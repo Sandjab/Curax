@@ -13,19 +13,40 @@ Pas de framework, pas de dépendance externe — tout est en vanilla HTML/CSS/JS
 ## Structure du projet
 
 ```
-├── index.html                          # Page d'accueil
-├── style.css                           # Styles (dark mode, responsive)
+├── index.html                          # Page d'accueil (vanilla JS, theming)
+├── style.css                           # Design system (6 thèmes tweakcn, light/dark)
 ├── manifest.json                       # Généré automatiquement par l'Action
 ├── articles/
-│   ├── mon-domaine/
-│   │   ├── manifest.json               # Métadonnées du domaine (optionnel)
-│   │   ├── article-un.html
-│   │   └── article-deux.html
+│   ├── observations.md                 # Analyse transversale du corpus
+│   ├── {domaine}/
+│   │   ├── manifest.json               # Métadonnées du domaine (name, icon, scores)
+│   │   └── *.html                      # Articles HTML
 │   └── article-orphelin.html           # Apparaît dans "Divers"
+├── scripts/
+│   ├── import-articles.py              # Pipeline d'import autonome (recommandé)
+│   └── extract-x-articles.py           # Script d'extraction X/Twitter (legacy)
+├── infiles/                            # Staging d'import temporaire (.gitignore)
 └── .github/
     ├── workflows/build-manifest.yml
     └── scripts/generate_manifest.py
 ```
+
+## Thèmes
+
+Le site propose 6 thèmes visuels issus de [tweakcn.com](https://tweakcn.com), chacun avec une variante light et dark :
+
+| Thème | Style |
+|-------|-------|
+| **Portfolio** (défaut) | Tons dorés, coins arrondis |
+| **MX-Brutalist** | Vert vif, bords carrés, bordures noires |
+| **Sage Green** | Vert sauge, coins très arrondis |
+| **2077** | Monochrome / rouge cyberpunk |
+| **AstroVista** | Orange spatial, bleu secondaire |
+| **Offworld** | Minimaliste, jaune pâle en dark |
+
+Le thème et le mode (light/dark) sont persistés dans `localStorage` (`curax-theme`, `curax-mode`). Un script inline dans le `<head>` applique le thème avant le chargement du CSS pour éviter le flash de contenu non stylé (FOUC).
+
+Les variables CSS suivent la convention shadcn/ui (`--background`, `--foreground`, `--primary`, `--card`, `--border`, etc.).
 
 ## Setup GitHub Pages
 
@@ -48,7 +69,17 @@ L'Action se déclenche automatiquement à chaque push modifiant `articles/**`. V
 
 ## Ajouter un article
 
-### Article dans un domaine
+### Méthode recommandée : import-articles.py
+
+1. Placez les fichiers HTML dans `infiles/`
+2. Lancez `python3 scripts/import-articles.py infiles/` — analyse, déduplication, auto-détection du domaine, preview
+3. Confirmez l'import (ou utilisez `--yes` pour sauter la confirmation)
+4. **Videz `infiles/`** après l'import — c'est un dossier de staging temporaire, les originaux restent dans vos sauvegardes navigateur
+5. Commit & push
+
+Le script détecte automatiquement le domaine par mots-clés, attribue un score de qualité (1-5), et met à jour les manifestes de domaine ainsi que le fichier `articles/observations.md`.
+
+### Méthode manuelle
 
 Créez un fichier HTML dans un sous-dossier de `articles/` :
 
@@ -81,11 +112,17 @@ Pour personnaliser l'affichage d'un domaine, ajoutez un `manifest.json` dans son
 {
   "name": "Nom affiché",
   "description": "Description du domaine",
-  "icon": "🔬"
+  "icon": "🔬",
+  "articles": {
+    "mon-article.html": {
+      "quality_score": 4,
+      "quality_note": "Tutoriel technique — long format"
+    }
+  }
 }
 ```
 
-Les trois champs sont optionnels. Sans ce fichier, le nom du dossier est utilisé comme titre.
+Les champs `name`, `description` et `icon` sont optionnels. Sans ce fichier, le nom du dossier est utilisé comme titre. Les scores de qualité sont générés automatiquement par `import-articles.py`.
 
 ## Développement local
 

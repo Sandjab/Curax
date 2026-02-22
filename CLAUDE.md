@@ -1,22 +1,22 @@
-# Curax — Agrégateur d'articles IA sur GitHub Pages
+# Curax — AI Article Aggregator on GitHub Pages
 
-## Structure du projet
+## Project structure
 
 ```
 Curax/
-├── index.html              # Page d'accueil dynamique (vanilla JS)
-├── style.css               # Design system (dark mode, responsive grid)
-├── manifest.json           # Index auto-généré par GitHub Action
-├── articles/               # Articles organisés par domaine
-│   ├── observations.md     # Observations transversales sur le corpus
-│   └── {domaine}/
-│       ├── manifest.json   # Métadonnées du domaine (name, description, icon, articles+scores)
-│       └── *.html          # Articles HTML
+├── index.html              # Dynamic homepage (vanilla JS, theming engine)
+├── style.css               # Design system (6 tweakcn themes, light/dark, responsive grid)
+├── manifest.json           # Auto-generated index by GitHub Action
+├── articles/               # Articles organized by domain
+│   ├── observations.md     # Cross-cutting corpus observations
+│   └── {domain}/
+│       ├── manifest.json   # Domain metadata (name, description, icon, articles+scores)
+│       └── *.html          # HTML articles
 ├── scripts/
-│   ├── extract-x-articles.py  # Script d'extraction des articles X/Twitter (legacy)
-│   └── import-articles.py     # Pipeline d'import autonome (recommandé)
-├── infiles/                # Dossier d'import (dans .gitignore)
-│   └── mapping.json        # Mapping fichier → domaine/titre/description (pour extract-x-articles.py)
+│   ├── extract-x-articles.py  # X/Twitter extraction script (legacy)
+│   └── import-articles.py     # Autonomous import pipeline (recommended)
+├── infiles/                # Temporary import staging area (in .gitignore)
+│   └── mapping.json        # File→domain/title/description mapping (for extract-x-articles.py only)
 └── .github/
     ├── workflows/build-manifest.yml
     └── scripts/generate_manifest.py
@@ -24,13 +24,51 @@ Curax/
 
 ## Pipeline
 
-1. `generate_manifest.py` scanne `articles/` et produit `manifest.json`
-2. GitHub Action exécute ce script à chaque push sur `articles/**`
-3. `index.html` fetch `manifest.json` et affiche les articles par domaine avec scores de qualité et observations transversales
+1. `generate_manifest.py` scans `articles/` and produces `manifest.json`
+2. GitHub Action runs this script on every push to `articles/**`
+3. `index.html` fetches `manifest.json` and displays articles by domain with quality scores and cross-cutting observations
 
-## Format des manifestes de domaine
+## Theming system
 
-Chaque `articles/{domaine}/manifest.json` contient :
+6 themes from [tweakcn.com](https://tweakcn.com): **portfolio** (default), **mx-brutalist**, **sage-green**, **2077**, **astrovista**, **offworld**.
+
+Each theme has light + dark variants defined in the `THEMES` object in `index.html`.
+
+### CSS variables
+
+Follow shadcn/ui convention: `--background`, `--foreground`, `--card`, `--card-foreground`, `--primary`, `--primary-foreground`, `--primary-hover`, `--secondary`, `--muted`, `--muted-foreground`, `--accent`, `--border`, `--input`, `--ring`, `--radius`.
+
+`:root` defaults in `style.css` correspond to Portfolio light theme.
+
+### Link contrast variables
+
+`--link` / `--link-hover`: dedicated variables for article title links, used only in themes where `--primary` has insufficient contrast against the background (Portfolio, Sage Green). CSS uses `var(--link, var(--primary))` fallback pattern — themes without `--link` fall back to `--primary` automatically.
+
+### Anti-FOUC
+
+Inline `<script>` in `<head>` (before CSS `<link>`) reads `localStorage` and sets `data-mode` / `data-theme` attributes on `<html>` immediately. This prevents a flash of unstyled content on page load.
+
+### Theme switching
+
+`applyTheme(themeId, mode)` must call `root.style.cssText = ''` before setting new properties. This resets inline styles from the previous theme and prevents stale variables from leaking across theme changes.
+
+Theme and mode persisted in `localStorage` keys: `curax-theme`, `curax-mode`.
+
+### Dark mode
+
+Dark mode is JS-driven via `data-mode="dark"` attribute. No `@media (prefers-color-scheme)` queries are used.
+
+Dark mode quality badges use `[data-mode="dark"]` selector, not media query.
+
+## CSS architecture
+
+- Shadows use `color-mix(in srgb, var(--foreground) N%, transparent)` for theme-adaptive opacity
+- Spacing tokens: `--space-xs` through `--space-xl`
+- Responsive breakpoint at 600px (single-column layout on mobile)
+
+## Domain manifest format
+
+Each `articles/{domain}/manifest.json` contains:
 ```json
 {
   "name": "Claude Code",
@@ -39,33 +77,33 @@ Chaque `articles/{domaine}/manifest.json` contient :
   "articles": {
     "guide-avance-skills-hooks-subagents.html": {
       "quality_score": 5,
-      "quality_note": "Tutoriel technique — long format — avec code — 7 liens"
+      "quality_note": "Technical tutorial — long format — with code — 7 links"
     }
   }
 }
 ```
 
-`quality_score` (1-5) : score de substance basé sur word_count, has_code, link_count, content_type.
-`quality_note` : synthèse du type de contenu et métriques clés.
+`quality_score` (1-5): substance score based on word_count, has_code, link_count, content_type.
+`quality_note`: content type summary and key metrics.
 
-## Observations transversales
+## Cross-cutting observations
 
-`articles/observations.md` contient un paragraphe d'analyse transversale du corpus, affiché en préambule de l'index. Ce fichier est régénéré automatiquement par `import-articles.py`.
+`articles/observations.md` contains a cross-cutting analysis paragraph of the corpus, displayed as a preamble on the index page. This file is auto-regenerated by `import-articles.py`.
 
-## Format des articles X/Twitter (infiles/)
+## X/Twitter article format (infiles/)
 
-Les fichiers HTML sauvegardés depuis X/Twitter ont ces caractéristiques :
-- `<title>` générique : "X Article - DD/MM/YYYY"
-- Pas de `<meta name="description">`
-- ~5000+ lignes de CSS inline dans `<style>` avant le contenu réel
-- Auteur dans `data-testid="UserAvatar-Container-{handle}"`
-- Texte principal dans `<span data-text="true">`
-- 2 exceptions : 1 article Cloudflare (auteur dans `.author-name-tooltip`), 1 Substack
+HTML files saved from X/Twitter have these characteristics:
+- Generic `<title>`: "X Article - DD/MM/YYYY"
+- No `<meta name="description">`
+- ~5000+ lines of inline CSS in `<style>` before actual content
+- Author in `data-testid="UserAvatar-Container-{handle}"`
+- Main text in `<span data-text="true">`
+- 2 exceptions: 1 Cloudflare article (author in `.author-name-tooltip`), 1 Substack
 
-## 7 domaines
+## 7 domains
 
-| Slug | Nom | Icône |
-|------|-----|-------|
+| Slug | Name | Icon |
+|------|------|------|
 | `claude-code` | Claude Code | 🛠️ |
 | `agents-ia` | Agents IA | 🤖 |
 | `openclaw` | OpenClaw / Moltbot | 🐙 |
@@ -74,9 +112,9 @@ Les fichiers HTML sauvegardés depuis X/Twitter ont ces caractéristiques :
 | `business-ia` | Business & IA | 💰 |
 | `vibe-coding` | Vibe Coding | 💡 |
 
-## Auto-détection de domaine
+## Auto-detection of domain
 
-`import-articles.py` détecte le domaine par mots-clés dans le contenu :
+`import-articles.py` detects the domain by keywords in content:
 - `claude code|cowork|skills|hooks|subagent|CLAUDE.md` → `claude-code`
 - `openclaw|moltbot|clawdbot|peter steinberger` → `openclaw`
 - `security|vulnerab|hardening|firewall|sandbox` → `securite-ia`
@@ -86,30 +124,43 @@ Les fichiers HTML sauvegardés depuis X/Twitter ont ces caractéristiques :
 - `vibe cod|rebuild|mainstream|tools for` → `vibe-coding`
 - Fallback → `agents-ia`
 
-## Workflow d'ajout d'articles
+## Article import workflow
 
-### Méthode recommandée : import-articles.py (automatique)
+### Recommended: import-articles.py (automatic)
 
-1. Placer les HTML dans `infiles/`
-2. `python3 scripts/import-articles.py infiles/` → analyse, dedup, auto-détection domaine, preview
-3. Confirmer → import, injection métadonnées, mise à jour manifestes + observations
-4. Commit & push
+1. Place HTML files in `infiles/`
+2. `python3 scripts/import-articles.py infiles/` → analyze, dedup, auto-detect domain, preview
+3. Confirm → import, metadata injection, manifest + observations update
+4. **Clean up `infiles/` after import** — it's a temporary staging area, originals stay in browser saves
+5. Commit & push
 
-Avec `--yes` pour sauter la confirmation.
+Use `--yes` to skip confirmation.
 
-### Méthode manuelle : extract-x-articles.py
+### Legacy: extract-x-articles.py
 
-1. Placer les HTML dans `infiles/`
-2. `python3 scripts/extract-x-articles.py --dedup infiles/` → détecter doublons
-3. Remplir `infiles/mapping.json` (domain, slug, title, description)
+1. Place HTML files in `infiles/`
+2. `python3 scripts/extract-x-articles.py --dedup infiles/` → detect duplicates
+3. Fill `infiles/mapping.json` (domain, slug, title, description)
 4. `python3 scripts/extract-x-articles.py infiles/` → preview
 5. `python3 scripts/extract-x-articles.py --apply infiles/` → import
-6. `python3 .github/scripts/generate_manifest.py` → regénérer manifeste
+6. `python3 .github/scripts/generate_manifest.py` → regenerate manifest
 7. Commit & push
 
-## Détection de doublons
+## Duplicate detection
 
-Les sauvegardes X/Twitter produisent parfois des fichiers en double (même contenu, noms différents).
-Les deux scripts détectent les doublons par empreinte SHA-256 du contenu textuel :
-- Pour les articles X/Twitter : hash des spans `data-text="true"`
-- Pour les autres formats : hash du texte significatif après `</style>`
+X/Twitter saves sometimes produce duplicate files (same content, different names).
+Both scripts detect duplicates via SHA-256 hash of textual content:
+- For X/Twitter articles: hash of `data-text="true"` spans
+- For other formats: hash of significant text after `</style>`
+
+## infiles/ workflow
+
+- Temporary import staging area, listed in `.gitignore`
+- `mapping.json` is only used by legacy `extract-x-articles.py`
+- Clean up all files after import (they are copies, originals stay in browser saves)
+
+## GitHub Pages deploy
+
+- CDN cache TTL ~5 minutes — new deploys may not be visible immediately
+- Hard reload (Cmd+Shift+R) bypasses browser cache but not CDN
+- `gh run list --limit 3` to check deploy status
