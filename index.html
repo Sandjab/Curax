@@ -41,6 +41,18 @@
 
         content.innerHTML = "";
 
+        if (manifest.observations) {
+          const obs = document.createElement("section");
+          obs.className = "observations";
+          const obsTitle = document.createElement("h2");
+          obsTitle.textContent = "Analyse du corpus";
+          obs.appendChild(obsTitle);
+          const obsText = document.createElement("p");
+          obsText.textContent = manifest.observations;
+          obs.appendChild(obsText);
+          content.appendChild(obs);
+        }
+
         for (const domain of domains) {
           content.appendChild(buildDomainSection(domain));
         }
@@ -106,18 +118,40 @@
         const card = document.createElement("article");
         card.className = "article-card";
 
+        const topRow = document.createElement("div");
+        topRow.className = "card-top-row";
+
         const h3 = document.createElement("h3");
         const a = document.createElement("a");
         a.href = article.file;
         a.textContent = article.title || article.file;
         h3.appendChild(a);
-        card.appendChild(h3);
+        topRow.appendChild(h3);
+
+        if (article.quality_score) {
+          const badge = document.createElement("span");
+          badge.className = "quality-badge quality-" + article.quality_score;
+          badge.textContent = article.quality_score + "/5";
+          if (article.quality_note) {
+            badge.title = article.quality_note;
+          }
+          topRow.appendChild(badge);
+        }
+
+        card.appendChild(topRow);
 
         if (article.description) {
           const desc = document.createElement("p");
           desc.className = "description";
           desc.textContent = article.description;
           card.appendChild(desc);
+        }
+
+        if (article.quality_note) {
+          const note = document.createElement("p");
+          note.className = "quality-note";
+          note.textContent = article.quality_note;
+          card.appendChild(note);
         }
 
         if (article.date) {

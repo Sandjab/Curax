@@ -67,6 +67,12 @@ def build_manifest():
     if not ARTICLES_DIR.is_dir():
         return {"generated": now(), "domains": [], "uncategorized": []}
 
+    # Read observations
+    observations = ""
+    obs_path = ARTICLES_DIR / "observations.md"
+    if obs_path.is_file():
+        observations = obs_path.read_text(encoding="utf-8").strip()
+
     # Collect domain subdirectories and root-level HTML files
     for entry in sorted(ARTICLES_DIR.iterdir()):
         if entry.is_dir():
@@ -76,7 +82,17 @@ def build_manifest():
         elif entry.suffix == ".html":
             uncategorized.append(build_article(entry))
 
-    return {"generated": now(), "domains": domains, "uncategorized": uncategorized}
+    # Sort domains by average quality_score descending
+    def _avg_score(domain):
+        scores = [a.get("quality_score", 0) for a in domain["articles"]]
+        return sum(scores) / len(scores) if scores else 0
+
+    domains.sort(key=_avg_score, reverse=True)
+
+    result = {"generated": now(), "domains": domains, "uncategorized": uncategorized}
+    if observations:
+        result["observations"] = observations
+    return result
 
 
 def build_domain(domain_dir: Path) -> dict:
@@ -89,9 +105,15 @@ def build_domain(domain_dir: Path) -> dict:
         except (json.JSONDecodeError, OSError):
             pass
 
+    article_meta = meta.get("articles", {})
+
     articles = []
     for html_file in sorted(domain_dir.glob("*.html")):
-        articles.append(build_article(html_file))
+        file_meta = article_meta.get(html_file.name)
+        articles.append(build_article(html_file, file_meta))
+
+    # Sort articles by quality_score descending (0 for unscored)
+    articles.sort(key=lambda a: a.get("quality_score", 0), reverse=True)
 
     return {
         "slug": domain_dir.name,
@@ -102,14 +124,20 @@ def build_domain(domain_dir: Path) -> dict:
     }
 
 
-def build_article(html_path: Path) -> dict:
+def build_article(html_path: Path, article_meta: dict = None) -> dict:
     meta = extract_metadata(html_path)
-    return {
+    result = {
         "file": str(html_path),
         "title": meta["title"] or html_path.stem.replace("-", " ").title(),
         "description": meta["description"],
         "date": get_last_commit_date(html_path),
     }
+    if article_meta:
+        if "quality_score" in article_meta:
+            result["quality_score"] = article_meta["quality_score"]
+        if "quality_note" in article_meta:
+            result["quality_note"] = article_meta["quality_note"]
+    return result
 
 
 def now() -> str:
