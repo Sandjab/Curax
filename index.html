@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curax — Index des articles</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Curax</h1>
+    <p>Index dynamique d'articles</p>
+  </header>
+
+  <main id="content">
+    <div class="welcome-message" id="loading">
+      <p>Chargement...</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>Généré automatiquement via GitHub Actions</p>
+  </footer>
+
+  <script>
+    (async function () {
+      const content = document.getElementById("content");
+
+      try {
+        const response = await fetch("manifest.json");
+        if (!response.ok) throw new Error("Manifeste introuvable");
+
+        const manifest = await response.json();
+        const domains = manifest.domains || [];
+        const uncategorized = manifest.uncategorized || [];
+
+        if (domains.length === 0 && uncategorized.length === 0) {
+          showWelcome();
+          return;
+        }
+
+        content.innerHTML = "";
+
+        for (const domain of domains) {
+          content.appendChild(buildDomainSection(domain));
+        }
+
+        if (uncategorized.length > 0) {
+          content.appendChild(
+            buildDomainSection({
+              name: "Divers",
+              description: "Articles non catégorisés",
+              icon: "📂",
+              articles: uncategorized,
+            })
+          );
+        }
+      } catch (e) {
+        showWelcome();
+      }
+
+      function showWelcome() {
+        content.innerHTML =
+          '<div class="welcome-message">' +
+          "<p>Bienvenue sur Curax.</p>" +
+          "<p>Ajoutez des articles dans le dossier <code>articles/</code> et poussez sur <code>main</code> pour les voir apparaître ici.</p>" +
+          "</div>";
+      }
+
+      function buildDomainSection(domain) {
+        const section = document.createElement("section");
+        section.className = "domain-section";
+
+        const header = document.createElement("div");
+        header.className = "domain-header";
+        if (domain.icon) {
+          const icon = document.createElement("span");
+          icon.className = "icon";
+          icon.textContent = domain.icon;
+          header.appendChild(icon);
+        }
+        const h2 = document.createElement("h2");
+        h2.textContent = domain.name || domain.slug;
+        header.appendChild(h2);
+        section.appendChild(header);
+
+        if (domain.description) {
+          const desc = document.createElement("p");
+          desc.className = "domain-description";
+          desc.textContent = domain.description;
+          section.appendChild(desc);
+        }
+
+        const grid = document.createElement("div");
+        grid.className = "articles-grid";
+
+        for (const article of domain.articles || []) {
+          grid.appendChild(buildArticleCard(article));
+        }
+
+        section.appendChild(grid);
+        return section;
+      }
+
+      function buildArticleCard(article) {
+        const card = document.createElement("article");
+        card.className = "article-card";
+
+        const h3 = document.createElement("h3");
+        const a = document.createElement("a");
+        a.href = article.file;
+        a.textContent = article.title || article.file;
+        h3.appendChild(a);
+        card.appendChild(h3);
+
+        if (article.description) {
+          const desc = document.createElement("p");
+          desc.className = "description";
+          desc.textContent = article.description;
+          card.appendChild(desc);
+        }
+
+        if (article.date) {
+          const date = document.createElement("time");
+          date.className = "date";
+          date.textContent = article.date;
+          card.appendChild(date);
+        }
+
+        return card;
+      }
+    })();
+  </script>
+</body>
+</html>

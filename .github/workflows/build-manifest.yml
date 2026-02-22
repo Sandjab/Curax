@@ -1,0 +1,32 @@
+name: Build Manifest
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "articles/**"
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate manifest
+        run: python3 .github/scripts/generate_manifest.py
+
+      - name: Commit manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git diff --cached --quiet && echo "No changes" || git commit -m "chore: update manifest.json [skip ci]"
+          git push
