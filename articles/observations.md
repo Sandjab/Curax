@@ -1,1 +1,0 @@
-@aiedge_ (8 articles) est le plus prolifique mais aussi le plus inegal — entre compilations de liens utiles et du pur hype motivationnel creux. 48% des articles contiennent du code, bon indicateur de contenu actionnable. Les articles prompt-engineering sont tous solides (scores 4-5).

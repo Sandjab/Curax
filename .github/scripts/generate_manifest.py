@@ -61,82 +61,64 @@ def get_last_commit_date(file_path: Path) -> str:
 
 
 def build_manifest():
+    catalog_path = ARTICLES_DIR / "catalog.json"
+    return build_manifest_from_catalog(catalog_path)
+
+
+def build_manifest_from_catalog(catalog_path: Path) -> dict:
+    """Construit le manifest depuis catalog.json (source de verite)."""
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+
+    # Grouper les articles par domaine
+    by_domain = {}
+    for article_path, meta in catalog.get("articles", {}).items():
+        domain_slug = meta["domain"]
+        if domain_slug not in by_domain:
+            by_domain[domain_slug] = []
+        by_domain[domain_slug].append((article_path, meta))
+
     domains = []
-    uncategorized = []
+    for slug, articles_list in by_domain.items():
+        domain_info = catalog.get("domains", {}).get(slug, {})
+        articles = []
+        for article_path, meta in articles_list:
+            html_path = Path(article_path)
+            if not html_path.is_file():
+                continue
+            html_meta = extract_metadata(html_path)
+            article = {
+                "file": article_path,
+                "title": html_meta["title"] or html_path.stem.replace("-", " ").title(),
+                "description": html_meta["description"],
+                "date": get_last_commit_date(html_path),
+                "quality_score": meta.get("quality_score", 0),
+                "quality_note": meta.get("quality_note", ""),
+                "tags": meta.get("tags", []),
+            }
+            articles.append(article)
 
-    if not ARTICLES_DIR.is_dir():
-        return {"generated": now(), "domains": [], "uncategorized": []}
+        # Trier articles par score desc
+        articles.sort(key=lambda a: a.get("quality_score", 0), reverse=True)
 
-    # Read observations
-    observations = ""
-    obs_path = ARTICLES_DIR / "observations.md"
-    if obs_path.is_file():
-        observations = obs_path.read_text(encoding="utf-8").strip()
+        domains.append({
+            "slug": slug,
+            "name": domain_info.get("name", slug.replace("-", " ").title()),
+            "description": domain_info.get("description", ""),
+            "icon": domain_info.get("icon", ""),
+            "articles": articles,
+        })
 
-    # Collect domain subdirectories and root-level HTML files
-    for entry in sorted(ARTICLES_DIR.iterdir()):
-        if entry.is_dir():
-            domain = build_domain(entry)
-            if domain["articles"]:
-                domains.append(domain)
-        elif entry.suffix == ".html":
-            uncategorized.append(build_article(entry))
-
-    # Sort domains by average quality_score descending
+    # Trier domaines par score moyen desc
     def _avg_score(domain):
         scores = [a.get("quality_score", 0) for a in domain["articles"]]
         return sum(scores) / len(scores) if scores else 0
 
     domains.sort(key=_avg_score, reverse=True)
 
-    result = {"generated": now(), "domains": domains, "uncategorized": uncategorized}
+    result = {"generated": now(), "domains": domains, "uncategorized": []}
+    observations = catalog.get("observations", "")
     if observations:
         result["observations"] = observations
-    return result
-
-
-def build_domain(domain_dir: Path) -> dict:
-    # Read optional domain manifest
-    manifest_path = domain_dir / "manifest.json"
-    meta = {}
-    if manifest_path.is_file():
-        try:
-            meta = json.loads(manifest_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-
-    article_meta = meta.get("articles", {})
-
-    articles = []
-    for html_file in sorted(domain_dir.glob("*.html")):
-        file_meta = article_meta.get(html_file.name)
-        articles.append(build_article(html_file, file_meta))
-
-    # Sort articles by quality_score descending (0 for unscored)
-    articles.sort(key=lambda a: a.get("quality_score", 0), reverse=True)
-
-    return {
-        "slug": domain_dir.name,
-        "name": meta.get("name", domain_dir.name.replace("-", " ").title()),
-        "description": meta.get("description", ""),
-        "icon": meta.get("icon", ""),
-        "articles": articles,
-    }
-
-
-def build_article(html_path: Path, article_meta: dict = None) -> dict:
-    meta = extract_metadata(html_path)
-    result = {
-        "file": str(html_path),
-        "title": meta["title"] or html_path.stem.replace("-", " ").title(),
-        "description": meta["description"],
-        "date": get_last_commit_date(html_path),
-    }
-    if article_meta:
-        if "quality_score" in article_meta:
-            result["quality_score"] = article_meta["quality_score"]
-        if "quality_note" in article_meta:
-            result["quality_note"] = article_meta["quality_note"]
     return result
 
 
@@ -147,4 +129,5 @@ def now() -> str:
 if __name__ == "__main__":
     manifest = build_manifest()
     OUTPUT.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"Manifest generated: {len(manifest['domains'])} domain(s), {len(manifest['uncategorized'])} uncategorized article(s)")
+    total_articles = sum(len(d["articles"]) for d in manifest["domains"])
+    print(f"Manifest generated: {len(manifest['domains'])} domain(s), {total_articles} article(s), {len(manifest['uncategorized'])} uncategorized")
