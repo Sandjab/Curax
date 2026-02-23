@@ -310,6 +310,14 @@
         return section;
       }
 
+      function scoreClass(s) {
+        if (s <= 2) return 'quality-low';
+        if (s <= 4) return 'quality-below';
+        if (s <= 6) return 'quality-mid';
+        if (s <= 8) return 'quality-good';
+        return 'quality-great';
+      }
+
       function buildArticleCard(article) {
         const card = document.createElement("article");
         card.className = "article-card";
@@ -326,8 +334,8 @@
 
         if (article.quality_score) {
           const badge = document.createElement("span");
-          badge.className = "quality-badge quality-" + article.quality_score;
-          badge.textContent = article.quality_score + "/5";
+          badge.className = "quality-badge " + scoreClass(article.quality_score);
+          badge.textContent = article.quality_score + "/10";
           if (article.quality_note) {
             badge.title = article.quality_note;
           }
@@ -341,6 +349,18 @@
           desc.className = "description";
           desc.textContent = article.description;
           card.appendChild(desc);
+        }
+
+        if (article.tags && article.tags.length > 0) {
+          const tagsDiv = document.createElement("div");
+          tagsDiv.className = "article-tags";
+          for (const tag of article.tags) {
+            const chip = document.createElement("span");
+            chip.className = "tag-badge";
+            chip.textContent = tag;
+            tagsDiv.appendChild(chip);
+          }
+          card.appendChild(tagsDiv);
         }
 
         if (article.quality_note) {
