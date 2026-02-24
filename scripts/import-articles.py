@@ -1,16 +1,6 @@
 #!/usr/bin/env python3
-"""
-Pipeline d'import autonome pour Curax.
 
-Analyse, classifie via Claude CLI, score et importe les articles HTML dans articles/.
-
-Usage:
-  python3 scripts/import-articles.py [infiles/]            # Analyse + preview
-  python3 scripts/import-articles.py --yes [infiles/]       # Analyse + import sans confirmation
-  python3 scripts/import-articles.py --reclassify           # Reclassifier tous les articles existants
-  python3 scripts/import-articles.py --workers 5            # Nombre de workers paralleles (defaut: 3)
-"""
-
+import argparse
 import os
 import sys
 import re
@@ -18,6 +8,7 @@ import json
 import hashlib
 import shutil
 import subprocess
+import textwrap
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -307,6 +298,33 @@ def dedup_files(file_contents):
     return excluded
 
 
+def dedup_against_catalog(file_contents, excluded, catalog):
+    """Compare les nouveaux fichiers aux articles deja importes dans catalog.json.
+    Retourne l'ensemble des fichiers source qui sont des doublons d'articles existants."""
+    # Construire les fingerprints des articles existants
+    existing_fps = {}
+    for article_key in catalog.get("articles", {}):
+        html_path = os.path.join(PROJECT_ROOT, article_key)
+        if not os.path.isfile(html_path):
+            continue
+        with open(html_path, encoding='utf-8', errors='replace') as f:
+            content = f.read()
+        fp = extract_content_fingerprint(content)
+        if fp is not None:
+            existing_fps[fp] = article_key
+
+    # Comparer les nouveaux fichiers
+    catalog_dupes = set()
+    for filepath, content in file_contents.items():
+        if filepath in excluded:
+            continue
+        fp = extract_content_fingerprint(content)
+        if fp is not None and fp in existing_fps:
+            catalog_dupes.add(filepath)
+            print(f"  Deja importe : {os.path.basename(filepath)} (identique a {existing_fps[fp]})")
+    return catalog_dupes
+
+
 # ---------------------------------------------------------------------------
 # Catalog management (articles/catalog.json)
 # ---------------------------------------------------------------------------
@@ -582,25 +600,33 @@ def prompt_confirm(message):
 # ---------------------------------------------------------------------------
 
 def main():
-    args = sys.argv[1:]
-    auto_yes = '--yes' in args
-    do_migrate = '--migrate' in args
-    do_reclassify = '--reclassify' in args
-
-    # Extraire --workers N
-    max_workers = 3
-    if '--workers' in args:
-        idx = args.index('--workers')
-        if idx + 1 < len(args):
-            max_workers = int(args[idx + 1])
-            args = args[:idx] + args[idx + 2:]
-
-    args = [a for a in args if not a.startswith('--')]
+    parser = argparse.ArgumentParser(
+        description="Pipeline d'import autonome pour Curax. Analyse, classifie via Claude CLI, score et importe les articles HTML.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent("""\
+            exemples:
+              python3 scripts/import-articles.py infiles/            Import avec preview
+              python3 scripts/import-articles.py --yes infiles/      Import sans confirmation
+              python3 scripts/import-articles.py --reclassify        Reclassifier tout
+              python3 scripts/import-articles.py --workers 5         5 workers parallèles
+        """)
+    )
+    parser.add_argument('source', nargs='?', default='infiles',
+                        help="dossier source contenant les fichiers HTML (défaut: infiles)")
+    parser.add_argument('--yes', action='store_true',
+                        help="importer sans demander de confirmation")
+    parser.add_argument('--reclassify', action='store_true',
+                        help="reclassifier tous les articles existants (nouveau scoring, tags, domaines)")
+    parser.add_argument('--migrate', action='store_true',
+                        help="migration one-time des manifests de domaine vers catalog.json")
+    parser.add_argument('--workers', type=int, default=3,
+                        help="nombre de workers parallèles pour le scoring (défaut: 3)")
+    args = parser.parse_args()
 
     # ------------------------------------------------------------------
     # --migrate : migration one-time
     # ------------------------------------------------------------------
-    if do_migrate:
+    if args.migrate:
         print("Migration des manifests de domaine vers catalog.json...\n")
         migrate_to_catalog()
         return
@@ -608,7 +634,7 @@ def main():
     # ------------------------------------------------------------------
     # --reclassify : reclassifier tous les articles existants
     # ------------------------------------------------------------------
-    if do_reclassify:
+    if args.reclassify:
         print("Reclassification de tous les articles existants...\n")
         catalog = load_catalog()
         if not catalog["articles"]:
@@ -624,7 +650,7 @@ def main():
         print(f"   {len(taxonomy['domains'])} domaines, observations mises a jour\n")
 
         # Scorer chaque article (en parallele)
-        print(f"2. Scoring des {total} articles ({max_workers} workers)...")
+        print(f"2. Scoring des {total} articles ({args.workers} workers)...")
         changes = []
 
         def _score_one(article_key, meta):
@@ -643,7 +669,7 @@ def main():
 
         articles_list = list(catalog["articles"].items())
         done_count = 0
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with ThreadPoolExecutor(max_workers=args.workers) as executor:
             futures = {
                 executor.submit(_score_one, key, meta): key
                 for key, meta in articles_list
@@ -704,7 +730,7 @@ def main():
                     label = "renomme"
                 print(f"  {key} -> {new_key} ({label})")
 
-            if not auto_yes:
+            if not args.yes:
                 if not prompt_confirm("\nConfirmer les deplacements/renommages ? [y/N]"):
                     print("Deplacements annules (scores et tags deja sauvegardes).")
                     _regenerate_manifest()
@@ -731,7 +757,7 @@ def main():
     # ------------------------------------------------------------------
     # Import standard de nouveaux articles
     # ------------------------------------------------------------------
-    source_dir = args[0] if args else 'infiles'
+    source_dir = args.source
 
     if not os.path.isdir(source_dir):
         print(f"Erreur : dossier '{source_dir}' introuvable", file=sys.stderr)
@@ -751,11 +777,15 @@ def main():
         with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
             file_contents[filepath] = f.read()
 
-    # Step 1: Dedup
+    # Step 1: Dedup (intra-source + vs articles existants)
+    catalog = load_catalog()
     print("1. Detection des doublons...")
     excluded = dedup_files(file_contents)
-    if excluded:
-        print(f"   {len(excluded)} doublon(s) exclus\n")
+    catalog_dupes = dedup_against_catalog(file_contents, excluded, catalog)
+    excluded |= catalog_dupes
+    total_dupes = len(excluded)
+    if total_dupes:
+        print(f"   {total_dupes} doublon(s) exclus\n")
     else:
         print("   Aucun doublon\n")
 
@@ -768,9 +798,6 @@ def main():
         info = analyze_article(filepath, content)
         analyses.append(info)
 
-    # Step 3: Load catalog
-    catalog = load_catalog()
-
     # Step 4: Appel Claude taxonomie
     print(f"\n3. Appel Claude pour la taxonomie ({len(analyses)} nouveaux articles)...")
     taxonomy_prompt = build_taxonomy_prompt(catalog, analyses)
@@ -780,7 +807,7 @@ def main():
     print(f"   {len(taxonomy['domains'])} domaines, observations mises a jour\n")
 
     # Step 5: Appel Claude scoring par article (en parallele)
-    print(f"4. Scoring des {len(analyses)} articles ({max_workers} workers)...")
+    print(f"4. Scoring des {len(analyses)} articles ({args.workers} workers)...")
     total_import = len(analyses)
 
     def _score_new(info):
@@ -792,7 +819,7 @@ def main():
         return (info, result)
 
     done_count = 0
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
         futures = {executor.submit(_score_new, info): info for info in analyses}
         for future in as_completed(futures):
             done_count += 1
@@ -826,7 +853,7 @@ def main():
     print()
 
     # Step 7: Confirm
-    if not auto_yes:
+    if not args.yes:
         if not prompt_confirm("Confirmer l'import ? [y/N]"):
             print("Import annule.")
             sys.exit(0)
