@@ -126,9 +126,11 @@ Domains are managed dynamically in `catalog.json`. Initial domains:
 `import-articles.py` uses `claude -p` (CLI) for semantic classification:
 
 1. **Taxonomy call** (1 per import): receives corpus summary + new article previews, produces optimal domain taxonomy and cross-cutting observations
-2. **Per-article call** (1 per article): receives extracted text + taxonomy, produces domain, tags (1-3), quality_score (1-10), quality_note, title, description
+2. **Per-article call** (1 per article, parallelized with 3 workers by default): receives extracted text + taxonomy, produces domain, tags (1-3), quality_score (1-10), quality_note, title, description
 
-No hardcoded domain rules — Claude decides classification based on content semantics. The `--json-schema` flag enforces structured output. Retry with exponential backoff on failure (max 2 retries).
+No hardcoded domain rules — Claude Opus decides classification based on content semantics. The `--json-schema` flag enforces structured output. Retry with exponential backoff on failure (max 2 retries).
+
+File slugs are derived from the Claude-generated title (not raw text). During `--reclassify`, files are renamed if the new title-based slug differs from the current filename.
 
 Environment variable `CLAUDECODE` is unset in subprocess to avoid nested session detection.
 
@@ -137,14 +139,15 @@ Environment variable `CLAUDECODE` is unset in subprocess to avoid nested session
 ### Recommended: import-articles.py (automatic, Claude-powered)
 
 1. Place HTML files in `infiles/`
-2. `python3 scripts/import-articles.py infiles/` → dedup, Claude taxonomy + scoring, preview
-3. Confirm → import, metadata injection, catalog.json + manifest.json update
+2. `python3 scripts/import-articles.py infiles/` → dedup, Claude Opus taxonomy + scoring, preview
+3. Confirm → import, metadata injection, catalog.json + manifest.json update (file slug based on Claude-generated title)
 4. **Clean up `infiles/` after import** — it's a temporary staging area, originals stay in browser saves
 5. Commit & push
 
 Flags:
 - `--yes` : skip confirmation
-- `--reclassify` : reclassify ALL existing articles (new taxonomy, new scores, new tags, file moves if domain changes)
+- `--reclassify` : reclassify ALL existing articles (new taxonomy, new scores, new tags, file renames based on Claude title, file moves if domain changes)
+- `--workers N` : number of parallel scoring workers (default: 3)
 
 ## Duplicate detection
 

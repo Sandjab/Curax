@@ -7,8 +7,8 @@ Analyse, classifie via Claude CLI, score et importe les articles HTML dans artic
 Usage:
   python3 scripts/import-articles.py [infiles/]            # Analyse + preview
   python3 scripts/import-articles.py --yes [infiles/]       # Analyse + import sans confirmation
-  python3 scripts/import-articles.py --migrate              # Migration manifests -> catalog.json
   python3 scripts/import-articles.py --reclassify           # Reclassifier tous les articles existants
+  python3 scripts/import-articles.py --workers 5            # Nombre de workers paralleles (defaut: 3)
 """
 
 import os
@@ -20,6 +20,9 @@ import shutil
 import subprocess
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import termios
+import tty
 
 # ---------------------------------------------------------------------------
 # Repertoires
@@ -37,7 +40,7 @@ CATALOG_PATH = os.path.join(ARTICLES_DIR, "catalog.json")
 def call_claude(prompt, json_schema=None):
     """Appelle Claude CLI en mode print, retourne le JSON parse."""
     cmd = [shutil.which("claude") or "claude", "-p",
-           "--output-format", "json", "--model", "sonnet"]
+           "--output-format", "json", "--model", "opus"]
     if json_schema:
         cmd += ["--json-schema", json.dumps(json_schema)]
     cmd.append(prompt)
@@ -47,6 +50,8 @@ def call_claude(prompt, json_schema=None):
     if result.returncode != 0:
         raise RuntimeError(f"Claude CLI failed: {result.stderr[:500]}")
     envelope = json.loads(result.stdout)
+    if json_schema and "structured_output" in envelope:
+        return envelope["structured_output"]
     raw = envelope.get("result", "")
     return json.loads(raw) if json_schema else raw
 
@@ -246,6 +251,16 @@ def inject_metadata(html_content, title, description):
 
 
 # ---------------------------------------------------------------------------
+# Slugification
+# ---------------------------------------------------------------------------
+
+def slugify(text, max_len=60):
+    """Convertit un texte en slug kebab-case."""
+    slug = re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-')[:max_len]
+    return slug or "untitled"
+
+
+# ---------------------------------------------------------------------------
 # Analyse d'un article (simplifiee — plus de scoring/domain heuristiques)
 # ---------------------------------------------------------------------------
 
@@ -256,13 +271,12 @@ def analyze_article(filepath, content):
     author = extract_author(content)
     preview = extract_text_preview(content, max_len=300)
 
-    # Slug from preview text
+    # Slug provisoire depuis le texte (sera remplace par le titre Claude apres scoring)
     first_sentence = preview[:120].split('.')[0].split('!')[0].split('?')[0].strip()
     if len(first_sentence) < 15:
         first_sentence = preview[:80].strip()
-    slug_base = first_sentence[:100]
-    slug = re.sub(r'[^a-z0-9]+', '-', slug_base.lower()).strip('-')[:60]
-    if not slug:
+    slug = slugify(first_sentence[:100])
+    if slug == "untitled":
         slug = os.path.splitext(os.path.basename(filepath))[0]
 
     return {
@@ -416,6 +430,10 @@ TAXONOMIE DES DOMAINES DISPONIBLES :
 TEXTE DE L'ARTICLE :
 {truncated}
 
+REGLE IMPORTANTE : classe selon le SUJET PRINCIPAL de l'article, pas selon les outils ou technologies mentionnes en exemple.
+Un article qui explique des patterns d'agents IA avec des exemples Claude Code reste un article sur les agents IA.
+Un article sur la securite des LLM qui mentionne des outils de code reste un article sur la securite.
+
 Ta tache : analyse cet article et produis :
 - domain : le slug du domaine le plus pertinent parmi ceux listes ci-dessus
 - tags : 1-3 tags en kebab-case (ex: "mcp", "orchestration", "prompting", "few-shot", "rag")
@@ -504,27 +522,59 @@ def do_import(analyses, file_contents, catalog):
         print(f"  {d}: {c}")
 
 
-def move_article(catalog, article_key, new_domain):
-    """Deplace physiquement un fichier HTML vers un nouveau domaine et met a jour catalog."""
+def move_or_rename_article(catalog, article_key, new_domain=None, new_slug=None):
+    """Deplace et/ou renomme un fichier HTML. Met a jour catalog."""
     old_path = os.path.join(PROJECT_ROOT, article_key)
     if not os.path.isfile(old_path):
         print(f"  ATTENTION : {article_key} introuvable, skip")
         return None
 
-    filename = os.path.basename(article_key)
-    new_dir = os.path.join(ARTICLES_DIR, new_domain)
+    old_filename = os.path.basename(article_key)
+    old_domain = article_key.split('/')[1]  # articles/{domain}/{file}
+
+    domain = new_domain or old_domain
+    filename = f"{new_slug}.html" if new_slug else old_filename
+
+    new_dir = os.path.join(ARTICLES_DIR, domain)
     os.makedirs(new_dir, exist_ok=True)
     new_path = os.path.join(new_dir, filename)
-    new_key = f"articles/{new_domain}/{filename}"
+    new_key = f"articles/{domain}/{filename}"
+
+    if new_key == article_key:
+        return None  # Rien a faire
 
     shutil.move(old_path, new_path)
 
     # Mettre a jour catalog
     meta = catalog["articles"].pop(article_key)
-    meta["domain"] = new_domain
+    meta["domain"] = domain
     catalog["articles"][new_key] = meta
 
     return new_key
+
+
+# ---------------------------------------------------------------------------
+# Confirmation interactive
+# ---------------------------------------------------------------------------
+
+def prompt_confirm(message):
+    """Demande confirmation avec un seul caractere (y/o = oui). Pas besoin d'Entree."""
+    sys.stdout.write(f"{message} ")
+    sys.stdout.flush()
+    try:
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+        try:
+            tty.cbreak(fd)
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        print(ch)
+        return ch.lower() in ('y', 'o')
+    except (termios.error, ValueError):
+        # Fallback si pas de terminal (pipe, etc.)
+        resp = sys.stdin.readline().replace('\r', '').strip().lower()
+        return resp in ('y', 'yes', 'o', 'oui')
 
 
 # ---------------------------------------------------------------------------
@@ -536,6 +586,15 @@ def main():
     auto_yes = '--yes' in args
     do_migrate = '--migrate' in args
     do_reclassify = '--reclassify' in args
+
+    # Extraire --workers N
+    max_workers = 3
+    if '--workers' in args:
+        idx = args.index('--workers')
+        if idx + 1 < len(args):
+            max_workers = int(args[idx + 1])
+            args = args[:idx] + args[idx + 2:]
+
     args = [a for a in args if not a.startswith('--')]
 
     # ------------------------------------------------------------------
@@ -564,67 +623,105 @@ def main():
         catalog["observations"] = taxonomy["observations"]
         print(f"   {len(taxonomy['domains'])} domaines, observations mises a jour\n")
 
-        # Scorer chaque article
-        print(f"2. Scoring des {total} articles...")
+        # Scorer chaque article (en parallele)
+        print(f"2. Scoring des {total} articles ({max_workers} workers)...")
         changes = []
-        for i, (article_key, meta) in enumerate(list(catalog["articles"].items()), 1):
-            # Lire le contenu HTML
+
+        def _score_one(article_key, meta):
+            """Score un article via Claude. Retourne (article_key, meta, result) ou None."""
             html_path = os.path.join(PROJECT_ROOT, article_key)
             if not os.path.isfile(html_path):
-                print(f"  [{i}/{total}] SKIP {article_key} (fichier introuvable)")
-                continue
-
+                return None
             with open(html_path, encoding='utf-8', errors='replace') as f:
                 content = f.read()
             text = extract_text_spans(content)
-
-            print(f"  [{i}/{total}] {article_key}...", end=" ", flush=True)
             result = call_claude_with_retry(
                 build_article_prompt(text, taxonomy["domains"]),
                 ARTICLE_SCHEMA
             )
-            print(f"-> {result['domain']} ({result['quality_score']}/10) [{', '.join(result['tags'])}]")
+            return (article_key, meta, result)
 
-            old_domain = meta["domain"]
-            new_domain = result["domain"]
-
-            # Verifier que le domaine existe dans la taxonomie
-            if new_domain not in taxonomy["domains"]:
-                print(f"    ATTENTION : domaine '{new_domain}' inconnu, garde '{old_domain}'")
-                new_domain = old_domain
-
-            catalog["articles"][article_key] = {
-                "domain": new_domain,
-                "tags": result["tags"],
-                "quality_score": result["quality_score"],
-                "quality_note": result["quality_note"],
+        articles_list = list(catalog["articles"].items())
+        done_count = 0
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {
+                executor.submit(_score_one, key, meta): key
+                for key, meta in articles_list
             }
+            for future in as_completed(futures):
+                done_count += 1
+                res = future.result()
+                if res is None:
+                    article_key = futures[future]
+                    print(f"  [{done_count}/{total}] SKIP {article_key} (fichier introuvable)")
+                    continue
 
-            if old_domain != new_domain:
-                changes.append((article_key, old_domain, new_domain))
+                article_key, meta, result = res
+                new_domain = result["domain"]
+                old_domain = meta["domain"]
 
-        # Preview des deplacements
+                # Verifier que le domaine existe dans la taxonomie
+                if new_domain not in taxonomy["domains"]:
+                    print(f"  [{done_count}/{total}] {article_key} -> ATTENTION domaine '{new_domain}' inconnu, garde '{old_domain}'")
+                    new_domain = old_domain
+                else:
+                    print(f"  [{done_count}/{total}] {article_key} -> {new_domain} ({result['quality_score']}/10) [{', '.join(result['tags'])}]")
+
+                catalog["articles"][article_key] = {
+                    "domain": new_domain,
+                    "tags": result["tags"],
+                    "quality_score": result["quality_score"],
+                    "quality_note": result["quality_note"],
+                }
+
+                # Detecter changements de domaine et/ou de slug
+                old_filename = os.path.basename(article_key)
+                old_slug = os.path.splitext(old_filename)[0]
+                new_slug = slugify(result.get("title", ""))
+                domain_changed = old_domain != new_domain
+                slug_changed = new_slug != old_slug and new_slug != "untitled"
+
+                if domain_changed or slug_changed:
+                    changes.append((article_key, old_domain, new_domain,
+                                    old_slug, new_slug if slug_changed else None))
+
+        # Sauvegarder les scores/tags AVANT la confirmation des deplacements
+        save_catalog(catalog)
+        print(f"   Scores et tags sauvegardes dans catalog.json")
+
+        # Preview des deplacements/renommages
         if changes:
-            print(f"\n3. Deplacements prevus ({len(changes)}) :")
-            for key, old, new in changes:
-                print(f"  {key} : {old} -> {new}")
+            print(f"\n3. Deplacements/renommages prevus ({len(changes)}) :")
+            for key, old_dom, new_dom, old_slug, new_slug_val in changes:
+                old_filename = os.path.basename(key)
+                new_filename = f"{new_slug_val}.html" if new_slug_val else old_filename
+                new_key = f"articles/{new_dom}/{new_filename}"
+                if old_dom != new_dom and new_slug_val:
+                    label = "deplace + renomme"
+                elif old_dom != new_dom:
+                    label = "deplace"
+                else:
+                    label = "renomme"
+                print(f"  {key} -> {new_key} ({label})")
 
             if not auto_yes:
-                resp = input("\nConfirmer les deplacements ? [y/N] ").strip().lower()
-                if resp not in ('y', 'yes', 'o', 'oui'):
-                    print("Deplacements annules (scores et tags mis a jour quand meme).")
-                    save_catalog(catalog)
+                if not prompt_confirm("\nConfirmer les deplacements/renommages ? [y/N]"):
+                    print("Deplacements annules (scores et tags deja sauvegardes).")
                     _regenerate_manifest()
                     print("\nTermine !")
                     return
 
-            # Executer les deplacements
-            for key, old, new in changes:
-                new_key = move_article(catalog, key, new)
+            # Executer les deplacements/renommages
+            for key, old_dom, new_dom, old_slug, new_slug_val in changes:
+                new_key = move_or_rename_article(
+                    catalog, key,
+                    new_domain=new_dom if old_dom != new_dom else None,
+                    new_slug=new_slug_val,
+                )
                 if new_key:
-                    print(f"  Deplace : {key} -> {new_key}")
+                    print(f"  {key} -> {new_key}")
         else:
-            print("\n3. Aucun deplacement necessaire.")
+            print("\n3. Aucun deplacement/renommage necessaire.")
 
         save_catalog(catalog)
         _regenerate_manifest()
@@ -682,29 +779,41 @@ def main():
     catalog["observations"] = taxonomy["observations"]
     print(f"   {len(taxonomy['domains'])} domaines, observations mises a jour\n")
 
-    # Step 5: Appel Claude scoring par article
-    print(f"4. Scoring des {len(analyses)} articles...")
-    for i, info in enumerate(analyses, 1):
-        print(f"  [{i}/{len(analyses)}] {info['filename']}...", end=" ", flush=True)
+    # Step 5: Appel Claude scoring par article (en parallele)
+    print(f"4. Scoring des {len(analyses)} articles ({max_workers} workers)...")
+    total_import = len(analyses)
+
+    def _score_new(info):
+        """Score un nouvel article via Claude."""
         result = call_claude_with_retry(
             build_article_prompt(info['text'], taxonomy["domains"]),
             ARTICLE_SCHEMA
         )
+        return (info, result)
 
-        # Verifier que le domaine existe
-        domain = result["domain"]
-        if domain not in taxonomy["domains"]:
-            # Fallback vers le premier domaine
-            domain = next(iter(taxonomy["domains"]))
-            print(f"(domaine corrige -> {domain})", end=" ")
+    done_count = 0
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_score_new, info): info for info in analyses}
+        for future in as_completed(futures):
+            done_count += 1
+            info, result = future.result()
 
-        info['domain'] = domain
-        info['tags'] = result['tags']
-        info['quality_score'] = result['quality_score']
-        info['quality_note'] = result['quality_note']
-        info['title'] = result['title']
-        info['description'] = result['description']
-        print(f"-> {domain} ({result['quality_score']}/10) [{', '.join(result['tags'])}]")
+            # Verifier que le domaine existe
+            domain = result["domain"]
+            if domain not in taxonomy["domains"]:
+                domain = next(iter(taxonomy["domains"]))
+
+            info['domain'] = domain
+            info['tags'] = result['tags']
+            info['quality_score'] = result['quality_score']
+            info['quality_note'] = result['quality_note']
+            info['title'] = result['title']
+            info['description'] = result['description']
+            # Slug base sur le titre Claude (remplace le slug provisoire)
+            title_slug = slugify(result['title'])
+            if title_slug != "untitled":
+                info['slug'] = title_slug
+            print(f"  [{done_count}/{total_import}] {info['filename']} -> {domain} ({result['quality_score']}/10) [{', '.join(result['tags'])}]")
 
     # Step 6: Display plan
     print(f"\n5. Plan d'import ({len(analyses)} articles) :\n")
@@ -718,8 +827,7 @@ def main():
 
     # Step 7: Confirm
     if not auto_yes:
-        resp = input("Confirmer l'import ? [y/N] ").strip().lower()
-        if resp not in ('y', 'yes', 'o', 'oui'):
+        if not prompt_confirm("Confirmer l'import ? [y/N]"):
             print("Import annule.")
             sys.exit(0)
 

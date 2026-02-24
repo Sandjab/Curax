@@ -58,20 +58,21 @@ flowchart TD
 4. **Videz `infiles/`** après — c'est un dossier de staging temporaire
 5. Commit & push
 
-### Classification Claude CLI
+### Classification Claude CLI (Opus)
 
 Chaque import déclenche :
 - **1 appel taxonomie** : analyse du corpus + nouveaux articles, produit la taxonomie optimale des domaines et les observations transversales
-- **1 appel par article** : produit domaine, tags (1-3), score de qualité (1-10), note synthétique, titre, description
+- **1 appel par article** (parallélisé, 3 workers par défaut) : produit domaine, tags (1-3), score de qualité (1-10), note synthétique, titre, description
 
-Les domaines sont gérés dynamiquement — Claude décide de la classification selon la sémantique du contenu.
+Les domaines sont gérés dynamiquement — Claude (Opus) décide de la classification selon la sémantique du contenu. Les fichiers sont nommés automatiquement d'après le titre généré par Claude.
 
 ### Flags
 
 | Flag | Description |
 |------|-------------|
 | `--yes` | Sauter la confirmation |
-| `--reclassify` | Reclassifier TOUS les articles existants (nouvelle taxonomie, nouveaux scores, déplacement si domaine change) |
+| `--reclassify` | Reclassifier TOUS les articles existants (nouvelle taxonomie, nouveaux scores, renommage des fichiers d'après le titre Claude, déplacement si domaine change) |
+| `--workers N` | Nombre de workers parallèles pour le scoring (défaut : 3) |
 
 ### Scores de qualité (/10)
 
