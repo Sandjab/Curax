@@ -565,7 +565,7 @@ def prompt_confirm(message):
         fd = sys.stdin.fileno()
         old = termios.tcgetattr(fd)
         try:
-            tty.cbreak(fd)
+            tty.setcbreak(fd)
             ch = sys.stdin.read(1)
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
