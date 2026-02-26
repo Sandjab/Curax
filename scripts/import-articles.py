@@ -38,10 +38,10 @@ def call_claude(prompt, json_schema=None, timeout=120):
            "--output-format", "json", "--model", "opus"]
     if json_schema:
         cmd += ["--json-schema", json.dumps(json_schema)]
-    cmd.append(prompt)
+    # Pass prompt via stdin to avoid Windows command-line length limit (32k chars)
     env = {**os.environ}
     env.pop("CLAUDECODE", None)  # eviter "nested session"
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env, encoding='utf-8')
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env, encoding='utf-8', input=prompt)
     if result.returncode != 0:
         raise RuntimeError(f"Claude CLI failed: {result.stderr[:500]}")
     envelope = json.loads(result.stdout)
