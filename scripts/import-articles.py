@@ -12,8 +12,12 @@ import textwrap
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import termios
-import tty
+try:
+    import termios
+    import tty
+    _HAS_TERMIOS = True
+except ImportError:
+    _HAS_TERMIOS = False
 
 # ---------------------------------------------------------------------------
 # Repertoires
@@ -28,7 +32,7 @@ CATALOG_PATH = os.path.join(ARTICLES_DIR, "catalog.json")
 # Claude CLI helper
 # ---------------------------------------------------------------------------
 
-def call_claude(prompt, json_schema=None):
+def call_claude(prompt, json_schema=None, timeout=120):
     """Appelle Claude CLI en mode print, retourne le JSON parse."""
     cmd = [shutil.which("claude") or "claude", "-p",
            "--output-format", "json", "--model", "opus"]
@@ -37,7 +41,7 @@ def call_claude(prompt, json_schema=None):
     cmd.append(prompt)
     env = {**os.environ}
     env.pop("CLAUDECODE", None)  # eviter "nested session"
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, env=env)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env, encoding='utf-8')
     if result.returncode != 0:
         raise RuntimeError(f"Claude CLI failed: {result.stderr[:500]}")
     envelope = json.loads(result.stdout)
@@ -47,12 +51,12 @@ def call_claude(prompt, json_schema=None):
     return json.loads(raw) if json_schema else raw
 
 
-def call_claude_with_retry(prompt, json_schema=None, max_retries=2):
+def call_claude_with_retry(prompt, json_schema=None, max_retries=2, timeout=120):
     """Appelle Claude CLI avec retry et backoff exponentiel."""
     last_error = None
     for attempt in range(max_retries + 1):
         try:
-            return call_claude(prompt, json_schema)
+            return call_claude(prompt, json_schema, timeout=timeout)
         except Exception as e:
             last_error = e
             if attempt < max_retries:
@@ -579,20 +583,30 @@ def prompt_confirm(message):
     """Demande confirmation avec un seul caractere (y/o = oui). Pas besoin d'Entree."""
     sys.stdout.write(f"{message} ")
     sys.stdout.flush()
-    try:
-        fd = sys.stdin.fileno()
-        old = termios.tcgetattr(fd)
+    if _HAS_TERMIOS:
         try:
-            tty.setcbreak(fd)
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old)
-        print(ch)
-        return ch.lower() in ('y', 'o')
-    except (termios.error, ValueError):
-        # Fallback si pas de terminal (pipe, etc.)
-        resp = sys.stdin.readline().replace('\r', '').strip().lower()
-        return resp in ('y', 'yes', 'o', 'oui')
+            fd = sys.stdin.fileno()
+            old = termios.tcgetattr(fd)
+            try:
+                tty.setcbreak(fd)
+                ch = sys.stdin.read(1)
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old)
+            print(ch)
+            return ch.lower() in ('y', 'o')
+        except (termios.error, ValueError):
+            pass
+    else:
+        try:
+            import msvcrt
+            ch = msvcrt.getwch()
+            print(ch)
+            return ch.lower() in ('y', 'o')
+        except ImportError:
+            pass
+    # Fallback si pas de terminal (pipe, etc.)
+    resp = sys.stdin.readline().replace('\r', '').strip().lower()
+    return resp in ('y', 'yes', 'o', 'oui')
 
 
 # ---------------------------------------------------------------------------
@@ -644,7 +658,7 @@ def main():
         total = len(catalog["articles"])
         print(f"1. Appel Claude pour la taxonomie ({total} articles)...")
         taxonomy_prompt = build_reclassify_taxonomy_prompt(catalog)
-        taxonomy = call_claude_with_retry(taxonomy_prompt, TAXONOMY_SCHEMA)
+        taxonomy = call_claude_with_retry(taxonomy_prompt, TAXONOMY_SCHEMA, timeout=300)
         catalog["domains"] = taxonomy["domains"]
         catalog["observations"] = taxonomy["observations"]
         print(f"   {len(taxonomy['domains'])} domaines, observations mises a jour\n")
@@ -801,7 +815,7 @@ def main():
     # Step 4: Appel Claude taxonomie
     print(f"\n3. Appel Claude pour la taxonomie ({len(analyses)} nouveaux articles)...")
     taxonomy_prompt = build_taxonomy_prompt(catalog, analyses)
-    taxonomy = call_claude_with_retry(taxonomy_prompt, TAXONOMY_SCHEMA)
+    taxonomy = call_claude_with_retry(taxonomy_prompt, TAXONOMY_SCHEMA, timeout=300)
     catalog["domains"] = taxonomy["domains"]
     catalog["observations"] = taxonomy["observations"]
     print(f"   {len(taxonomy['domains'])} domaines, observations mises a jour\n")
