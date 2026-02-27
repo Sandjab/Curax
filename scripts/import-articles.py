@@ -123,6 +123,20 @@ def _clean_entities(text):
             .replace("&nbsp;", " "))
 
 
+def _extract_pre_blocks(content):
+    """Extract text from <pre><code>...</code></pre> blocks, stripping inner HTML tags."""
+    blocks = re.findall(r'<pre[^>]*>(.*?)</pre>', content, re.DOTALL)
+    if not blocks:
+        return ""
+    cleaned = []
+    for block in blocks:
+        text = re.sub(r'<[^>]+>', '', block)
+        text = _clean_entities(text).strip()
+        if text:
+            cleaned.append(text)
+    return '\n\n'.join(cleaned)
+
+
 def _escape_html(text):
     return (text
             .replace("&", "&amp;")
@@ -147,7 +161,11 @@ def extract_author(content):
 def extract_text_spans(content):
     spans = re.findall(r'data-text="true"[^>]*>(.*?)</span>', content)
     if spans:
-        return ' '.join(_clean_entities(s) for s in spans)
+        text = ' '.join(_clean_entities(s) for s in spans)
+        pre_text = _extract_pre_blocks(content)
+        if pre_text:
+            text = text + '\n\n' + pre_text
+        return text
 
     idx = content.rfind('</style>')
     if idx >= 0:
@@ -175,7 +193,12 @@ def extract_text_preview(content, max_len=200):
                 break
             collected.append(text)
             total += len(text)
-        return re.sub(r'\s+', ' ', ' '.join(collected)).strip()
+        if total < max_len:
+            pre_text = _extract_pre_blocks(content)
+            if pre_text:
+                remaining = max_len - total
+                collected.append(pre_text[:remaining])
+        return re.sub(r'\s+', ' ', ' '.join(collected)).strip()[:max_len]
 
     idx = content.rfind('</style>')
     if idx >= 0:
@@ -197,6 +220,9 @@ def extract_content_fingerprint(content):
     spans = re.findall(r'data-text="true"[^>]*>(.*?)</span>', content)
     if spans:
         text = ' '.join(_clean_entities(s) for s in spans)
+        pre_text = _extract_pre_blocks(content)
+        if pre_text:
+            text = text + '\n\n' + pre_text
         return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
     idx = content.rfind('</style>')
