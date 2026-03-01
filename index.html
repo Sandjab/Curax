@@ -237,6 +237,20 @@
 
         content.innerHTML = "";
 
+        // Extraire les articles de faible qualité (score <= 4)
+        const trashArticles = [];
+        for (const domain of domains) {
+          const kept = [];
+          for (const article of domain.articles || []) {
+            if (article.quality_score && article.quality_score <= 4) {
+              trashArticles.push(article);
+            } else {
+              kept.push(article);
+            }
+          }
+          domain.articles = kept;
+        }
+
         if (manifest.observations) {
           const obs = document.createElement("section");
           obs.className = "observations";
@@ -250,6 +264,7 @@
         }
 
         for (const domain of domains) {
+          if ((domain.articles || []).length === 0) continue;
           content.appendChild(buildDomainSection(domain));
         }
 
@@ -260,6 +275,17 @@
               description: "Articles non catégorisés",
               icon: "📂",
               articles: uncategorized,
+            })
+          );
+        }
+
+        if (trashArticles.length > 0) {
+          content.appendChild(
+            buildDomainSection({
+              name: "Poubelle",
+              description: "Articles de faible qualité (score ≤ 4/10)",
+              icon: "🗑️",
+              articles: trashArticles,
             })
           );
         }
