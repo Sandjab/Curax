@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Tasks — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Tasks</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h1>Lecture Critique d'Article</h1>
+<h2>SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Tasks</h2>
+<p><strong>Li, X. et al.</strong> — arXiv preprint, février 2026</p>
+
+<hr>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>Les <strong>Agent Skills</strong> — paquets structurés de connaissances procédurales (instructions, templates de code, ressources exécutables) — augmentent les agents LLM au moment de l'inférence sans modification du modèle. Malgré une adoption explosive (47 150 Skills uniques recensées dans l'écosystème), aucun benchmark n'évaluait systématiquement <em>si</em> et <em>quand</em> ces Skills améliorent réellement les performances des agents.</p>
+
+<p>SKILLSBENCH comble cette lacune en proposant le premier benchmark traitant les Skills comme des artefacts d'évaluation de premier ordre. L'objectif est triple :</p>
+<ul>
+  <li>Quantifier l'efficacité des Skills curées vs. auto-générées</li>
+  <li>Identifier les facteurs de design (quantité, complexité) qui déterminent l'efficacité</li>
+  <li>Comparer l'impact des Skills selon les domaines, modèles et harnesses agents</li>
+</ul>
+
+<p>La question de recherche est claire, originale et d'une pertinence immédiate pour les praticiens et chercheurs du domaine. L'analogie architecturale proposée (modèle = CPU, harness = OS, Skills = applications) fournit un cadre conceptuel utile.</p>
+
+<h2>2. Méthodologie</h2>
+
+<h3>2.1 Construction du benchmark</h3>
+<p>Le dataset comprend <strong>84 tâches évaluées</strong> (sur 86 curées, issues de 322 soumissions candidates) couvrant <strong>11 domaines</strong> : Software Engineering (16), Office & White Collar (14), Natural Science (12), Media & Content Production (11), Cybersecurity (8), Finance (8), Robotics (5), Manufacturing (3), Energy (3), Mathematics (2), Healthcare (2).</p>
+
+<p>Chaque tâche est un module autonome comprenant :</p>
+<ul>
+  <li>Une instruction humaine (vérifiée par GPTZero et revue humaine)</li>
+  <li>Un environnement Docker containerisé avec Skills</li>
+  <li>Une solution oracle (100% de réussite requise)</li>
+  <li>Des vérificateurs déterministes (pytest, pas de LLM-as-judge)</li>
+</ul>
+
+<p>La construction suit un modèle communautaire open-source (105 contributeurs) avec un pipeline de qualité en trois phases : validation automatisée, revue humaine, et audit de fuite.</p>
+
+<h3>2.2 Protocole expérimental</h3>
+<p>Trois conditions évaluées par tâche :</p>
+<ul>
+  <li><strong>No Skills</strong> : instruction seule</li>
+  <li><strong>With Skills</strong> : Skills curées complètes</li>
+  <li><strong>Self-Generated Skills</strong> : l'agent génère ses propres connaissances procédurales avant de résoudre</li>
+</ul>
+
+<p><strong>7 configurations agent-modèle</strong> testées : Claude Code (Opus 4.5, Opus 4.6, Sonnet 4.5, Haiku 4.5), Gemini CLI (Gemini 3 Pro, Gemini 3 Flash), Codex CLI (GPT-5.2). Température fixée à 0, 5 essais par tâche, totalisant <strong>7 308 trajectoires valides</strong>.</p>
+
+<p>Les métriques principales sont le <strong>pass rate</strong> (binaire, agrégé par tâche puis par configuration) et le <strong>normalized gain</strong> (formule de Hake), permettant des comparaisons entre modèles à baselines différentes.</p>
+
+<h3>2.3 Forces méthodologiques</h3>
+<ul>
+  <li>Vérification déterministe éliminant la variance du LLM-as-judge</li>
+  <li>Évaluation appariée (with/without Skills) sur les mêmes tâches</li>
+  <li>Audit de fuite automatisé pour empêcher les Skills de contenir des solutions directes</li>
+  <li>Stratification par difficulté (Core/Extended/Extreme)</li>
+  <li>Taux d'acceptation de 26.7% reflétant un filtrage rigoureux</li>
+</ul>
+
+<h3>2.4 Faiblesses méthodologiques</h3>
+<ul>
+  <li><strong>Absence de baselines contrôlées en longueur</strong> : l'injection de Skills augmente la longueur du contexte, rendant impossible l'attribution causale stricte entre « plus de contexte » et « connaissances procédurales structurées »</li>
+  <li><strong>Biais d'entraînement potentiel</strong> : les modèles Claude ont été entraînés avec connaissance de la spécification Agent Skills, conférant un avantage potentiel</li>
+  <li><strong>Déséquilibre des domaines</strong> : Healthcare (2 tâches) et Manufacturing (3) sont sous-représentés, fragilisant les conclusions spectaculaires (+51.9pp, +41.9pp) pour ces domaines</li>
+  <li><strong>Écart benchmark-écosystème</strong> : les Skills évaluées proviennent du quartile supérieur en qualité (score ≥9/12), alors que l'écosystème réel a un score moyen de 6.2/12</li>
+</ul>
+
+<h2>3. Résultats principaux</h2>
+
+<h3>Finding 1 : Les Skills curées apportent un bénéfice substantiel mais variable</h3>
+<p>Amélioration moyenne de <strong>+16.2 points de pourcentage (pp)</strong> avec une forte variance (de +13.6pp à +23.3pp selon la configuration). Claude Code + Opus 4.5 montre le gain maximal (+23.3pp), reflétant l'intégration native des Skills.</p>
+
+<h3>Finding 2 : Les Skills auto-générées sont inefficaces</h3>
+<p>Résultat négatif important : les modèles ne peuvent pas produire de manière fiable les connaissances procédurales dont ils bénéficient en consommation. Moyenne de <strong>–1.3pp</strong> par rapport à la baseline sans Skills. Seul Opus 4.6 montre une amélioration modeste (+1.4pp). Deux modes d'échec identifiés : procédures imprécises et non-reconnaissance du besoin de Skills spécialisées.</p>
+
+<h3>Finding 3 : Forte hétérogénéité par domaine</h3>
+<p>Healthcare (+51.9pp) et Manufacturing (+41.9pp) bénéficient le plus, tandis que Mathematics (+6.0pp) et Software Engineering (+4.5pp) montrent des gains faibles. Interprétation cohérente : les domaines sous-représentés dans le pré-entraînement bénéficient davantage de la guidance procédurale externe.</p>
+
+<h3>Finding 4 : « Less is more » pour le design de Skills</h3>
+<p>2-3 Skills sont optimales (+18.6pp) ; 4+ Skills n'apportent que +5.9pp. Les Skills « Detailed » (+18.8pp) et « Compact » (+17.1pp) surpassent les Skills « Comprehensive » (–2.9pp). La surcharge documentaire dégrade les performances.</p>
+
+<h3>Finding 5 : Les Skills compensent partiellement l'échelle du modèle</h3>
+<p>Claude Haiku 4.5 avec Skills (27.7%) dépasse Claude Opus 4.5 sans Skills (22.0%), démontrant que les Skills peuvent substituer partiellement la capacité du modèle.</p>
+
+<h3>Finding 6 : 16 tâches sur 84 montrent des deltas négatifs</h3>
+<p>Les Skills peuvent nuire lorsqu'elles introduisent une guidance conflictuelle ou une complexité inutile pour des tâches que le modèle maîtrise déjà.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<h3>Limites reconnues par les auteurs</h3>
+<ul>
+  <li><strong>Couverture</strong> : tâches terminales containerisées uniquement — les résultats ne se transfèrent pas directement aux agents GUI, multi-agents ou workflows de long horizon</li>
+  <li><strong>Attribution causale</strong> : l'augmentation du contexte est un confondant non contrôlé ; des baselines à longueur égale (texte aléatoire, documentation RAG) sont nécessaires</li>
+  <li><strong>Déterminisme</strong> : la containerisation fournit l'isolation mais pas le déterminisme parfait ni l'immunité à la contamination des données d'entraînement</li>
+  <li><strong>Volatilité des harnesses</strong> : les harnesses commerciales évoluent, limitant la reproductibilité à long terme</li>
+  <li><strong>Composition de Skills</strong> : les effets d'interaction entre Skills multiples ne sont pas étudiés</li>
+</ul>
+
+<h3>Limites additionnelles identifiées</h3>
+<ul>
+  <li><strong>Biais de sélection des Skills</strong> : en ne retenant que le quartile supérieur de qualité, le benchmark surestime l'efficacité des Skills en conditions réelles</li>
+  <li><strong>Petit nombre de tâches par domaine</strong> : 2 tâches pour Healthcare rendent le +51.9pp statistiquement fragile — un intervalle de confiance aurait été bienvenu</li>
+  <li><strong>Absence d'analyse statistique formelle</strong> : pas de tests de significativité, pas d'intervalles de confiance, pas de correction pour comparaisons multiples</li>
+  <li><strong>Biais de l'évaluation binaire</strong> : le pass/fail ne capture pas les progrès partiels ni la qualité des solutions</li>
+</ul>
+
+<h2>5. Reproductibilité</h2>
+
+<p><strong>Points positifs :</strong></p>
+<ul>
+  <li>Environnements Docker containerisés assurant l'isolation</li>
+  <li>Vérificateurs déterministes (pytest, pas de LLM-as-judge)</li>
+  <li>Infrastructure open-source mentionnée (framework Harbor)</li>
+  <li>Appendices détaillés avec spécifications complètes des tâches, structure des répertoires, templates de configuration</li>
+  <li>5 essais par tâche pour lisser la variance</li>
+</ul>
+
+<p><strong>Points faibles :</strong></p>
+<ul>
+  <li>Dépendance à des APIs commerciales (Claude Code, Gemini CLI, Codex CLI) susceptibles d'évoluer</li>
+  <li>Les Skills curées ne sont pas toutes détaillées dans l'article</li>
+  <li>Le code du benchmark et les données ne sont pas explicitement publiés avec un lien dans cet article (préprint)</li>
+  <li>Température 0 ne garantit pas le déterminisme parfait pour tous les modèles</li>
+</ul>
+
+<h2>6. Impact et applications</h2>
+
+<p><strong>Impact scientifique :</strong></p>
+<ul>
+  <li>Premier benchmark dédié à l'évaluation systématique des Agent Skills — comble un vide méthodologique important</li>
+  <li>Le résultat sur les Skills auto-générées est particulièrement impactant : il démontre une asymétrie fondamentale entre production et consommation de connaissances procédurales par les LLM</li>
+  <li>Les principes de design empiriquement validés (concision, modularité, 2-3 modules) fournissent des recommandations actionnables</li>
+</ul>
+
+<p><strong>Impact pratique :</strong></p>
+<ul>
+  <li>Guide le design de Skills : préférer des instructions focalisées avec exemples concrets plutôt que des documentations exhaustives</li>
+  <li>Justifie l'investissement dans la curation humaine de Skills plutôt que la génération automatique</li>
+  <li>Démontre le potentiel des Skills pour démocratiser l'accès aux capacités agents (petits modèles + Skills ≈ grands modèles)</li>
+  <li>Alerte sur les risques de dégradation (16/84 tâches négativement impactées)</li>
+</ul>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>SKILLSBENCH se positionne à l'intersection de trois courants de recherche :</p>
+
+<p><strong>Benchmarks agents :</strong> contrairement à Terminal-Bench (Merrill et al., 2026), SWE-bench (Jimenez et al., 2024), AgentBench (Liu et al., 2023) et WebArena (Zhou et al., 2024) qui mesurent la capacité brute des modèles, SKILLSBENCH introduit l'évaluation appariée de l'augmentation — mesurant non pas « que peut faire le modèle ? » mais « combien l'augmentation par Skills améliore-t-elle le modèle ? ».</p>
+
+<p><strong>Augmentation procédurale :</strong> s'inscrit dans la lignée de CoALA (Sumers et al., 2023), Voyager (Wang et al., 2023), et des travaux sur les options temporelles (Sutton et al., 1999), en opérationnalisant le concept de connaissances procédurales modulaires pour les agents LLM.</p>
+
+<p><strong>Écosystèmes de Skills :</strong> documente quantitativement pour la première fois l'écosystème de 47 150 Skills (croissance exponentielle, distribution de qualité, caractéristiques structurelles), fournissant un contexte empirique aux spécifications d'Anthropic (Agent Skills, MCP).</p>
+
+<p>La contribution principale réside dans le passage d'une évaluation agent-centrique à une évaluation augmentation-centrique, un changement de paradigme nécessaire étant donné la prolifération des écosystèmes de Skills.</p>
+
+<hr>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: var(--muted, #f5f5f5);">
+      <th style="text-align: left;">Critère</th>
+      <th style="text-align: center;">Score (/5)</th>
+      <th style="text-align: left;">Commentaire</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Question de recherche</strong></td>
+      <td style="text-align: center;">4</td>
+      <td>Claire, originale et d'une pertinence immédiate. Comble un vide empirique identifié.</td>
+    </tr>
+    <tr>
+      <td><strong>Design expérimental</strong></td>
+      <td style="text-align: center;">4</td>
+      <td>Évaluation appariée rigoureuse avec 3 conditions, vérification déterministe. Manque de baselines contrôlées en longueur de contexte.</td>
+    </tr>
+    <tr>
+      <td><strong>Taille d'échantillon</strong></td>
+      <td style="text-align: center;">4</td>
+      <td>7 308 trajectoires, 84 tâches, 7 configurations. Certains domaines très sous-représentés (2-3 tâches).</td>
+    </tr>
+    <tr>
+      <td><strong>Qualité des métriques</strong></td>
+      <td style="text-align: center;">4</td>
+      <td>Pass rate binaire déterministe + normalized gain. Pas de crédit partiel ni de tests de significativité.</td>
+    </tr>
+    <tr>
+      <td><strong>Contrôle des biais</strong></td>
+      <td style="text-align: center;">3</td>
+      <td>Audit de fuite et vérification humaine solides. Confondant majeur non contrôlé : longueur de contexte. Biais d'entraînement potentiel pour Claude.</td>
+    </tr>
+    <tr>
+      <td><strong>Reproductibilité</strong></td>
+      <td style="text-align: center;">4</td>
+      <td>Containerisation Docker, vérificateurs déterministes, appendices détaillés. Dépendance aux APIs commerciales volatiles.</td>
+    </tr>
+    <tr>
+      <td><strong>Transparence / limitations</strong></td>
+      <td style="text-align: center;">5</td>
+      <td>Discussion exemplaire des limites : attribution causale, écart benchmark-écosystème, couverture, contamination. Rares dans le domaine.</td>
+    </tr>
+    <tr>
+      <td><strong>Impact / nouveauté</strong></td>
+      <td style="text-align: center;">4</td>
+      <td>Premier benchmark augmentation-centrique pour Skills agents. Résultats directement actionnables. Changement de paradigme évaluatif.</td>
+    </tr>
+    <tr style="background-color: var(--muted, #f5f5f5); font-weight: bold;">
+      <td><strong>Note globale</strong></td>
+      <td style="text-align: center;"><strong>4.0 / 5</strong></td>
+      <td>Étude empirique solide et pionnière, limitée par l'absence de contrôles causaux stricts et le déséquilibre des domaines.</td>
+    </tr>
+  </tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

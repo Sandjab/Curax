@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Tasks — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Tasks</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les agents IA reçoivent un mode d'emploi : est-ce vraiment utile ?</h2>
+
+<p>Imaginez un chirurgien brillant, formé dans les meilleures universités, capable de discourir sur n'importe quel sujet médical. Maintenant, demandez-lui de réaliser une intervention très spécifique qu'il n'a jamais pratiquée — disons, une chirurgie robotique du genou selon un protocole hospitalier précis. Même avec tout son savoir, il aura besoin d'un guide opératoire détaillé pour exceller. C'est exactement le dilemme auquel font face les agents IA modernes : des modèles de langage surpuissants, mais souvent démunis face aux procédures spécifiques d'un métier donné.</p>
+
+<p>Pour combler ce fossé, un concept a émergé ces derniers mois dans l'écosystème des outils de développement : les <strong>Skills</strong> (ou « compétences »). Ce sont des paquets structurés de connaissances procédurales — des modes d'emploi, en quelque sorte — qu'on injecte à un agent IA au moment de l'exécution pour le guider dans des tâches spécialisées. Claude Code d'Anthropic, Gemini CLI de Google, Codex CLI d'OpenAI : tous ces outils adoptent ce paradigme. Mais une question fondamentale restait sans réponse : <em>est-ce que ces Skills aident vraiment ?</em> Et si oui, dans quelles conditions ? C'est précisément ce qu'une équipe de 30 chercheurs issus de 23 institutions a entrepris de mesurer avec <strong>SkillsBench</strong>, le premier benchmark dédié à l'évaluation systématique des Skills pour agents IA.</p>
+
+<h2>Le problème : des milliers de recettes, mais aucun moyen de savoir si elles marchent</h2>
+
+<p>L'écosystème des Skills a connu une croissance fulgurante. Les dépôts communautaires hébergent désormais des dizaines de milliers de Skills couvrant l'ingénierie logicielle, l'analyse de données, la cybersécurité ou encore les workflows d'entreprise. Or, malgré cette prolifération, il n'existait aucun moyen standardisé de répondre à des questions pourtant essentielles :</p>
+
+<ul>
+<li><strong>Les Skills améliorent-elles réellement la performance d'un agent ?</strong> Ou s'agit-il d'un effet placebo, où l'ajout de contexte — quel qu'il soit — suffit à donner l'impression d'un progrès ?</li>
+<li><strong>Quels types de Skills fonctionnent le mieux ?</strong> Faut-il des guides exhaustifs de 50 pages ou des fiches concises de 2 pages ?</li>
+<li><strong>Un agent peut-il créer ses propres Skills ?</strong> Si un modèle de langage est capable de consommer efficacement un guide procédural, peut-il aussi en rédiger un de qualité ?</li>
+<li><strong>Les gains sont-ils uniformes ?</strong> Ou certains domaines profitent-ils massivement des Skills tandis que d'autres n'en tirent aucun bénéfice ?</li>
+</ul>
+
+<p>Les benchmarks existants — SWE-bench, AgentBench, Terminal-Bench — mesurent la capacité brute d'un modèle à accomplir une tâche. Ils répondent à la question « <em>ce modèle peut-il résoudre le problème X ?</em> », mais jamais à « <em>la Skill Y améliore-t-elle la résolution du problème X ?</em> ». C'est cette lacune méthodologique que SkillsBench vient combler.</p>
+
+<h2>La méthode : un laboratoire contrôlé pour Skills d'agents IA</h2>
+
+<p>Pour comprendre l'approche des chercheurs, reprenons l'analogie culinaire. Imaginez que vous vouliez évaluer l'efficacité de livres de recettes. Vous ne pouvez pas simplement donner un livre à un cuisinier et observer le résultat : il faut le même cuisinier, le même plat, avec et sans recette, dans une cuisine identique, et avec un jury qui goûte à l'aveugle. C'est exactement ce protocole que SkillsBench met en place, mais pour des agents IA.</p>
+
+<h3>Construction du benchmark</h3>
+
+<p>Les chercheurs ont d'abord agrégé <strong>47 150 Skills uniques</strong> provenant de trois sources : les dépôts open source (12 847), l'écosystème Claude Code (28 412) et des partenaires industriels (5 891). En parallèle, 105 contributeurs issus du monde académique et de l'industrie ont soumis 322 tâches candidates. Après un processus de filtrage rigoureux — validation automatique, audit anti-triche, revue humaine — 84 tâches réparties sur 11 domaines ont été retenues.</p>
+
+<p>Chaque tâche est un module autonome comprenant une instruction en langage naturel, un environnement Docker isolé (avec les Skills associées), une solution de référence prouvant que la tâche est faisable, et un vérificateur déterministe — des tests automatiques qui produisent un verdict binaire succès/échec, sans recours au jugement d'un LLM.</p>
+
+<h3>Le protocole des trois conditions</h3>
+
+<p>C'est ici que réside l'innovation méthodologique clé. Chaque tâche est évaluée sous <strong>trois conditions</strong> :</p>
+
+<ul>
+<li><strong>Sans Skills :</strong> l'agent reçoit uniquement la description de la tâche, sans aucun guide procédural. C'est la ligne de base.</li>
+<li><strong>Avec Skills curées :</strong> l'agent dispose de Skills soigneusement rédigées par des experts humains — des guides étape par étape, des scripts, des exemples, des bonnes pratiques.</li>
+<li><strong>Avec Skills auto-générées :</strong> l'agent n'a pas de Skills fournies, mais on lui demande de produire lui-même ses propres connaissances procédurales avant d'attaquer la tâche. Peut-il être son propre professeur ?</li>
+</ul>
+
+<p>Ce dispositif expérimental permet une comparaison directe et rigoureuse. Au total, <strong>7 configurations modèle-outil</strong> ont été testées (quatre modèles Claude, deux modèles Gemini, GPT-5.2) sur les trois conditions, produisant <strong>7 308 trajectoires</strong> d'évaluation — chaque trajectoire étant une tentative complète d'un agent sur une tâche donnée.</p>
+
+<h3>Les garde-fous anti-triche</h3>
+
+<p>Les chercheurs ont pris des précautions considérables pour que les Skills ne « trichent » pas en encodant subtilement les réponses. Un agent de validation automatique détecte toute fuite d'information — noms de fichiers spécifiques à la tâche, séquences de commandes résolvant directement le problème, constantes provenant des spécifications. Les instructions sont toutes rédigées par des humains (vérification systématique via GPTZero et relecture humaine). Et les Skills doivent s'appliquer à une <em>classe</em> de problèmes, pas à une instance unique.</p>
+
+<h2>Résultats clés : quatre découvertes majeures</h2>
+
+<h3>1. Les Skills curées améliorent significativement la performance — mais pas uniformément</h3>
+
+<p>Le résultat principal est sans appel : les Skills curées augmentent le taux de réussite moyen de <strong>+16,2 points de pourcentage</strong> par rapport à la condition sans Skills. C'est un gain substantiel. Cependant, la variance est considérable : selon la configuration modèle-outil, le gain oscille entre +13,6 et +23,3 points.</p>
+
+<p>Plus frappant encore, <strong>l'écart entre domaines est colossal</strong>. La santé bénéficie d'un bond de +51,9 points (de 34,2 % à 86,1 %), l'industrie manufacturière de +41,9 points. À l'inverse, les mathématiques ne gagnent que +6,0 points et l'ingénierie logicielle +4,5 points. L'explication est intuitive : les domaines dont les procédures spécialisées sont sous-représentées dans les données d'entraînement des modèles tirent le plus grand bénéfice d'un guide externe. Un modèle de langage a déjà « lu » des millions de lignes de code, mais beaucoup moins de protocoles d'harmonisation de données cliniques ou de workflows industriels.</p>
+
+<h3>2. Les Skills auto-générées ne servent à rien</h3>
+
+<p>C'est probablement la découverte la plus contre-intuitive et la plus importante de l'étude. Quand on demande aux agents de produire eux-mêmes leurs connaissances procédurales avant de s'attaquer à la tâche, le résultat est <strong>nul, voire négatif</strong> : –1,3 point en moyenne par rapport à la condition sans Skills. Seul Claude Opus 4.6 montre un gain marginal (+1,4 point) ; Codex avec GPT-5.2 perd carrément 5,6 points.</p>
+
+<blockquote>
+<p>Les modèles sont capables de <em>consommer</em> efficacement des connaissances procédurales, mais ils ne peuvent pas les <em>produire</em> de manière fiable. C'est une asymétrie fondamentale.</p>
+</blockquote>
+
+<p>L'analyse des trajectoires révèle deux modes d'échec : soit le modèle identifie qu'un savoir spécialisé est nécessaire mais génère des procédures vagues et incomplètes (« utiliser pandas pour traiter les données » sans préciser quels appels d'API), soit — pire — il ne perçoit même pas le besoin d'une expertise spécifique et fonce tête baissée avec une approche généraliste.</p>
+
+<h3>3. Moins, c'est mieux : 2-3 Skills ciblées battent la documentation exhaustive</h3>
+
+<p>Les chercheurs ont stratifié les résultats par nombre de Skills fournies et par leur complexité. Le verdict est clair : <strong>2 à 3 Skills ciblées</strong> produisent le gain optimal (+18,6 points), tandis que 4 Skills ou plus ne rapportent que +5,9 points. Côté complexité, les Skills « détaillées mais focalisées » (+18,8 points) et « compactes » (+17,1 points) surpassent largement les Skills « exhaustives » qui, elles, <em>dégradent</em> la performance (–2,9 points).</p>
+
+<p>L'explication est double. D'une part, les agents peinent à extraire l'information pertinente d'un document trop long — le bruit noie le signal. D'autre part, des Skills multiples ou très longues consomment le budget de contexte du modèle sans apporter de valeur opérationnelle, créant une forme de surcharge cognitive numérique.</p>
+
+<h3>4. Un petit modèle avec Skills peut battre un gros modèle sans</h3>
+
+<p>Résultat remarquable pour les considérations de coût : Claude Haiku 4.5 — le plus petit modèle de la gamme Claude testé — atteint <strong>27,7 % de réussite avec Skills</strong>, dépassant ainsi Claude Opus 4.5 sans Skills (22,0 %). Autrement dit, plutôt que de payer le prix d'un modèle plus puissant, fournir des Skills bien rédigées à un modèle plus léger peut être une stratégie plus efficiente.</p>
+
+<p>L'analyse coût-performance confirme cette tendance. Gemini 3 Flash avec Skills domine la frontière de Pareto : malgré une consommation de tokens 2,3 fois supérieure à Gemini 3 Pro (le modèle compense un raisonnement moins profond par davantage d'exploration itérative), son coût par token 4 fois inférieur le rend 44 % moins cher par tâche.</p>
+
+<h2>Implications pratiques : ce que ça change pour les équipes tech</h2>
+
+<p><strong>Pour les praticiens qui utilisent des agents IA au quotidien</strong>, ces résultats offrent des orientations concrètes. Investir dans la rédaction de Skills procédurales pour vos workflows spécialisés est rentable — surtout si votre domaine s'éloigne du code informatique classique. Les équipes médicales, industrielles, financières ou en cybersécurité ont le plus à y gagner.</p>
+
+<p><strong>Pour les auteurs de Skills</strong>, le message est limpide : privilégiez des guides courts, étape par étape, avec au moins un exemple concret qui fonctionne. Résistez à la tentation de la documentation encyclopédique. Deux ou trois modules bien ciblés valent mieux qu'un manuel de référence exhaustif. Et structurez vos Skills explicitement en fonction des contraintes de l'outil agent utilisé — un rappel de format JSON au milieu d'une longue Skill peut faire la différence entre un agent qui suit le guide et un agent qui l'oublie.</p>
+
+<p><strong>Pour les décideurs qui évaluent le rapport coût/performance</strong>, la possibilité de compenser la taille du modèle par des Skills bien conçues ouvre une voie économique intéressante. Un modèle léger et rapide, équipé de Skills adaptées, peut rivaliser avec un modèle haut de gamme nu — à une fraction du coût.</p>
+
+<p><strong>Pour l'écosystème dans son ensemble</strong>, le constat que les Skills auto-générées sont inefficaces souligne l'irremplaçabilité — pour l'instant — de l'expertise humaine dans la formalisation des connaissances procédurales. Les modèles de langage excellent à suivre des procédures bien rédigées, mais ne savent pas encore les inventer. C'est un argument fort en faveur de la curation communautaire de Skills de qualité.</p>
+
+<h2>Pour aller plus loin : questions ouvertes et pistes futures</h2>
+
+<p>Malgré la rigueur du protocole, plusieurs questions restent en suspens. D'abord, <strong>le facteur « contexte supplémentaire »</strong> : injecter des Skills allonge le contexte fourni au modèle. Une partie des gains observés pourrait-elle simplement provenir du fait d'avoir plus de texte en entrée, indépendamment de sa nature procédurale ? L'échec des Skills auto-générées suggère que non — le contenu structuré compte — mais des contrôles plus stricts (injection de texte aléatoire ou de documentation non procédurale de longueur équivalente) permettraient de trancher définitivement.</p>
+
+<p>Ensuite, <strong>la composition des Skills</strong> reste un territoire inexploré. Que se passe-t-il quand deux Skills se contredisent ? Peut-on prédire l'effet combiné de plusieurs Skills à partir de leurs effets individuels ? Les 16 tâches sur 84 où les Skills <em>dégradent</em> la performance (jusqu'à –39 points dans un cas) méritent une investigation approfondie : dans quelles conditions un guide procédural devient-il contre-productif ?</p>
+
+<p>La question de la <strong>synthèse automatique de Skills</strong> reste ouverte et prometteuse. Si les modèles ne savent pas auto-générer des Skills efficaces « à froid », pourraient-ils le faire à partir de démonstrations d'experts, de logs de trajectoires réussies, ou de documentation existante ? Transformer de la connaissance déclarative en savoir procédural structuré est peut-être le prochain défi à relever.</p>
+
+<p>Enfin, SkillsBench se limite aux <strong>tâches en ligne de commande dans des conteneurs Docker</strong>. L'évaluation d'agents opérant dans des interfaces graphiques, des environnements multi-agents, ou sur des workflows de très longue durée reste à faire. De même, l'étude ne teste que des Skills de haute qualité soigneusement filtrées — en conditions réelles, les utilisateurs piochent dans des écosystèmes de Skills de qualité inégale, ce qui pourrait considérablement modifier les résultats.</p>
+
+<p>SkillsBench pose ainsi les bases empiriques d'une discipline naissante : l'ingénierie des Skills pour agents IA. Loin du débat théorique, ce benchmark offre pour la première fois des données chiffrées permettant de concevoir, sélectionner et déployer des Skills de manière raisonnée. Dans un écosystème où les agents autonomes deviennent des outils de travail quotidiens, savoir comment les « former » efficacement au moment de l'exécution n'est plus un luxe académique — c'est un avantage compétitif.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

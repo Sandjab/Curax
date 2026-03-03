@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Everything is Context: Agentic File System Abstraction for Context Engineering — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Everything is Context: Agentic File System Abstraction for Context Engineering</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Et si toute l'intelligence artificielle n'était qu'une question de contexte ?</h2>
+
+<p>Quand vous discutez avec ChatGPT, Claude ou Gemini, vous avez probablement l'impression de parler à une entité qui <em>comprend</em> ce que vous dites. En réalité, ces modèles de langage sont des amnésiques de luxe : à chaque nouvelle conversation, ils repartent de zéro. Tout ce qu'ils « savent » à un instant donné tient dans une fenêtre limitée — quelques dizaines ou centaines de milliers de mots — au-delà de laquelle ils oublient tout. Ce qui distingue un assistant IA médiocre d'un assistant brillant, ce n'est pas tant la puissance du modèle que la qualité du <strong>contexte</strong> qu'on lui fournit : les bons documents, les bons souvenirs, les bonnes instructions, au bon moment.</p>
+
+<p>C'est précisément ce défi que six chercheurs de CSIRO (Australie) et d'ArcBlock (États-Unis) — Xiwei Xu, Robert Mao, Quan Bai, Xuewu Gu, Yechao Li et Liming Zhu — ont décidé de repenser de fond en comble. Leur proposition, publiée fin 2025 : traiter le contexte de l'IA comme un <strong>système de fichiers</strong>, à la manière dont Unix traite tout périphérique, tout flux de données, toute ressource comme un simple fichier. Une idée en apparence modeste, mais dont les implications architecturales sont profondes.</p>
+
+<h2>Le problème : une IA qui perd le fil</h2>
+
+<p>Imaginons un médecin qui, à chaque consultation, oublierait l'intégralité du dossier de son patient. Il devrait relire toutes les analyses, tous les comptes rendus, toutes les ordonnances — et encore, seulement celles qu'on lui mettrait sous les yeux, dans la limite de ce qu'il peut lire en quelques minutes. C'est exactement la situation des grands modèles de langage (LLM) aujourd'hui.</p>
+
+<p>Le terme technique est le <strong>context engineering</strong> — l'ingénierie du contexte. Il désigne tout le travail nécessaire pour rassembler, structurer et gouverner les informations extérieures dont un LLM a besoin pour raisonner correctement : bases de connaissances, historiques de conversation, outils disponibles, préférences utilisateur, données métier. Ce travail est devenu le véritable goulot d'étranglement des systèmes d'IA générative modernes.</p>
+
+<p>Les approches actuelles sont nombreuses mais fragmentées :</p>
+
+<ul>
+<li>Le <strong>prompt engineering</strong> consiste à formuler astucieusement les instructions, mais ne gère pas le cycle de vie complet de l'information.</li>
+<li>Le <strong>RAG</strong> (Retrieval-Augmented Generation) permet d'aller chercher des documents pertinents dans une base, mais chaque framework l'implémente à sa manière.</li>
+<li>Les frameworks comme <strong>LangChain</strong> ou <strong>AutoGen</strong> proposent des modules pour la mémoire et les outils, mais sans véritable cohérence architecturale.</li>
+</ul>
+
+<p>Résultat : les artefacts de contexte — ces fragments d'information assemblés pour nourrir le raisonnement de l'IA — sont souvent <strong>éphémères, opaques et invérifiables</strong>. On ne sait pas exactement ce que le modèle a « vu », pourquoi il l'a vu, ni si cette information était à jour. Les chercheurs appellent ce phénomène le <em>context rot</em> (la « pourriture du contexte ») : une dégradation progressive de la qualité des informations fournies au modèle, qui conduit à des réponses de plus en plus décalées par rapport à la réalité.</p>
+
+<blockquote>
+<p>« Les systèmes GenAI peuvent produire des résultats inexacts ou trompeurs en raison d'une conscience contextuelle limitée et de sources de données en constante évolution. »</p>
+</blockquote>
+
+<p>Le problème s'aggrave encore lorsque plusieurs agents IA collaborent entre eux ou avec des humains. Comment s'assurer que chaque agent accède aux bonnes informations, sans fuites entre contextes ? Comment tracer la provenance de chaque décision ? Comment permettre à un expert humain d'intervenir, de corriger, de valider ? Aucune architecture existante ne répondait de manière satisfaisante à toutes ces questions simultanément.</p>
+
+<h2>La méthode : « Tout est fichier », version IA</h2>
+
+<p>La proposition des chercheurs s'inspire d'un principe vieux de plus de cinquante ans, né avec le système d'exploitation Unix : <strong>« Everything is a file »</strong> — tout est un fichier. Sous Unix, qu'il s'agisse d'un disque dur, d'une imprimante, d'une connexion réseau ou d'un simple document texte, tout est accessible via la même interface : un chemin dans une arborescence de fichiers, avec les mêmes opérations de base (lire, écrire, chercher). Cette uniformité est l'une des raisons du succès durable d'Unix.</p>
+
+<p>L'idée est d'appliquer exactement la même logique au contexte de l'IA. Concrètement, les chercheurs proposent un <strong>système de fichiers virtuel</strong> dans lequel toutes les sources de contexte — mémoire de conversation, bases de connaissances, outils externes, profils utilisateur, annotations humaines — sont « montées » comme des répertoires dans une arborescence unique. Un agent IA qui a besoin d'une information n'a qu'à parcourir cette arborescence, exactement comme un programme Unix parcourt <code>/home</code> ou <code>/var/log</code>.</p>
+
+<h3>Une arborescence pour tout le contexte</h3>
+
+<p>Prenons un exemple. Un agent IA assistant un développeur pourrait voir une arborescence comme celle-ci :</p>
+
+<ul>
+<li><strong>/context/history/</strong> — l'historique complet et immuable de toutes les interactions passées</li>
+<li><strong>/context/memory/agent-dev/</strong> — la mémoire structurée de cet agent spécifique (faits retenus, résumés de sessions précédentes, préférences de l'utilisateur)</li>
+<li><strong>/context/pad/task-42/</strong> — un « brouillon » temporaire lié à la tâche en cours</li>
+<li><strong>/modules/github-mcp/</strong> — les outils GitHub montés via le protocole MCP, accessibles comme des fichiers exécutables</li>
+</ul>
+
+<p>Chaque élément de cette arborescence possède des <strong>métadonnées</strong> (date de création, source, auteur, niveau de confiance, droits d'accès) qui permettent à tout moment de savoir d'où vient une information, qui l'a produite et si elle est encore fiable. C'est l'équivalent des permissions et des timestamps du système de fichiers Unix, mais appliqué à la connaissance.</p>
+
+<h3>Le cycle de vie du contexte en trois étapes</h3>
+
+<p>Sur cette infrastructure, les chercheurs construisent un <strong>pipeline d'ingénierie du contexte</strong> en trois composants, que l'on peut comparer à la chaîne logistique d'une bibliothèque :</p>
+
+<p><strong>1. Le Constructeur de Contexte</strong> joue le rôle du bibliothécaire. Quand une nouvelle question arrive, il parcourt les étagères (l'arborescence de fichiers), sélectionne les documents les plus pertinents, les résume si nécessaire pour qu'ils tiennent dans le budget de « mots » du modèle, et produit un <em>manifeste</em> — une liste documentée de tout ce qui a été sélectionné et de tout ce qui a été exclu, avec les raisons. Ce manifeste est la clé de la traçabilité : on sait exactement ce que le modèle a reçu.</p>
+
+<p><strong>2. Le Metteur à Jour du Contexte</strong> est le coursier. Il achemine les documents sélectionnés vers le modèle, gère le rafraîchissement en temps réel pendant les conversations longues, et s'assure que la fenêtre de contexte du modèle contient toujours les informations les plus pertinentes et les plus récentes. Si une conversation dure, il remplace progressivement les éléments obsolètes par des éléments frais — un peu comme un écran qui défile, mais de manière intelligente.</p>
+
+<p><strong>3. L'Évaluateur de Contexte</strong> est le contrôleur qualité. Après chaque réponse du modèle, il vérifie la cohérence avec les sources, détecte les hallucinations potentielles, et décide si les nouvelles informations produites méritent d'être conservées en mémoire. Quand le niveau de confiance est trop bas ou qu'une contradiction est détectée, il <strong>déclenche une revue humaine</strong> : un expert peut alors corriger, annoter ou valider, et ces contributions humaines sont elles-mêmes enregistrées comme des éléments de contexte à part entière.</p>
+
+<h3>La mémoire, du brouillon au savoir permanent</h3>
+
+<p>Les chercheurs identifient une véritable <strong>taxonomie de la mémoire</strong> pour les systèmes d'IA, allant du plus éphémère au plus durable. Le <em>scratchpad</em> est un brouillon de raisonnement lié à une tâche précise, détruit après usage. La <em>mémoire épisodique</em> conserve des résumés de sessions. La <em>mémoire factuelle</em> stocke des faits atomiques persistants. La <em>mémoire procédurale</em> retient les outils et fonctions disponibles. Et la <em>mémoire utilisateur</em> garde les préférences et l'historique propres à chaque personne. Toutes ces couches sont exposées de manière uniforme dans le système de fichiers, avec des métadonnées et des règles de gouvernance explicites.</p>
+
+<h2>Résultats clés : du concept au code fonctionnel</h2>
+
+<p>L'approche n'est pas restée au stade théorique. Les chercheurs l'ont implémentée dans <strong>AIGNE</strong>, un framework open source de développement d'agents IA. Deux cas d'usage concrets illustrent la faisabilité de l'architecture :</p>
+
+<p><strong>Un agent à mémoire persistante.</strong> En quelques lignes de code, un développeur peut créer un agent conversationnel qui retient le contexte d'une session à l'autre. La mémoire est stockée dans une base SQLite locale, montée dans le système de fichiers virtuel. Chaque tour de dialogue est automatiquement ajouté à la mémoire et réinjecté dans les conversations futures. L'agent se « souvient » de ses interactions passées, sans que le développeur ait à gérer manuellement le stockage ou la récupération.</p>
+
+<p><strong>Un assistant GitHub via MCP.</strong> Le deuxième exemple montre qu'un serveur MCP (Model Context Protocol) — ici le serveur GitHub officiel — peut être monté comme un module du système de fichiers. L'agent IA interagit alors avec GitHub comme s'il parcourait des fichiers : rechercher des dépôts, lister des issues, commenter des pull requests, tout cela via des chemins dans l'arborescence unifiée. L'intégration d'un nouvel outil externe ne nécessite aucune réécriture de l'agent — il suffit de « monter » le service, exactement comme on branche une clé USB sur un ordinateur.</p>
+
+<p>Les bénéfices architecturaux mis en évidence sont significatifs :</p>
+
+<ul>
+<li><strong>Traçabilité complète</strong> : chaque interaction, chaque sélection de contexte, chaque modification de mémoire est journalisée avec sa provenance.</li>
+<li><strong>Modularité</strong> : on peut remplacer un backend de stockage (base relationnelle, base vectorielle, graphe de connaissances) sans impacter le reste du système.</li>
+<li><strong>Gouvernance</strong> : les droits d'accès, l'isolation entre agents et la gestion du cycle de vie des données sont intégrés dès la conception.</li>
+<li><strong>Interopérabilité</strong> : tout service exposant une API (REST, GraphQL, MCP) peut être projeté dans le système de fichiers sans code d'intégration spécifique.</li>
+</ul>
+
+<h2>Implications pratiques : pourquoi cela change la donne</h2>
+
+<p>À première vue, proposer un système de fichiers pour l'IA peut sembler être un exercice d'architecture logicielle assez classique. Mais les implications sont considérables, en particulier pour les entreprises qui déploient des systèmes d'IA en production.</p>
+
+<h3>Vers une IA auditable et conforme</h3>
+
+<p>Dans les secteurs réglementés — santé, finance, droit —, la question n'est plus seulement « l'IA donne-t-elle la bonne réponse ? » mais aussi « peut-on prouver <em>pourquoi</em> elle a donné cette réponse ? ». En versionnant et en traçant chaque élément de contexte, l'architecture proposée permet de <strong>reconstituer a posteriori</strong> le raisonnement complet d'un agent, depuis les sources consultées jusqu'à la réponse finale. C'est un prérequis pour la conformité réglementaire, mais aussi pour la confiance des utilisateurs.</p>
+
+<h3>L'humain dans la boucle, enfin structuré</h3>
+
+<p>Beaucoup de frameworks IA prétendent intégrer l'humain dans la boucle, mais en pratique, les mécanismes sont souvent ad hoc. Ici, les contributions humaines — corrections factuelles, validations, annotations interprétatives — sont des <strong>artefacts de première classe</strong> dans le système de fichiers, au même titre que les données machine. Le savoir tacite des experts devient une composante versionnée et traçable de la base de connaissances. C'est un changement de paradigme pour la collaboration humain-IA.</p>
+
+<h3>Le contexte comme infrastructure DevOps</h3>
+
+<p>En traitant le contexte comme des fichiers, on peut lui appliquer toutes les pratiques matures du génie logiciel : versionnement avec Git, revue par les pairs, déploiement continu, tests de régression. Le contexte cesse d'être un « prompt magique » bricolé dans un coin et devient une <strong>infrastructure versionnable, testable et déployable</strong>, soumise aux mêmes exigences de qualité que le code applicatif. Pour les équipes qui gèrent des systèmes IA en production, c'est une avancée majeure.</p>
+
+<h3>Collaboration multi-agents sécurisée</h3>
+
+<p>À mesure que les systèmes multi-agents se développent — plusieurs IA collaborant sur une tâche complexe —, la question de l'isolation des contextes devient critique. Le système de fichiers offre un mécanisme naturel de <strong>sandboxing</strong> : chaque agent n'accède qu'aux répertoires qui lui sont autorisés, avec des permissions explicites. Pas de fuites d'information accidentelles entre agents, pas de contamination croisée des mémoires.</p>
+
+<h2>Pour aller plus loin : questions ouvertes et pistes futures</h2>
+
+<p>Malgré la solidité de la proposition, plusieurs défis restent ouverts. Les chercheurs eux-mêmes identifient des directions de recherche prometteuses.</p>
+
+<p><strong>La navigation autonome.</strong> L'une des pistes les plus fascinantes est de permettre aux agents de <em>construire eux-mêmes</em> leur arborescence de contexte. Plutôt que de se contenter de lire des fichiers montés par un développeur, un agent pourrait parcourir l'espace de fichiers, créer des index, organiser des données, faire évoluer sa propre structure de connaissances — devenant en quelque sorte un « processus auto-organisé » dans un système d'exploitation cognitif.</p>
+
+<p><strong>Le passage à l'échelle.</strong> Quand des milliers d'agents accèdent simultanément à un système de fichiers partagé, comment maintenir les performances ? Les questions de réplication, de cache distribué et de cohérence éventuelle — bien connues des architectes de systèmes distribués — se posent ici avec une acuité nouvelle.</p>
+
+<p><strong>La compression intelligente du contexte.</strong> Résumer un document pour le faire tenir dans la fenêtre de tokens, c'est inévitablement perdre de l'information. Quels sont les compromis optimaux ? Comment mesurer la perte de sens ? La fenêtre de contexte des modèles ne cesse de croître (200 000 tokens pour Claude, davantage pour d'autres), mais elle reste fondamentalement bornée. La gestion de cette contrainte restera un sujet de recherche actif.</p>
+
+<p><strong>La gouvernance éthique.</strong> Si le contexte est versionné et traçable, il est aussi potentiellement surveillable. Où tracer la frontière entre auditabilité légitime et surveillance excessive ? Comment protéger les données personnelles dans une mémoire persistante partagée ? Ces questions, à la croisée de l'ingénierie et de l'éthique, ne sont pas encore résolues.</p>
+
+<p><strong>L'évaluation empirique.</strong> L'article pose des fondations architecturales solides, mais les évaluations quantitatives à grande échelle restent à mener. Comment mesurer concrètement l'impact de cette architecture sur la qualité des réponses, la réduction des hallucinations, ou la productivité des développeurs ? Les deux exemples présentés sont convaincants, mais le passage à des déploiements industriels massifs constituera le véritable test.</p>
+
+<blockquote>
+<p>En proposant de traiter le contexte de l'IA comme un système de fichiers, les chercheurs ne résolvent pas tous les problèmes de l'intelligence artificielle générative. Mais ils posent une <strong>fondation architecturale</strong> qui transforme une pratique artisanale — la gestion du contexte — en une discipline d'ingénierie systématique. Et dans l'histoire de l'informatique, c'est souvent ce type d'abstraction unificatrice qui déclenche les avancées les plus durables.</p>
+</blockquote>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
