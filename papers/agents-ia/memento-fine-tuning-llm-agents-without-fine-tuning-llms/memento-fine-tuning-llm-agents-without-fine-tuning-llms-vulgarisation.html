@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memento: Fine-tuning LLM Agents without Fine-tuning LLMs — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Memento: Fine-tuning LLM Agents without Fine-tuning LLMs</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Memento : quand les agents IA apprennent de leurs erreurs sans retourner a l'ecole</h2>
+
+<p><em>Des chercheurs de l'UCL et du Huawei Noah's Ark Lab proposent un cadre ou les agents a base de grands modeles de langage progressent en continu, simplement en se souvenant de leurs experiences passees — sans jamais modifier les poids du modele sous-jacent.</em></p>
+
+<h3>1. Introduction : un agent qui apprend sur le tas</h3>
+
+<p>Imaginez un collegue brillant mais amnésique. Chaque matin, il arrive au bureau avec les memes competences brutes, mais sans aucun souvenir des projets de la veille. Pour le faire progresser, deux options : soit vous lui ecrivez des procedures ultra-detaillees qu'il suivra a la lettre (rigide, mais fonctionnel), soit vous l'envoyez en formation intensive pendant des semaines (efficace, mais couteux). Dans les deux cas, la situation est frustrante. Ce qu'on aimerait, c'est qu'il note ses experiences dans un carnet et s'en serve le lendemain.</p>
+
+<p>C'est exactement le probleme que rencontrent aujourd'hui les agents d'intelligence artificielle bases sur les grands modeles de langage (LLM). Ces agents — capables de naviguer sur le web, d'utiliser des outils, de rediger du code ou de mener des recherches complexes — sont de plus en plus deployes dans des scenarios dits de <em>deep research</em>, ou il faut enchainer des dizaines d'etapes pour repondre a une question. Pourtant, la plupart restent figes apres leur deploiement : ils ne tirent aucune lecon de leurs succes ni de leurs echecs.</p>
+
+<p>L'article <strong>Memento: Fine-tuning LLM Agents without Fine-tuning LLMs</strong>, publie par une equipe de l'UCL et du Huawei Noah's Ark Lab, propose une troisieme voie elegante : doter l'agent d'une memoire episodique externe qui s'enrichit au fil du temps, et d'une politique de rappel intelligente pour savoir quand et comment puiser dans cette memoire. Le modele de langage lui-meme n'est jamais modifie. Le resultat ? Un agent qui progresse en continu, a faible cout, et qui atteint les meilleures performances mondiales sur plusieurs benchmarks de reference.</p>
+
+<h3>2. Le probleme : deux paradigmes, deux impasses</h3>
+
+<p>Pour comprendre l'apport de Memento, il faut d'abord saisir les limites des approches existantes.</p>
+
+<p><strong>L'approche "workflow fige".</strong> On construit un pipeline avec des etapes predefinies : l'agent recoit une question, la decompose selon un schema rigide, appelle des outils dans un ordre prevu, puis compile la reponse. Ca fonctionne pour des taches bien delimitees, mais des qu'on sort du cadre prevu, l'agent est perdu. Il ne s'adapte pas, ne s'ameliore pas, et chaque nouveau type de probleme exige un redesign manuel du workflow.</p>
+
+<p><strong>L'approche "fine-tuning".</strong> On reentrainne le modele de langage sur de nouvelles donnees, par apprentissage supervise ou par renforcement. L'agent devient plus performant, mais a quel prix ? Le fine-tuning d'un modele de plusieurs centaines de milliards de parametres exige des ressources GPU considerables, des jeux de donnees annotes, et surtout du temps. Pire encore, le reentrainement risque de provoquer un <em>oubli catastrophique</em> : en apprenant de nouvelles competences, le modele degrade ses performances sur des taches qu'il maitrisait auparavant.</p>
+
+<p>Ni l'un ni l'autre de ces paradigmes ne permet ce dont on a reellement besoin : un agent capable d'apprendre en continu, en temps reel, a partir de son propre flux d'experiences, sans infrastructure lourde et sans degradation de ses capacites existantes.</p>
+
+<blockquote>
+<p>La question centrale posee par les auteurs : <strong>comment construire des agents LLM qui apprennent continuellement dans un environnement changeant, sans le cout prohibitif du fine-tuning ?</strong></p>
+</blockquote>
+
+<h3>3. La methode : un carnet d'experiences et un bibliothecaire intelligent</h3>
+
+<p>La reponse de Memento s'inspire directement de la facon dont les humains apprennent. Quand vous resolvez un probleme complexe — disons, debugger une application en production — vous ne repartez pas de zero a chaque fois. Vous vous souvenez d'incidents similaires, des strategies qui ont fonctionne (et de celles qui ont echoue), et vous adaptez ces souvenirs au contexte present. C'est ce qu'on appelle en sciences cognitives le <em>raisonnement par cas</em> (case-based reasoning, ou CBR).</p>
+
+<p>Memento transpose ce mecanisme aux agents IA a travers trois composants principaux.</p>
+
+<h3>Le carnet d'experiences : la Case Bank</h3>
+
+<p>Chaque fois que l'agent resout une tache (ou echoue), il enregistre un "cas" dans sa banque de cas. Un cas, c'est un triplet simple : <strong>la situation rencontree</strong> (la question posee et son contexte), <strong>le plan d'action suivi</strong> (comment l'agent a decompose et traite le probleme), et <strong>le resultat obtenu</strong> (succes ou echec). Au fil du temps, cette banque de cas constitue une memoire d'experience de plus en plus riche.</p>
+
+<p>L'analogie la plus parlante est celle d'un cabinet d'avocats specialise. Chaque affaire traitee est archivee avec son contexte, la strategie adoptee et l'issue du dossier. Quand un nouveau cas se presente, les juristes ne repartent pas de zero : ils consultent la jurisprudence interne pour identifier des precedents pertinents.</p>
+
+<h3>Le bibliothecaire : la politique de rappel</h3>
+
+<p>Accumuler des cas ne suffit pas — encore faut-il savoir lesquels rappeler et quand. C'est la ou Memento se distingue des approches naives de type RAG (Retrieval-Augmented Generation), qui se contentent de chercher les documents les plus similaires sans notion de qualite ou d'utilite.</p>
+
+<p>Memento propose deux modes de rappel :</p>
+
+<ul>
+<li><strong>Le mode non-parametrique</strong> : on encode chaque cas sous forme de vecteur et on recupere les cas les plus proches par similarite semantique. Simple, rapide, sans entrainement supplementaire. C'est l'equivalent de chercher "affaires similaires" dans les archives.</li>
+<li><strong>Le mode parametrique</strong> : on entraine un petit reseau de neurones (bien plus leger que le LLM) pour apprendre quels cas sont reellement utiles dans quels contextes. Ce reseau attribue un score de qualite a chaque combinaison situation-cas, et s'ameliore en ligne, au fil des interactions. C'est l'equivalent d'avoir un bibliothecaire experimente qui sait non seulement quels dossiers sont similaires, mais lesquels contiennent les meilleures strategies.</li>
+</ul>
+
+<p>Le point crucial : cette politique de rappel s'entraine par apprentissage par renforcement, mais uniquement sur le petit reseau de selection — jamais sur le LLM lui-meme. Le cout computationnel est marginal.</p>
+
+<h3>L'architecture planificateur-executeur</h3>
+
+<p>Memento fonctionne en boucle entre deux roles :</p>
+
+<ul>
+<li><strong>Le planificateur</strong> recoit la question de l'utilisateur, consulte la banque de cas pour trouver des precedents pertinents, et decompose la tache en sous-etapes. Il s'appuie sur GPT-4.1 et integre les cas recuperes directement dans son prompt.</li>
+<li><strong>L'executeur</strong> prend en charge chaque sous-etape individuellement. Il dispose d'un ensemble d'outils (recherche web, extraction de donnees, analyse de fichiers, execution de code) accessibles via le protocole MCP (Model Context Protocol), un standard ouvert pour l'integration d'outils. Apres chaque sous-etape, il renvoie les resultats au planificateur, qui decide si la tache est terminee ou s'il faut replanifier.</li>
+</ul>
+
+<p>Trois types de memoire coexistent : la <strong>memoire de cas</strong> (les precedents strategiques), la <strong>memoire de sous-taches</strong> (l'etat d'avancement de la tache en cours) et la <strong>memoire d'outils</strong> (l'historique des appels d'outils pour chaque sous-tache). Cette separation permet a l'agent de raisonner a differents niveaux d'abstraction sans confusion.</p>
+
+<h3>4. Resultats : des performances de premier plan</h3>
+
+<p>Les auteurs evaluent Memento sur quatre benchmarks complementaires, couvrant un large spectre de difficulte et de competences requises.</p>
+
+<p><strong>GAIA</strong>, le benchmark de reference pour les taches complexes a horizon long necessitant l'utilisation d'outils (recherche web, manipulation de fichiers, calcul). Memento atteint <strong>87,88 % en Pass@3 sur le jeu de validation</strong> et <strong>79,40 % sur le jeu de test prive</strong>, se classant <strong>premier au classement mondial</strong> au moment de la publication. Ce resultat est d'autant plus remarquable que GAIA est considere comme l'un des benchmarks les plus exigeants pour les agents de recherche.</p>
+
+<p><strong>DeepResearcher</strong>, un benchmark de recherche web en temps reel. Memento obtient <strong>66,6 % en F1 et 80,4 % en Precision Match</strong>, surpassant la methode d'entrainement de reference (le systeme START, base sur du fine-tuning), et ce sans modifier le moindre parametre du modele.</p>
+
+<p><strong>SimpleQA</strong>, un test de precision factuelle. Memento atteint <strong>95,0 % en Precision Match</strong>, un score quasi parfait qui demontre que la memoire de cas aide a eviter les hallucinations et les erreurs factuelles recurrentes.</p>
+
+<p><strong>HLE</strong> (Humanity's Last Exam), un benchmark de raisonnement academique de longue traine, concu pour etre extremement difficile. Memento y obtient <strong>24,4 %</strong>, un score encore modeste en absolu mais representant une amelioration substantielle par rapport aux baselines.</p>
+
+<p>L'etude d'ablation revele des enseignements precieux :</p>
+
+<ul>
+<li><strong>L'apprentissage continu fonctionne reellement.</strong> Les courbes d'apprentissage montrent une progression claire de la performance au fil des iterations, passant de 72,2 % a 95,0 % sur SimpleQA en cinq iterations. L'agent s'ameliore effectivement avec l'experience.</li>
+<li><strong>La memoire parametrique surpasse la memoire non-parametrique</strong> sur la plupart des taches, confirmant l'interet d'apprendre quels cas sont utiles plutot que de se fier a la seule similarite.</li>
+<li><strong>La generalisation hors-distribution est remarquable.</strong> Sur des jeux de donnees jamais vus pendant l'entrainement (Musique, Bamboogle, PopQA), la memoire de cas apporte entre <strong>4,7 et 9,6 points de pourcentage</strong> d'amelioration absolue. L'agent ne se contente pas de memoriser : il generalise.</li>
+</ul>
+
+<h3>5. Implications pratiques : pourquoi ca change la donne</h3>
+
+<p><strong>Un deploiement a cout marginal.</strong> Le principal attrait de Memento pour l'industrie est economique. Fine-tuner un modele de la taille de GPT-4 coute des dizaines de milliers de dollars en GPU et necessite une infrastructure dediee. Memento, lui, ne necessite que le stockage de vecteurs et l'entrainement d'un petit reseau de selection. N'importe quelle equipe utilisant des LLM via API peut implementer cette approche sans infrastructure supplementaire significative.</p>
+
+<p><strong>L'adaptation en temps reel.</strong> Dans un contexte professionnel, les besoins evoluent constamment. Un agent de support technique fait face a de nouveaux types d'incidents chaque semaine. Un agent de recherche doit s'adapter a de nouveaux domaines. Avec Memento, chaque interaction enrichit la base d'experience et ameliore les interactions suivantes, sans interruption de service ni phase de reentrainement.</p>
+
+<p><strong>La fin de l'oubli catastrophique.</strong> Puisque les parametres du LLM ne sont jamais modifies, il n'y a aucun risque de degradation des capacites existantes. L'agent accumule de la connaissance de maniere additive, sans compromettre ce qu'il sait deja faire. C'est un avantage decisif pour les deployments en production ou la fiabilite est non-negociable.</p>
+
+<p><strong>L'interoperabilite via MCP.</strong> Le choix du protocole MCP pour l'integration d'outils n'est pas anodin. Ce standard ouvert, de plus en plus adopte dans l'ecosysteme des agents IA, permet a Memento de se connecter a n'importe quel serveur d'outils compatible sans modification de code. Cela ouvre la voie a des agents veritablement modulaires et extensibles.</p>
+
+<p><strong>La transparence des decisions.</strong> Contrairement a un modele fine-tune dont les ameliorations sont opaques (enfouies dans les poids), la banque de cas de Memento est inspectable. On peut examiner quels precedents ont influence une decision, comprendre pourquoi l'agent a choisi telle strategie, et meme corriger manuellement la memoire en retirant des cas problematiques. C'est un argument de poids pour les domaines ou l'explicabilite est reglementairement requise.</p>
+
+<h3>6. Pour aller plus loin : questions ouvertes et pistes futures</h3>
+
+<p>Malgre ses resultats impressionnants, Memento laisse plusieurs questions en suspens que les auteurs identifient eux-memes.</p>
+
+<p><strong>Le passage a l'echelle de la memoire.</strong> Au fil du temps, la banque de cas croit indefiniment. Les systemes classiques de CBR souffrent d'un probleme bien connu appele <em>swamping</em> : quand la base devient trop volumineuse, le cout de recherche depasse le benefice. Memento n'integre pas encore de mecanisme d'oubli ou d'elagage systematique. Les auteurs evoquent des pistes inspirees des neurosciences — oubli a la Ebbinghaus, consolidation pendant les phases d'inactivite — mais ne les implementent pas.</p>
+
+<p><strong>La qualite des cas stockes.</strong> Actuellement, tous les cas (succes et echecs) sont conserves. Mais un echec du a un probleme reseau transitoire a-t-il la meme valeur pedagogique qu'un echec strategique ? Un mecanisme plus fin de curation des cas pourrait ameliorer significativement l'efficacite du rappel.</p>
+
+<p><strong>Le transfert entre domaines.</strong> Les experiences montrent que Memento generalise bien a des taches hors-distribution structurellement similaires. Mais qu'en est-il du transfert entre des domaines radicalement differents ? Un agent qui a accumule de l'experience en recherche scientifique peut-il en tirer parti pour des taches de programmation ? Cette question reste ouverte.</p>
+
+<p><strong>La dependance au modele sous-jacent.</strong> Memento repose actuellement sur GPT-4.1 et o4-mini/o3 d'OpenAI. L'article ne mesure pas l'impact du changement de modele de base. Si une organisation souhaite migrer vers un modele open source, la banque de cas reste-t-elle exploitable ? La politique de rappel doit-elle etre reapprise ?</p>
+
+<p><strong>L'apprentissage multi-agent.</strong> Dans un scenario de production, plusieurs instances d'un meme agent pourraient partager une banque de cas commune, permettant un apprentissage collectif. Cette mutualisation des experiences, evoquee mais non exploree dans l'article, ouvrirait des perspectives fascinantes pour les deployments a grande echelle.</p>
+
+<blockquote>
+<p>En definitive, Memento illustre une tendance de fond dans la recherche en IA agentique : plutot que de tout miser sur des modeles toujours plus gros et toujours plus entraines, on peut obtenir des gains spectaculaires en concevant intelligemment l'architecture qui entoure le modele — sa memoire, ses outils, sa capacite de rappel. C'est un message encourageant pour toutes les equipes qui deploient des agents en production : l'amelioration continue n'exige pas necessairement un budget de reentrainement pharaonique. Parfois, un bon carnet de notes suffit.</p>
+</blockquote>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
