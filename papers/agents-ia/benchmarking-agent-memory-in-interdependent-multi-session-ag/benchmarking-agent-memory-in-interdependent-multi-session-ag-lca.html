@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benchmarking Agent Memory in Interdependent Multi-Session Agentic Tasks — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Benchmarking Agent Memory in Interdependent Multi-Session Agentic Tasks</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+
+<h3>1. Objectif et contexte</h3>
+<p>Cette publication identifie un écart fondamental dans l'évaluation des agents LLM : les benchmarks existants évaluent soit la <strong>mémorisation</strong> (rappel de conversations passées via QA), soit l'<strong>action</strong> (exécution en session unique), mais jamais les deux de manière couplée. Or, dans les scénarios réalistes, un agent doit acquérir de l'information en interagissant avec son environnement, la distiller en mémoire, puis la réutiliser pour résoudre des tâches futures.</p>
+<p>Les auteurs introduisent <strong>MEMORYARENA</strong>, un « gym d'évaluation unifié » structuré autour de boucles <em>Mémoire-Agent-Environnement</em>. Le benchmark se compose de tâches multi-sessions avec des sous-tâches <strong>explicitement interdépendantes</strong> : la résolution d'une sous-tâche ultérieure est sous-spécifiée sans les informations acquises lors des sessions précédentes.</p>
+<p>Le positionnement est solide et bien argumenté. La Table 1 de comparaison avec les benchmarks existants (LoCoMo, LongMemEval, WebArena, AgencyBench, etc.) démontre clairement que MEMORYARENA est le premier à combiner évaluation de la mémoire, actions agentiques, retour d'environnement, multi-sessions ET interdépendance des sous-tâches.</p>
+
+<h3>2. Méthodologie</h3>
+<p>Le benchmark couvre <strong>quatre environnements</strong> distincts, chacun ciblant des compétences mémorielles différentes :</p>
+<ul>
+  <li><strong>Bundled Web Shopping</strong> (150 tâches, 6 sous-tâches chacune) : achat d'articles compatibles nécessitant le rappel des attributs des achats précédents. Construction rigoureuse via arbres de compatibilité, filtrage par attributs, puis vérification humaine.</li>
+  <li><strong>Group Travel Planning</strong> (270 tâches, 5-9 sous-tâches) : planification de voyage de groupe avec contraintes JOIN et RELATION s'accumulant. Basé sur TravelPlanner avec extension multi-voyageurs.</li>
+  <li><strong>Progressive Web Search</strong> (256 tâches, 2-16 sous-tâches) : recherche d'information compositionnelle où chaque étape ajoute une contrainte. Dérivé de BrowseComp-Plus avec filtrage et décomposition en sous-requêtes vérifiées par des annotateurs humains.</li>
+  <li><strong>Formal Reasoning</strong> (60 tâches : 40 math, 20 physique) : raisonnement séquentiel sur des chaînes de dérivation extraites d'articles de recherche, curé par des experts PhD.</li>
+</ul>
+<p>Le protocole expérimental évalue trois paradigmes de mémoire :</p>
+<ul>
+  <li><strong>Long-context (0D)</strong> : historique verbatim en contexte (GPT-5.1-mini, GPT-4.1-mini, Gemini-3-Flash, Claude-Sonnet-4.5)</li>
+  <li><strong>Mémoire externe (1D/2D)</strong> : Letta/MemGPT, Mem0, Mem0-g, ReasoningBank</li>
+  <li><strong>RAG (0D/1D/2D)</strong> : BM25, embeddings, MemoRAG, GraphRAG</li>
+</ul>
+<p>La taxonomie 0D/1D/2D (brut / plat consolidé / structuré) offre une grille de lecture claire des systèmes de mémoire. L'agent de tâche est fixé à GPT-5.1-mini pour l'ensemble des expériences avec mémoire externe et RAG, ce qui limite la généralisation mais assure la comparabilité.</p>
+
+<h3>3. Résultats principaux</h3>
+<p>Les résultats sont frappants et constituent la contribution empirique majeure :</p>
+<ul>
+  <li><strong>Taux de succès globalement très bas</strong> : le meilleur système (Text-Embedding-3-Small en RAG) n'atteint que 0.23 de SR moyen. Le Group Travel Planning affiche un SR de 0.00 pour <em>toutes</em> les méthodes.</li>
+  <li><strong>La mémoire externe n'est pas universellement bénéfique</strong> : les agents long-context restent compétitifs voire supérieurs dans certains environnements (Web Shopping, Travel Planning). L'article identifie un double mismatch : représentationnel (l'information compressée s'intègre mal au raisonnement in-context) et d'entraînement (la mémoire n'est pas co-optimisée avec l'agent).</li>
+  <li><strong>Décroissance avec la profondeur</strong> (Figure 3) : le SR@k décroît systématiquement avec k pour toutes les méthodes, aucune ne maintenant une région plate — preuve directe de la dérive de croyance (belief drift) dans le cadre POMDP.</li>
+  <li><strong>La mémoire externe aide sélectivement</strong> : dans Progressive Web Search (traces > 120k tokens) et Formal Reasoning (raisonnement complexe), la mémoire externe et le RAG surpassent le long-context en atténuant la saturation attentionnelle.</li>
+  <li><strong>Latence</strong> : les agents long-context sont les plus rapides ; la complexité architecturale de la mémoire ne prédit pas la latence de manière systématique.</li>
+</ul>
+
+<h3>4. Discussion et limites</h3>
+<p><strong>Forces de la discussion :</strong></p>
+<ul>
+  <li>Le cadrage POMDP (Section 4.6) est particulièrement éclairant : il formalise la mémoire comme un mécanisme d'estimation d'état de croyance, et la décroissance du SR@k comme une dérive de croyance. Cette perspective théorique ouvre des pistes concrètes (optimisation conjointe mémoire-agent, statistiques suffisantes).</li>
+  <li>L'identification des deux bottlenecks (côté mémoire : mécanismes non optimisés pour le suivi d'état ; côté agent : incapacité à formuler des requêtes efficaces et intégrer les résultats) est pertinente.</li>
+</ul>
+<p><strong>Limites identifiées :</strong></p>
+<ul>
+  <li><strong>Agent de tâche unique</strong> : toutes les expériences avec mémoire externe/RAG utilisent GPT-5.1-mini. L'interaction entre le modèle de base et le système de mémoire reste inexplorée.</li>
+  <li><strong>Taille d'échantillon hétérogène</strong> : 270 tâches pour Travel Planning mais seulement 20 pour Physics Reasoning. La puissance statistique sur les environnements de raisonnement formel est limitée.</li>
+  <li><strong>Construction des tâches</strong> : le filtrage initial de Progressive Web Search utilise un LLM pour éliminer les instances résolubles en une seule interaction, introduisant un biais potentiel de sélection.</li>
+  <li><strong>Absence de section limitations formelle</strong> : la déclaration d'impact est minimale et ne discute pas les limitations du benchmark lui-même (couverture des domaines, biais de difficulté, validité écologique).</li>
+  <li><strong>Reproductibilité partielle</strong> : bien que le benchmark soit publié, les configurations exactes des systèmes de mémoire externes ne sont pas toujours spécifiées en détail.</li>
+</ul>
+
+<h3>5. Reproductibilité</h3>
+<p>Le benchmark est diffusé publiquement via <em>memoryarena.github.io</em>. Le processus de construction des données est décrit avec un niveau de détail raisonnable, incluant les étapes de filtrage, d'annotation humaine, et les critères de validation. La taxonomie des systèmes de mémoire (0D/1D/2D) est clairement définie. Cependant, les hyperparamètres spécifiques des systèmes de mémoire testés (paramètres de chunking, de consolidation, de retrieval) ne sont pas tous explicités dans le corps de l'article, bien que l'appendice fournisse des détails supplémentaires. La reproductibilité est jugée <strong>bonne mais pas complète</strong>.</p>
+
+<h3>6. Impact et applications</h3>
+<p>L'impact potentiel est <strong>significatif</strong> pour le domaine des agents IA :</p>
+<ul>
+  <li><strong>Révélation d'un angle mort majeur</strong> : démontrer que des systèmes quasi-saturés sur LoCoMo échouent massivement sur des tâches agentiques interdépendantes remet en question les prétentions des systèmes de mémoire actuels.</li>
+  <li><strong>Cadre d'évaluation unifié</strong> : MEMORYARENA offre un testbed standardisé pour comparer les paradigmes de mémoire (long-context vs. externe vs. RAG) sur un pied d'égalité.</li>
+  <li><strong>Orientation de la recherche</strong> : le cadrage POMDP et l'identification des bottlenecks (mismatch représentationnel et d'entraînement) fournissent des directions concrètes pour la recherche future.</li>
+  <li><strong>Applications pratiques</strong> : les résultats informent directement le design d'agents conversationnels multi-sessions, d'assistants personnels, et de systèmes de planification à long horizon.</li>
+</ul>
+
+<h3>7. Positionnement dans la littérature</h3>
+<p>MEMORYARENA se positionne à l'intersection de deux lignes de recherche jusqu'ici disjointes :</p>
+<ul>
+  <li>Les <strong>benchmarks de mémoire</strong> (LoCoMo, LongMemEval, MemoryAgentBench, MemoryBench) qui évaluent le rappel statique sans actions agentiques.</li>
+  <li>Les <strong>benchmarks agentiques</strong> (WebArena, SWE-Bench, WebShop) qui évaluent l'action en session unique sans mémoire persistante.</li>
+</ul>
+<p>Par rapport aux travaux concurrents récents (AgencyBench, Evo-Memory, VeriGUI), MEMORYARENA se distingue par l'<strong>interdépendance explicite</strong> des sous-tâches et l'évaluation systématique de multiples mécanismes de mémoire. La comparaison avec AgencyBench (qui intègre aussi mémoire et action mais via des outils add-and-retrieve simples) est pertinente.</p>
+<p>Le parallèle avec les POMDP est original dans ce contexte et connecte le travail à une littérature plus large en planification sous observabilité partielle, enrichissant la compréhension théorique du problème.</p>
+<p>Ce travail devrait rapidement devenir une <strong>référence incontournable</strong> pour l'évaluation des systèmes de mémoire dans le contexte agentique, comblant un vide reconnu par la communauté.</p>
+
+<h3>Tableau récapitulatif des scores de robustesse</h3>
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f0f0f0;">
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Justification</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Question de recherche</strong></td>
+      <td>4</td>
+      <td>Lacune clairement identifiée entre benchmarks de mémoire et d'action ; question originale et bien motivée.</td>
+    </tr>
+    <tr>
+      <td><strong>Design expérimental</strong></td>
+      <td>4</td>
+      <td>4 environnements diversifiés, 3 paradigmes de mémoire, taxonomie 0D/1D/2D. Agent de tâche unique limite la portée.</td>
+    </tr>
+    <tr>
+      <td><strong>Taille d'échantillon</strong></td>
+      <td>3</td>
+      <td>766 tâches au total, mais distribution inégale (270 Travel vs. 20 Physics). Puissance statistique limitée sur le raisonnement formel.</td>
+    </tr>
+    <tr>
+      <td><strong>Qualité des métriques</strong></td>
+      <td>4</td>
+      <td>SR, PS et sPS bien définis et complémentaires. SR@k pour l'analyse en profondeur. Métriques adaptées à chaque environnement.</td>
+    </tr>
+    <tr>
+      <td><strong>Contrôle des biais</strong></td>
+      <td>3</td>
+      <td>Vérification humaine des données, mais filtrage LLM initial dans Progressive Web Search. Pas de discussion des biais de construction.</td>
+    </tr>
+    <tr>
+      <td><strong>Reproductibilité</strong></td>
+      <td>4</td>
+      <td>Benchmark publié, processus de construction détaillé. Configurations des systèmes de mémoire partiellement spécifiées.</td>
+    </tr>
+    <tr>
+      <td><strong>Transparence / Limitations</strong></td>
+      <td>3</td>
+      <td>Limites implicitement reconnues mais pas de section dédiée. Impact statement minimal.</td>
+    </tr>
+    <tr>
+      <td><strong>Impact / Nouveauté</strong></td>
+      <td>4</td>
+      <td>Premier benchmark couplant mémoire et action avec interdépendances. Résultats révélateurs. Cadrage POMDP original.</td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr style="background-color: #f0f0f0;">
+      <td><strong>Note globale</strong></td>
+      <td colspan="2"><strong>3.8 / 5</strong> — Contribution de benchmark solide et bien exécutée, comblant un vide réel dans l'évaluation des agents avec mémoire. Les résultats empiriques sont convaincants et le cadrage théorique enrichit l'analyse. Quelques faiblesses méthodologiques (tailles d'échantillon, agent unique, transparence sur les limites) empêchent une note plus élevée.</td>
+    </tr>
+  </tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

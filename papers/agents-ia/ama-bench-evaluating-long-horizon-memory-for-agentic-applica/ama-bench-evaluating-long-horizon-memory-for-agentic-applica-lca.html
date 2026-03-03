@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMA-Bench: Evaluating Long-Horizon Memory for Agentic Applications — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AMA-Bench: Evaluating Long-Horizon Memory for Agentic Applications</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+<h3>AMA-Bench: Evaluating Long-Horizon Memory for Agentic Applications</h3>
+<p><em>Zhao et al., 2026 — UC San Diego</em></p>
+
+<h2>1. Objectif et contexte</h2>
+<p>Cette publication adresse un manque identifié dans l'évaluation de la mémoire des agents LLM : les benchmarks existants (LoCoMo, LongMemEval, MemoryBench) se concentrent sur des interactions dialogiques humain-agent en langage naturel, alors que les agents autonomes réels opèrent dans des environnements machine (bases de données, exécuteurs de code, interfaces web) produisant des représentations symboliques denses et causalement structurées.</p>
+<p>Les auteurs proposent <strong>AMA-Bench</strong>, un benchmark en deux volets (réel et synthétique) évaluant la mémoire sur des trajectoires agent-environnement authentiques, ainsi que <strong>AMA-Agent</strong>, un système de mémoire exploitant un graphe de causalité et une recherche augmentée par outils.</p>
+<p>Le positionnement est pertinent : la distinction entre mémoire dialogue-centrique et mémoire agent-centrique est bien argumentée via trois limitations clés des benchmarks existants (manque de diversité de représentations, absence de causalité, information objective éparse).</p>
+
+<h2>2. Méthodologie</h2>
+<h3>2.1 Construction du benchmark</h3>
+<p><strong>Sous-ensemble réel :</strong> 2 496 paires QA annotées par des experts sur 208 trajectoires couvrant 6 domaines (Web, Embodied AI, Gaming, Software Engineering, Text2SQL, Open-world QA). Les trajectoires proviennent de benchmarks établis (WebArena, SWE-bench, ALFWorld, BALROG, GAIA, Spider 2.0) et sont générées par des frameworks agents de référence. 12 paires QA par trajectoire, couvrant 4 catégories de capacités mémoire : Recall, Causal Inference, State Updating, State Abstraction.</p>
+<p><strong>Sous-ensemble synthétique :</strong> 1 200 paires QA générées programmatiquement dans deux environnements (TextWorld, BabyAI) avec contrôle de la difficulté via un vecteur ϕ, permettant l'évaluation à des horizons arbitraires (8K à 128K tokens).</p>
+
+<h3>2.2 Protocole d'évaluation</h3>
+<p>15 systèmes de mémoire évalués sur deux backbones (Qwen3-8B et 32B), incluant des modèles long-contexte commerciaux (GPT-5.2, Gemini 2.5 Flash), des systèmes RAG (BM25, GraphRAG, HippoRAG2) et des agents mémoire (MemGPT, Mem0, Mem1, MemoRAG, etc.). L'évaluation utilise un LLM-as-a-judge (Qwen3-32B) pour scorer Accuracy et F1.</p>
+
+<h3>2.3 AMA-Agent</h3>
+<p>Le système proposé comprend : (A) un <strong>Causality Graph</strong> construit par extraction d'états et de dépendances causales inter-états à partir de paires de tours adjacents, et (B) une <strong>recherche augmentée par outils</strong> combinant similarité vectorielle (top-K), traversée de graphe en profondeur contrôlée et recherche par mots-clés programmatique.</p>
+
+<h3>Points forts méthodologiques</h3>
+<ul>
+<li>Formalisation rigoureuse via POMDP (S, A, O, P, r) et définition formelle du système de mémoire en deux étapes (Build/Retrieve)</li>
+<li>Taxonomie claire des capacités mémoire en 4 catégories alignées sur 3 mécanismes</li>
+<li>Double validation des annotations (cross-review par un second annotateur)</li>
+<li>Protocole needle-in-a-haystack adapté au contexte agentique</li>
+<li>Analyse de corrélation synthétique-réel validant la fidélité du sous-ensemble synthétique</li>
+</ul>
+
+<h3>Faiblesses méthodologiques</h3>
+<ul>
+<li><strong>Circularité potentielle :</strong> la même équipe conçoit le benchmark et la méthode gagnante, ce qui peut introduire un biais de conception favorable à AMA-Agent</li>
+<li><strong>LLM-as-a-judge :</strong> utilisation de Qwen3-32B comme juge automatique — modèle lui-même évalué comme backbone, créant une dépendance circulaire potentielle</li>
+<li><strong>Trajectoires non-originales :</strong> les trajectoires réelles proviennent de benchmarks existants et non de déploiements en production, limitant la représentativité « réelle »</li>
+<li><strong>Homogénéité des annotateurs :</strong> tous les annotateurs sont des chercheurs du même groupe, ce qui peut limiter la diversité des perspectives</li>
+</ul>
+
+<h2>3. Résultats principaux</h2>
+<p><strong>Performance des modèles :</strong> GPT-5.2 atteint la meilleure accuracy (72,26%) parmi les modèles long-contexte, mais reste loin de la perfection, confirmant la difficulté du benchmark. Les modèles open-source (Qwen3-32B : 51,81%) sont significativement en retrait.</p>
+<p><strong>Systèmes de mémoire vs. long-contexte :</strong> résultat surprenant et important — les systèmes de mémoire existants sous-performent systématiquement la baseline long-contexte sur les tâches agentiques (contrairement aux benchmarks dialogue-centriques), suggérant que la compression lossy et la recherche par similarité sont inadaptées aux trajectoires d'agents.</p>
+<p><strong>AMA-Agent :</strong> atteint 57,22% de précision moyenne (backbone Qwen3-32B), surpassant le meilleur système RAG (HippoRAG2 : 44,80%) et le meilleur agent mémoire (MemoRAG : 46,06%) de 11,16 points.</p>
+<p><strong>Ablation :</strong> la suppression du Causality Graph (-24,6%) et de la recherche augmentée (-22,8%) dégrade substantiellement les performances, validant la nécessité des deux composants.</p>
+<p><strong>Scalabilité :</strong> AMA-Agent maintient des performances robustes de 8K à 128K tokens, alors que le long-contexte se dégrade significativement au-delà de 32K.</p>
+
+<h2>4. Discussion et limites</h2>
+<h3>Limites reconnues par les auteurs</h3>
+<ul>
+<li>Focus exclusif sur la mémoire intra-épisode ; les scénarios cross-task et l'apprentissage continu ne sont pas couverts</li>
+</ul>
+
+<h3>Limites additionnelles identifiées</h3>
+<ul>
+<li><strong>Taille du dataset réel :</strong> 208 trajectoires (30-51 par domaine) représentent un échantillon modeste pour un benchmark se voulant représentatif de l'ensemble du spectre agentique</li>
+<li><strong>Biais de sélection des trajectoires :</strong> priorité donnée aux trajectoires longues, ce qui peut biaiser les résultats en faveur de systèmes performants sur les horizons longs</li>
+<li><strong>Absence de métriques de coût :</strong> aucune analyse du coût computationnel (tokens consommés, latence) des différents systèmes de mémoire, information pourtant critique pour le déploiement</li>
+<li><strong>Fixité du paramètre K=5 :</strong> le choix de K=5 pour la recherche par similarité dans AMA-Agent n'est pas justifié par ablation</li>
+<li><strong>Généralisation :</strong> le sous-ensemble synthétique se limite à deux environnements (TextWorld, BabyAI), limitant la diversité des patterns testés</li>
+</ul>
+
+<h2>5. Reproductibilité</h2>
+<p>La reproductibilité est <strong>partiellement assurée</strong> :</p>
+<ul>
+<li><strong>Points positifs :</strong> détails d'implémentation fournis en annexe pour chaque baseline, configurations par défaut documentées, sources des trajectoires identifiées (benchmarks open-source)</li>
+<li><strong>Points négatifs :</strong> le code source d'AMA-Bench et d'AMA-Agent n'est pas explicitement mentionné comme publiquement disponible dans le texte principal ; les prompts exacts utilisés pour le LLM-as-a-judge ne sont pas détaillés dans le corps du papier</li>
+<li>Les données sont déclarées construites entièrement à partir de sources open-source, sans PII</li>
+</ul>
+
+<h2>6. Impact et applications</h2>
+<p><strong>Impact scientifique :</strong> cette contribution est significative pour la communauté des agents LLM. Elle établit le premier benchmark dédié à la mémoire agentique et met en évidence un résultat contre-intuitif : les systèmes de mémoire existants, conçus pour le dialogue, sont contre-productifs pour les agents autonomes. Ce constat peut réorienter la recherche vers des architectures mémoire agent-centriques.</p>
+<p><strong>Impact pratique :</strong> le graphe de causalité et la recherche augmentée par outils proposés dans AMA-Agent offrent un blueprint concret pour les praticiens développant des agents à mémoire longue. La corrélation synthétique-réel validée permet l'évaluation à moindre coût.</p>
+<p><strong>Limites d'impact :</strong> les performances absolues restent modestes (57% pour le meilleur système), indiquant que la mémoire agentique reste un problème largement ouvert. L'écart avec GPT-5.2 en long-contexte (72%) suggère que des gains significatifs sont encore possibles.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+<p>AMA-Bench se positionne explicitement comme complémentaire aux benchmarks dialogue-centriques (LoCoMo, LongMemEval, MemoryAgentBench, MemoryBench, RealTalk) et long-contexte (QuALITY, RULER, LongBench v2). La Table 1 du papier fournit une comparaison structurée convaincante.</p>
+<p>Le papier s'inscrit dans la continuité des travaux sur les systèmes de mémoire (MemGPT, Mem0, SimpleMem, GraphRAG, HippoRAG2) tout en proposant un cadre d'évaluation qui les met à l'épreuve dans un contexte plus réaliste. L'innovation du Causality Graph s'inspire des approches structurées (GraphRAG) mais ajoute la dimension causale spécifique aux MDP partiellement observables.</p>
+<p>La comparaison avec 15 baselines est exhaustive et constitue l'un des points forts du papier, offrant une photographie complète de l'état de l'art début 2026.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<thead>
+<tr style="background-color: #f0f0f0;">
+<th>Critère</th>
+<th>Score (/5)</th>
+<th>Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Question de recherche</strong></td>
+<td>4</td>
+<td>Gap clairement identifié entre benchmarks dialogue-centriques et besoins réels des agents ; formulation rigoureuse via POMDP</td>
+</tr>
+<tr>
+<td><strong>Design expérimental</strong></td>
+<td>4</td>
+<td>Double volet réel/synthétique, 15 baselines, ablations, protocole needle ; légère circularité benchmark-méthode</td>
+</tr>
+<tr>
+<td><strong>Taille d'échantillon</strong></td>
+<td>3</td>
+<td>2 496 QA réels + 1 200 synthétiques : correct mais modeste ; 30-51 trajectoires par domaine</td>
+</tr>
+<tr>
+<td><strong>Qualité des métriques</strong></td>
+<td>3</td>
+<td>LLM-as-a-judge (Qwen3-32B) avec validation en annexe ; dépendance circulaire potentielle ; F1 et Accuracy reportés</td>
+</tr>
+<tr>
+<td><strong>Contrôle des biais</strong></td>
+<td>3</td>
+<td>Cross-review des annotations, même backbone pour comparaison équitable ; biais potentiel de conception favorable à AMA-Agent</td>
+</tr>
+<tr>
+<td><strong>Reproductibilité</strong></td>
+<td>3</td>
+<td>Sources open-source, détails d'implémentation en annexe ; disponibilité du code non confirmée explicitement</td>
+</tr>
+<tr>
+<td><strong>Transparence / limitations</strong></td>
+<td>3</td>
+<td>Limite intra-épisode reconnue ; absence de discussion sur le coût computationnel et les limites du LLM-juge</td>
+</tr>
+<tr>
+<td><strong>Impact / nouveauté</strong></td>
+<td>4</td>
+<td>Premier benchmark agent-centrique pour la mémoire ; résultat contre-intuitif sur la sous-performance des systèmes de mémoire existants</td>
+</tr>
+</tbody>
+<tfoot>
+<tr style="background-color: #f0f0f0;">
+<td><strong>Note globale</strong></td>
+<td><strong>3.5 / 5</strong></td>
+<td>Contribution benchmark solide avec des insights expérimentaux précieux, tempérée par une taille d'échantillon modeste et des risques de circularité</td>
+</tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

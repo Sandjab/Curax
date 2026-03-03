@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benchmarking Agent Memory in Interdependent Multi-Session Agentic Tasks — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Benchmarking Agent Memory in Interdependent Multi-Session Agentic Tasks</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les agents IA oublient ce qu'ils ont fait cinq minutes avant</h2>
+
+<p>Imaginez un assistant virtuel chargé de vous organiser un voyage de groupe. Il réserve un vol pour Paris, puis un hôtel… mais au moment de choisir le restaurant, il a déjà oublié que trois membres du groupe sont végétariens — une information pourtant mentionnée lors de la réservation de l'hôtel. Absurde ? C'est pourtant le quotidien des agents d'intelligence artificielle actuels dès qu'on leur confie des tâches étalées sur plusieurs sessions de travail.</p>
+
+<p>Une équipe de chercheurs de Stanford, de l'UCSD et de plusieurs autres universités américaines vient de publier un benchmark inédit, <strong>MemoryArena</strong>, qui met le doigt sur ce problème avec une précision chirurgicale. Leur constat est sans appel : les systèmes de mémoire dont on équipe aujourd'hui les agents IA, même ceux qui obtiennent des scores quasi parfaits sur les benchmarks existants, échouent massivement quand il faut réellement se souvenir et réutiliser des informations pour agir.</p>
+
+<h2>Le problème : des benchmarks qui mesurent la mauvaise chose</h2>
+
+<p>Pour comprendre l'enjeu, il faut d'abord saisir comment on évalue aujourd'hui la mémoire des agents IA. Il existe deux grandes familles de tests, et chacune ne regarde qu'une moitié du problème.</p>
+
+<p>La <strong>première famille</strong> évalue la mémorisation pure. On donne à l'agent de longues conversations ou des documents volumineux, puis on lui pose des questions pour vérifier s'il se souvient de tel ou tel détail. C'est l'approche de benchmarks reconnus comme LoCoMo ou LongMemEval. Le problème ? Ces tests mesurent la capacité à <em>retrouver</em> une information, mais jamais la capacité à <em>s'en servir</em> pour prendre une décision concrète dans un environnement qui réagit.</p>
+
+<p>La <strong>seconde famille</strong> évalue l'action. Des benchmarks comme WebArena ou SWE-Bench placent l'agent dans un environnement dynamique — naviguer sur un site web, corriger un bug dans du code — et mesurent s'il accomplit sa mission. Mais ces tests se déroulent en une seule session : tout l'historique tient dans la fenêtre de contexte du modèle, et l'agent n'a jamais besoin de se souvenir de quoi que ce soit au-delà de la conversation en cours.</p>
+
+<blockquote>
+<p>« Dans la réalité, mémorisation et action sont indissociables : les agents acquièrent de la mémoire en interagissant avec leur environnement, puis s'appuient sur cette mémoire pour résoudre les tâches suivantes. »</p>
+</blockquote>
+
+<p>C'est précisément cet angle mort que MemoryArena vient combler. Les chercheurs défendent une idée simple mais puissante : on ne peut pas évaluer la mémoire d'un agent en dehors de la boucle complète <strong>Mémoire → Agent → Environnement</strong>. La mémoire n'a de valeur que si elle se traduit en meilleures décisions.</p>
+
+<h2>La méthode : un gymnase d'évaluation à quatre terrains</h2>
+
+<p>Pour tester cette hypothèse, l'équipe a conçu quatre environnements de tâches, chacun composé de sous-tâches <em>explicitement interdépendantes</em>. Le mot clé ici est « interdépendantes » : réussir la sous-tâche 3 exige impérativement d'avoir retenu et compris ce qui s'est passé lors des sous-tâches 1 et 2.</p>
+
+<h3>Le shopping groupé</h3>
+<p>L'agent doit acheter un ensemble de produits compatibles entre eux — par exemple, un boîtier d'appareil photo, puis un objectif adapté, puis un étui à la bonne taille. Chaque achat se fait dans une session séparée. L'agent qui oublie la marque ou les dimensions du boîtier acheté en session 1 choisira un objectif incompatible en session 2. Cent cinquante scénarios de ce type ont été créés manuellement, avec des pièges sous forme de produits « distracteurs » presque compatibles.</p>
+
+<h3>La planification de voyage de groupe</h3>
+<p>Un premier voyageur établit un itinéraire de base, puis cinq à huit autres participants rejoignent le groupe un par un, chacun avec ses préférences et ses contraintes. Certains veulent partager un restaurant avec un membre précis, d'autres exigent un hôtel mieux noté que celui d'un autre participant. L'agent doit jongler avec un plan de trente créneaux d'activités tout en gardant en tête l'ensemble des contraintes accumulées. Deux cent soixante-dix scénarios ont été construits, avec des chaînes de dépendances pouvant atteindre quatre niveaux de profondeur.</p>
+
+<h3>La recherche web progressive</h3>
+<p>L'agent doit trouver une personne ou une entité satisfaisant une série de conditions introduites une par une, session après session. À chaque étape, un nouveau critère s'ajoute aux précédents. Le résultat final doit respecter <em>toutes</em> les contraintes cumulées. C'est un peu comme un jeu de « Qui est-ce ? » étalé sur seize manches, sauf que l'agent doit se souvenir de toutes les réponses intermédiaires. Deux cent cinquante-six tâches de ce type ont été retenues après un filtrage rigoureux par des annotateurs humains.</p>
+
+<h3>Le raisonnement formel séquentiel</h3>
+<p>Ici, on entre dans le domaine de la recherche académique en mathématiques et en physique. Des experts de niveau doctorat ont sélectionné des articles scientifiques dont les démonstrations s'appuient sur de longues chaînes de résultats intermédiaires — lemmes, propositions, définitions — que l'agent doit maîtriser dans l'ordre pour parvenir à la conclusion finale. Soixante problèmes (quarante en maths, vingt en physique) ont été minutieusement annotés.</p>
+
+<p>Au total, MemoryArena propose <strong>766 tâches</strong> décomposées en sous-tâches, avec en moyenne près de sept sous-tâches par tâche et cinquante-sept étapes d'action. Chaque tâche génère des traces de raisonnement dépassant souvent les quarante mille tokens — bien au-delà de ce que la plupart des systèmes gèrent confortablement.</p>
+
+<h2>Résultats clés : un constat d'échec généralisé</h2>
+
+<p>Les chercheurs ont confronté à MemoryArena trois grandes familles d'approches, représentant l'état de l'art actuel.</p>
+
+<ul>
+<li><strong>Les agents à contexte long</strong> (GPT-5.1-mini, GPT-4.1-mini, Gemini-3-Flash, Claude Sonnet 4.5) qui conservent l'intégralité de l'historique dans leur fenêtre de contexte.</li>
+<li><strong>Les agents dotés de mémoire externe</strong> (Letta/MemGPT, Mem0, ReasoningBank) qui distillent et stockent l'information dans un système dédié.</li>
+<li><strong>Les agents augmentés par RAG</strong> (BM25, embeddings, MemoRAG, GraphRAG) qui indexent les interactions passées et les récupèrent à la demande.</li>
+</ul>
+
+<p>Le résultat le plus frappant : <strong>le taux de réussite moyen sur l'ensemble des tâches ne dépasse pas 23 %</strong>, et ce pour la meilleure méthode (RAG par embeddings). La plupart des approches tournent entre 12 et 19 %. En planification de voyage de groupe, le taux de réussite complet est tout simplement de <strong>zéro pour cent</strong> pour toutes les méthodes testées, sans exception.</p>
+
+<p>Plus révélateur encore, les chercheurs ont mesuré la dégradation des performances en fonction de la profondeur des dépendances. À chaque sous-tâche supplémentaire dans la chaîne, les performances chutent. Aucune méthode ne parvient à maintenir un niveau stable : la courbe descend inexorablement, quelle que soit la sophistication du système de mémoire employé.</p>
+
+<h3>La mémoire externe n'est pas une solution miracle</h3>
+
+<p>Résultat contre-intuitif : ajouter un système de mémoire externe ou du RAG à un modèle performant ne produit pas systématiquement de meilleurs résultats. Les chercheurs identifient deux causes.</p>
+
+<p>D'abord, un <strong>décalage de représentation</strong>. Les agents à contexte long raisonnent sur un historique brut et cohérent. Les systèmes de mémoire externe renvoient des fragments compressés, réordonnés ou reformulés, qui ne s'intègrent pas toujours bien au raisonnement du modèle. C'est un peu comme essayer de suivre un roman en ne relisant que des résumés de chapitres rédigés par quelqu'un d'autre — on perd les nuances.</p>
+
+<p>Ensuite, un <strong>décalage d'entraînement</strong>. Les systèmes de mémoire ne sont pas entraînés conjointement avec l'agent. L'agent ne sait pas formuler les bonnes requêtes vers sa mémoire, et ne sait pas non plus exploiter efficacement ce qu'elle lui renvoie.</p>
+
+<p>La mémoire externe se révèle toutefois bénéfique dans deux cas précis : la recherche web progressive, où les traces d'interaction dépassent les 120 000 tokens par sous-tâche, et le raisonnement formel, qui exige un raisonnement hautement spécialisé. Dans ces situations extrêmes, le contexte long seul ne suffit plus et la capacité du RAG à resurfacer sélectivement l'information pertinente fait la différence.</p>
+
+<h2>Implications pratiques : pourquoi ça compte</h2>
+
+<p>Ces résultats ont des conséquences directes pour quiconque développe ou déploie des agents IA en production.</p>
+
+<p><strong>Les agents « autonomes » restent une promesse fragile.</strong> L'industrie investit massivement dans des agents capables de mener des tâches complexes sur plusieurs jours — gérer un projet, piloter un pipeline de données, assurer un support client au long cours. MemoryArena montre que dès que les tâches s'étalent sur plus de quelques sessions avec des dépendances entre elles, les performances s'effondrent. Le fossé entre les scores impressionnants sur les benchmarks existants et la réalité opérationnelle est béant.</p>
+
+<p><strong>Les fenêtres de contexte toujours plus grandes ne résoudront pas le problème.</strong> L'intuition « plus de contexte = meilleure mémoire » se heurte à un mur. Les modèles à contexte long accumulent les erreurs au fil des sessions : une mauvaise décision en session 2 reste inscrite dans l'historique et contamine les sessions suivantes. C'est le phénomène de propagation d'erreurs, et agrandir la fenêtre ne fait que donner plus de place à ces erreurs pour s'accumuler.</p>
+
+<p><strong>L'architecture de mémoire devient un champ de recherche critique.</strong> Ni la mémoire brute (tout garder), ni la mémoire structurée actuelle (résumer, indexer, récupérer) ne suffisent. Il faut repenser la façon dont un agent <em>distille</em> son expérience — ce qu'il garde, ce qu'il oublie, comment il relie les informations entre sessions. Les chercheurs classent les approches en trois niveaux de sophistication : mémoire « 0D » (historique brut), « 1D » (distillation à plat) et « 2D » (mémoire structurée en graphe). Aucun niveau ne domine les autres de façon convaincante.</p>
+
+<p><strong>La latence est un coût caché.</strong> Les systèmes de mémoire externe ajoutent un surcoût significatif en temps d'exécution. Letta (anciennement MemGPT) prend en moyenne 133 secondes par sous-tâche, contre 74 secondes pour un agent à contexte long. Dans un contexte de production où chaque seconde compte, ce surcoût doit être mis en balance avec un gain de performance qui n'est pas garanti.</p>
+
+<h2>Pour aller plus loin : les questions ouvertes</h2>
+
+<p>MemoryArena ouvre autant de questions qu'il en résout. Plusieurs pistes se dessinent pour la recherche à venir.</p>
+
+<p><strong>L'entraînement conjoint agent-mémoire.</strong> Le décalage entre l'agent et son système de mémoire est l'un des problèmes les plus clairement identifiés. Entraîner les deux composants de concert — apprendre à l'agent à écrire dans sa mémoire et à la consulter efficacement — pourrait être un levier majeur d'amélioration.</p>
+
+<p><strong>L'oubli intelligent.</strong> Les humains ne retiennent pas tout : ils hiérarchisent, résument et oublient stratégiquement. Les systèmes actuels oscillent entre tout garder (contexte long) et des résumés souvent trop agressifs. Développer des mécanismes d'oubli sélectif, inspirés des sciences cognitives, est une voie encore peu explorée.</p>
+
+<p><strong>La robustesse à la propagation d'erreurs.</strong> Quand un agent fait une erreur en session 2, comment éviter qu'elle contamine les sessions 3 à 7 ? Les mécanismes d'auto-correction et de détection d'incohérences dans la mémoire sont un chantier ouvert.</p>
+
+<p><strong>La généralisation à d'autres domaines.</strong> MemoryArena couvre quatre environnements. Qu'en est-il de la gestion de projet logiciel sur plusieurs sprints, du suivi médical d'un patient sur plusieurs consultations, ou de la négociation commerciale en plusieurs rounds ? Chaque domaine apportera probablement ses propres défis spécifiques à la mémoire.</p>
+
+<p>Enfin, une question plus fondamentale se pose : <strong>faut-il s'inspirer davantage de la mémoire humaine ?</strong> Notre cerveau ne fonctionne ni comme un contexte long (nous ne relisons pas toute notre vie avant chaque décision) ni comme un système RAG (nous ne faisons pas de requête explicite dans nos souvenirs). Il utilise un mélange de mémoire épisodique, sémantique et procédurale, avec des mécanismes de consolidation pendant le sommeil. Les architectures actuelles d'agents IA sont encore loin de cette sophistication.</p>
+
+<p>MemoryArena pose un diagnostic clair : nous avons été trop optimistes en confondant la capacité d'un modèle à retrouver une information avec sa capacité à l'utiliser intelligemment, au bon moment, pour prendre la bonne décision. Avant de confier à des agents IA des tâches réellement complexes et étalées dans le temps, il reste un sérieux travail d'ingénierie — et peut-être de science fondamentale — à accomplir sur leur mémoire.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
