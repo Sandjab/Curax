@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 """Scan articles/ and generate manifest.json at the repo root."""
 
 import json
