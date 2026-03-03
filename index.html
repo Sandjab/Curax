@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Curax — Index des articles</title>
+  <title>Curax</title>
   <script>
   (function(){
     var m = localStorage.getItem('curax-mode') || 'light';
@@ -13,6 +13,7 @@
   })();
   </script>
   <link rel="stylesheet" href="style.css">
+  <script src="themes.js"></script>
 </head>
 <body>
   <header>
@@ -38,10 +39,22 @@
     </div>
   </header>
 
+  <nav class="tab-bar" id="tab-bar">
+    <button class="tab-button active" data-tab="articles" type="button">
+      <span class="tab-icon">📰</span> Articles
+    </button>
+    <button class="tab-button" data-tab="publications" type="button">
+      <span class="tab-icon">🎓</span> Publications
+    </button>
+  </nav>
+
   <main id="content">
-    <div class="welcome-message" id="loading">
-      <p>Chargement...</p>
+    <div id="tab-articles" class="tab-content">
+      <div class="welcome-message" id="loading">
+        <p>Chargement...</p>
+      </div>
     </div>
+    <div id="tab-publications" class="tab-content" style="display:none"></div>
   </main>
 
   <footer>
@@ -49,121 +62,8 @@
   </footer>
 
   <script>
-    // ── Theme definitions ──
-    var THEMES = {
-      portfolio: {
-        light: {
-          background: '#f8f7f2', foreground: '#1a1a1a', card: '#ffffff', 'card-foreground': '#1a1a1a',
-          primary: '#c1a875', 'primary-foreground': '#ffffff', 'primary-hover': '#b09560',
-          link: '#8b6914', 'link-hover': '#6d5210',
-          secondary: '#f0ece0', 'secondary-foreground': '#1a1a1a',
-          muted: '#f0ece0', 'muted-foreground': '#6b6352',
-          accent: '#f0ece0', 'accent-foreground': '#1a1a1a',
-          border: '#e2decb', input: '#e2decb', ring: '#c1a875', radius: '0.75rem'
-        },
-        dark: {
-          background: '#141412', foreground: '#f8f7f2', card: '#1e1e1c', 'card-foreground': '#f8f7f2',
-          primary: '#d4bc8b', 'primary-foreground': '#141412', 'primary-hover': '#e0cc9e',
-          link: '#e8c878', 'link-hover': '#f0d890',
-          secondary: '#2d2b28', 'secondary-foreground': '#f8f7f2',
-          muted: '#2d2b28', 'muted-foreground': '#a39e94',
-          accent: '#2d2b28', 'accent-foreground': '#f8f7f2',
-          border: '#2d2b28', input: '#2d2b28', ring: '#d4bc8b', radius: '0.75rem'
-        }
-      },
-      'mx-brutalist': {
-        light: {
-          background: 'hsl(45,100%,98%)', foreground: 'hsl(150,60%,5%)', card: 'hsl(45,100%,96%)', 'card-foreground': 'hsl(150,60%,5%)',
-          primary: 'hsl(150,100%,28%)', 'primary-foreground': '#ffffff', 'primary-hover': 'hsl(150,100%,22%)',
-          secondary: 'hsl(0,100%,48%)', 'secondary-foreground': '#ffffff',
-          muted: 'hsl(45,30%,90%)', 'muted-foreground': 'hsl(150,20%,30%)',
-          accent: 'hsl(0,100%,48%)', 'accent-foreground': '#ffffff',
-          border: '#000000', input: '#000000', ring: 'hsl(150,100%,28%)', radius: '0px'
-        },
-        dark: {
-          background: 'hsl(150,80%,4%)', foreground: 'hsl(45,100%,95%)', card: 'hsl(150,60%,7%)', 'card-foreground': 'hsl(45,100%,95%)',
-          primary: 'hsl(150,100%,48%)', 'primary-foreground': 'hsl(150,80%,4%)', 'primary-hover': 'hsl(150,100%,55%)',
-          secondary: 'hsl(0,100%,55%)', 'secondary-foreground': '#ffffff',
-          muted: 'hsl(150,40%,12%)', 'muted-foreground': 'hsl(45,50%,65%)',
-          accent: 'hsl(0,100%,55%)', 'accent-foreground': '#ffffff',
-          border: 'hsl(45,100%,95%)', input: 'hsl(45,60%,30%)', ring: 'hsl(150,100%,48%)', radius: '0px'
-        }
-      },
-      'sage-green': {
-        light: {
-          background: '#fdfdfd', foreground: '#000000', card: '#ffffff', 'card-foreground': '#1a1a1a',
-          primary: '#AFBEA5', 'primary-foreground': '#1a1a1a', 'primary-hover': '#97a88d',
-          link: '#3d6b35', 'link-hover': '#2d5027',
-          secondary: '#f0f2ee', 'secondary-foreground': '#1a1a1a',
-          muted: '#f0f2ee', 'muted-foreground': '#5c6356',
-          accent: '#495940', 'accent-foreground': '#ffffff',
-          border: '#e7e7ee', input: '#e7e7ee', ring: '#AFBEA5', radius: '1.4rem'
-        },
-        dark: {
-          background: '#070503', foreground: '#f9f8f7', card: '#131210', 'card-foreground': '#f9f8f7',
-          primary: '#AFBEA5', 'primary-foreground': '#070503', 'primary-hover': '#c0ceb6',
-          link: '#c4d4b8', 'link-hover': '#d8e6ce',
-          secondary: '#1e1d1a', 'secondary-foreground': '#f9f8f7',
-          muted: '#1e1d1a', 'muted-foreground': '#a09d96',
-          accent: '#495940', 'accent-foreground': '#ffffff',
-          border: '#2f281b', input: '#2f281b', ring: '#AFBEA5', radius: '1.4rem'
-        }
-      },
-      '2077': {
-        light: {
-          background: '#ffffff', foreground: '#1a1a1a', card: '#f5f5f5', 'card-foreground': '#1a1a1a',
-          primary: '#1c1c1c', 'primary-foreground': '#ffffff', 'primary-hover': '#333333',
-          secondary: '#f0f0f0', 'secondary-foreground': '#1a1a1a',
-          muted: '#f0f0f0', 'muted-foreground': '#666666',
-          accent: '#1c1c1c', 'accent-foreground': '#ffffff',
-          border: '#e0e0e0', input: '#e0e0e0', ring: '#1c1c1c', radius: '0rem'
-        },
-        dark: {
-          background: '#000000', foreground: '#ffffff', card: '#111111', 'card-foreground': '#ffffff',
-          primary: '#d6544b', 'primary-foreground': '#ffffff', 'primary-hover': '#e06b63',
-          secondary: '#1a1a1a', 'secondary-foreground': '#ffffff',
-          muted: '#1a1a1a', 'muted-foreground': '#888888',
-          accent: '#d6544b', 'accent-foreground': '#ffffff',
-          border: '#222222', input: '#222222', ring: '#d6544b', radius: '0rem'
-        }
-      },
-      astrovista: {
-        light: {
-          background: '#e8ebed', foreground: '#333333', card: '#f2f4f6', 'card-foreground': '#333333',
-          primary: '#df6035', 'primary-foreground': '#ffffff', 'primary-hover': '#c94f28',
-          secondary: '#2f4b79', 'secondary-foreground': '#ffffff',
-          muted: '#dde0e4', 'muted-foreground': '#666666',
-          accent: '#2f4b79', 'accent-foreground': '#ffffff',
-          border: '#cccccc', input: '#cccccc', ring: '#df6035', radius: '0.5rem'
-        },
-        dark: {
-          background: '#1a1a1a', foreground: '#e5e5e5', card: '#242424', 'card-foreground': '#e5e5e5',
-          primary: '#df6035', 'primary-foreground': '#ffffff', 'primary-hover': '#f07046',
-          secondary: '#284167', 'secondary-foreground': '#e5e5e5',
-          muted: '#2a2a2a', 'muted-foreground': '#999999',
-          accent: '#284167', 'accent-foreground': '#e5e5e5',
-          border: '#353535', input: '#353535', ring: '#df6035', radius: '0.5rem'
-        }
-      },
-      offworld: {
-        light: {
-          background: '#f5f5f5', foreground: '#1a1a1a', card: '#ffffff', 'card-foreground': '#1a1a1a',
-          primary: '#1a1a1a', 'primary-foreground': '#f5f5f5', 'primary-hover': '#333333',
-          secondary: '#e8e8e8', 'secondary-foreground': '#1a1a1a',
-          muted: '#e8e8e8', 'muted-foreground': '#666666',
-          accent: '#e8e8e8', 'accent-foreground': '#1a1a1a',
-          border: '#cccccc', input: '#cccccc', ring: '#1a1a1a', radius: '0rem'
-        },
-        dark: {
-          background: '#10100E', foreground: '#FFFFE3', card: '#1a1a17', 'card-foreground': '#FFFFE3',
-          primary: '#FFFFE3', 'primary-foreground': '#10100E', 'primary-hover': '#ffffcc',
-          secondary: '#252520', 'secondary-foreground': '#FFFFE3',
-          muted: '#252520', 'muted-foreground': '#a0a090',
-          accent: '#252520', 'accent-foreground': '#FFFFE3',
-          border: '#606055', input: '#606055', ring: '#FFFFE3', radius: '0rem'
-        }
-      }
-    };
+    // ── Theme definitions (loaded from themes.js) ──
+    var THEMES = CURAX_THEMES;
 
     // ── Theme switching logic ──
     var currentMode = localStorage.getItem('curax-mode') || 'light';
@@ -202,7 +102,7 @@
       }
     }
 
-    // Init
+    // Init theme
     var themeSelect = document.getElementById('theme-select');
     var modeToggle = document.getElementById('mode-toggle');
 
@@ -218,196 +118,405 @@
       applyTheme(currentTheme, newMode);
     });
 
-    // ── Main app ──
-    (async function () {
-      const content = document.getElementById("content");
+    // ── Tab switching ──
+    var currentTab = localStorage.getItem('curax-tab') || 'articles';
 
-      try {
-        const response = await fetch("manifest.json");
-        if (!response.ok) throw new Error("Manifeste introuvable");
+    function switchTab(tabId) {
+      currentTab = tabId;
+      localStorage.setItem('curax-tab', tabId);
 
-        const manifest = await response.json();
-        const domains = manifest.domains || [];
-        const uncategorized = manifest.uncategorized || [];
+      document.querySelectorAll('.tab-content').forEach(function(el) {
+        el.style.display = 'none';
+      });
+      var target = document.getElementById('tab-' + tabId);
+      if (target) target.style.display = '';
 
-        if (domains.length === 0 && uncategorized.length === 0) {
-          showWelcome();
-          return;
-        }
+      document.querySelectorAll('.tab-button').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+      });
 
-        content.innerHTML = "";
+      updateSubtitle(tabId);
+    }
 
-        // Extraire les articles de faible qualité (score <= 4)
-        const trashArticles = [];
-        for (const domain of domains) {
-          const kept = [];
-          for (const article of domain.articles || []) {
-            if (article.quality_score && article.quality_score <= 4) {
-              trashArticles.push(article);
-            } else {
-              kept.push(article);
-            }
-          }
-          domain.articles = kept;
-        }
+    function updateSubtitle(tabId) {
+      var sub = document.getElementById('subtitle');
+      if (tabId === 'articles') {
+        sub.textContent = window._articlesSubtitle || '';
+      } else {
+        sub.textContent = window._publicationsSubtitle || '';
+      }
+    }
 
-        const totalArticles = domains.reduce((sum, d) => sum + (d.articles || []).length, 0) + uncategorized.length + trashArticles.length;
-        const totalDomains = domains.filter(d => (d.articles || []).length > 0).length;
-        document.getElementById("subtitle").textContent = `${totalArticles} articles / ${totalDomains} catégories`;
+    document.querySelectorAll('.tab-button').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        switchTab(this.getAttribute('data-tab'));
+      });
+    });
 
-        if (manifest.observations) {
-          const obs = document.createElement("section");
-          obs.className = "observations";
-          const obsTitle = document.createElement("h2");
-          obsTitle.textContent = "Analyse du corpus";
-          obs.appendChild(obsTitle);
-          const obsText = document.createElement("p");
-          obsText.textContent = manifest.observations;
-          obs.appendChild(obsText);
-          content.appendChild(obs);
-        }
+    // ── Shared helpers ──
+    function scoreClass(s) {
+      if (s <= 2) return 'quality-low';
+      if (s <= 4) return 'quality-below';
+      if (s <= 6) return 'quality-mid';
+      if (s <= 8) return 'quality-good';
+      return 'quality-great';
+    }
 
-        for (const domain of domains) {
-          if ((domain.articles || []).length === 0) continue;
-          content.appendChild(buildDomainSection(domain));
-        }
+    function buildObservationsBox(text) {
+      var obs = document.createElement("section");
+      obs.className = "observations";
+      var obsTitle = document.createElement("h2");
+      obsTitle.textContent = "Analyse du corpus";
+      obs.appendChild(obsTitle);
+      var obsText = document.createElement("p");
+      obsText.textContent = text;
+      obs.appendChild(obsText);
+      return obs;
+    }
 
-        if (uncategorized.length > 0) {
-          content.appendChild(
-            buildDomainSection({
-              name: "Divers",
-              description: "Articles non catégorisés",
-              icon: "📂",
-              articles: uncategorized,
-            })
-          );
-        }
+    function buildDomainSection(domain, cardBuilder) {
+      var section = document.createElement("section");
+      section.className = "domain-section";
 
-        if (trashArticles.length > 0) {
-          content.appendChild(
-            buildDomainSection({
-              name: "Poubelle",
-              description: "Articles de faible qualité (score ≤ 4/10)",
-              icon: "🗑️",
-              articles: trashArticles,
-            })
-          );
-        }
-      } catch (e) {
-        showWelcome();
+      var header = document.createElement("div");
+      header.className = "domain-header";
+      if (domain.icon) {
+        var icon = document.createElement("span");
+        icon.className = "icon";
+        icon.textContent = domain.icon;
+        header.appendChild(icon);
+      }
+      var h2 = document.createElement("h2");
+      h2.textContent = domain.name || domain.slug;
+      header.appendChild(h2);
+      section.appendChild(header);
+
+      if (domain.description) {
+        var desc = document.createElement("p");
+        desc.className = "domain-description";
+        desc.textContent = domain.description;
+        section.appendChild(desc);
       }
 
-      function showWelcome() {
-        content.innerHTML =
+      var grid = document.createElement("div");
+      grid.className = "articles-grid";
+
+      var items = domain.articles || domain.papers || [];
+      for (var i = 0; i < items.length; i++) {
+        grid.appendChild(cardBuilder(items[i]));
+      }
+
+      section.appendChild(grid);
+      return section;
+    }
+
+    // ── Article card builder ──
+    function buildArticleCard(article) {
+      var card = document.createElement("article");
+      card.className = "article-card";
+
+      var topRow = document.createElement("div");
+      topRow.className = "card-top-row";
+
+      var h3 = document.createElement("h3");
+      var a = document.createElement("a");
+      a.href = article.file;
+      a.textContent = article.title || article.file;
+      h3.appendChild(a);
+      topRow.appendChild(h3);
+
+      if (article.quality_score) {
+        var badge = document.createElement("span");
+        badge.className = "quality-badge " + scoreClass(article.quality_score);
+        badge.textContent = article.quality_score + "/10";
+        if (article.quality_note) badge.title = article.quality_note;
+        topRow.appendChild(badge);
+      }
+
+      card.appendChild(topRow);
+
+      if (article.description) {
+        var desc = document.createElement("p");
+        desc.className = "description";
+        desc.textContent = article.description;
+        card.appendChild(desc);
+      }
+
+      if (article.tags && article.tags.length > 0) {
+        var tagsDiv = document.createElement("div");
+        tagsDiv.className = "article-tags";
+        for (var i = 0; i < article.tags.length; i++) {
+          var chip = document.createElement("span");
+          chip.className = "tag-badge";
+          chip.textContent = article.tags[i];
+          tagsDiv.appendChild(chip);
+        }
+        card.appendChild(tagsDiv);
+      }
+
+      if (article.quality_note) {
+        var note = document.createElement("p");
+        note.className = "quality-note";
+        note.textContent = article.quality_note;
+        card.appendChild(note);
+      }
+
+      if (article.date) {
+        var date = document.createElement("time");
+        date.className = "date";
+        date.textContent = article.date;
+        card.appendChild(date);
+      }
+
+      return card;
+    }
+
+    // ── Paper card builder ──
+    function buildPaperCard(paper) {
+      var card = document.createElement("article");
+      card.className = "article-card paper-card";
+
+      // Top row: title + badge
+      var topRow = document.createElement("div");
+      topRow.className = "card-top-row";
+
+      var h3 = document.createElement("h3");
+      var a = document.createElement("a");
+      a.href = paper.file;
+      a.target = "_blank";
+      a.textContent = paper.title || paper.file;
+      h3.appendChild(a);
+      topRow.appendChild(h3);
+
+      if (paper.quality_score) {
+        var badge = document.createElement("span");
+        badge.className = "quality-badge " + scoreClass(paper.quality_score);
+        badge.textContent = paper.quality_score + "/10";
+        if (paper.quality_note) badge.title = paper.quality_note;
+        topRow.appendChild(badge);
+      }
+
+      card.appendChild(topRow);
+
+      // Paper meta: authors, year, journal
+      var authors = paper.authors || [];
+      var metaParts = [];
+      if (authors.length > 0) {
+        var authStr = authors.length > 3 ? authors[0] + ' et al.' : authors.join(', ');
+        metaParts.push(authStr);
+      }
+      if (paper.year) metaParts.push(String(paper.year));
+      if (paper.journal) metaParts.push(paper.journal);
+
+      if (metaParts.length > 0) {
+        var meta = document.createElement("p");
+        meta.className = "paper-meta";
+        meta.textContent = metaParts.join(' · ');
+        card.appendChild(meta);
+      }
+
+      // Description
+      if (paper.description) {
+        var desc = document.createElement("p");
+        desc.className = "description";
+        desc.textContent = paper.description;
+        card.appendChild(desc);
+      }
+
+      // Tags
+      if (paper.tags && paper.tags.length > 0) {
+        var tagsDiv = document.createElement("div");
+        tagsDiv.className = "article-tags";
+        for (var i = 0; i < paper.tags.length; i++) {
+          var chip = document.createElement("span");
+          chip.className = "tag-badge";
+          chip.textContent = paper.tags[i];
+          tagsDiv.appendChild(chip);
+        }
+        card.appendChild(tagsDiv);
+      }
+
+      // Quality note
+      if (paper.quality_note) {
+        var note = document.createElement("p");
+        note.className = "quality-note";
+        note.textContent = paper.quality_note;
+        card.appendChild(note);
+      }
+
+      // DOI
+      if (paper.doi) {
+        var doiP = document.createElement("p");
+        doiP.className = "paper-doi";
+        var doiA = document.createElement("a");
+        doiA.href = "https://doi.org/" + paper.doi;
+        doiA.target = "_blank";
+        doiA.textContent = paper.doi;
+        doiP.appendChild(doiA);
+        card.appendChild(doiP);
+      }
+
+      // Date
+      if (paper.date) {
+        var date = document.createElement("time");
+        date.className = "date";
+        date.textContent = paper.date;
+        card.appendChild(date);
+      }
+
+      // Action buttons
+      var actions = document.createElement("div");
+      actions.className = "paper-actions";
+
+      if (paper.vulgarisation_file) {
+        var vBtn = document.createElement("a");
+        vBtn.href = paper.vulgarisation_file;
+        vBtn.target = "_blank";
+        vBtn.className = "action-btn";
+        vBtn.innerHTML = '<span class="tab-icon">📚</span> Vulgarisation';
+        actions.appendChild(vBtn);
+      }
+
+      if (paper.lca_file) {
+        var lBtn = document.createElement("a");
+        lBtn.href = paper.lca_file;
+        lBtn.target = "_blank";
+        lBtn.className = "action-btn";
+        lBtn.innerHTML = '<span class="tab-icon">📋</span> LCA';
+        actions.appendChild(lBtn);
+      }
+
+      if (actions.childNodes.length > 0) {
+        card.appendChild(actions);
+      }
+
+      return card;
+    }
+
+    // ── Render articles tab ──
+    function renderArticlesTab(manifest, container) {
+      var domains = manifest.domains || [];
+      var uncategorized = manifest.uncategorized || [];
+
+      // Extract trash
+      var trashArticles = [];
+      for (var i = 0; i < domains.length; i++) {
+        var kept = [];
+        var articles = domains[i].articles || [];
+        for (var j = 0; j < articles.length; j++) {
+          if (articles[j].quality_score && articles[j].quality_score <= 4) {
+            trashArticles.push(articles[j]);
+          } else {
+            kept.push(articles[j]);
+          }
+        }
+        domains[i].articles = kept;
+      }
+
+      var totalArticles = domains.reduce(function(sum, d) { return sum + (d.articles || []).length; }, 0) + uncategorized.length + trashArticles.length;
+      var totalDomains = domains.filter(function(d) { return (d.articles || []).length > 0; }).length;
+      window._articlesSubtitle = totalArticles + ' articles / ' + totalDomains + ' catégories';
+
+      container.innerHTML = "";
+
+      if (totalArticles === 0) {
+        container.innerHTML = '<div class="welcome-message"><p>Aucun article pour le moment.</p></div>';
+        return;
+      }
+
+      if (manifest.observations) {
+        container.appendChild(buildObservationsBox(manifest.observations));
+      }
+
+      for (var i = 0; i < domains.length; i++) {
+        if ((domains[i].articles || []).length === 0) continue;
+        container.appendChild(buildDomainSection(domains[i], buildArticleCard));
+      }
+
+      if (uncategorized.length > 0) {
+        container.appendChild(buildDomainSection({
+          name: "Divers", description: "Articles non catégorisés", icon: "📂", articles: uncategorized
+        }, buildArticleCard));
+      }
+
+      if (trashArticles.length > 0) {
+        container.appendChild(buildDomainSection({
+          name: "Poubelle", description: "Articles de faible qualité (score ≤ 4/10)", icon: "🗑️", articles: trashArticles
+        }, buildArticleCard));
+      }
+    }
+
+    // ── Render publications tab ──
+    function renderPublicationsTab(manifest, container) {
+      container.innerHTML = "";
+
+      if (!manifest.papers || !manifest.papers.domains || manifest.papers.domains.length === 0) {
+        window._publicationsSubtitle = '0 publications';
+        container.innerHTML = '<div class="welcome-message"><p>Aucune publication pour le moment.</p><p>Placez des fichiers PDF dans <code>infiles/</code> et lancez <code>python scripts/import.py infiles/</code></p></div>';
+        return;
+      }
+
+      var paperDomains = manifest.papers.domains;
+
+      // Extract trash
+      var trashPapers = [];
+      for (var i = 0; i < paperDomains.length; i++) {
+        var kept = [];
+        var papers = paperDomains[i].papers || [];
+        for (var j = 0; j < papers.length; j++) {
+          if (papers[j].quality_score && papers[j].quality_score <= 4) {
+            trashPapers.push(papers[j]);
+          } else {
+            kept.push(papers[j]);
+          }
+        }
+        paperDomains[i].papers = kept;
+      }
+
+      var totalPapers = paperDomains.reduce(function(sum, d) { return sum + (d.papers || []).length; }, 0) + trashPapers.length;
+      var totalDomains = paperDomains.filter(function(d) { return (d.papers || []).length > 0; }).length;
+      window._publicationsSubtitle = totalPapers + ' publications / ' + totalDomains + ' axes';
+
+      if (manifest.papers.observations) {
+        container.appendChild(buildObservationsBox(manifest.papers.observations));
+      }
+
+      for (var i = 0; i < paperDomains.length; i++) {
+        if ((paperDomains[i].papers || []).length === 0) continue;
+        container.appendChild(buildDomainSection(paperDomains[i], buildPaperCard));
+      }
+
+      if (trashPapers.length > 0) {
+        container.appendChild(buildDomainSection({
+          name: "Poubelle", description: "Publications de faible qualité (score ≤ 4/10)", icon: "🗑️", papers: trashPapers
+        }, buildPaperCard));
+      }
+    }
+
+    // ── Main app ──
+    (async function () {
+      try {
+        var response = await fetch("manifest.json");
+        if (!response.ok) throw new Error("Manifeste introuvable");
+
+        var manifest = await response.json();
+        var articlesContainer = document.getElementById("tab-articles");
+        var publicationsContainer = document.getElementById("tab-publications");
+
+        renderArticlesTab(manifest, articlesContainer);
+        renderPublicationsTab(manifest, publicationsContainer);
+
+        // Apply initial tab
+        switchTab(currentTab);
+      } catch (e) {
+        document.getElementById("tab-articles").innerHTML =
           '<div class="welcome-message">' +
           "<p>Bienvenue sur Curax.</p>" +
           "<p>Ajoutez des articles dans le dossier <code>articles/</code> et poussez sur <code>main</code> pour les voir apparaître ici.</p>" +
           "</div>";
-      }
-
-      function buildDomainSection(domain) {
-        const section = document.createElement("section");
-        section.className = "domain-section";
-
-        const header = document.createElement("div");
-        header.className = "domain-header";
-        if (domain.icon) {
-          const icon = document.createElement("span");
-          icon.className = "icon";
-          icon.textContent = domain.icon;
-          header.appendChild(icon);
-        }
-        const h2 = document.createElement("h2");
-        h2.textContent = domain.name || domain.slug;
-        header.appendChild(h2);
-        section.appendChild(header);
-
-        if (domain.description) {
-          const desc = document.createElement("p");
-          desc.className = "domain-description";
-          desc.textContent = domain.description;
-          section.appendChild(desc);
-        }
-
-        const grid = document.createElement("div");
-        grid.className = "articles-grid";
-
-        for (const article of domain.articles || []) {
-          grid.appendChild(buildArticleCard(article));
-        }
-
-        section.appendChild(grid);
-        return section;
-      }
-
-      function scoreClass(s) {
-        if (s <= 2) return 'quality-low';
-        if (s <= 4) return 'quality-below';
-        if (s <= 6) return 'quality-mid';
-        if (s <= 8) return 'quality-good';
-        return 'quality-great';
-      }
-
-      function buildArticleCard(article) {
-        const card = document.createElement("article");
-        card.className = "article-card";
-
-        const topRow = document.createElement("div");
-        topRow.className = "card-top-row";
-
-        const h3 = document.createElement("h3");
-        const a = document.createElement("a");
-        a.href = article.file;
-        a.textContent = article.title || article.file;
-        h3.appendChild(a);
-        topRow.appendChild(h3);
-
-        if (article.quality_score) {
-          const badge = document.createElement("span");
-          badge.className = "quality-badge " + scoreClass(article.quality_score);
-          badge.textContent = article.quality_score + "/10";
-          if (article.quality_note) {
-            badge.title = article.quality_note;
-          }
-          topRow.appendChild(badge);
-        }
-
-        card.appendChild(topRow);
-
-        if (article.description) {
-          const desc = document.createElement("p");
-          desc.className = "description";
-          desc.textContent = article.description;
-          card.appendChild(desc);
-        }
-
-        if (article.tags && article.tags.length > 0) {
-          const tagsDiv = document.createElement("div");
-          tagsDiv.className = "article-tags";
-          for (const tag of article.tags) {
-            const chip = document.createElement("span");
-            chip.className = "tag-badge";
-            chip.textContent = tag;
-            tagsDiv.appendChild(chip);
-          }
-          card.appendChild(tagsDiv);
-        }
-
-        if (article.quality_note) {
-          const note = document.createElement("p");
-          note.className = "quality-note";
-          note.textContent = article.quality_note;
-          card.appendChild(note);
-        }
-
-        if (article.date) {
-          const date = document.createElement("time");
-          date.className = "date";
-          date.textContent = article.date;
-          card.appendChild(date);
-        }
-
-        return card;
+        window._articlesSubtitle = '';
+        window._publicationsSubtitle = '';
+        switchTab('articles');
       }
     })();
   </script>
