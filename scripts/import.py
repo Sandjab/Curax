@@ -759,7 +759,7 @@ def build_paper_lca_prompt(text, taxonomy_domains):
     truncated = text[:60000]
     domains_desc = json.dumps(taxonomy_domains, indent=2, ensure_ascii=False)
 
-    return f"""Tu es un evaluateur de publications scientifiques. Tu produis une Lecture Critique d'Article (LCA) rigoureuse.
+    return f"""Tu es un évaluateur de publications scientifiques. Tu produis une Lecture Critique d'Article (LCA) rigoureuse, rédigée en français correct avec accents.
 
 TAXONOMIE DES DOMAINES DISPONIBLES :
 {domains_desc}
@@ -767,45 +767,46 @@ TAXONOMIE DES DOMAINES DISPONIBLES :
 TEXTE DE LA PUBLICATION :
 {truncated}
 
-Ta tache : analyse cette publication et produis :
+Ta tâche : analyse cette publication et produis :
 
-1. METADONNEES :
+1. MÉTADONNÉES :
 - domain : le slug du domaine le plus pertinent
 - tags : 1-3 tags en kebab-case
 - title : titre de la publication
 - description : description en 1-2 phrases
-- quality_note : appreciation synthetique du contenu (1 phrase)
+- quality_note : appréciation synthétique du contenu (1 phrase)
 - authors : liste des auteurs (format "Nom, Initiale.")
-- year : annee de publication (entier)
-- journal : nom du journal/conference
-- doi : identifiant DOI si present dans le texte (sinon chaine vide)
+- year : année de publication (entier)
+- journal : nom du journal/conférence
+- doi : identifiant DOI si présent dans le texte (sinon chaîne vide)
 
 2. SCORES DE ROBUSTESSE (0-5 chacun) :
-- question_recherche : clarte, originalite, pertinence
-- design_experimental : adequation du protocole
+- question_recherche : clarté, originalité, pertinence
+- design_experimental : adéquation du protocole
 - taille_echantillon : puissance statistique
-- qualite_metriques : validite des mesures
+- qualite_metriques : validité des mesures
 - controle_biais : gestion des confondants
-- reproductibilite : donnees/code disponibles
-- transparence_limitations : honnetete sur les limites
+- reproductibilite : données/code disponibles
+- transparence_limitations : honnêteté sur les limites
 - impact_nouveaute : contribution au domaine
 
-3. NOTE GLOBALE (robustness_global) : note de 0 a 5 (nombre decimal), appreciation independante de la qualite globale de la publication. Ce n'est PAS la moyenne des scores ci-dessus mais ton evaluation synthetique.
+3. NOTE GLOBALE (robustness_global) : note de 0 à 5 (nombre décimal), appréciation indépendante de la qualité globale de la publication. Ce n'est PAS la moyenne des scores ci-dessus mais ton évaluation synthétique.
 
-4. LCA EN HTML (lca_html) : document HTML complet d'analyse critique en francais, structure en 7 sections :
+4. LCA EN HTML (lca_html) : document HTML complet d'analyse critique en français, structuré en 7 sections :
    - Objectif et contexte
-   - Methodologie
-   - Resultats principaux
+   - Méthodologie
+   - Résultats principaux
    - Discussion et limites
-   - Reproductibilite
+   - Reproductibilité
    - Impact et applications
-   - Positionnement dans la litterature
+   - Positionnement dans la littérature
 
-   Inclus un tableau recapitulatif des 8 criteres de robustesse avec les scores.
+   Inclus un tableau récapitulatif des 8 critères de robustesse avec les scores.
    Le HTML doit contenir UNIQUEMENT le contenu du <body> (pas de <html>, <head>, <body> tags).
-   Utilise des balises semantiques : <h2>, <h3>, <p>, <table>, <ul>, <strong>.
+   Utilise des balises sémantiques : <h2>, <h3>, <p>, <table>, <ul>, <strong>.
 
-Reponds en JSON."""
+Rédige l'intégralité du HTML en français correctement accentué.
+Réponds en JSON."""
 
 
 def build_paper_vulgarisation_prompt(text, title, authors):
