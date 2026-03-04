@@ -37,6 +37,77 @@ PAPERS_DIR = os.path.join(PROJECT_ROOT, "papers")
 PAPERS_CATALOG_PATH = os.path.join(PAPERS_DIR, "catalog.json")
 
 # ---------------------------------------------------------------------------
+# Directives d'humanisation (anti-marqueurs IA)
+# ---------------------------------------------------------------------------
+
+_HUMANIZATION_BASE = """
+DIRECTIVES D'ÉCRITURE — ANTI-MARQUEURS IA :
+
+Vocabulaire INTERDIT (ne jamais utiliser) :
+- "Il convient de noter/souligner/mentionner"
+- "Il est intéressant de noter", "Il est important de souligner/rappeler"
+- "Force est de constater"
+- "Notamment" en début de phrase ou en incise automatique
+- "En somme", "En définitive", "En résumé" comme transition conclusive
+- "constitue un pilier", "constitue une avancée"
+- "offre une perspective inédite/nouvelle"
+- "ouvre des perspectives prometteuses"
+- "joue un rôle clé/crucial/fondamental"
+- "revêt une importance particulière/capitale"
+- "s'avère être", "s'avère particulièrement"
+- "Au cœur de" en ouverture
+- "Dans un contexte de/où", "À l'aune de"
+- "Permettant ainsi de", "Contribuant ainsi à", "Offrant ainsi", "Témoignant de"
+- "Soulignons que", "Notons que"
+- "en pleine expansion/mutation/effervescence"
+- "un paysage en constante évolution"
+- "les parties prenantes", "paradigme" (sauf sens épistémologique réel)
+- "holistique", "synergies", "écosystème" (sauf sens littéral)
+- "Plongeons dans", "Décryptons", "Décryptage"
+
+Anti-patterns structurels à ÉLIMINER :
+1. Transitions mécaniques ("Passons maintenant à…", "Examinons à présent…", "Intéressons-nous à…") → enchaîner directement, les titres suffisent.
+2. Résumés réflexes → ne pas conclure une section par un résumé de ce qu'on vient de dire. Chaque phrase apporte de l'information nouvelle.
+3. Listes ternaires systématiques → ne pas toujours lister exactement 3 éléments. Le nombre varie naturellement (2, 4, 5…).
+4. Pattern "**Gras :** définition" → intégrer les définitions dans le flux du texte. Le gras sert à l'emphase ponctuelle.
+5. Participes présents conclusifs → ne pas terminer un paragraphe par "permettant ainsi de…", "ouvrant la voie à…". Utiliser des phrases finies sujet-verbe-complément.
+6. Phrases d'ouverture génériques → commencer par le sujet concret, pas par "L'IA transforme tous les secteurs…"
+7. Emphase systématique → ne pas mettre en gras un mot-clé par paragraphe de façon mécanique.
+
+Règles de style :
+- Phrases directes : sujet → verbe → complément. Pas de périphrases.
+- Varier la longueur des phrases : alterner courtes (< 10 mots) et longues (20-30 mots).
+- Supprimer les adverbes d'intensité vides : "très", "extrêmement", "particulièrement" (sauf nuance réelle).
+- Préférer les verbes aux nominalisations : "les chercheurs ont analysé" plutôt que "l'analyse effectuée par les chercheurs".
+- Pas de métacommentaires : pas de "comme nous l'avons vu", "il est crucial de comprendre que".
+- Accentuation française obligatoire : tout le texte en français DOIT être correctement accentué (é, è, ê, à, â, ù, û, ô, î, ç). Ne jamais produire de français sans accents.
+"""
+
+_HUMANIZATION_LCA = """
+STYLE SPÉCIFIQUE LCA :
+- Ton analytique et direct. Pas d'euphémismes sur les faiblesses méthodologiques.
+- Critique franche : si la méthodologie est faible, le dire sans enrober. "L'échantillon de 12 sujets ne permet aucune généralisation" plutôt que "la taille de l'échantillon pourrait constituer une limitation".
+- Précision factuelle : chaque affirmation s'appuie sur un élément concret de l'article.
+- Pas de diplomatie excessive : pas de "les auteurs ont fait un travail remarquable, toutefois…".
+- Ne pas commencer par "Cette étude se propose de…" — commencer par le sujet d'étude.
+- Ne pas conclure chaque section par "ce qui soulève des questions importantes pour…"
+- Varier le sujet des phrases : ne pas utiliser "les auteurs" comme sujet systématique.
+"""
+
+_HUMANIZATION_VULGARISATION = """
+STYLE SPÉCIFIQUE VULGARISATION :
+- Ton de collègue senior qui explique à un junior curieux. Ni professoral, ni condescendant.
+- Accroches concrètes : commencer par un fait, un chiffre, une situation — pas par une contextualisation abstraite.
+- Analogies ciblées : une bonne analogie par concept complexe, pas plus.
+- Chiffres parlants : transformer les chiffres bruts en comparaisons compréhensibles.
+- Ne pas ouvrir par "Imaginez un monde où…" ou "Avez-vous déjà pensé à…"
+- Ne pas terminer par "l'avenir nous dira" ou "les possibilités sont infinies".
+- Une question rhétorique par article maximum.
+- Ne pas écrire "En d'autres termes" ou "Autrement dit" — réécrire la première formulation si elle n'est pas claire.
+- Ne pas annoncer ce qu'on va expliquer ("Nous allons voir que…") — l'expliquer directement.
+"""
+
+# ---------------------------------------------------------------------------
 # Claude CLI helper
 # ---------------------------------------------------------------------------
 
@@ -756,7 +827,7 @@ Reponds en JSON."""
 
 def build_paper_lca_prompt(text, taxonomy_domains):
     """Construit le prompt pour l'analyse LCA d'une publication."""
-    truncated = text[:60000]
+    truncated = text[:100000]
     domains_desc = json.dumps(taxonomy_domains, indent=2, ensure_ascii=False)
 
     return f"""Tu es un évaluateur de publications scientifiques. Tu produis une Lecture Critique d'Article (LCA) rigoureuse, rédigée en français correct avec accents.
@@ -804,40 +875,43 @@ Ta tâche : analyse cette publication et produis :
    Inclus un tableau récapitulatif des 8 critères de robustesse avec les scores.
    Le HTML doit contenir UNIQUEMENT le contenu du <body> (pas de <html>, <head>, <body> tags).
    Utilise des balises sémantiques : <h2>, <h3>, <p>, <table>, <ul>, <strong>.
-
+{_HUMANIZATION_BASE}
+{_HUMANIZATION_LCA}
 Rédige l'intégralité du HTML en français correctement accentué.
 Réponds en JSON."""
 
 
 def build_paper_vulgarisation_prompt(text, title, authors):
     """Construit le prompt pour la vulgarisation d'une publication."""
-    truncated = text[:40000]
+    truncated = text[:100000]
     authors_str = ', '.join(authors[:5])
 
-    return f"""Tu es un vulgarisateur scientifique expert. Tu rediges des articles de vulgarisation en francais.
+    return f"""Tu es un vulgarisateur scientifique expert. Tu rédiges des articles de vulgarisation en français.
 
 PUBLICATION : "{title}" par {authors_str}
 
 TEXTE DE LA PUBLICATION :
 {truncated}
 
-Ta tache : redige un article de vulgarisation en francais (~2000 mots).
+Ta tâche : rédige un article de vulgarisation en français (~2000 mots).
 
 STRUCTURE en 6 sections :
-1. Introduction : accroche et contexte general
-2. Le probleme : quel defi scientifique est adresse
-3. La methode vulgarisee : comment les chercheurs s'y sont pris (sans formules, analogies bienvenues)
-4. Resultats cles : les decouvertes principales, chiffres marquants
-5. Implications pratiques : pourquoi ca compte pour l'industrie/la societe
-6. Pour aller plus loin : ouvertures, questions non resolues, pistes futures
+1. Introduction : accroche et contexte général
+2. Le problème : quel défi scientifique est adressé
+3. La méthode vulgarisée : comment les chercheurs s'y sont pris (sans formules, analogies bienvenues)
+4. Résultats clés : les découvertes principales, chiffres marquants
+5. Implications pratiques : pourquoi ça compte pour l'industrie/la société
+6. Pour aller plus loin : ouvertures, questions non résolues, pistes futures
 
-PUBLIC : professionnel tech non specialiste du domaine.
-TON : pedagogique, engage, pas condescendant. Pas de formules mathematiques.
-
+PUBLIC : professionnel tech non spécialiste du domaine.
+TON : pédagogique, engagé, pas condescendant. Pas de formules mathématiques.
+{_HUMANIZATION_BASE}
+{_HUMANIZATION_VULGARISATION}
 Le HTML doit contenir UNIQUEMENT le contenu du <body> (pas de <html>, <head>, <body> tags).
-Utilise des balises semantiques : <h2>, <h3>, <p>, <blockquote>, <ul>, <strong>, <em>.
+Utilise des balises sémantiques : <h2>, <h3>, <p>, <blockquote>, <ul>, <strong>, <em>.
 
-Reponds en JSON avec la cle "vulgarisation_html"."""
+Rédige l'intégralité du HTML en français correctement accentué.
+Réponds en JSON avec la clé "vulgarisation_html"."""
 
 
 def build_paper_reclassify_taxonomy_prompt(papers_catalog):
@@ -1273,6 +1347,7 @@ def main():
               python3 scripts/import.py --yes infiles/          Import sans confirmation
               python3 scripts/import.py --reclassify            Reclassifier les articles
               python3 scripts/import.py --reclassify-papers     Reclassifier les publications
+              python3 scripts/import.py --regenerate-companions Régénérer LCA + vulgarisation
               python3 scripts/import.py --workers 5             5 workers parallèles
         """)
     )
@@ -1284,6 +1359,8 @@ def main():
                         help="reclassifier tous les articles existants (nouveau scoring, tags, domaines)")
     parser.add_argument('--reclassify-papers', action='store_true',
                         help="reclassifier les publications (domain, tags, quality_note ; score figé, compagnons non régénérés)")
+    parser.add_argument('--regenerate-companions', action='store_true',
+                        help="régénérer les LCA et vulgarisations de toutes les publications existantes")
     parser.add_argument('--migrate', action='store_true',
                         help="migration one-time des manifests de domaine vers catalog.json")
     parser.add_argument('--workers', type=int, default=3,
@@ -1531,6 +1608,104 @@ def main():
         save_papers_catalog(papers_catalog)
         _regenerate_manifest()
         print("\nTermine !")
+        return
+
+    # ------------------------------------------------------------------
+    # --regenerate-companions : régénérer LCA + vulgarisation
+    # ------------------------------------------------------------------
+    if args.regenerate_companions:
+        print("Régénération des LCA et vulgarisations...\n")
+        papers_catalog = load_papers_catalog()
+        if not papers_catalog["papers"]:
+            print("Aucune publication dans papers/catalog.json.")
+            sys.exit(1)
+
+        total = len(papers_catalog["papers"])
+        print(f"1. Extraction du texte de {total} publications...")
+
+        paper_infos = []
+        for paper_key, meta in papers_catalog["papers"].items():
+            pdf_path = os.path.join(PROJECT_ROOT, paper_key)
+            if not os.path.isfile(pdf_path):
+                print(f"  SKIP {paper_key} (fichier introuvable)")
+                continue
+            text = extract_pdf_text(pdf_path)
+            if not text or len(text.strip()) < 100:
+                print(f"  SKIP {paper_key} (texte trop court)")
+                continue
+            paper_infos.append({
+                'key': paper_key,
+                'meta': meta,
+                'text': text,
+            })
+
+        if not paper_infos:
+            print("Aucune publication à traiter.")
+            sys.exit(0)
+
+        print(f"   {len(paper_infos)} publications prêtes\n")
+
+        print(f"2. Appel Claude pour LCA + vulgarisation ({args.workers} workers)...")
+
+        def _regenerate_one(info):
+            """LCA puis vulgarisation pour une publication."""
+            lca_result = call_claude_with_retry(
+                build_paper_lca_prompt(info['text'], papers_catalog["domains"]),
+                PAPER_LCA_SCHEMA,
+                timeout=300
+            )
+            vulg_result = call_claude_with_retry(
+                build_paper_vulgarisation_prompt(
+                    info['text'],
+                    lca_result['title'],
+                    lca_result['authors']
+                ),
+                PAPER_VULGARISATION_SCHEMA,
+                timeout=300
+            )
+            return (info, lca_result, vulg_result)
+
+        done_count = 0
+        with ThreadPoolExecutor(max_workers=args.workers) as executor:
+            futures = {executor.submit(_regenerate_one, info): info for info in paper_infos}
+            for future in as_completed(futures):
+                done_count += 1
+                info, lca_result, vulg_result = future.result()
+                paper_key = info['key']
+                meta = info['meta']
+
+                # Mettre à jour les scores
+                new_robustness = lca_result['robustness_global']
+                new_quality = min(round(new_robustness * 2), 10)
+
+                # Écrire les fichiers companions
+                parts = paper_key.split('/')
+                domain = parts[1]
+                slug = parts[2]
+                paper_dir = os.path.join(PAPERS_DIR, domain, slug)
+
+                lca_html = build_companion_html(meta['title'], lca_result['lca_html'], 'lca')
+                lca_path = os.path.join(paper_dir, f"{slug}-lca.html")
+                with open(lca_path, 'w', encoding='utf-8') as f:
+                    f.write(lca_html)
+
+                vulg_html = build_companion_html(meta['title'], vulg_result['vulgarisation_html'], 'vulgarisation')
+                vulg_path = os.path.join(paper_dir, f"{slug}-vulgarisation.html")
+                with open(vulg_path, 'w', encoding='utf-8') as f:
+                    f.write(vulg_html)
+
+                # Mettre à jour le catalogue
+                papers_catalog["papers"][paper_key]["quality_score"] = new_quality
+                papers_catalog["papers"][paper_key]["robustness_score"] = new_robustness
+
+                authors_short = meta['authors'][0] if meta.get('authors') else 'Unknown'
+                if len(meta.get('authors', [])) > 1:
+                    authors_short += ' et al.'
+                print(f"  [{done_count}/{len(paper_infos)}] {slug} ({new_quality}/10, robustesse {new_robustness}/5) {authors_short}")
+
+        save_papers_catalog(papers_catalog)
+        _regenerate_manifest()
+        print(f"\nTerminé ! {done_count} publications régénérées.")
         return
 
     # ------------------------------------------------------------------

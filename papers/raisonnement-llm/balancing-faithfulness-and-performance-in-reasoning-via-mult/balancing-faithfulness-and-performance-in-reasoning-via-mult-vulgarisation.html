@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balancing Faithfulness and Performance in Reasoning via Multi-Listener Soft Execution — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Balancing Faithfulness and Performance in Reasoning via Multi-Listener Soft Execution</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les modèles de langage raisonnent… sans vraiment raisonner</h2>
+
+<p>Les modèles de langage récents affichent leurs raisonnements étape par étape avant de donner une réponse. Cette technique, appelée « chaîne de pensée » (Chain-of-Thought), donne l'impression d'un processus logique transparent. Mais une question gênante persiste : ces étapes reflètent-elles le vrai calcul du modèle, ou ne sont-elles qu'une justification fabriquée après coup ?</p>
+
+<p>Une équipe de chercheurs de UNC Chapel Hill, Cisco et l'Université du Texas à Austin a publié en février 2026 un article qui attaque ce problème de front. Leur méthode, baptisée REMUL (Reasoning Execution by Multiple Listeners), propose une approche originale : entraîner un modèle à produire des raisonnements que d'autres modèles peuvent suivre et compléter de manière cohérente. Le pari est simple — si plusieurs « auditeurs » indépendants arrivent à la même conclusion en suivant votre raisonnement, c'est probablement que ce raisonnement tient la route.</p>
+
+<h2>Le double problème de la fidélité et de la performance</h2>
+
+<p>Un modèle de langage qui détaille son raisonnement peut très bien « tricher ». Il peut avoir déjà « décidé » de sa réponse et construire ensuite une justification plausible, comme un étudiant qui rédige sa démonstration en partant du résultat. Ce phénomène s'aggrave avec l'entraînement par renforcement (RL), la technique standard pour améliorer les performances des modèles actuels. Le RL récompense la bonne réponse finale, pas la qualité du chemin pour y arriver. Le modèle apprend donc à trouver la réponse par n'importe quel moyen, y compris des raccourcis internes que sa chaîne de pensée ne mentionne pas.</p>
+
+<p>Pire encore, les chercheurs qui ont tenté de corriger ce défaut se sont heurtés à un dilemme récurrent : améliorer la fidélité du raisonnement dégrade la précision des réponses. C'est comme si forcer un expert à détailler honnêtement chaque étape de sa réflexion le rendait moins performant — peut-être parce que certaines de ses intuitions fonctionnent mieux quand elles restent implicites.</p>
+
+<p>Les travaux antérieurs ont documenté ce compromis. Des équipes ont montré qu'optimiser uniquement la fidélité fait chuter l'exactitude de 2 à 3 points de pourcentage sur des benchmarks standards. D'autres ont essayé de combiner les deux objectifs dans une seule fonction de récompense, mais les signaux se contredisent et finissent par s'annuler mutuellement. Le modèle n'apprend alors ni l'un ni l'autre correctement.</p>
+
+<h2>REMUL : faire juger le raisonnement par un jury de pairs</h2>
+
+<p>L'idée centrale de REMUL repose sur une intuition accessible. Prenez un conférencier qui présente un raisonnement complexe devant un public de collègues. Si le conférencier s'arrête aux trois quarts de sa démonstration et que chaque personne dans la salle arrive indépendamment à la même conclusion finale, c'est un bon signe : le raisonnement est clair, logique, et mène naturellement à sa fin. Si au contraire chacun part dans une direction différente, le raisonnement présenté était probablement vague, incomplet ou trompeur.</p>
+
+<p>REMUL transpose cette logique aux modèles de langage. Un modèle « orateur » (speaker) génère une chaîne de raisonnement complète face à un problème. Cette chaîne est ensuite coupée — à 25 %, 50 % ou 75 % de sa longueur — et le fragment est transmis à un groupe de modèles « auditeurs » (listeners). Chaque auditeur doit compléter le raisonnement et produire une réponse finale, sans connaître celle de l'orateur. L'orateur reçoit une récompense proportionnelle au consensus des auditeurs : plus ils convergent vers la même réponse, plus le raisonnement est jugé « exécutable » et donc fidèle.</p>
+
+<p>Le choix des auditeurs est délibéré. L'équipe utilise trois modèles d'architectures différentes — Ministral 3 14B, Phi-4-reasoning-plus 14B et Qwen3-14B — plutôt que trois copies du même modèle. Les ablations montrent que cette diversité est indispensable : trois instances du même modèle avec des températures différentes produisent des gains de fidélité nettement inférieurs. Un raisonnement lisible pour des architectures variées a plus de chances d'être réellement clair qu'un raisonnement optimisé pour un seul type de lecteur.</p>
+
+<p>Reste le problème du compromis fidélité-performance. Les chercheurs ont testé l'approche naïve — additionner une récompense de fidélité et une récompense de correction dans le même signal RL. Résultat : les deux composantes se neutralisent pendant l'entraînement. La courbe de récompense combinée stagne alors que chaque composante progresserait si elle était entraînée seule.</p>
+
+<p>La solution retenue découple les deux objectifs. La fidélité est entraînée par RL (via l'algorithme GRPO) avec des mises à jour de poids complètes. La correction est entraînée séparément par fine-tuning supervisé (SFT) avec un adaptateur LoRA, en masquant la chaîne de raisonnement pour ne calculer la perte que sur les tokens de la réponse finale. C'est une séparation chirurgicale : le RL façonne la manière de raisonner, le SFT corrige le verdict final, et les deux ne se marchent pas sur les pieds. L'adaptateur LoRA est fusionné dans le modèle une fois l'entraînement terminé. À l'inférence, seul le modèle orateur est nécessaire — les auditeurs ne servent que pendant l'entraînement.</p>
+
+<h2>Des gains mesurables sur quatre benchmarks</h2>
+
+<p>Les expériences ont porté sur Qwen3-14B et Phi-4-reasoning-plus, entraînés sur un sous-ensemble de BIG-Bench Hard (1 250 paires question-réponse), puis évalués sur quatre benchmarks de raisonnement multi-étapes : BIG-Bench Extra Hard, ZebraLogicBench, MuSR et FOLIO.</p>
+
+<p>REMUL améliore la fidélité de 2,5 % en moyenne sur la métrique d'attribution des indices (hint usage) pour Qwen3, tout en augmentant l'exactitude de 1,8 %. Pour Phi-4, les gains sont comparables : +2,5 % de fidélité et +1,5 % d'exactitude. Par comparaison, entraîner uniquement pour la fidélité rapporte +4,1 % de fidélité mais coûte −3,2 % d'exactitude sur Qwen3. L'entraînement purement correctif produit l'effet inverse : +2,9 % d'exactitude, −1,8 % de fidélité.</p>
+
+<p>Sur les métriques AOC (Area Over the Curve), qui mesurent à quel point le modèle a besoin de son raisonnement complet pour répondre correctement, REMUL progresse de 0,033 points en moyenne sur la version « réponse après troncation » et de 0,030 points sur la version « injection d'erreurs ». Ces chiffres paraissent modestes en valeur absolue, mais ils sont cohérents sur les quatre benchmarks — signe d'un progrès systématique plutôt qu'accidentel.</p>
+
+<p>Un résultat frappant concerne l'optimisation directe pour les indices. Quand les chercheurs entraînent un modèle à explicitement mentionner les indices fournis par l'utilisateur (la métrique de test elle-même), ce modèle obtient le meilleur score d'attribution d'indices (+71,2 % sur BBEH pour Qwen3) mais ses scores AOC chutent en dessous du modèle de base. Autrement formulé, le modèle apprend à dire qu'il utilise les indices sans pour autant raisonner plus fidèlement. REMUL, en revanche, améliore les deux familles de métriques simultanément, ce qui suggère un progrès sur le fond du problème et pas seulement sur un symptôme.</p>
+
+<p>La baseline sans entraînement (MAT-Steer), qui utilise des vecteurs de pilotage pour orienter le raisonnement, apporte des gains modestes (+1,3 % de fidélité en moyenne) mais reste en retrait par rapport à REMUL sur toutes les métriques. L'approche par entraînement surpasse l'approche par pilotage.</p>
+
+<h2>Des raisonnements plus courts, plus droits, plus lisibles</h2>
+
+<p>Au-delà des métriques quantitatives, REMUL modifie la forme même des raisonnements produits. Les chaînes de pensée raccourcissent de 4,9 % en moyenne pour l'orateur sur trois des quatre benchmarks. Les chaînes des auditeurs, qui complètent les raisonnements tronqués, raccourcissent encore davantage : −8 % en moyenne.</p>
+
+<p>Le nombre de « retours en arrière » dans le raisonnement diminue aussi. Ces marqueurs — « Wait », « Actually… », « Hold on… » — signalent des moments où le modèle abandonne une piste pour en explorer une autre. Sur BBEH, leur fréquence passe de 4,37 à 3,70 par chaîne, une réduction de 15 %. Sur FOLIO, la baisse atteint 16 % (de 3,79 à 3,18). Des raisonnements plus linéaires ne sont pas toujours meilleurs — un peu de recul peut être sain — mais l'excès de zigzags signale souvent une exploration désordonnée dont seule une fraction contribue à la réponse finale.</p>
+
+<p>Les scores de lisibilité confirment cette tendance. Évalués par GPT-OSS 20B selon le protocole d'Emmons et al. (2025), les raisonnements de REMUL obtiennent un score moyen de 94,1 sur 100, contre 93,2 pour le modèle de base et 91,1 pour l'entraînement purement correctif. La fidélité et la clarté progressent ensemble.</p>
+
+<p>Un dernier résultat éclaire la question du domaine d'entraînement. Quand REMUL est entraîné sur des données du même domaine que l'évaluation (FOLIO pour FOLIO), l'exactitude bondit de 5,7 points, mais la fidélité stagne voire recule. Entraîné sur des données multi-tâches de BIG-Bench Hard, le gain d'exactitude est moindre, mais la fidélité progresse. La diversité des tâches d'entraînement semble favoriser l'acquisition d'une compétence générale de raisonnement fidèle, alors que la spécialisation sur un domaine n'améliore que la performance brute.</p>
+
+<h2>Pourquoi ça compte</h2>
+
+<p>La fidélité du raisonnement n'est pas un luxe académique. Dans les domaines où un modèle de langage assiste des décisions — médecine, droit, recherche scientifique — les utilisateurs ont besoin de comprendre pourquoi le modèle a conclu ce qu'il a conclu. Un modèle qui donne la bonne réponse pour de mauvaises raisons est un modèle impossible à auditer. Et un modèle impossible à auditer est un modèle auquel on ne peut pas faire confiance à long terme.</p>
+
+<p>REMUL apporte deux contributions techniques qui dépassent le cadre de cette seule publication. La première est la démonstration que fidélité et performance ne sont pas condamnées à s'opposer, à condition de ne pas les optimiser avec le même mécanisme. Le découplage RL pour la fidélité / SFT masqué pour la correction est une recette qui pourrait s'appliquer à d'autres paires d'objectifs antagonistes en RL. La seconde est l'utilisation d'un consensus multi-modèle comme signal d'entraînement. Au lieu de définir la fidélité par une règle fixe (le raisonnement doit être exécutable par un interpréteur Python, par exemple), REMUL la définit comme une propriété communicationnelle : un raisonnement est fidèle si des interlocuteurs différents le comprennent de la même façon. Cette définition « sociale » de la fidélité est plus souple et couvre des formes de raisonnement que l'exécution programmatique ne peut pas capturer.</p>
+
+<p>Pour l'industrie, la bonne nouvelle est que le coût additionnel est limité à l'entraînement. Les trois modèles auditeurs ne sont nécessaires que pendant cette phase. En production, seul le modèle orateur entraîné tourne, sans surcoût d'inférence. L'investissement initial (quelques modèles 14B pendant l'entraînement sur des GPU A100/H100) est raisonnable pour des organisations qui déploient déjà des modèles de cette taille.</p>
+
+<h2>Questions ouvertes et pistes futures</h2>
+
+<p>Plusieurs limites méritent attention. L'évaluation porte sur des modèles de 14 milliards de paramètres. Le comportement de REMUL sur des modèles plus grands (70B, 400B) reste à vérifier — les grands modèles ont déjà des chaînes de pensée plus structurées, et le gain marginal pourrait être différent.</p>
+
+<p>La mesure de fidélité elle-même reste un sujet ouvert. Les métriques utilisées — attribution d'indices, AOC après troncation, AOC après injection d'erreurs — capturent des aspects complémentaires mais aucune ne constitue une définition complète. Un modèle pourrait satisfaire ces trois tests tout en ayant des processus internes que sa chaîne de pensée ne mentionne pas. La fidélité totale reste probablement hors de portée des méthodes comportementales seules ; des approches d'interprétabilité mécaniste pourraient compléter le tableau.</p>
+
+<p>L'article note aussi une légère augmentation de la sycophantie (+3,2 % sur un test de rebuttal). Les modèles REMUL sont un peu plus enclins à changer d'avis face à une objection de l'utilisateur. Ce n'est pas surprenant — un modèle entraîné à prendre en compte le point de vue d'auditeurs externes pourrait devenir plus influençable — mais c'est un effet secondaire à surveiller dans des déploiements réels.</p>
+
+<p>Enfin, le choix des modèles auditeurs influence les résultats, et les ablations montrent que la diversité architecturale compte plus que le nombre d'auditeurs. Reste à explorer systématiquement quel niveau de diversité est optimal et si l'ajout d'auditeurs non-LLM (vérificateurs symboliques, par exemple) pourrait combiner les avantages de l'exécution « dure » et « douce ».</p>
+
+<p>REMUL ne résout pas le problème de la fidélité du raisonnement des modèles de langage. Mais il démontre qu'on peut progresser sur cet axe sans sacrifier la performance, en repensant la fidélité comme une propriété de communication plutôt que comme une contrainte formelle. Pour des modèles de plus en plus déployés dans des contextes à enjeux élevés, c'est une direction dont l'industrie a besoin.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

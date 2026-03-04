@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codified Context: Infrastructure for AI Agents in a Complex Codebase — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Codified Context: Infrastructure for AI Agents in a Complex Codebase</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Les assistants de codage à base de LLM perdent leur cohérence entre sessions : ils oublient les conventions du projet, répètent des erreurs connues et ne disposent d'aucune mémoire persistante. Les fichiers manifestes uniques (CLAUDE.md, .cursorrules, AGENTS.md) suffisent pour des projets modestes, mais s'effondrent au-delà de quelques milliers de lignes. L'article propose une infrastructure de « contexte codifié » à trois niveaux, développée de façon itérative pendant la construction d'un système distribué C# de 108 000 lignes (simulation multijoueur temps réel). L'auteur, chimiste de formation, utilise Claude Code comme unique outil de génération de code — ce qui fait du projet un cas d'usage de développement logiciel assisté par IA par un non-spécialiste.</p>
+
+<p>L'architecture se décompose en : (1) une constitution hot-memory (~660 lignes) chargée à chaque session, (2) 19 agents spécialisés (~9 300 lignes) invoqués par tâche via des tables de routage, et (3) une base de connaissances cold-memory de 34 documents (~16 250 lignes) interrogée à la demande via un serveur MCP. Le tout représente ~26 200 lignes, soit 24,2 % du volume de code C#.</p>
+
+<h2>Méthodologie</h2>
+
+<p>L'article se présente explicitement comme un « systems paper and experience report ». L'évaluation combine quatre sources de données :</p>
+
+<ul>
+<li>Métriques quantitatives extraites de l'historique Git (148 commits, 70 jours de développement à temps partiel)</li>
+<li>Métriques d'interaction tirées de 1 457 fichiers JSONL de conversation : 2 801 prompts humains, 1 197 invocations d'agents, 16 522 tours autonomes d'agents sur 283 sessions</li>
+<li>Quatre études de cas observationnelles sélectionnées pour leur diversité qualitative</li>
+<li>Observations qualitatives sur les coûts de maintenance et les modes de défaillance</li>
+</ul>
+
+<p>Aucune expérience contrôlée n'a été menée. Les quatre études de cas illustrent des mécanismes distincts : coordination inter-sessions (système de sauvegarde, 74 sessions), capitalisation d'expérience (routage UI réseau), détection de lacunes documentaires (système de drop), et diagnostic collaboratif avec connaissance de domaine embarquée (RNG déterministe). L'auteur ne prétend à aucune relation causale.</p>
+
+<h3>Limites du protocole</h3>
+
+<p>Le protocole est fondamentalement un N=1 : un développeur, un projet, un outil (Claude Code). Les 283 sessions proviennent toutes du même contexte. L'absence de groupe de contrôle empêche toute quantification de l'apport réel de l'infrastructure par rapport à un développement sans celle-ci. La croissance de l'expérience du développeur au fil des 70 jours constitue un facteur confondant majeur et non isolable. Les études de cas, sélectionnées par l'auteur lui-même, présentent un biais de sélection inhérent — les cas où l'infrastructure a échoué ou n'a pas aidé ne sont pas documentés avec le même niveau de détail.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>L'infrastructure a évolué en trois phases : une constitution minimale (~100 lignes) les 10 premiers jours, l'émergence de spécifications et d'agents pour les domaines à fort taux d'échec (jours 11-30), puis l'intégration du serveur MCP et l'expansion du pool d'agents (jours 31-57). Le ratio connaissances/code atteint 24,2 % en fin de projet.</p>
+
+<p>Les agents les plus fréquemment invoqués sont le code-reviewer (154 invocations) et le network-protocol-designer (85 invocations). 57 % des invocations d'agents classifiables concernent des spécialistes définis dans l'infrastructure, les 43 % restants des agents outils intégrés. Plus de 80 % des prompts humains font moins de 100 mots, ce que l'auteur interprète comme un signe que le contexte pré-chargé réduit le besoin d'explications dans les prompts. Les prompts de méta-infrastructure (construction de l'architecture de connaissances elle-même) représentent 4,3 % des prompts substantifs.</p>
+
+<p>Le coût de maintenance est estimé à 1-2 heures par semaine : quelques minutes par session pour mettre à jour les spécifications affectées, plus une revue bimensuelle de 30-45 minutes sur l'ensemble des documents. La dégradation des spécifications (staleness) est identifiée comme le mode de défaillance principal : au moins deux incidents documentés où des spécifications obsolètes ont conduit des agents à générer du code incorrect (syntaxiquement correct mais fonctionnellement erroné).</p>
+
+<h2>Discussion et limites</h2>
+
+<p>L'article est un rapport d'expérience, pas une étude empirique contrôlée. Cette distinction est essentielle pour évaluer la portée des résultats.</p>
+
+<p>Le problème central — l'absence de baseline — rend impossible toute affirmation sur l'efficacité réelle de l'infrastructure. Quand l'auteur observe que le système de sauvegarde fonctionne correctement sur 74 sessions, rien ne permet de savoir si le même résultat aurait été obtenu sans l'infrastructure, avec un simple fichier CLAUDE.md plus long, ou grâce à l'apprentissage progressif du développeur. L'étude de cas 2 (routage UI) compare un « avant » sans spécification à un « après » avec spécification, mais la deuxième fonctionnalité était structurellement plus simple que la première — les conditions n'étaient pas équivalentes.</p>
+
+<p>Le ratio de 24,2 % de contexte par rapport au code C# est frappant, mais l'auteur reconnaît lui-même que ce chiffre reflète la complexité spécifique de son domaine (simulation distribuée temps réel) et non un objectif ou une norme. Un projet CRUD typique nécessiterait probablement un ratio bien inférieur. L'absence de benchmarks comparatifs avec d'autres projets utilisant des approches différentes (manifeste unique étendu, embedding-based retrieval, ou Google Conductor mentionné comme travail concurrent) laisse la question de l'efficacité relative sans réponse.</p>
+
+<p>Le biais d'auto-évaluation est omniprésent : l'auteur conçoit l'infrastructure, l'utilise, sélectionne les études de cas et rédige l'analyse. Aucun regard externe ne valide les observations. L'affirmation que « plus de 80 % des prompts font moins de 100 mots » est présentée comme une preuve indirecte de l'efficacité du contexte pré-chargé — mais cette corrélation n'établit rien : des prompts courts peuvent simplement refléter un style de communication ou des tâches granulaires.</p>
+
+<p>La perte de certains fichiers de conversation lors d'un nettoyage de cache, mentionnée en passant, soulève des questions sur la complétude des données d'interaction rapportées.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>C'est le point fort de l'article. Le dépôt compagnon (github.com/arisvas4/codified-context-infrastructure) contient des spécifications d'agents représentatives, le serveur MCP de récupération, des exemples de constitution et de documents de base de connaissances, trois agents « factory » pour bootstrapper l'architecture sur de nouveaux projets, et tous les scripts d'analyse référencés. Les données d'interaction (schéma du dataset, scripts d'extraction) sont documentées.</p>
+
+<p>La reproductibilité de l'expérience elle-même est cependant limitée : reproduire 283 sessions de développement sur un système de 108 000 lignes n'est pas réaliste. Ce qui est reproductible, c'est l'architecture proposée — un autre développeur pourrait l'appliquer à son projet et comparer ses résultats. Mais sans métriques formalisées de succès, une telle réplication resterait aussi anecdotique que l'original.</p>
+
+<p>Le serveur MCP utilise un matching par sous-chaînes de mots-clés plutôt qu'une recherche sémantique — l'auteur identifie cette limitation et propose le passage à une récupération par embeddings comme direction future.</p>
+
+<h2>Impact et applications</h2>
+
+<p>L'article remplit trois fonctions utiles. D'abord, il documente concrètement une pratique émergente : la structuration de la connaissance projet pour agents IA au-delà du manifeste unique. Les six directives pour praticiens (Figure 4) condensent des heuristiques opérationnelles : commencer la constitution dès le premier jour, écrire les spécifications pour l'agent et non pour l'humain, traiter la documentation comme infrastructure porteuse de charge, utiliser la confusion de l'agent comme signal diagnostique.</p>
+
+<p>Ensuite, la distinction hot/cold memory et le concept de routage automatique par tables de déclenchement (trigger tables) sont des contributions d'ingénierie transposables. Le pattern « si le débogage d'un domaine consomme une session entière sans résolution, créer un agent spécialisé et recommencer » est pragmatique.</p>
+
+<p>Enfin, l'article est un cas d'usage documenté de développement logiciel complexe par un expert de domaine (chimiste) utilisant des agents IA comme seul outil de génération de code. Ce profil d'utilisateur, distinct du développeur professionnel, est pertinent pour comprendre l'adoption des outils agentiques.</p>
+
+<p>L'impact reste limité par l'absence de validation externe. Les 283 sessions et 108 000 lignes de code impressionnent quantitativement, mais un seul développeur qui réussit avec sa propre méthode ne démontre pas la généralisabilité de cette méthode.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>L'article se situe au croisement de plusieurs courants de recherche. Il prolonge les études empiriques sur les manifestes agentiques (Chatlatanagulchai et al. 2025, Santos et al. 2025, Jiang et Nam 2025) en posant la question « que se passe-t-il quand les besoins de connaissance dépassent un fichier unique ? ». Il s'inscrit dans la lignée du context engineering formalisé par Mei et al. (2025) et de l'Agentic Context Engineering de Zhang et al. (2026), dont il partage l'observation du biais de brièveté (brevity bias).</p>
+
+<p>Par rapport aux frameworks multi-agents (AutoGen, ChatDev, MetaGPT), la contribution est complémentaire : ces frameworks définissent comment les agents se coordonnent, alors que le présent travail structure la connaissance dont les agents dépendent. Le travail concurrent de Google Conductor pour Gemini CLI adresse un problème similaire mais avec un couplage à un outil spécifique, tandis que l'architecture proposée ici se veut portable.</p>
+
+<p>L'article référence 28 travaux, dont la majorité sont des preprints arXiv de 2025-2026, ce qui reflète la rapidité d'évolution du domaine mais pose aussi un risque : plusieurs de ces références n'ont pas encore subi de revue par les pairs. La base scientifique sous-jacente est donc elle-même fragile.</p>
+
+<p>Le positionnement le plus honnête est celui d'un rapport d'expérience structuré avec artefacts open-source, comparable aux « experience reports » acceptés dans des venues comme ICSE-SEIP. La contribution principale n'est pas une preuve d'efficacité mais un cadre architectural concret et documenté que la communauté peut tester, adapter et éventuellement évaluer rigoureusement.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>3</td><td>Question pertinente et actuelle (mise à l'échelle du contexte pour agents IA), mais formulée comme un rapport de système plutôt qu'une hypothèse testable.</td></tr>
+<tr><td>Design expérimental</td><td>2</td><td>Pas d'expérience contrôlée. Études de cas observationnelles sélectionnées par l'auteur. Aucun groupe de comparaison.</td></tr>
+<tr><td>Taille d'échantillon</td><td>1</td><td>N=1 : un développeur, un projet, un outil. Les 283 sessions et 2 801 prompts proviennent tous du même contexte unique.</td></tr>
+<tr><td>Qualité des métriques</td><td>2</td><td>Métriques descriptives (lignes de code, nombre de sessions, invocations). Pas de mesure formelle de qualité du code, de taux d'erreur ou de productivité.</td></tr>
+<tr><td>Contrôle des biais</td><td>1</td><td>Auto-évaluation complète : l'auteur conçoit, utilise et évalue son propre système. Facteurs confondants (courbe d'apprentissage) non contrôlés.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Dépôt open-source avec agents, serveur MCP, exemples, factory agents et scripts d'analyse. L'expérience elle-même (70 jours, 108K lignes) n'est pas reproductible en l'état.</td></tr>
+<tr><td>Transparence et limitations</td><td>4</td><td>Section 5.3 détaillée et honnête sur les menaces à la validité. L'auteur ne revendique aucune relation causale et qualifie clairement l'article de rapport d'expérience.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Architecture tiered concrète et directives pratiques transposables. Contribution d'ingénierie plutôt que scientifique. Pas de validation externe de l'efficacité.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

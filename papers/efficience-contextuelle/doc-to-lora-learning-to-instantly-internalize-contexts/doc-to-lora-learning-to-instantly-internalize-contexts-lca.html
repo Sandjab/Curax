@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doc-to-LoRA: Learning to Instantly Internalize Contexts — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Doc-to-LoRA: Learning to Instantly Internalize Contexts</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    
+<h2>Lecture Critique d'Article</h2>
+<p>Doc-to-LoRA (D2L) propose un hyperréseau léger (309M paramètres) qui, en une seule passe avant, convertit un contexte textuel en adaptateur LoRA pour un LLM gelé. L'objectif : éliminer le coût répétitif de la distillation de contexte (CD) — génération de requêtes, rétropropagation, optimisation par SGD — en amortissant ce processus dans une phase unique de méta-entraînement. Le modèle cible peut ensuite répondre à des requêtes sans consommer la fenêtre de contexte, avec une latence inférieure à la seconde et une consommation mémoire réduite de plusieurs ordres de grandeur.</p>
+
+<h2>1. Objectif et contexte</h2>
+<p>L'apprentissage en contexte (ICL) est commode mais transitoire : les longs prompts alourdissent l'inférence par le coût quadratique de l'attention et la croissance du KV-cache. La distillation de contexte (CD) internalise l'information dans les paramètres du modèle, mais exige une optimisation coûteuse par contexte — plusieurs minutes, des dizaines de gigaoctets de VRAM, et une collecte de requêtes synthétiques.</p>
+<p>D2L cherche à combiner la commodité de l'ICL avec l'efficacité de la CD. L'idée : méta-apprendre la transformation « contexte → poids LoRA » dans un hyperréseau, de sorte qu'un seul passage avant remplace tout le pipeline de CD. La question de recherche est bien posée et répond à un besoin concret dans les scénarios de personnalisation fréquente ou de déploiement sur appareil.</p>
+
+<h2>2. Méthodologie</h2>
+<h3>Architecture</h3>
+<p>L'hyperréseau repose sur un module Perceiver à 8 blocs de cross-attention, sans couche de self-attention. Le contexte est encodé par le LLM cible gelé (gemma-2-2b-it), produisant des activations par couche Z ∈ R<sup>L×N×D</sup>. Le Perceiver mappe ces activations de longueur variable vers r vecteurs latents fixes (r = 8 ou 16), qui sont ensuite projetés en matrices LoRA A<sub>l</sub> et B<sub>l</sub> par des têtes de sortie par couche. Les adaptateurs sont appliqués aux couches « down projection » de chaque bloc MLP.</p>
+
+<h3>Composition par chunking</h3>
+<p>Pour traiter des contextes longs, D2L découpe le texte en K morceaux contigus, génère un adaptateur par morceau, puis concatène les matrices LoRA le long de la dimension du rang. Le rang effectif devient r·K, ce qui permet d'augmenter la capacité sans modifier l'architecture de l'hyperréseau. Ce mécanisme autorise le traitement de documents dépassant la fenêtre de contexte du LLM cible.</p>
+
+<h3>Objectif de méta-entraînement</h3>
+<p>L'hyperréseau H<sub>ϕ</sub> est optimisé pour minimiser la divergence KL entre le LLM « enseignant » (avec contexte) et le LLM « élève » (sans contexte, mais avec LoRA généré). La perte s'agrège sur un large corpus D de paires (contexte, ensemble de requêtes-réponses). Cette formulation en distillation query-indépendante permet au modèle internalisé de répondre à des requêtes non vues.</p>
+
+<h3>Données d'entraînement</h3>
+<p>Le corpus d'entraînement comprend ~3,2 millions de contextes issus de FineWeb-Edu et de datasets de QA (SQuAD, DROP, ROPES, PwC). Pour chaque contexte, 10 requêtes sont générées par gemma-3-12b-it en deux itérations, et les réponses sont auto-générées par gemma-2-2b-it. Le volume total atteint ~101 millions de triplets contexte-requête-réponse (~28 milliards de tokens de contexte).</p>
+
+<h3>Entraînement en deux phases</h3>
+<p>La première phase (80K pas) entraîne D2L à produire un seul chunk par contexte — apprentissage pur de l'internalisation. La seconde phase (20K pas) introduit le chunking aléatoire (1 à 8 morceaux) pour régulariser la composabilité des LoRA. L'entraînement complet requiert 5 jours sur 8 GPU H200.</p>
+
+<h2>3. Résultats principaux</h2>
+<h3>Needle-in-a-Haystack synthétique</h3>
+<p>Sur une tâche NIAH, D2L atteint une précision quasi parfaite jusqu'à 8K tokens (limite du LLM cible) et maintient des performances élevées jusqu'à ~40K tokens — soit 4× la longueur maximale du modèle de base et plus de 150× la longueur maximale d'entraînement (256 tokens). Au-delà de 40K tokens, la dégradation reste progressive. La consommation mémoire additionnelle reste inférieure à 50 Mo, contre plus de 12 Go pour le modèle de base à 128K tokens.</p>
+
+<h3>QA sur passages courts (SQuAD, DROP, ROPES)</h3>
+<p>D2L surpasse toutes les baselines in-parameter sur les trois benchmarks, atteignant 82,5 % de la performance ICL sur SQuAD. L'internalisation prend moins d'une seconde (mode batched : ~0,09s ; mode itératif : ~0,55s), contre ~40s pour CD oracle et >100s pour CD avec requêtes générées. La mémoire additionnelle reste sous 2 Go, contre >40 Go pour CD avec requêtes générées.</p>
+
+<h3>QA sur documents longs (LongBench)</h3>
+<p>Sur 2WikiMultihopQA, MultiFieldQA et QASPER, D2L généralise en zero-shot à des documents atteignant 32K tokens — alors que le plus long exemple d'entraînement fait 2 344 tokens. La performance normalisée sur 2WikiMultihopQA atteint 0,857 (batched) contre 0,704-0,745 pour CD avec requêtes générées, et approche le CD oracle (0,901). Un résultat intéressant : combiner D2L avec le contexte tronqué améliore les performances par rapport au contexte tronqué seul, possiblement en atténuant le phénomène de « lost-in-the-middle ».</p>
+
+<h3>Transfert cross-modal VLM→LLM</h3>
+<p>En utilisant gemma-3-4b-it (VLM) comme encodeur de contexte et gemma-2-2b-it (LLM texte) comme cible, D2L atteint 75 % de précision sur Imagenette (10 classes) — un résultat frappant étant donné que ni D2L ni le LLM cible n'ont vu d'images durant l'entraînement. La performance sur les tâches textuelles diminue cependant (SQuAD : 0,705 vs 0,814 avec encodeur LLM).</p>
+
+<h3>Ablations</h3>
+<p>Le passage de rang 8 à rang 16 améliore les performances sur SQuAD (+0,082) et DROP (+0,056). La suppression des données QA de l'entraînement a un impact limité (comparable sur SQuAD et ROPES, baisse sur DROP). L'objectif KL surpasse l'objectif NTP (next-token prediction) de façon substantielle, en particulier dans le test de généralisation « swapped » (0,385 vs 0,235 en rappel).</p>
+
+<h2>4. Discussion et limites</h2>
+<h3>Interférence de connaissances</h3>
+<p>Le problème le plus sérieux identifié par les auteurs : lorsqu'un contexte non pertinent est internalisé (prompt assistant générique, texte distracteur), D2L dégrade la performance du modèle de base en dessous de son niveau sans contexte (Table 8). Le modèle semble développer un biais fort supposant que toute requête subséquente sera liée au contexte internalisé. Les auteurs attribuent ce biais au pipeline de génération de données, qui ne produit que des requêtes pertinentes. Aucune solution n'est implémentée — seulement des pistes (ajout de requêtes non pertinentes, mécanismes de continual learning).</p>
+
+<h3>Coût de méta-entraînement</h3>
+<p>5 jours sur 8 GPU H200 représentent un investissement initial considérable. L'hyperréseau doit être réentraîné pour chaque nouveau LLM cible. Ce coût est amorti sur de nombreuses utilisations, mais limite l'adoption pour des modèles de niche ou des mises à jour fréquentes de l'architecture cible.</p>
+
+<h3>Écart avec l'ICL</h3>
+<p>Un écart de performance persistant sépare D2L de l'ICL : ~82,5 % de la performance ICL sur SQuAD. Cet écart est inhérent aux méthodes in-parameter, mais la comparaison avec CD oracle (qui utilise la requête exacte de test) montre que D2L s'en rapproche sans accès à cette information privilégiée.</p>
+
+<h3>Comparaison avec CD</h3>
+<p>La comparaison avantageuse de D2L repose sur un budget de requêtes limité pour CD (5-25 requêtes). Les auteurs reconnaissent qu'avec des centaines de requêtes, CD dépasserait D2L. L'argument de la latence reste valide : CD avec 100 requêtes prend >10 minutes par échantillon, ce qui est incompatible avec des applications interactives.</p>
+
+<h3>Métriques d'évaluation</h3>
+<p>ROUGE-L F1 est une métrique de surface qui ne capture pas la correction factuelle de manière fiable. Les auteurs le reconnaissent implicitement en reportant aussi le rappel ROUGE-L, mais l'absence de métriques de fidélité factuelle (exacte match, F1 par token sur les réponses courtes) affaiblit l'évaluation. Le problème est visible avec Generative Adapter, dont le F1 élevé masque un rappel faible.</p>
+
+<h2>5. Reproductibilité</h2>
+<p>Le code est disponible sur GitHub (github.com/SakanaAI/doc-to-lora). L'architecture est documentée avec des listings de pseudocode et des descriptions de modules PyTorch (Listings 1-3). Les prompts de génération de données sont intégralement reproduits (Listings 4-8). Les hyperparamètres d'entraînement sont spécifiés : learning rate (4×10<sup>-5</sup>), taille de batch (>200K tokens de contexte sur 8 GPU), nombre de pas (80K + 20K).</p>
+<p>La reproduction effective reste coûteuse : 5 jours sur 8 H200 pour le méta-entraînement, plus la génération préalable de ~101M de triplets requête-réponse via gemma-3-12b-it. Peu d'équipes académiques disposent de ces ressources. Les checkpoints entraînés ne semblent pas être publiés directement, bien qu'un checkpoint T2L soit mentionné comme « publicly available ».</p>
+
+<h2>6. Impact et applications</h2>
+<p>L'internalisation sub-seconde transforme la CD d'un processus hors-ligne en une opération temps réel. Les cas d'usage concrets incluent : personnalisation fréquente des LLM (préférences utilisateur, historique de conversation), internalisation de documents privés sur appareil (réduction du KV-cache de >12 Go à <50 Mo pour 128K tokens), et mise à jour continue de connaissances dans des environnements dynamiques (bases de code actives, tâches agentiques).</p>
+<p>Le transfert cross-modal ouvre une direction de recherche vers des LLM textuels augmentés de capacités visuelles sans modification architecturale — bien que la précision de 75 % sur 10 classes reste préliminaire.</p>
+<p>La principale limitation pratique est l'interférence de connaissances : tant que ce problème n'est pas résolu, l'utilisation en production exige un soin particulier pour éviter que l'internalisation ne corrompe les connaissances existantes du modèle.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+<p>D2L s'inscrit dans la lignée de Text-to-LoRA (T2L, Charakorn et al., 2025), dont il partage le premier auteur. La différence centrale : T2L est entraîné sur des datasets SFT avec perte NTP, tandis que D2L utilise l'objectif de distillation KL avec requêtes auto-générées. Cette distinction explique la supériorité de D2L sur les tâches de rappel factuel (T2L échoue largement dans les expériences présentées).</p>
+<p>Par rapport à Generative Adapter (Chen et al., 2025), qui combine pré-entraînement et fine-tuning SFT de l'hyperréseau, D2L opère sans dataset SFT curé. L'analyse des auteurs est précise : GA produit des réponses plus courtes avec un F1 trompeur — le rappel ROUGE-L révèle une fidélité factuelle inférieure.</p>
+<p>Face à Cartridges (Eyuboglu et al., 2025), qui compresse le contexte en prefix-tuning (KV-cache) via CD classique, D2L amortit le coût de CD dans l'hyperréseau. L'annexe D montre que l'architecture D2L peut aussi générer du KV-cache, ce qui rapproche les deux approches.</p>
+<p>Les méthodes de compression de prompts (LLMLingua-2, Gisting) opèrent dans l'espace des tokens, pas des paramètres. D2L offre une compression plus agressive (0 token de contexte résiduel) au prix d'une dégradation de performance plus marquée que la compression à 40 %.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+<table>
+  <thead>
+    <tr style="background-color: rgba(0,0,0,0.05);">
+      <th style="text-align: left;">Critère</th>
+      <th style="text-align: center;">Score (/5)</th>
+      <th style="text-align: left;">Commentaire</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td style="text-align: center;"><span class="score-4">4</span></td>
+      <td>Problème bien défini et motivé. La distinction entre internalisation query-dépendante et query-indépendante clarifie la contribution. Formulation mathématique rigoureuse.</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td style="text-align: center;"><span class="score-4">4</span></td>
+      <td>Progression cohérente : tâche synthétique (NIAH) → QA courte → QA longue → transfert cross-modal. Baselines pertinentes avec bornes supérieure (CD oracle, ICL) et inférieure (sans contexte). L'entraînement en deux phases manque de justification théorique.</td>
+    </tr>
+    <tr>
+      <td>Taille d'échantillon</td>
+      <td style="text-align: center;"><span class="score-3">3</span></td>
+      <td>500 échantillons de test par dataset, limité par le coût de CD. L'entraînement sur ~101M de triplets est massif, mais l'évaluation reste modeste. Pas d'intervalles de confiance sur les métriques principales (seulement sur la latence).</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td style="text-align: center;"><span class="score-3">3</span></td>
+      <td>ROUGE-L F1 est une métrique de surface inadéquate pour la fidélité factuelle. La « performance normalisée » relative masque les scores absolus (relégués en appendice). Les mesures de latence et mémoire sont en revanche précises et pertinentes.</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td style="text-align: center;"><span class="score-3">3</span></td>
+      <td>Inclusion de datasets QA dans l'entraînement crée une fuite potentielle, partiellement adressée par l'ablation (Table 5). La comparaison avec CD sous budget limité favorise D2L. L'interférence de connaissances (Table 8) est identifiée mais non résolue.</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td style="text-align: center;"><span class="score-4">4</span></td>
+      <td>Code disponible sur GitHub, architecture détaillée en listings, prompts de génération intégralement publiés. Le coût de reproduction reste prohibitif (5 jours × 8 H200). Absence de checkpoints pré-entraînés publiés pour D2L.</td>
+    </tr>
+    <tr>
+      <td>Transparence et limitations</td>
+      <td style="text-align: center;"><span class="score-4">4</span></td>
+      <td>Discussion franche du coût de méta-entraînement, de l'écart ICL/in-parameter, de l'interférence de connaissances, et de la nécessité de réentraîner par LLM cible. Les auteurs publient aussi les résultats négatifs (Table 8, dégradation Mistral sur contextes longs).</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td style="text-align: center;"><span class="score-4">4</span></td>
+      <td>L'amortissement de la CD dans un hyperréseau est une contribution substantielle. La généralisation zero-shot à 4× la fenêtre de contexte et le transfert cross-modal VLM→LLM sont des résultats non triviaux. Le mécanisme de chunking compositionnel est élégant.</td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr style="background-color: rgba(0,0,0,0.05);">
+      <td><strong>Note globale de robustesse</strong></td>
+      <td style="text-align: center;"><strong>3.5 / 5</strong></td>
+      <td>Travail rigoureux avec une contribution technique claire et une validation expérimentale large. Les faiblesses résident dans les métriques d'évaluation (ROUGE-L), la taille d'évaluation modeste (500 échantillons), et le problème non résolu d'interférence de connaissances qui limite le déploiement pratique.</td>
+    </tr>
+  </tfoot>
+</table>
+
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

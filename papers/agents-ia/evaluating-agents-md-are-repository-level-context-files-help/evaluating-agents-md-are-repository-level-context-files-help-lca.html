@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents? — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents?</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Les fichiers de contexte — AGENTS.md, CLAUDE.md et équivalents — se sont imposés comme pratique standard pour adapter les agents de codage aux spécificités d'un dépôt logiciel. Plus de 60 000 dépôts GitHub publics en contenaient au moment de la rédaction. Les principaux fournisseurs d'agents (Anthropic, OpenAI, Alibaba) recommandent leur utilisation et proposent des commandes dédiées pour les générer automatiquement. Aucune étude rigoureuse n'avait cependant mesuré si ces fichiers améliorent réellement la capacité des agents à résoudre des tâches d'ingénierie logicielle.</p>
+
+<p>Cette publication d'ETH Zurich et LogicStar.ai comble ce manque. Les auteurs évaluent l'effet des fichiers de contexte sur quatre agents de codage (Claude Code, Codex, Qwen Code) dans trois configurations : absence de fichier, fichier généré par LLM, fichier écrit par un développeur humain. L'évaluation couvre SWE-BENCH LITE (300 tâches, 11 dépôts populaires) et un nouveau benchmark, AGENTBENCH (138 instances, 12 dépôts de niche contenant des fichiers de contexte écrits par des développeurs).</p>
+
+<h2>Méthodologie</h2>
+
+<h3>Construction d'AGENTBENCH</h3>
+
+<p>Le benchmark AGENTBENCH suit un pipeline en cinq étapes. La sélection cible des dépôts Python contenant un fichier de contexte à la racine, disposant d'une suite de tests et comptant au moins 400 pull requests. Les PR sont filtrées par un mélange de règles heuristiques et d'un agent LLM qui évalue leur caractère déterministe et testable. Un agent configure l'environnement d'exécution, un autre génère des descriptions de tâches standardisées à partir des PR et issues associées, et un dernier produit les tests unitaires de régression. Les tests générés sont vérifiés manuellement pour éliminer la sur-spécification.</p>
+
+<p>Le choix d'utiliser GPT-5.2 avec Codex comme agent de construction introduit une dépendance à un modèle spécifique pour la qualité des instances. La couverture moyenne des tests atteint 75 % du code modifié — un chiffre correct mais qui laisse une marge d'erreur non négligeable sur le quart restant.</p>
+
+<h3>Protocole expérimental</h3>
+
+<p>Quatre agents sont testés, chacun couplé à son modèle natif : Claude Code avec Sonnet 4.5, Codex avec GPT-5.2 et GPT-5.1 Mini, Qwen Code avec Qwen3-30B-Coder. Les températures sont fixées à 0 pour trois agents sur quatre (0.7 pour Qwen, avec top-p 0.8). Chaque configuration est exécutée une seule fois par instance — une limitation significative en l'absence d'estimation de variance.</p>
+
+<p>Les trois conditions expérimentales (NONE, LLM, HUMAN) sont clairement définies. Pour la condition LLM, chaque agent génère son propre fichier via sa commande d'initialisation recommandée. Les fichiers développeur proviennent de l'état pré-patch du dépôt. Les agents ont accès au web mais une vérification manuelle confirme l'absence de triche (consultation des PR correspondantes).</p>
+
+<h2>Résultats principaux</h2>
+
+<p>Le résultat central contredit les recommandations des fournisseurs d'agents. Les fichiers de contexte générés par LLM diminuent le taux de résolution de 0,5 % sur SWE-BENCH LITE et de 2 % sur AGENTBENCH en moyenne. Les fichiers écrits par des développeurs améliorent la performance de 4 % en moyenne sur AGENTBENCH, mais cette amélioration reste marginale et ne se manifeste pas pour tous les agents — Claude Code fait exception avec une dégradation.</p>
+
+<p>Les coûts augmentent systématiquement. Les fichiers LLM ajoutent en moyenne 2,45 étapes sur SWE-BENCH LITE et 3,92 sur AGENTBENCH, soit une hausse de coût de 20 à 23 %. Le nombre de tokens de raisonnement augmente de 10 à 22 % selon les modèles. Les agents consacrent plus de temps à explorer le dépôt, lancer des tests et utiliser des outils spécifiques mentionnés dans le fichier de contexte — sans que cet effort supplémentaire se traduise en résultats.</p>
+
+<p>Un résultat éclairant : lorsque toute la documentation existante est retirée du dépôt, les fichiers de contexte LLM surpassent les fichiers humains de 2,7 % en moyenne. Les fichiers générés sont donc redondants avec la documentation existante, mais utiles quand cette documentation manque — ce qui correspond aux témoignages anecdotiques de développeurs de projets peu documentés.</p>
+
+<p>Ni le modèle utilisé pour la génération, ni le prompt employé n'ont d'effet significatif et cohérent sur la qualité des fichiers produits. GPT-5.2 génère des fichiers qui améliorent les performances sur SWE-BENCH LITE (+2 %) mais les dégradent sur AGENTBENCH (-3 %).</p>
+
+<h2>Discussion et limites</h2>
+
+<p>La restriction à Python constitue la limitation la plus sérieuse. Ce langage, surreprésenté dans les données d'entraînement, implique que les modèles possèdent déjà une connaissance paramétrique de l'outillage et des dépendances des dépôts populaires. L'effet des fichiers de contexte pourrait différer pour des langages moins courants (Rust, Haskell, OCaml) où cette connaissance préalable est plus faible.</p>
+
+<p>L'exécution unique par configuration empêche toute analyse statistique de la variance. Avec des taux de résolution oscillant entre 30 et 60 %, une différence de 2 à 4 points de pourcentage pourrait relever du bruit, surtout sur 138 instances. L'absence de tests de significativité ou d'intervalles de confiance affaiblit les conclusions quantitatives.</p>
+
+<p>AGENTBENCH ne contient que 12 dépôts. La distribution, bien que plus homogène que SWE-BENCH LITE, reste trop restreinte pour garantir la généralisation. Certains dépôts ne contribuent que 3 instances (graphiti), rendant les estimations par dépôt instables.</p>
+
+<p>L'évaluation se limite au taux de résolution. Les fichiers de contexte pourraient améliorer d'autres dimensions — qualité du code produit, conformité aux conventions du projet, sécurité — que cette étude ne mesure pas. Les auteurs reconnaissent cette limitation et suggèrent des pistes pour de futurs travaux.</p>
+
+<p>Le protocole de génération des tests de régression par LLM, malgré la vérification manuelle, laisse subsister un risque de tests insuffisamment discriminants. La couverture moyenne de 75 % signifie qu'un quart du code modifié n'est pas vérifié.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le code de génération d'AGENTBENCH et d'évaluation est annoncé comme disponible publiquement. Tous les prompts utilisés pour le filtrage des PR, la configuration des environnements, la génération des descriptions de tâches et des tests sont reproduits intégralement en annexe. Les versions des modèles sont spécifiées (Sonnet 4.5, GPT-5.2, GPT-5.1 Mini, Qwen3-30B-Coder).</p>
+
+<p>Reproduire les expériences nécessite un budget d'inférence conséquent : Claude Code avec Sonnet 4.5 coûte en moyenne 1,30 USD par instance (40 instances par dépôt SWE-BENCH LITE), soit plusieurs milliers de dollars pour l'ensemble des configurations. Le déploiement local de Qwen3-30B via vLLM requiert du matériel GPU dédié. Ces contraintes pratiques limitent la reproductibilité à des équipes disposant de ressources significatives.</p>
+
+<h2>Impact et applications</h2>
+
+<p>Cette étude remet en question une pratique largement adoptée par l'industrie. La recommandation pratique est claire : ne pas utiliser de fichiers de contexte générés automatiquement par LLM dans l'état actuel, et limiter les fichiers manuels à des instructions minimales (outillage spécifique, commandes de build). Les survols de codebase, que 95 à 100 % des fichiers générés incluent, n'aident pas les agents à localiser plus rapidement les fichiers pertinents.</p>
+
+<p>Le benchmark AGENTBENCH enrichit l'écosystème d'évaluation avec des dépôts de niche, complémentaires aux grands projets de SWE-BENCH LITE. Cette diversification est bienvenue, les benchmarks existants étant dominés par quelques dépôts populaires (django représente la majorité des instances SWE-BENCH LITE).</p>
+
+<p>L'analyse des traces révèle un phénomène contre-intuitif : les agents suivent les instructions des fichiers de contexte (utilisation d'outils mentionnés, exécution de tests recommandés), mais ce suivi accroît la complexité de la tâche sans améliorer le résultat. Suivre plus d'instructions rend la résolution plus difficile, pas plus facile.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Cette publication se distingue des travaux descriptifs antérieurs (Chatlatanagulchai et al., 2025 ; Mohsenimofidi et al., 2025) qui cataloguaient le contenu des fichiers de contexte sans évaluer leur efficacité. Elle s'inscrit dans la lignée des benchmarks d'évaluation des agents de codage initiée par SWE-BENCH (Jimenez et al., 2024) et étendue vers la génération de fonctionnalités (FEA-Bench), la sécurité (SecureAgentBench) et la performance (SWE-Perf).</p>
+
+<p>Le résultat principal — l'inefficacité des fichiers de contexte générés automatiquement — entre en tension directe avec les recommandations de GitHub (Nigh, 2025), Anthropic (2025b) et les témoignages de développeurs individuels (Sewell, 2025). L'explication proposée (redondance avec la documentation existante) est convaincante mais partielle : elle n'explique pas pourquoi les fichiers augmentent la difficulté perçue par les modèles, mesurée par le nombre de tokens de raisonnement.</p>
+
+<p>La direction future la plus prometteuse concerne la génération de fichiers de contexte ciblés et minimaux, s'appuyant sur les travaux en planification (Dynamic Cheatsheet, Suzgun et al., 2025) et en ingénierie de contexte agentique (Zhang et al., 2025b). L'écart documenté entre recommandations industrielles et résultats empiriques crée un espace de recherche concret pour améliorer l'auto-adaptation des agents à leurs environnements de travail.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Commentaire</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td>4</td>
+      <td>Question claire, originale et directement pertinente pour la pratique industrielle actuelle.</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td>4</td>
+      <td>Deux benchmarks complémentaires, trois conditions, quatre agents. Protocole bien structuré malgré l'absence de répétitions.</td>
+    </tr>
+    <tr>
+      <td>Taille de l'échantillon</td>
+      <td>3</td>
+      <td>138 instances AGENTBENCH sur 12 dépôts, 300 instances SWE-BENCH LITE. Exécution unique par configuration, sans estimation de variance.</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td>4</td>
+      <td>Métriques bien définies (taux de résolution, coût, nombre d'étapes). Analyse comportementale des traces enrichissante.</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td>3</td>
+      <td>Vérification de non-fuite et non-triche. Biais potentiel : les fichiers LLM sont générés par les agents évalués. Pas de tests de significativité statistique.</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td>4</td>
+      <td>Code et prompts publiés. Versions de modèles spécifiées. Coût de reproduction élevé (plusieurs milliers de dollars d'inférence).</td>
+    </tr>
+    <tr>
+      <td>Transparence et limitations</td>
+      <td>4</td>
+      <td>Section dédiée aux limitations. Restriction à Python, absence d'évaluation de la sécurité et de la qualité du code reconnues.</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td>4</td>
+      <td>Première évaluation rigoureuse contredisant les pratiques recommandées. Nouveau benchmark AGENTBENCH. Résultats directement actionnables.</td>
+    </tr>
+  </tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

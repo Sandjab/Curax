@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ActionEngine: From Reactive to Programmatic GUI Agents via State Machine Memory — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>ActionEngine: From Reactive to Programmatic GUI Agents via State Machine Memory</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Des agents logiciels qui cliquent à votre place — mais pas assez vite</h2>
+
+<p>Un agent GUI prend une capture d'écran, demande à un modèle de langage « que faire maintenant ? », exécute le clic suggéré, puis recommence. Pour accomplir une tâche de 50 étapes sur un site web, il faut 50 allers-retours avec le modèle. Chaque appel coûte du temps, de l'argent, et introduit un risque d'erreur. Une seule hallucination visuelle en chemin peut faire dérailler toute la séquence. C'est le quotidien des agents dits « réactifs » — ceux que la recherche produit depuis deux ans.</p>
+
+<p>Une équipe de Georgia Tech et Microsoft Research propose ActionEngine, un système qui change la logique de fond : au lieu de réfléchir à chaque pas, l'agent explore d'abord le site hors ligne, construit une carte de navigation, puis génère un programme Python complet en un seul appel au modèle. Le résultat, testé sur le benchmark WebArena (tâches Reddit) : 95 % de réussite contre 66 % pour le meilleur concurrent, avec un coût divisé par douze et un temps d'exécution réduit de moitié.</p>
+
+<h2>2. Le problème : des agents myopes et dispendieux</h2>
+
+<p>Les agents GUI actuels fonctionnent en boucle fermée. À chaque étape, l'agent observe l'écran (capture d'écran ou arbre DOM), interroge un grand modèle multimodal pour décider de l'action suivante, l'exécute, puis recommence sur la page résultante. Ce cycle « observer–raisonner–agir » semble naturel : c'est ainsi qu'un humain procède devant un écran inconnu.</p>
+
+<p>Mais cette approche accumule deux handicaps. Le premier est économique. Le nombre d'appels au modèle croît proportionnellement au nombre d'étapes de la tâche. Une tâche qui demande de naviguer vers un forum, trouver un post, identifier un auteur, lire ses commentaires, filtrer ceux qui ont reçu plus de votes négatifs que positifs, puis compter le résultat — soit une quinzaine d'actions — nécessite une quinzaine d'inférences coûteuses. Multipliez par des centaines de tâches quotidiennes, et la facture API devient prohibitive.</p>
+
+<p>Le second handicap est cognitif, si l'on peut employer ce mot pour un logiciel. L'agent n'a aucune mémoire persistante de l'application qu'il manipule. Il redécouvre la structure du site à chaque tâche, sans savoir que le bouton « Trier par Nouveau » qu'il a déjà utilisé hier existe toujours au même endroit aujourd'hui. Cette myopie l'empêche de réutiliser des parcours connus ou de composer des solutions à partir de briques déjà validées. Les meilleurs agents réactifs plafonnent à 58-66 % de réussite sur WebArena, un benchmark qui exige du raisonnement multi-étapes sur de vrais sites web.</p>
+
+<h2>3. La méthode : une carte routière et un compilateur</h2>
+
+<p>ActionEngine repose sur une idée simple, empruntée à la façon dont un développeur apprend une application avant d'écrire un script d'automatisation. Plutôt que de découvrir le site en temps réel, le développeur commence par naviguer dans l'interface, note les pages, les boutons, les formulaires, puis écrit un programme qui enchaîne les actions sans hésitation. ActionEngine reproduit cette démarche avec deux agents spécialisés.</p>
+
+<h3>L'agent explorateur : cartographier l'application</h3>
+
+<p>Le premier agent, appelé Crawling Agent, parcourt le site web hors ligne — sans aucune tâche utilisateur à accomplir. Son objectif : construire une carte complète de l'application sous forme de graphe d'états. Chaque page distincte du site devient un nœud du graphe. Chaque action possible (cliquer sur un bouton, remplir un champ, lire un contenu) devient une arête reliant deux nœuds, ou un arc qui revient au même nœud quand l'action ne change pas de page.</p>
+
+<p>L'analogie la plus parlante est celle du plan de métro. Les stations sont les pages, les lignes sont les actions de navigation. Une fois le plan dessiné, n'importe quel trajet se réduit à une recherche de chemin sur le graphe — pas besoin de demander son chemin à chaque correspondance.</p>
+
+<p>Un problème surgit immédiatement : un site comme Reddit contient des millions de posts, donc potentiellement des millions de pages distinctes. Modéliser chaque page individuellement rendrait le graphe inutilisable. Les chercheurs contournent l'obstacle en distinguant la structure d'une page de son contenu. La page du forum « wallstreetbets » et celle du forum « AskReddit » ont la même structure (barre de navigation, liste de posts, filtres de tri) même si les données affichées diffèrent. Le graphe ne retient qu'un seul nœud « Page de forum » — un patron réutilisable pour toutes les instances. Pour Reddit, cette compression produit un graphe de 20 à 30 nœuds et 100 à 150 transitions. Compact et manipulable.</p>
+
+<p>Chaque nœud est décrit par ses « atomes » — des groupes d'éléments d'interface qui apparaissent toujours ensemble. La page d'accueil de Reddit, par exemple, se décompose en quatre atomes : la barre de navigation, la barre de recherche, le sélecteur de type de contenu, et les filtres. Cette décomposition atomique permet d'identifier une page par sa signature structurelle, indépendamment des données qu'elle affiche.</p>
+
+<h3>L'agent exécutant : un compilateur pour tâches web</h3>
+
+<p>Le second agent, l'Execution Agent, entre en scène quand un utilisateur soumet une tâche. Son travail ressemble à celui d'un compilateur de code source. Il traduit la requête en langage naturel en un programme Python exécutable, en trois phases successives.</p>
+
+<p>D'abord, la phase de « sketch » : un modèle de langage reçoit la tâche et le graphe d'états filtré (seuls les nœuds accessibles depuis la position actuelle sont transmis). Il produit un programme Python squelettique qui décrit la logique de la tâche — boucles, conditions, appels de fonctions — mais laisse les actions de navigation sous forme de placeholders abstraits. Le programme dit « va sur tel forum » sans préciser la séquence exacte de clics nécessaires.</p>
+
+<p>Ensuite, la phase de liaison : un algorithme de recherche en largeur parcourt le graphe pour résoudre chaque placeholder en une séquence concrète de transitions. « Va sur tel forum » se décompose en « clique ici, puis clique là ». Cette étape est déterministe — pas d'appel au modèle de langage.</p>
+
+<p>Enfin, la compilation : le programme résolu est transformé en un plan d'actions typées (clics Playwright, lectures de texte, blocs Python) prêt à être exécuté par un runtime déterministe. L'ensemble de la planification ne requiert qu'un seul appel au modèle de langage, contre une dizaine ou plus pour un agent réactif.</p>
+
+<h3>Le filet de sécurité : s'adapter quand l'interface change</h3>
+
+<p>Un site web évolue. Un bouton change de place, un sélecteur CSS est renommé. Si le programme pré-compilé échoue à l'exécution, ActionEngine ne replannifie pas tout depuis zéro. Un mécanisme de repli ciblé entre en jeu : un agent visuel analyse la page courante, identifie le bon élément d'interface, corrige l'action défaillante, et met à jour le graphe d'états pour les exécutions futures. La réparation est locale — elle ne touche que le nœud défaillant, sans invalider le reste du plan.</p>
+
+<h2>4. Résultats clés : moins cher, plus rapide, plus fiable</h2>
+
+<p>Les chercheurs ont évalué ActionEngine sur les 106 tâches Reddit du benchmark WebArena, un environnement réaliste où les agents doivent naviguer sur un clone fonctionnel de Reddit pour accomplir des tâches complexes (compter des votes, répondre à des commentaires, filtrer des posts selon des critères précis).</p>
+
+<p>Le taux de réussite atteint 95 %, contre 66 % pour AgentOccam, la meilleure baseline réactive utilisant GPT-4-Turbo. L'écart de 29 points ne vient pas d'un modèle plus puissant — ActionEngine utilise Claude Sonnet 4.5, compétitif mais pas supérieur en capacités brutes. L'écart vient de l'architecture elle-même.</p>
+
+<p>Le gain en efficacité est spectaculaire. Le nombre moyen d'appels au modèle passe de 10,2 à 1,8 par tâche — une réduction de 82 %. Les tokens d'entrée consommés chutent de 62 300 à 8 100 en moyenne, soit 87 % de moins. Le coût moyen par tâche tombe de 0,71 $ à 0,06 $, un facteur 11,8. La latence moyenne passe de 237 secondes à 118 secondes.</p>
+
+<p>Les gains les plus marqués apparaissent sur les tâches de raisonnement multi-étapes avec branchement logique. Un groupe de tâches demandant de compter des commentaires filtrés par critère de votes illustre bien la différence : l'agent réactif y consomme 140 900 tokens d'entrée en 17,8 appels au modèle, pour un taux de réussite de 60 %. ActionEngine résout ces mêmes tâches en un seul appel, 6 800 tokens, et 100 % de réussite. Le temps d'exécution passe de 343 à 65 secondes.</p>
+
+<p>Les échecs résiduels — 5 tâches sur 106 — relèvent presque tous d'ambiguïtés dans l'énoncé de la tâche plutôt que de limites du système. Une tâche demande de trouver « le manager du site web » parmi des commentateurs, mais aucun commentateur ne s'identifie explicitement comme tel. Une autre mentionne le forum « machinelearning » alors que le forum existant s'appelle « MachineLearning » avec une casse et un espacement différents. Ces cas de figure posent un problème de désambiguïsation linguistique, pas d'automatisation d'interface.</p>
+
+<h2>5. Implications pratiques : automatiser pour de bon</h2>
+
+<p>La division du coût par douze change la donne pour le déploiement en production. Aujourd'hui, les entreprises qui expérimentent avec des agents web se heurtent à des factures API disproportionnées par rapport à la valeur des tâches automatisées. Répondre à un commentaire sur un forum ne devrait pas coûter 0,71 $ en inférences. À 0,06 $ la tâche, l'économie de l'automatisation commence à tenir.</p>
+
+<p>La réduction de latence a aussi des conséquences directes. Un agent qui met quatre minutes à accomplir une tâche reste un gadget de démonstration. Un agent qui la boucle en deux minutes — et avec une fiabilité de 95 % — peut s'intégrer dans un workflow réel. Les équipes de support client, de modération de contenu, ou de veille concurrentielle manipulent quotidiennement des interfaces web répétitives. Un agent capable de synthétiser un programme d'automatisation en un seul appel, puis de l'exécuter de façon déterministe, ressemble davantage à un outil qu'à un prototype.</p>
+
+<p>L'architecture d'ActionEngine présente un avantage structurel pour la maintenance. Le graphe d'états, une fois construit, est réutilisable indéfiniment pour toutes les tâches sur la même application. L'investissement initial (l'exploration hors ligne) est amorti sur l'ensemble des exécutions futures. Et quand l'interface évolue, le mécanisme de mise à jour incrémentale évite de reconstruire le graphe depuis zéro — seuls les nœuds affectés sont corrigés.</p>
+
+<p>Cette séparation entre apprentissage de l'application et exécution de tâches rappelle la distinction classique entre compilation et exécution en génie logiciel. Le temps passé à compiler n'est investi qu'une fois ; ensuite, le programme compilé tourne sans surcoût. ActionEngine applique ce principe aux interactions homme-machine automatisées.</p>
+
+<p>La portée dépasse le web. Les chercheurs mentionnent la compatibilité avec UIAutomator pour les applications mobiles. Toute application dotée d'une interface graphique structurée — logiciel de bureau, application mobile, outil SaaS — pourrait bénéficier de la même approche. Le graphe d'états est un formalisme générique, pas une technique spécifique au HTML.</p>
+
+<h2>6. Pour aller plus loin : ce que l'étude ne résout pas</h2>
+
+<p>ActionEngine a été évalué sur un seul domaine de WebArena : Reddit (Postmill). Les auteurs le justifient par la complexité de ce domaine (tâches de raisonnement long, navigation inter-pages), mais la question de la généralisation reste ouverte. Un site de commerce en ligne, avec ses flux de paiement, ses variantes de produits et ses pop-ups dynamiques, pourrait poser des défis différents. Les 20-30 nœuds suffisent pour Reddit ; Amazon ou Salesforce en nécessiteraient peut-être des centaines.</p>
+
+<p>La construction du graphe d'états repose sur un processus semi-automatisé qui demande encore une intervention humaine pour valider les opérations découvertes par le crawl. Les auteurs ne quantifient pas le temps nécessaire à cette phase initiale. Si la construction du graphe pour une application complexe prend des jours de travail humain, le retour sur investissement dépend du volume de tâches à automatiser par la suite.</p>
+
+<p>Le mécanisme de mise à jour incrémentale gère les changements localisés d'interface — un bouton déplacé, un sélecteur CSS renommé. Mais les auteurs reconnaissent qu'une refonte majeure de l'interface nécessiterait un re-crawl complet. La frontière entre « changement local » et « refonte majeure » reste floue, et aucun critère automatique ne permet aujourd'hui de décider quand basculer de la réparation locale à la reconstruction.</p>
+
+<p>Le système repose sur la capacité du modèle de langage à produire un programme correct du premier coup. Avec Claude Sonnet 4.5, le validateur n'intervient presque jamais. Mais les auteurs signalent qu'avec des modèles moins puissants comme GPT-4o, 20 à 30 % des exécutions nécessitent du « hot-patching » — une correction à la volée du code généré. La qualité du modèle sous-jacent reste donc un facteur déterminant, et le système n'élimine pas la dépendance aux grands modèles de langage : il en réduit le nombre d'appels sans les supprimer.</p>
+
+<p>Enfin, les six échecs sur 106 tâches soulèvent une question plus large sur l'évaluation des agents. Quand un agent échoue parce que l'énoncé de la tâche est ambigu (« le manager du site web » sans indication claire de qui c'est), le problème n'est pas dans l'agent mais dans la spécification. Les futurs benchmarks devront intégrer des mécanismes de clarification — permettre à l'agent de poser une question avant d'agir, comme le ferait un humain face à une instruction floue.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

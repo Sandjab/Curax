@@ -127,129 +127,85 @@
     <p class="doc-type">Vulgarisation</p>
   </div>
   <div class="companion-content">
-    <h2>Quand les agents IA lisent la notice : l'impact mesurable des fichiers AGENTS.md sur l'efficacité du code automatisé</h2>
+    <h2>1. Introduction : quand les agents IA lisent la notice avant de coder</h2>
 
-<p><em>Une étude empirique montre que fournir un simple fichier d'instructions à un agent de codage IA réduit son temps d'exécution de près de 29 % et sa consommation de tokens de 17 %. Un résultat qui interroge la manière dont nous préparons nos dépôts logiciels à l'ère de la programmation autonome.</em></p>
+<p>Soixante mille dépôts GitHub contiennent déjà un fichier AGENTS.md. Ce chiffre, relevé début 2026, montre à quelle vitesse une pratique émergente s'est imposée : écrire un mode d'emploi destiné non pas aux développeurs humains, mais aux agents IA qui interviennent sur le code. Des outils comme OpenAI Codex ou Claude Code ne se contentent plus de compléter des lignes ; ils clonent des dépôts, raisonnent sur l'architecture, exécutent des commandes et soumettent des pull requests de manière autonome. La question que pose une équipe de chercheurs de Singapour, Heidelberg, Bamberg et Londres est simple en apparence : est-ce que fournir ce fichier d'instructions change quelque chose à l'efficacité concrète de ces agents ?</p>
 
-<h2>1. Introduction : les robots codent, mais ont-ils lu le mode d'emploi ?</h2>
+<p>Leur réponse, étayée par 124 pull requests analysées sur 10 dépôts réels, apporte les premières preuves empiriques qu'un fichier AGENTS.md bien construit réduit le temps d'exécution de près de 29 % et la consommation de tokens de sortie d'environ 17 %. Des chiffres qui, traduits en coût d'API et en temps d'attente, intéressent toute équipe qui déploie des agents de codage à grande échelle.</p>
 
-<p>Imaginez un nouveau développeur qui débarque dans votre équipe un lundi matin. Vous lui confiez un ticket de bug à corriger. Deux scénarios se présentent : soit vous le lâchez dans le dépôt de code sans aucune explication, et il passe des heures à comprendre l'architecture, les conventions de nommage et la structure des tests ; soit vous lui remettez un document d'accueil — une sorte de « guide du nouveau contributeur » — et il se met au travail bien plus vite.</p>
+<h2>2. Le problème : des agents autonomes, mais aveugles</h2>
 
-<p>C'est exactement la question que se sont posée six chercheurs de Singapour, Heidelberg, Bamberg et Londres à propos des <strong>agents IA de codage</strong>. Ces agents — comme OpenAI Codex ou Claude Code — ne sont plus de simples assistants qui complètent vos lignes de code. Ce sont désormais des systèmes autonomes capables de naviguer dans un dépôt entier, de raisonner sur plusieurs fichiers, d'exécuter des commandes et de soumettre des <em>pull requests</em> avec une intervention humaine minimale.</p>
+<p>Un agent IA de codage débarque sur un dépôt comme un nouveau développeur qui arrive le premier jour dans une entreprise. Il ne connaît ni la structure des dossiers, ni les conventions de nommage, ni les commandes de build. Quand un humain rejoint une équipe, il lit le README, pose des questions aux collègues, parcourt le code existant. L'agent, lui, n'a pas de collègues à interroger. Il doit tout déduire de ce qu'il trouve dans le dépôt.</p>
 
-<p>Mais voilà : comme notre développeur fraîchement arrivé, ces agents ont besoin de contexte. Et c'est là qu'intervient un artefact discret mais de plus en plus répandu dans l'écosystème open source : le fichier <strong>AGENTS.md</strong>.</p>
+<p>Jusqu'à récemment, les recherches se concentraient sur le prompt engineering — la façon de formuler chaque requête envoyée au modèle de langage. Mais un prompt est éphémère : il disparaît après chaque session. Les fichiers AGENTS.md prennent le contre-pied de cette approche. Ils persistent dans le dépôt, sont versionnés avec Git, et fournissent à l'agent un socle de connaissances stable sur le projet : architecture, conventions de codage, commandes de test, contraintes techniques.</p>
 
-<h2>2. Le problème : un angle mort dans la recherche sur les agents de codage</h2>
+<p>Plusieurs études avaient déjà documenté le contenu de ces fichiers et leur adoption croissante. Chatlatanagulchai et ses collègues ont montré que les développeurs y inscrivent surtout des instructions fonctionnelles — build, tests, implémentation — et assez peu de directives non fonctionnelles comme la performance ou la sécurité. Mohsenimofidi et al. ont décrit l'émergence de ces fichiers comme un mécanisme de « context engineering » dans les workflows agentiques. Mais personne n'avait mesuré l'effet réel de leur présence sur le comportement d'un agent. Est-ce que l'agent code plus vite ? Consomme-t-il moins de ressources ? Produit-il un résultat comparable ? C'est précisément ce que cette étude isole et quantifie.</p>
 
-<p>Le fichier AGENTS.md, c'est en quelque sorte le « README destiné aux robots ». Placé à la racine d'un dépôt logiciel, il décrit l'architecture du projet, les conventions de codage, les instructions de build et de test, et parfois les contraintes opérationnelles que l'agent doit respecter. Le format a été adopté par plus de <strong>60 000 dépôts</strong> à ce jour, et il est reconnu par plusieurs plateformes majeures : OpenAI Codex, GitLab Duo ou encore Claude Code (via son équivalent CLAUDE.md).</p>
+<h2>3. La méthode : un banc d'essai en conditions contrôlées</h2>
 
-<p>Des études récentes avaient déjà documenté l'émergence de ces fichiers, leur structure et leur contenu typique. On savait qu'ils se concentraient majoritairement sur des instructions fonctionnelles — comment compiler, comment tester, comment organiser le code — tandis que les préoccupations non fonctionnelles comme la performance ou la sécurité restaient rares. Mais une question fondamentale demeurait sans réponse :</p>
+<p>L'idée centrale de l'expérience ressemble à un test A/B classique. Pour chaque tâche de développement, l'agent Codex d'OpenAI (basé sur le modèle gpt-5.2-codex) est lancé deux fois sur le même dépôt, dans le même état exact du code : une fois avec le fichier AGENTS.md à la racine, une fois sans. Tout le reste — le code source, la description de la tâche, l'environnement d'exécution — reste identique. Les chercheurs mesurent ensuite le temps d'exécution et la consommation de tokens dans chaque condition.</p>
 
-<blockquote>
-<p><strong>Est-ce que ces fichiers changent réellement quelque chose au comportement des agents ?</strong> Ou ne sont-ils qu'un acte de foi des développeurs, une sorte de rituel sans effet mesurable ?</p>
-</blockquote>
+<h3>Sélection des dépôts</h3>
 
-<p>Aucune étude empirique n'avait jusqu'ici isolé l'effet concret d'un fichier AGENTS.md sur les performances d'un agent, en maintenant toutes les autres variables constantes. C'est précisément le vide que cette recherche vient combler, en se concentrant sur une dimension très concrète : <strong>l'efficacité opérationnelle</strong>, mesurée en temps d'exécution et en consommation de tokens (l'unité de facturation des modèles de langage).</p>
+<p>Les chercheurs sont partis d'un corpus de 132 dépôts identifiés dans des travaux antérieurs sur les fichiers d'instructions pour agents. Ils ont d'abord filtré ceux qui ne contenaient qu'un seul AGENTS.md, placé à la racine — pour éviter les interférences entre plusieurs fichiers d'instructions dispersés dans les sous-dossiers. Ce premier filtre a réduit l'ensemble à 89 dépôts. Un second filtre a éliminé les fichiers trop superficiels : seuls ceux qui documentaient les conventions de codage, l'architecture du projet ou une description du projet ont été retenus. Un modèle de langage local (gpt-oss-120b via Ollama) a effectué cette classification, suivie d'une vérification manuelle. Résultat : 26 dépôts qualifiés, dont 10 ont été sélectionnés aléatoirement pour l'expérience.</p>
 
-<h2>3. La méthode : un protocole expérimental rigoureux, façon essai clinique</h2>
+<h3>Choix des tâches</h3>
 
-<p>Pour comprendre l'approche des chercheurs, prenons une analogie médicale. Dans un essai clinique, on compare un groupe qui reçoit le traitement à un groupe témoin qui reçoit un placebo, en s'assurant que tout le reste est identique. Ici, le « traitement », c'est la présence du fichier AGENTS.md. Le « patient », c'est l'agent IA. Et la « maladie », c'est la tâche de développement à accomplir.</p>
+<p>Sur chacun de ces 10 dépôts, les chercheurs ont sélectionné jusqu'à 15 pull requests déjà fusionnées, en respectant des critères stricts : moins de 100 lignes modifiées, au plus 5 fichiers touchés, des changements de code uniquement (pas de documentation ni de configuration), et une date postérieure à l'introduction du fichier AGENTS.md dans le dépôt. Ces contraintes garantissent des tâches de taille maîtrisée et permettent de répéter les expériences sans que chaque exécution ne dure des heures. Au total, 124 pull requests ont été retenues.</p>
 
-<h3>Sélection des dépôts et des tâches</h3>
+<h3>Reconstruction de l'état du dépôt</h3>
 
-<p>Les chercheurs sont partis d'un corpus de dépôts GitHub connus pour utiliser des fichiers d'instructions pour agents. Ils ont appliqué une série de filtres stricts :</p>
+<p>Pour chaque pull request, le dépôt est ramené à l'état exact qu'il avait juste avant la fusion de cette PR. C'est comme remonter le temps dans l'historique Git. L'agent doit alors reproduire les changements de la PR à partir de cet état antérieur, sans connaître la solution. La version du fichier AGENTS.md utilisée correspond elle aussi à ce point précis de l'historique.</p>
 
-<ul>
-<li>Ne retenir que les dépôts avec <strong>un seul fichier AGENTS.md à la racine</strong> (pour éviter les interférences entre fichiers multiples).</li>
-<li>Ne garder que les fichiers contenant des informations réellement utiles : conventions de codage, architecture du projet, description du projet. Les fichiers trop pauvres en contenu actionnable ont été écartés.</li>
-<li>Sélectionner des <em>pull requests</em> de petite taille (moins de 100 lignes modifiées, 5 fichiers maximum) pour réduire la variabilité et rendre les expériences reproductibles.</li>
-</ul>
+<h3>Génération des descriptions de tâches</h3>
 
-<p>Au final, l'étude porte sur <strong>10 dépôts</strong> et <strong>124 pull requests</strong> — un échantillon volontairement ciblé, mais suffisant pour une première investigation rigoureuse.</p>
+<p>Un problème pratique : beaucoup de pull requests sur GitHub ont des descriptions lacunaires — un titre comme « fix bug » sans autre explication. Pour donner à l'agent un input cohérent, les chercheurs ont généré pour chaque PR une description structurée façon ticket GitHub (énoncé du problème, comportement attendu, critères d'acceptation) à l'aide d'un modèle de langage local qui recevait le diff de la PR et l'arborescence du dépôt.</p>
 
-<h3>Le dispositif expérimental</h3>
+<h3>Exécution isolée</h3>
 
-<p>Pour chaque pull request, les chercheurs ont reconstitué l'état exact du dépôt <em>juste avant</em> que la PR ne soit fusionnée. C'est comme remonter le temps : l'agent se retrouve dans la situation qu'aurait connue un développeur humain à ce moment précis.</p>
+<p>Chaque expérience tourne dans un conteneur Docker dédié. Le dépôt est cloné, positionné sur le bon commit, et l'agent reçoit sa tâche. Après exécution, tout est nettoyé — aucun cache, aucun artefact intermédiaire ne survit d'une tâche à l'autre. Ce protocole élimine les biais liés à l'état résiduel de l'environnement.</p>
 
-<p>Ensuite, chaque tâche est exécutée <strong>deux fois</strong>, dans des conditions identiques sauf sur un point :</p>
-<ul>
-<li><strong>Condition A</strong> : le dépôt contient le fichier AGENTS.md tel qu'il existait à cette date.</li>
-<li><strong>Condition B</strong> : le même dépôt, mais avec le fichier AGENTS.md supprimé.</li>
-</ul>
+<h2>4. Résultats clés : moins de temps, moins de tokens</h2>
 
-<p>L'agent utilisé est <strong>OpenAI Codex</strong> (modèle gpt-5.2-codex), choisi parce que c'est l'outil pour lequel le format AGENTS.md a été initialement conçu. Chaque exécution se fait dans un <strong>conteneur Docker isolé</strong> — un environnement vierge à chaque fois, sans mémoire résiduelle d'une tâche à l'autre. Comme dans un bon protocole scientifique, on contrôle toutes les variables sauf celle qu'on étudie.</p>
+<p>Les résultats montrent un effet cohérent sur les deux métriques principales.</p>
 
-<h3>La question de la tâche à confier à l'agent</h3>
+<p>Le temps d'exécution médian passe de 98,6 secondes sans AGENTS.md à 70,3 secondes avec — une réduction de 28,6 %. En moyenne, l'agent gagne 33 secondes par tâche (de 163 s à 130 s, soit 20,3 % de moins). Cette amélioration ne vient pas d'un petit nombre de cas extrêmes : la réduction est visible aussi bien sur la médiane que sur la moyenne, ce qui indique un effet distribué sur l'ensemble des tâches.</p>
 
-<p>Un problème pratique se posait : beaucoup de pull requests sur GitHub ont des descriptions vides ou inutilisables (« fix bug », sans autre explication). Pour standardiser l'entrée, les chercheurs ont généré automatiquement un <strong>énoncé de tâche structuré</strong> pour chaque PR, à partir du diff de code et de l'arborescence du dépôt. Ce ticket artificiel ressemble à un vrai ticket GitHub, avec un énoncé du problème, le comportement attendu et des critères d'acceptation. L'agent reçoit exactement le même énoncé dans les deux conditions.</p>
+<p>Côté tokens de sortie — ceux que l'agent génère, et qui représentent la partie la plus coûteuse de la facturation API —, la consommation moyenne baisse de 5 745 à 4 591 tokens (−20,1 %). La médiane diminue de 2 925 à 2 440 tokens (−16,6 %). La réduction plus marquée de la moyenne par rapport à la médiane suggère que l'AGENTS.md bénéficie surtout aux tâches qui, sans lui, déclenchent des exécutions particulièrement gourmandes. L'agent qui « tâtonne » sur un dépôt inconnu consomme parfois beaucoup de tokens en exploration ; avec un fichier d'instructions, ces pics de consommation se réduisent.</p>
 
-<h2>4. Résultats clés : le guide fait la différence</h2>
+<p>Les tokens d'entrée (ceux envoyés au modèle) diminuent aussi en moyenne (de 353 000 à 319 000, soit −9,7 %), mais leurs médianes restent quasi identiques voire légèrement supérieures avec AGENTS.md. L'explication probable : le fichier d'instructions lui-même ajoute du contexte en entrée, ce qui compense partiellement la réduction obtenue par une navigation moins exploratoire.</p>
 
-<p>Les résultats sont nets et cohérents. Voici les chiffres marquants :</p>
+<p>Les tests statistiques (Wilcoxon signed-rank, p &lt; 0,05) confirment la significativité des différences pour le temps d'exécution et les tokens de sortie. Les différences sur les tokens d'entrée et les tokens en cache ne franchissent pas le seuil de significativité.</p>
 
-<h3>Le temps d'exécution chute significativement</h3>
+<blockquote>Un fichier AGENTS.md ne rend pas l'agent plus intelligent. Il lui évite de perdre du temps à comprendre ce qu'un développeur humain aurait appris en lisant le README et en discutant avec l'équipe.</blockquote>
 
-<p>Quand l'agent dispose du fichier AGENTS.md, le <strong>temps médian d'exécution passe de 98,6 secondes à 70,3 secondes</strong> — soit une réduction de <strong>28,6 %</strong>. En moyenne, le gain est de 33 secondes par tâche (de 163 à 130 secondes, soit −20,3 %). Ce n'est pas un effet marginal porté par quelques cas extrêmes : la réduction est visible sur l'ensemble de la distribution. Le test statistique de Wilcoxon (un test robuste pour les données appariées) confirme la significativité du résultat.</p>
+<p>Pour s'assurer que ces gains d'efficacité ne masquent pas une dégradation de la qualité, les chercheurs ont inspecté manuellement 50 tâches échantillonnées. Dans tous les cas, l'agent a produit des modifications de code non triviales et cohérentes avec l'objectif de la PR d'origine — avec ou sans AGENTS.md. L'instruction n'incite pas l'agent à bâcler ; elle l'aide à aller plus droit au but.</p>
 
-<h3>Les tokens de sortie diminuent sensiblement</h3>
+<h2>5. Implications pratiques : un levier d'optimisation à coût quasi nul</h2>
 
-<p>La consommation de <strong>tokens de sortie</strong> — c'est-à-dire le volume de texte et de code que l'agent génère — baisse elle aussi. La médiane passe de 2 925 à 2 440 tokens, soit <strong>−16,6 %</strong>. En moyenne, la réduction atteint 20 %. Fait intéressant : la baisse est plus prononcée sur la moyenne que sur la médiane, ce qui suggère que le fichier AGENTS.md est particulièrement bénéfique dans les cas les plus coûteux — ces exécutions longues et verbeuses où l'agent « tâtonne » davantage.</p>
+<p>Rédiger un fichier AGENTS.md prend quelques dizaines de minutes. Son effet sur l'efficacité d'un agent de codage se traduit en économies mesurables. Prenons un exemple concret : une équipe qui exécute 1 000 tâches automatisées par mois avec un agent type Codex. La réduction de 20 % sur les tokens de sortie allège directement la facture d'API. La réduction de 29 % sur le temps médian libère de la capacité d'exécution — ou réduit les files d'attente quand plusieurs agents tournent en parallèle.</p>
 
-<h3>Les tokens d'entrée restent stables</h3>
+<p>Le ratio coût/bénéfice est difficile à battre. Contrairement à l'optimisation d'un modèle ou au réglage fin d'une architecture d'agent, un fichier d'instructions est un artefact textuel que n'importe quel développeur senior peut rédiger. Il se versionne, se revoit en code review, et s'adapte au fil du projet. C'est du context engineering à l'état pur : donner à la machine l'information qu'elle ne peut pas deviner.</p>
 
-<p>Côté entrée (le contexte fourni au modèle), les chiffres bougent peu. La médiane des tokens d'entrée est même <em>légèrement supérieure</em> avec AGENTS.md (120 587 contre 116 609), ce qui est logique : le fichier d'instructions ajoute du contenu au contexte. Mais ce surcoût en entrée est largement compensé par les économies en sortie et en temps.</p>
+<p>L'étude pointe aussi un changement de perspective dans la gestion des dépôts. Un README s'adresse aux humains. Un fichier AGENTS.md s'adresse aux machines. Les deux coexistent, mais ne remplissent pas la même fonction. Le README explique le « pourquoi » du projet ; l'AGENTS.md encode le « comment » opérationnel — quelles commandes lancer, quelles conventions respecter, quelle structure de dossiers suivre. Cette distinction va probablement s'accentuer à mesure que les agents gagnent en autonomie et interviennent sur des dépôts de plus en plus divers.</p>
 
-<h3>La qualité du travail n'est pas sacrifiée</h3>
+<p>Un aspect à ne pas négliger : la maintenance. Un AGENTS.md obsolète pourrait potentiellement induire l'agent en erreur et produire l'effet inverse de celui recherché. L'étude ne mesure pas ce scénario, mais le risque existe. Traiter ce fichier comme du code — le mettre à jour à chaque changement d'architecture, le tester implicitement via les résultats de l'agent — semble une hygiène raisonnable.</p>
 
-<p>Point crucial : les chercheurs ont vérifié manuellement un échantillon de 50 tâches pour s'assurer que l'agent produisait bien des modifications de code cohérentes et non triviales dans les deux conditions. Le gain d'efficacité ne résulte pas d'un agent qui « bâcle » le travail — il fait simplement le même travail plus vite et avec moins de bavardage.</p>
+<h2>6. Pour aller plus loin : les questions en suspens</h2>
 
-<h2>5. Implications pratiques : pourquoi ces résultats comptent</h2>
+<p>Les auteurs sont transparents sur les limites de leur travail et tracent une feuille de route pour la suite.</p>
 
-<h3>Un levier d'optimisation des coûts immédiat</h3>
+<p>Première limite : l'étude porte sur un seul agent (Codex) et un seul modèle (gpt-5.2-codex). Rien ne garantit que les résultats se transposent à Claude Code, à GitHub Copilot Workspace ou à d'autres systèmes. Chaque agent interprète les fichiers d'instructions différemment. Répliquer l'expérience sur plusieurs familles de modèles et d'agents fait partie de la feuille de route explicite des chercheurs.</p>
 
-<p>Dans le monde réel, les agents IA de codage sont facturés au token. Une réduction de 17 à 20 % de la consommation de tokens de sortie, c'est une <strong>réduction directe de la facture</strong>. Pour une entreprise qui déploie des agents sur des centaines de pull requests par semaine, l'économie devient substantielle. Et le gain en temps — près de 29 % sur la médiane — se traduit par des boucles de feedback plus rapides pour les développeurs.</p>
+<p>Deuxième limite : les tâches testées sont volontairement petites — moins de 100 lignes, 5 fichiers maximum. Ce choix permet un protocole rigoureux et reproductible, mais laisse ouverte la question de l'effet sur des refactorisations majeures ou des fonctionnalités multi-modules. On peut supposer que le gain serait encore plus marqué sur des tâches complexes, où l'exploration du dépôt prend plus de temps — mais c'est une hypothèse, pas une mesure.</p>
 
-<h3>L'émergence d'une nouvelle pratique d'ingénierie</h3>
+<p>Troisième limite : l'étude mesure l'efficacité (temps, tokens), pas la qualité du code produit. La vérification manuelle sur 50 cas confirme que l'agent ne produit pas de résultats dégradés, mais une évaluation systématique de la correction sémantique, de la maintenabilité et de l'alignement avec l'intention du développeur reste à faire. Les chercheurs envisagent de comparer les changements générés par l'agent avec les PR originales via des analyses de similarité structurelle.</p>
 
-<p>Cette étude donne une assise empirique à ce que beaucoup de praticiens pressentaient intuitivement : <strong>préparer son dépôt pour les agents, ça paie</strong>. Le fichier AGENTS.md n'est pas un gadget. C'est un artefact d'ingénierie logicielle à part entière, versionné, maintenable et collaboratif, qui influence directement la performance des outils autonomes.</p>
+<p>Une piste de recherche prometteuse concerne le contenu du fichier AGENTS.md lui-même. Tous les fichiers ne se valent pas. Un AGENTS.md qui décrit l'architecture complète du projet aura-t-il un effet différent de celui qui liste seulement les commandes de build ? L'étude traite le fichier comme une variable binaire (présent ou absent), mais la granularité du contenu — sa spécificité, son organisation, la présence d'exemples de code — pourrait moduler l'effet de manière significative. Analyser les traces d'exécution de l'agent (combien de tours d'exploration, combien de fichiers lus avant de commencer à coder) donnerait des indices sur les mécanismes en jeu.</p>
 
-<p>On assiste à l'émergence de ce que les chercheurs appellent le <strong>« context engineering »</strong> : l'art de structurer l'information de projet de manière à ce qu'elle soit exploitable non seulement par les humains, mais aussi par les agents. C'est un changement de paradigme subtil mais profond. Pendant des décennies, la documentation technique s'adressait exclusivement aux développeurs humains. Désormais, elle a un deuxième public : les machines.</p>
+<p>Les chercheurs avancent une hypothèse sur l'origine des gains observés : un fichier AGENTS.md décrit la structure du dépôt et les conventions dès le départ, ce qui réduit le besoin pour l'agent de naviguer à l'aveugle dans l'arborescence. Moins d'exploration signifie moins de tours de raisonnement, moins de requêtes au modèle sous-jacent, et donc moins de tokens et de temps. C'est une hypothèse plausible, mais sa validation nécessitera l'analyse fine des logs d'exécution — un travail que les auteurs prévoient pour leurs prochaines publications.</p>
 
-<h3>Un investissement modeste pour un gain mesurable</h3>
-
-<p>Rédiger un bon fichier AGENTS.md demande un investissement modeste — quelques heures pour décrire l'architecture, les conventions et les workflows d'un projet. Comparé au coût cumulé de milliers d'exécutions d'agents sur la durée de vie d'un dépôt, le retour sur investissement est potentiellement considérable. C'est d'autant plus vrai que le même fichier bénéficie aussi aux développeurs humains qui rejoignent le projet.</p>
-
-<h3>L'hypothèse explicative : moins d'exploration, plus d'action</h3>
-
-<p>Les chercheurs avancent une hypothèse plausible pour expliquer le mécanisme sous-jacent : en décrivant la structure du dépôt et les conventions de codage dès le départ, le fichier AGENTS.md <strong>réduit le besoin pour l'agent de « deviner » l'organisation du projet</strong> par une navigation exploratoire coûteuse. Moins de tâtonnements signifie moins d'itérations de planification, moins de requêtes au modèle sous-jacent, et in fine moins de tokens consommés et moins de temps écoulé.</p>
-
-<p>C'est exactement ce qui se passe avec un développeur humain : quand on lui donne un bon document d'onboarding, il ne perd pas de temps à ouvrir des fichiers au hasard pour comprendre la logique du projet.</p>
-
-<h2>6. Pour aller plus loin : les questions que cette étude ouvre</h2>
-
-<p>Aussi encourageants soient-ils, ces résultats ne sont qu'un premier pas. Les auteurs eux-mêmes esquissent un ambitieux programme de recherche pour la suite.</p>
-
-<h3>La correctitude reste à évaluer</h3>
-
-<p>L'étude mesure l'efficacité, pas la qualité du code produit. L'agent va-t-il plus vite <em>et</em> mieux avec AGENTS.md, ou simplement plus vite ? Les chercheurs prévoient de comparer systématiquement les changements générés par l'agent avec les vraies pull requests fusionnées par les développeurs humains, en utilisant des vérifications automatisées et des analyses de similarité structurelle.</p>
-
-<h3>Un seul agent, un seul modèle</h3>
-
-<p>L'expérience n'a été menée qu'avec OpenAI Codex. Le résultat se généralise-t-il à Claude Code, à GitHub Copilot Workspace, ou à d'autres systèmes agentiques ? La réponse n'est pas acquise d'avance : chaque agent a sa propre architecture de raisonnement et sa propre manière de consommer le contexte. Des réplications croisées seront nécessaires.</p>
-
-<h3>Des tâches modestes</h3>
-
-<p>Par choix méthodologique, les tâches étudiées sont de petite envergure (moins de 100 lignes de code modifiées). Qu'en est-il pour des refactorisations majeures, des ajouts de fonctionnalités complexes ou des migrations multi-modules ? L'effet d'AGENTS.md pourrait y être encore plus prononcé — ou au contraire se diluer dans la complexité. C'est une question ouverte.</p>
-
-<h3>Le contenu du fichier compte-t-il ?</h3>
-
-<p>L'étude traite le fichier AGENTS.md comme une variable binaire : présent ou absent. Mais tous les fichiers AGENTS.md ne se valent pas. Un fichier détaillé et bien structuré a-t-il plus d'impact qu'un fichier sommaire ? Quelles sections sont les plus utiles — la description de l'architecture, les conventions de nommage, les instructions de test ? Analyser les <strong>traces d'exécution</strong> des agents (les étapes intermédiaires de leur raisonnement) pourrait permettre de comprendre <em>pourquoi</em> certains fichiers sont plus efficaces que d'autres.</p>
-
-<h3>Vers une co-évolution humains-agents</h3>
-
-<p>Au-delà des questions techniques, cette recherche soulève un enjeu plus large. Si les fichiers d'instructions pour agents deviennent un standard, ils vont <strong>co-évoluer avec les agents eux-mêmes</strong>. Les développeurs adapteront leurs fichiers en fonction du comportement observé des agents ; les concepteurs d'agents optimiseront leurs systèmes pour mieux exploiter ces fichiers. On entre dans une boucle de rétroaction où la documentation du projet et l'intelligence artificielle se façonnent mutuellement — un terrain fascinant et encore largement inexploré pour la recherche en génie logiciel.</p>
-
-<p><strong>En résumé</strong>, cette étude de Lulla et ses collègues apporte une première preuve empirique solide : un simple fichier texte, placé à la racine d'un dépôt, peut rendre un agent de codage IA significativement plus rapide et plus économe. C'est un résultat à la fois rassurant et stimulant. Rassurant, parce qu'il montre que les développeurs conservent un levier d'influence concret sur le comportement des agents autonomes. Stimulant, parce qu'il ouvre la voie à une nouvelle discipline — l'ingénierie du contexte pour agents — dont nous ne faisons qu'entrevoir les contours.</p>
+<p>Cette étude pose un jalon. Elle transforme une intuition de praticiens — « donnons des instructions à nos agents » — en donnée mesurable. Le travail reste préliminaire par sa taille d'échantillon et son périmètre, mais il ouvre un champ d'investigation empirique sur un artefact logiciel qui n'existait pas il y a deux ans et qui équipe déjà des dizaines de milliers de projets.</p>
   </div>
   <script>
   (function(){

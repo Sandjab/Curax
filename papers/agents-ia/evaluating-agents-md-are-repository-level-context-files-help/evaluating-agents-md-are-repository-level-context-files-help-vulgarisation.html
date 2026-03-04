@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents? — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents?</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Plus de 60 000 dépôts GitHub publics contiennent aujourd'hui un fichier <code>AGENTS.md</code> ou <code>CLAUDE.md</code> — un README destiné non pas aux développeurs humains, mais aux agents de code IA. L'idée paraît logique : si un nouveau développeur a besoin d'un guide pour s'orienter dans un projet, pourquoi pas un agent autonome ? Les éditeurs d'outils — Anthropic, OpenAI, Alibaba — recommandent chaudement cette pratique. Certains intègrent même une commande <code>/init</code> pour générer automatiquement ce fichier contextuel.</p>
+
+<p>Mais personne n'avait vérifié si ces fichiers servaient réellement à quelque chose. Une équipe de l'ETH Zurich et de LogicStar.ai a décidé de poser la question frontalement : les fichiers contextuels améliorent-ils la capacité des agents à résoudre de vrais problèmes de code ? Leur réponse, publiée en février 2026, est contre-intuitive. Les fichiers générés par IA dégradent les performances dans la majorité des cas, et les fichiers rédigés par des humains n'apportent qu'un gain marginal — le tout pour un surcoût de 20 % en inférence.</p>
+
+<h2>Le problème</h2>
+
+<p>Un agent de code comme Claude Code, Codex ou Qwen Code fonctionne en boucle : il lit un ticket, explore le dépôt, modifie des fichiers, lance des tests, corrige ses erreurs, et recommence jusqu'à produire un patch qui passe la suite de tests. Pour l'aider, on peut lui fournir un fichier contextuel décrivant l'architecture du projet, les conventions de style, les outils de build, la structure des répertoires.</p>
+
+<p>Le problème ? Aucune étude rigoureuse n'avait mesuré l'effet de ces fichiers sur la résolution réelle de tickets. Les témoignages existants se limitaient à des retours anecdotiques de développeurs individuels, du type « mon agent fonctionne mieux depuis que j'ai ajouté un AGENTS.md ». Deux obstacles rendaient l'évaluation difficile. D'abord, les benchmarks classiques comme SWE-bench portent sur des projets populaires (Django, Matplotlib, scikit-learn) qui ne contiennent pas de fichiers contextuels — ces fichiers n'existant que depuis mi-2025. Ensuite, les dépôts qui en possèdent sont des projets récents et de niche, avec des pratiques de documentation hétérogènes et des pull requests souvent peu documentées.</p>
+
+<p>Les chercheurs devaient donc construire un nouveau benchmark, adapté à ces projets de niche, tout en comparant les résultats sur le benchmark de référence existant.</p>
+
+<h2>La méthode</h2>
+
+<p>L'équipe a travaillé sur deux fronts simultanés. Le premier : évaluer des fichiers contextuels générés par IA sur SWE-bench Lite, le benchmark classique de 300 tickets issus de 11 projets Python majeurs. Le second : créer de toutes pièces un nouveau benchmark, baptisé AgentBench, à partir de projets qui utilisent déjà des fichiers contextuels rédigés par leurs développeurs.</p>
+
+<h3>Construire AgentBench</h3>
+
+<p>La construction d'AgentBench ressemble à un entonnoir. Les chercheurs ont d'abord cherché sur GitHub les dépôts Python contenant un <code>AGENTS.md</code> ou un <code>CLAUDE.md</code> à la racine, disposant d'une suite de tests et d'au moins 400 pull requests. Sur cette base, ils ont filtré les PR qui référençaient au moins une issue et modifiaient du code Python. Un agent IA a ensuite trié les PR susceptibles d'introduire des comportements testables de manière déterministe — corrections de bugs ou ajouts de fonctionnalités vérifiables.</p>
+
+<p>Pour chaque PR retenue, un agent a configuré l'environnement d'exécution et vérifié que les tests passaient. Un autre agent a rédigé une description standardisée du ticket en six sections (description, étapes de reproduction, comportement attendu, comportement observé, spécification, informations complémentaires), à partir de la PR et des issues associées. Les chercheurs ont vérifié manuellement que ces descriptions ne divulguaient pas la solution.</p>
+
+<p>La plupart des projets de niche ne fournissent pas de tests unitaires dans leurs PR. Les chercheurs ont donc fait générer des tests par un agent, puis vérifié qu'ils échouaient sur le code d'origine et passaient après application du patch. Ils ont ensuite corrigé manuellement les tests trop spécifiques — ceux qui vérifiaient des détails d'implémentation plutôt que le comportement attendu. Résultat final : 138 instances issues de 12 dépôts, avec une couverture de test moyenne de 75 % du code modifié.</p>
+
+<h3>Trois configurations d'évaluation</h3>
+
+<p>Chaque instance a été testée dans trois configurations. Sans fichier contextuel : l'agent travaille à l'aveugle, avec seulement le code et la description du ticket. Avec un fichier généré par IA : chaque agent utilise sa propre commande d'initialisation pour produire le fichier (<code>/init</code> pour Codex, par exemple). Avec le fichier rédigé par les développeurs du projet : uniquement sur AgentBench, puisque les projets de SWE-bench n'en possèdent pas.</p>
+
+<p>Quatre agents ont été mis à l'épreuve : Claude Code avec Sonnet 4.5, Codex avec GPT-5.2 et GPT-5.1 Mini, et Qwen Code avec Qwen3-30B. Chaque agent utilisait ses réglages par défaut, température fixée à 0 (sauf Qwen à 0.7), avec un seul échantillon par instance.</p>
+
+<h2>Résultats clés</h2>
+
+<h3>Les fichiers générés par IA font plus de mal que de bien</h3>
+
+<p>Sur les 8 combinaisons agent/benchmark testées, les fichiers contextuels générés par IA ont dégradé les performances dans 5 cas. La baisse moyenne atteint 0,5 % sur SWE-bench Lite et 2 % sur AgentBench. En parallèle, le nombre d'étapes par ticket augmente systématiquement — en moyenne 2,5 étapes de plus sur SWE-bench et 3,9 sur AgentBench. Cette exploration supplémentaire se traduit par une hausse du coût d'inférence de 20 à 23 %.</p>
+
+<p>Prenons un exemple concret : avec Claude Code sur SWE-bench Lite, le coût moyen par instance passe de 1,30 $ sans fichier contextuel à 1,51 $ avec un fichier généré. Pour GPT-5.2 sur AgentBench, il bondit de 0,38 $ à 0,57 $ — une augmentation de 50 %.</p>
+
+<h3>Les fichiers humains font un peu mieux, mais pas de beaucoup</h3>
+
+<p>Les fichiers rédigés par les développeurs surpassent ceux générés par IA dans tous les cas, et améliorent les performances par rapport à l'absence de fichier pour trois agents sur quatre. Le gain moyen reste modeste : +4 % en taux de résolution. Claude Code est l'exception — ses performances baissent même avec un fichier humain. Le surcoût persiste : 3,3 étapes supplémentaires en moyenne, et jusqu'à 19 % de coût en plus.</p>
+
+<h3>Les agents suivent les instructions — c'est le problème</h3>
+
+<p>L'analyse des traces d'exécution révèle un phénomène éclairant. Quand un fichier contextuel mentionne un outil (par exemple <code>uv</code> pour la gestion des dépendances, ou un outil spécifique au projet), les agents l'utilisent massivement : 1,6 appel par instance en moyenne pour <code>uv</code> quand il est mentionné, contre moins de 0,01 quand il ne l'est pas. Les agents lisent les instructions et les appliquent. Le problème ne vient pas d'un défaut d'obéissance.</p>
+
+<p>Le problème, c'est que ces instructions supplémentaires rendent la tâche plus complexe. GPT-5.2 et GPT-5.1 Mini, dont l'architecture permet de mesurer l'effort de raisonnement via le nombre de tokens de réflexion, consomment respectivement 22 % et 14 % de tokens de raisonnement en plus quand un fichier contextuel est présent. L'agent « réfléchit » davantage, explore plus largement, lance plus de tests — mais ne résout pas mieux le problème.</p>
+
+<h3>Les fichiers contextuels ne servent pas de carte du dépôt</h3>
+
+<p>L'un des arguments en faveur des fichiers contextuels est qu'ils fournissent une vue d'ensemble du projet. 100 % des fichiers générés par Sonnet 4.5 contiennent une section d'aperçu de l'architecture, 99 % pour GPT-5.2. Les chercheurs ont mesuré le nombre d'étapes avant que l'agent interagisse avec un fichier concerné par le patch. Résultat : la présence d'un fichier contextuel ne réduit pas ce délai. Les agents ne trouvent pas les fichiers pertinents plus vite avec une carte que sans.</p>
+
+<p>Pire, GPT-5.1 Mini perd du temps à chercher le fichier contextuel dans l'arborescence, puis à le relire — alors que son contenu figure déjà dans le contexte initial de l'agent. Ce comportement n'apparaît que lorsqu'un fichier contextuel existe.</p>
+
+<h3>Le fichier contextuel duplique la documentation existante</h3>
+
+<p>Pour tester cette hypothèse, les chercheurs ont supprimé toute la documentation du dépôt (fichiers <code>.md</code>, dossier <code>docs/</code>, exemples de code) avant l'évaluation. Dans cette configuration sans documentation, les fichiers générés par IA améliorent systématiquement les performances de 2,7 % en moyenne — et surpassent même les fichiers humains. Ce résultat explique les témoignages positifs : les développeurs de projets peu documentés constatent un gain réel en ajoutant un fichier contextuel, parce que celui-ci compense l'absence de documentation, pas parce qu'il apporte une valeur spécifique.</p>
+
+<h3>Un meilleur modèle ne produit pas un meilleur fichier</h3>
+
+<p>Faire générer les fichiers contextuels par GPT-5.2 (le modèle le plus puissant testé) au lieu du modèle natif de chaque agent améliore les résultats sur SWE-bench Lite (+2 % en moyenne) mais les dégrade sur AgentBench (-3 %). Le choix du prompt d'initialisation — celui de Codex ou celui de Claude Code — n'a pas d'effet cohérent non plus. Aucune combinaison modèle/prompt ne domine les autres de manière fiable.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Ces résultats percutent directement les recommandations des fournisseurs d'agents. Anthropic, OpenAI et Alibaba conseillent tous de générer un fichier contextuel pour chaque projet. Les chercheurs suggèrent l'inverse : mieux vaut s'en passer, au moins pour les fichiers auto-générés.</p>
+
+<p>Si un fichier contextuel est maintenu, il devrait se limiter au strict nécessaire. Les données montrent que les agents profitent des informations sur l'outillage spécifique (quel gestionnaire de paquets utiliser, quelle commande lance les tests), mais souffrent des descriptions architecturales détaillées qui les poussent à explorer davantage sans résoudre plus de tickets. Un fichier contextuel efficace ressemblerait à cinq lignes de commandes concrètes, pas à une page de prose sur la philosophie du projet.</p>
+
+<p>Pour les équipes qui gèrent des projets peu documentés ou utilisant des technologies de niche, le calcul change. Dans ces cas, un fichier contextuel — même généré automatiquement — compense l'absence d'information et aide réellement l'agent. La recommandation n'est pas binaire : elle dépend de la qualité de la documentation existante.</p>
+
+<p>Le surcoût financier mérite attention. Une augmentation de 20 % du coût d'inférence, multipliée par des centaines de tickets traités par mois dans une organisation, représente un budget non négligeable — pour un gain en performance nul ou négatif. Les équipes qui mesurent le ROI de leurs agents de code devraient intégrer ce paramètre.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>L'étude se concentre sur Python, un langage abondamment représenté dans les données d'entraînement des modèles. Les agents disposent probablement d'une connaissance paramétrique suffisante de l'écosystème Python pour se passer de fichiers contextuels. En Rust, en Zig ou en Elixir, la donne pourrait être différente. Les auteurs appellent explicitement à des évaluations sur des langages moins courants, où les modèles manquent de connaissances implicites sur les outils et les conventions.</p>
+
+<p>Le benchmark AgentBench ne couvre que la résolution de tickets — corrections de bugs et ajouts de fonctionnalités. Les fichiers contextuels pourraient avoir un impact sur d'autres dimensions : sécurité du code généré, performance, respect des conventions de style. Des travaux antérieurs montrent que le simple fait de demander à un LLM de « générer du code sécurisé » améliore la sécurité du résultat. Un fichier contextuel contenant des consignes de sécurité spécifiques au projet pourrait produire un effet similaire, mais cela reste à mesurer.</p>
+
+<p>La piste la plus prometteuse concerne l'amélioration de la génération automatique elle-même. Les fichiers humains font mieux que les fichiers auto-générés — il existe donc une marge de progression. Des approches de planification et d'apprentissage continu, où l'agent enrichit progressivement sa connaissance d'un dépôt au fil des tâches résolues, pourraient produire des fichiers contextuels adaptatifs plutôt que statiques. Un agent qui se souvient de ses erreurs passées sur un projet donné et met à jour ses propres instructions en conséquence — voilà un scénario où le fichier contextuel deviendrait un véritable outil d'auto-amélioration plutôt qu'une simple description figée.</p>
+
+<p>En attendant, le message est clair : dans l'état actuel des agents et des modèles, un fichier contextuel doit rester court, factuel et orienté vers l'outillage. Les longues descriptions architecturales, les guides de style détaillés et les aperçus exhaustifs de l'arborescence du projet ne font qu'alourdir le travail de l'agent. Moins de prose, plus de commandes.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

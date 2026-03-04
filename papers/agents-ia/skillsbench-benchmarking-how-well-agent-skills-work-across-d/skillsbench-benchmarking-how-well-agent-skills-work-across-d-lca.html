@@ -127,213 +127,122 @@
     <p class="doc-type">Lecture Critique d'Article</p>
   </div>
   <div class="companion-content">
-    <h1>Lecture Critique d'Article</h1>
-<h2>SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Tasks</h2>
-<p><strong>Li, X. et al.</strong> — arXiv preprint, février 2026</p>
+    <h2>Objectif et contexte</h2>
 
-<hr>
+<p>Les Agent Skills — paquets structurés d'instructions procédurales, de scripts et de modèles de code — se multiplient dans l'écosystème des agents LLM depuis l'automne 2025. Plus de 47 000 Skills uniques circulent sur GitHub et des marketplaces communautaires. Aucune évaluation systématique ne mesurait leur apport réel sur la performance des agents avant SkillsBench.</p>
 
-<h2>1. Objectif et contexte</h2>
+<p>La question de recherche est triple : dans quelle mesure les Skills améliorent-elles la performance des agents ? Quels facteurs de conception distinguent les Skills efficaces des inefficaces ? Les modèles peuvent-ils générer eux-mêmes des Skills utiles ? Le benchmark couvre 84 tâches réparties sur 11 domaines (ingénierie logicielle, finance, santé, cybersécurité, sciences naturelles, robotique, fabrication, énergie, médias, bureautique, mathématiques), évaluées sous trois conditions sur 7 configurations agent-modèle, pour un total de 7 308 trajectoires.</p>
 
-<p>Les <strong>Agent Skills</strong> — paquets structurés de connaissances procédurales (instructions, templates de code, ressources exécutables) — augmentent les agents LLM au moment de l'inférence sans modification du modèle. Malgré une adoption explosive (47 150 Skills uniques recensées dans l'écosystème), aucun benchmark n'évaluait systématiquement <em>si</em> et <em>quand</em> ces Skills améliorent réellement les performances des agents.</p>
+<h2>Méthodologie</h2>
 
-<p>SKILLSBENCH comble cette lacune en proposant le premier benchmark traitant les Skills comme des artefacts d'évaluation de premier ordre. L'objectif est triple :</p>
-<ul>
-  <li>Quantifier l'efficacité des Skills curées vs. auto-générées</li>
-  <li>Identifier les facteurs de design (quantité, complexité) qui déterminent l'efficacité</li>
-  <li>Comparer l'impact des Skills selon les domaines, modèles et harnesses agents</li>
-</ul>
+<p>Le protocole repose sur une évaluation appariée : chaque tâche est exécutée avec et sans Skills, ce qui permet de mesurer directement le delta d'efficacité. Trois harnais commerciaux sont mobilisés : Claude Code (Anthropic), Gemini CLI (Google) et Codex CLI (OpenAI), couplés à sept modèles frontière — Claude Opus 4.5, Opus 4.6, Sonnet 4.5, Haiku 4.5, Gemini 3 Pro, Gemini 3 Flash et GPT-5.2.</p>
 
-<p>La question de recherche est claire, originale et d'une pertinence immédiate pour les praticiens et chercheurs du domaine. L'analogie architecturale proposée (modèle = CPU, harness = OS, Skills = applications) fournit un cadre conceptuel utile.</p>
+<p>Les tâches s'exécutent dans des conteneurs Docker isolés. La vérification est déterministe via des assertions pytest, sans recours au LLM-as-judge. Chaque trajectoire produit un résultat binaire pass/fail. Cinq essais par tâche et par condition alimentent le calcul d'un taux de réussite moyen, avec intervalles de confiance bootstrap à 95 % sur 1 000 rééchantillonnages.</p>
 
-<h2>2. Méthodologie</h2>
+<p>La construction du jeu de données suit un modèle communautaire : 105 contributeurs ont soumis 322 tâches candidates. Le filtrage combine validation automatisée (structure, oracle à 100 %, détection IA via GPTZero) et revue humaine (validité des données, réalisme, qualité de l'oracle, qualité des Skills, résistance à la triche). Le taux d'acceptation atteint 26,7 %. Un audit de fuite automatisé, exécuté via un agent Claude Code SDK en CI, vérifie que les Skills ne contiennent pas de solutions directes.</p>
 
-<h3>2.1 Construction du benchmark</h3>
-<p>Le dataset comprend <strong>84 tâches évaluées</strong> (sur 86 curées, issues de 322 soumissions candidates) couvrant <strong>11 domaines</strong> : Software Engineering (16), Office & White Collar (14), Natural Science (12), Media & Content Production (11), Cybersecurity (8), Finance (8), Robotics (5), Manufacturing (3), Energy (3), Mathematics (2), Healthcare (2).</p>
+<p>Un biais de sélection assumé : les Skills curées proviennent du quartile supérieur en qualité (score ≥ 9/12), alors que la moyenne de l'écosystème est de 6,2/12. Les résultats représentent donc un scénario optimiste.</p>
 
-<p>Chaque tâche est un module autonome comprenant :</p>
-<ul>
-  <li>Une instruction humaine (vérifiée par GPTZero et revue humaine)</li>
-  <li>Un environnement Docker containerisé avec Skills</li>
-  <li>Une solution oracle (100% de réussite requise)</li>
-  <li>Des vérificateurs déterministes (pytest, pas de LLM-as-judge)</li>
-</ul>
+<h2>Résultats principaux</h2>
 
-<p>La construction suit un modèle communautaire open-source (105 contributeurs) avec un pipeline de qualité en trois phases : validation automatisée, revue humaine, et audit de fuite.</p>
+<p>Les Skills curées augmentent le taux de réussite moyen de 16,2 points de pourcentage (pp), de 24,3 % à 40,6 %. L'amplitude varie selon la configuration : +13,6 pp pour Gemini CLI + Gemini 3 Pro, +23,3 pp pour Claude Code + Opus 4.5. La meilleure performance absolue revient à Gemini CLI + Gemini 3 Flash (48,7 % avec Skills).</p>
 
-<h3>2.2 Protocole expérimental</h3>
-<p>Trois conditions évaluées par tâche :</p>
-<ul>
-  <li><strong>No Skills</strong> : instruction seule</li>
-  <li><strong>With Skills</strong> : Skills curées complètes</li>
-  <li><strong>Self-Generated Skills</strong> : l'agent génère ses propres connaissances procédurales avant de résoudre</li>
-</ul>
+<p>Les écarts entre domaines sont considérables. La santé progresse de +51,9 pp et la fabrication de +41,9 pp, tandis que les mathématiques gagnent +6,0 pp et l'ingénierie logicielle +4,5 pp. Les domaines dont les connaissances procédurales sont sous-représentées dans le pré-entraînement profitent le plus de l'augmentation externe.</p>
 
-<p><strong>7 configurations agent-modèle</strong> testées : Claude Code (Opus 4.5, Opus 4.6, Sonnet 4.5, Haiku 4.5), Gemini CLI (Gemini 3 Pro, Gemini 3 Flash), Codex CLI (GPT-5.2). Température fixée à 0, 5 essais par tâche, totalisant <strong>7 308 trajectoires valides</strong>.</p>
+<p>Le résultat le plus frappant concerne les Skills auto-générées : –1,3 pp en moyenne par rapport à la condition sans Skills. Seul Opus 4.6 montre un gain marginal (+1,4 pp) ; Codex + GPT-5.2 se dégrade de –5,6 pp. Les modèles ne parviennent pas à produire les connaissances procédurales dont ils bénéficient en consommation. L'analyse des trajectoires révèle deux modes de défaillance : production de procédures imprécises (« utiliser pandas pour le traitement de données » sans préciser les patterns API concrets), ou incapacité à reconnaître le besoin de Skills spécialisées dans les domaines à forte expertise (fabrication, finance).</p>
 
-<p>Les métriques principales sont le <strong>pass rate</strong> (binaire, agrégé par tâche puis par configuration) et le <strong>normalized gain</strong> (formule de Hake), permettant des comparaisons entre modèles à baselines différentes.</p>
+<p>L'analyse par tâche révèle 16 cas sur 84 où les Skills dégradent la performance, jusqu'à –39,3 pp pour <code>taxonomy-tree-merge</code>. Les Skills peuvent introduire des conflits de guidage ou une complexité superflue sur des tâches que les modèles gèrent déjà sans aide.</p>
 
-<h3>2.3 Forces méthodologiques</h3>
-<ul>
-  <li>Vérification déterministe éliminant la variance du LLM-as-judge</li>
-  <li>Évaluation appariée (with/without Skills) sur les mêmes tâches</li>
-  <li>Audit de fuite automatisé pour empêcher les Skills de contenir des solutions directes</li>
-  <li>Stratification par difficulté (Core/Extended/Extreme)</li>
-  <li>Taux d'acceptation de 26.7% reflétant un filtrage rigoureux</li>
-</ul>
+<p>Sur la conception des Skills : 2 à 3 modules ciblés surpassent les documentations exhaustives. Les Skills « détaillées » (+18,8 pp) et « compactes » (+17,1 pp) dominent les « compréhensives » (–2,9 pp). La concision procédurale l'emporte sur l'exhaustivité.</p>
 
-<h3>2.4 Faiblesses méthodologiques</h3>
-<ul>
-  <li><strong>Absence de baselines contrôlées en longueur</strong> : l'injection de Skills augmente la longueur du contexte, rendant impossible l'attribution causale stricte entre « plus de contexte » et « connaissances procédurales structurées »</li>
-  <li><strong>Biais d'entraînement potentiel</strong> : les modèles Claude ont été entraînés avec connaissance de la spécification Agent Skills, conférant un avantage potentiel</li>
-  <li><strong>Déséquilibre des domaines</strong> : Healthcare (2 tâches) et Manufacturing (3) sont sous-représentés, fragilisant les conclusions spectaculaires (+51.9pp, +41.9pp) pour ces domaines</li>
-  <li><strong>Écart benchmark-écosystème</strong> : les Skills évaluées proviennent du quartile supérieur en qualité (score ≥9/12), alors que l'écosystème réel a un score moyen de 6.2/12</li>
-</ul>
+<p>Claude Haiku 4.5 avec Skills (27,7 %) dépasse Opus 4.5 sans Skills (22,0 %). Les Skills compensent partiellement les limites de capacité du modèle, avec des implications économiques directes : Gemini 3 Flash avec Skills coûte 0,57 $ par essai contre 1,06 $ pour Gemini 3 Pro, tout en offrant une meilleure performance.</p>
 
-<h2>3. Résultats principaux</h2>
+<h2>Discussion et limites</h2>
 
-<h3>Finding 1 : Les Skills curées apportent un bénéfice substantiel mais variable</h3>
-<p>Amélioration moyenne de <strong>+16.2 points de pourcentage (pp)</strong> avec une forte variance (de +13.6pp à +23.3pp selon la configuration). Claude Code + Opus 4.5 montre le gain maximal (+23.3pp), reflétant l'intégration native des Skills.</p>
+<p>Le principal confondant méthodologique est l'augmentation de la longueur du contexte. L'injection de Skills ajoute du texte au prompt, et une partie du gain pourrait refléter un effet « plus de contexte » plutôt que la structure procédurale. Les auteurs argumentent que la condition auto-générée (même budget, pas de gain) plaide en faveur de la structure. L'argument tient partiellement, mais un baseline avec du texte aléatoire ou de la documentation factuelle de longueur équivalente aurait fourni une isolation causale bien plus solide. Les auteurs identifient eux-mêmes cette lacune et la listent comme travail futur.</p>
 
-<h3>Finding 2 : Les Skills auto-générées sont inefficaces</h3>
-<p>Résultat négatif important : les modèles ne peuvent pas produire de manière fiable les connaissances procédurales dont ils bénéficient en consommation. Moyenne de <strong>–1.3pp</strong> par rapport à la baseline sans Skills. Seul Opus 4.6 montre une amélioration modeste (+1.4pp). Deux modes d'échec identifiés : procédures imprécises et non-reconnaissance du besoin de Skills spécialisées.</p>
+<p>La sélection des Skills dans le quartile supérieur de qualité crée un écart entre le benchmark et l'usage réel. Un praticien piochant dans l'écosystème moyen (6,2/12) obtiendra probablement des gains inférieurs aux 16,2 pp rapportés.</p>
 
-<h3>Finding 3 : Forte hétérogénéité par domaine</h3>
-<p>Healthcare (+51.9pp) et Manufacturing (+41.9pp) bénéficient le plus, tandis que Mathematics (+6.0pp) et Software Engineering (+4.5pp) montrent des gains faibles. Interprétation cohérente : les domaines sous-représentés dans le pré-entraînement bénéficient davantage de la guidance procédurale externe.</p>
+<p>La couverture par domaine est inégale. La santé et les mathématiques comptent 2 tâches chacune, la fabrication et l'énergie 3. Le gain spectaculaire de +51,9 pp en santé repose sur 2 tâches seulement — impossible d'en tirer une conclusion généralisable. Les domaines les mieux représentés (ingénierie logicielle : 16 tâches, bureautique : 14) offrent des estimations plus fiables.</p>
 
-<h3>Finding 4 : « Less is more » pour le design de Skills</h3>
-<p>2-3 Skills sont optimales (+18.6pp) ; 4+ Skills n'apportent que +5.9pp. Les Skills « Detailed » (+18.8pp) et « Compact » (+17.1pp) surpassent les Skills « Comprehensive » (–2.9pp). La surcharge documentaire dégrade les performances.</p>
+<p>Le benchmark se limite aux tâches en terminal conteneurisé. Les agents GUI, les systèmes multi-agents et les workflows à horizon long ne sont pas couverts. La métrique binaire pass/fail écrase l'information sur les progrès partiels : un agent qui résout 90 % d'une tâche et un autre qui n'a rien produit reçoivent le même score de 0. L'analyse des échecs (Appendice I) compense partiellement cette perte avec une taxonomie des modes de défaillance.</p>
 
-<h3>Finding 5 : Les Skills compensent partiellement l'échelle du modèle</h3>
-<p>Claude Haiku 4.5 avec Skills (27.7%) dépasse Claude Opus 4.5 sans Skills (22.0%), démontrant que les Skills peuvent substituer partiellement la capacité du modèle.</p>
+<p>Le recours à des harnais commerciaux introduit un risque de non-reproductibilité à moyen terme. Les versions sont documentées (Claude Code 2.1.19, modèles identifiés par leur API ID), mais le comportement des harnais évolue entre versions. Le couplage étroit modèle-harnais (Claude Code ne fonctionne qu'avec les modèles Claude, etc.) empêche d'isoler les effets du modèle et du harnais.</p>
 
-<h3>Finding 6 : 16 tâches sur 84 montrent des deltas négatifs</h3>
-<p>Les Skills peuvent nuire lorsqu'elles introduisent une guidance conflictuelle ou une complexité inutile pour des tâches que le modèle maîtrise déjà.</p>
+<h2>Reproductibilité</h2>
 
-<h2>4. Discussion et limites</h2>
+<p>Les 84 tâches sont conteneurisées avec des Dockerfiles complets, des Makefiles de build et des budgets de ressources spécifiés dans des fichiers <code>task.toml</code>. L'environnement d'exécution est reproductible à l'identique. Les identifiants de modèle et les versions des harnais figurent en Table 8. La température est fixée à 0.</p>
 
-<h3>Limites reconnues par les auteurs</h3>
-<ul>
-  <li><strong>Couverture</strong> : tâches terminales containerisées uniquement — les résultats ne se transfèrent pas directement aux agents GUI, multi-agents ou workflows de long horizon</li>
-  <li><strong>Attribution causale</strong> : l'augmentation du contexte est un confondant non contrôlé ; des baselines à longueur égale (texte aléatoire, documentation RAG) sont nécessaires</li>
-  <li><strong>Déterminisme</strong> : la containerisation fournit l'isolation mais pas le déterminisme parfait ni l'immunité à la contamination des données d'entraînement</li>
-  <li><strong>Volatilité des harnesses</strong> : les harnesses commerciales évoluent, limitant la reproductibilité à long terme</li>
-  <li><strong>Composition de Skills</strong> : les effets d'interaction entre Skills multiples ne sont pas étudiés</li>
-</ul>
+<p>La dépendance à des API commerciales conditionne la reproduction exacte à la disponibilité et au coût de ces services. Aucun lien vers un dépôt public n'est fourni dans le papier, bien que l'infrastructure soit décrite comme ouverte. La validation à 10 essais sur un sous-ensemble (tâches Extreme, GPT-5.2 et Opus 4.5) confirme la stabilité des estimations à 5 essais, avec un delta ≤ 1,2 pp.</p>
 
-<h3>Limites additionnelles identifiées</h3>
-<ul>
-  <li><strong>Biais de sélection des Skills</strong> : en ne retenant que le quartile supérieur de qualité, le benchmark surestime l'efficacité des Skills en conditions réelles</li>
-  <li><strong>Petit nombre de tâches par domaine</strong> : 2 tâches pour Healthcare rendent le +51.9pp statistiquement fragile — un intervalle de confiance aurait été bienvenu</li>
-  <li><strong>Absence d'analyse statistique formelle</strong> : pas de tests de significativité, pas d'intervalles de confiance, pas de correction pour comparaisons multiples</li>
-  <li><strong>Biais de l'évaluation binaire</strong> : le pass/fail ne capture pas les progrès partiels ni la qualité des solutions</li>
-</ul>
+<p>Le processus de construction du benchmark est documenté avec un degré de détail inhabituel : pipeline CI automatisé, critères de revue explicites, template de rapport de benchmark, cycle de vie des pull requests. Cette transparence procédurale dépasse la norme des publications de benchmarks dans le domaine.</p>
 
-<h2>5. Reproductibilité</h2>
+<h2>Impact et applications</h2>
 
-<p><strong>Points positifs :</strong></p>
-<ul>
-  <li>Environnements Docker containerisés assurant l'isolation</li>
-  <li>Vérificateurs déterministes (pytest, pas de LLM-as-judge)</li>
-  <li>Infrastructure open-source mentionnée (framework Harbor)</li>
-  <li>Appendices détaillés avec spécifications complètes des tâches, structure des répertoires, templates de configuration</li>
-  <li>5 essais par tâche pour lisser la variance</li>
-</ul>
+<p>SkillsBench produit les premières données empiriques à grande échelle sur l'efficacité des Agent Skills. Les praticiens disposent d'un cadre d'évaluation pour décider si l'adoption de Skills se justifie dans leur domaine — les gains de +51,9 pp en santé contre +4,5 pp en ingénierie logicielle orientent les priorités d'investissement, sous réserve des caveats de taille d'échantillon mentionnés plus haut.</p>
 
-<p><strong>Points faibles :</strong></p>
-<ul>
-  <li>Dépendance à des APIs commerciales (Claude Code, Gemini CLI, Codex CLI) susceptibles d'évoluer</li>
-  <li>Les Skills curées ne sont pas toutes détaillées dans l'article</li>
-  <li>Le code du benchmark et les données ne sont pas explicitement publiés avec un lien dans cet article (préprint)</li>
-  <li>Température 0 ne garantit pas le déterminisme parfait pour tous les modèles</li>
-</ul>
+<p>Les principes de conception validés empiriquement — Skills focalisés de 2 à 3 modules, instructions procédurales concises plutôt que documentation exhaustive, au moins un exemple fonctionnel — fournissent un guide opérationnel pour les auteurs de Skills. La démonstration que les Skills auto-générées sont inefficaces recentre les efforts sur la curation humaine experte, un résultat contre-intuitif dans un domaine qui tend vers l'automatisation maximale.</p>
 
-<h2>6. Impact et applications</h2>
+<p>L'analyse coût-performance montre que les Skills décalent la frontière de Pareto vers le haut. Un petit modèle augmenté de Skills peut rivaliser avec un modèle plus puissant sans Skills, à moindre coût. Ce résultat a des implications directes pour les architectures de déploiement en production.</p>
 
-<p><strong>Impact scientifique :</strong></p>
-<ul>
-  <li>Premier benchmark dédié à l'évaluation systématique des Agent Skills — comble un vide méthodologique important</li>
-  <li>Le résultat sur les Skills auto-générées est particulièrement impactant : il démontre une asymétrie fondamentale entre production et consommation de connaissances procédurales par les LLM</li>
-  <li>Les principes de design empiriquement validés (concision, modularité, 2-3 modules) fournissent des recommandations actionnables</li>
-</ul>
+<h2>Positionnement dans la littérature</h2>
 
-<p><strong>Impact pratique :</strong></p>
-<ul>
-  <li>Guide le design de Skills : préférer des instructions focalisées avec exemples concrets plutôt que des documentations exhaustives</li>
-  <li>Justifie l'investissement dans la curation humaine de Skills plutôt que la génération automatique</li>
-  <li>Démontre le potentiel des Skills pour démocratiser l'accès aux capacités agents (petits modèles + Skills ≈ grands modèles)</li>
-  <li>Alerte sur les risques de dégradation (16/84 tâches négativement impactées)</li>
-</ul>
+<p>SkillsBench se distingue des benchmarks agents existants — Terminal-Bench (Merrill et al., 2026), SWE-bench (Jimenez et al., 2024), AgentBench (Liu et al., 2023), WebArena (Zhou et al., 2024) — par son évaluation appariée. Ces benchmarks mesurent la capacité brute d'un agent sur une tâche. SkillsBench mesure le gain d'augmentation, une question complémentaire et jusqu'ici non traitée.</p>
 
-<h2>7. Positionnement dans la littérature</h2>
+<p>Le concept de Skills hérite des travaux sur l'abstraction temporelle (options framework, Sutton et al., 1999), les architectures cognitives pour agents linguistiques (CoALA, Sumers et al., 2023), et les agents à monde ouvert (Voyager, Wang et al., 2023). La spécification formelle — fichier SKILL.md avec frontmatter YAML, ressources exécutables optionnelles, portabilité cross-modèle — formalise ce qui existait de manière informelle dans les ecosystèmes Claude Code et Gemini CLI.</p>
 
-<p>SKILLSBENCH se positionne à l'intersection de trois courants de recherche :</p>
-
-<p><strong>Benchmarks agents :</strong> contrairement à Terminal-Bench (Merrill et al., 2026), SWE-bench (Jimenez et al., 2024), AgentBench (Liu et al., 2023) et WebArena (Zhou et al., 2024) qui mesurent la capacité brute des modèles, SKILLSBENCH introduit l'évaluation appariée de l'augmentation — mesurant non pas « que peut faire le modèle ? » mais « combien l'augmentation par Skills améliore-t-elle le modèle ? ».</p>
-
-<p><strong>Augmentation procédurale :</strong> s'inscrit dans la lignée de CoALA (Sumers et al., 2023), Voyager (Wang et al., 2023), et des travaux sur les options temporelles (Sutton et al., 1999), en opérationnalisant le concept de connaissances procédurales modulaires pour les agents LLM.</p>
-
-<p><strong>Écosystèmes de Skills :</strong> documente quantitativement pour la première fois l'écosystème de 47 150 Skills (croissance exponentielle, distribution de qualité, caractéristiques structurelles), fournissant un contexte empirique aux spécifications d'Anthropic (Agent Skills, MCP).</p>
-
-<p>La contribution principale réside dans le passage d'une évaluation agent-centrique à une évaluation augmentation-centrique, un changement de paradigme nécessaire étant donné la prolifération des écosystèmes de Skills.</p>
-
-<hr>
+<p>La méthodologie combine le scoring à dénominateur fixe de Terminal-Bench et le gain normalisé de Hake (1998), emprunté à la recherche en physique éducative. Cette combinaison permet de comparer les améliorations entre modèles de niveaux de base différents, en distinguant les effets de plafond des effets réels de scaffolding. Malgré les limites discutées — confondant de longueur de contexte, biais de sélection des Skills, couverture inégale des domaines — SkillsBench établit un cadre d'évaluation qui manquait au domaine et qui sera probablement adopté comme référence pour les travaux futurs sur l'augmentation procédurale des agents.</p>
 
 <h2>Tableau récapitulatif des scores de robustesse</h2>
 
-<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<table>
   <thead>
-    <tr style="background-color: var(--muted, #f5f5f5);">
-      <th style="text-align: left;">Critère</th>
-      <th style="text-align: center;">Score (/5)</th>
-      <th style="text-align: left;">Commentaire</th>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Commentaire</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>Question de recherche</strong></td>
-      <td style="text-align: center;">4</td>
-      <td>Claire, originale et d'une pertinence immédiate. Comble un vide empirique identifié.</td>
+      <td>Question de recherche</td>
+      <td>4</td>
+      <td>Question claire et originale ; premier benchmark dédié aux Skills d'agents LLM, avec triple axe (efficacité, conception, auto-génération)</td>
     </tr>
     <tr>
-      <td><strong>Design expérimental</strong></td>
-      <td style="text-align: center;">4</td>
-      <td>Évaluation appariée rigoureuse avec 3 conditions, vérification déterministe. Manque de baselines contrôlées en longueur de contexte.</td>
+      <td>Design expérimental</td>
+      <td>4</td>
+      <td>Évaluation appariée sur trois conditions avec vérification déterministe ; absence de baseline longueur-contrôlée (texte aléatoire ou documentation factuelle)</td>
     </tr>
     <tr>
-      <td><strong>Taille d'échantillon</strong></td>
-      <td style="text-align: center;">4</td>
-      <td>7 308 trajectoires, 84 tâches, 7 configurations. Certains domaines très sous-représentés (2-3 tâches).</td>
+      <td>Taille d'échantillon</td>
+      <td>3</td>
+      <td>7 308 trajectoires sur 84 tâches, 5 essais par condition ; mais 4 domaines sur 11 comptent 2 ou 3 tâches seulement</td>
     </tr>
     <tr>
-      <td><strong>Qualité des métriques</strong></td>
-      <td style="text-align: center;">4</td>
-      <td>Pass rate binaire déterministe + normalized gain. Pas de crédit partiel ni de tests de significativité.</td>
+      <td>Qualité des métriques</td>
+      <td>4</td>
+      <td>Vérificateurs déterministes pytest avec gain normalisé ; la métrique binaire pass/fail perd l'information sur les progrès partiels</td>
     </tr>
     <tr>
-      <td><strong>Contrôle des biais</strong></td>
-      <td style="text-align: center;">3</td>
-      <td>Audit de fuite et vérification humaine solides. Confondant majeur non contrôlé : longueur de contexte. Biais d'entraînement potentiel pour Claude.</td>
+      <td>Contrôle des biais</td>
+      <td>3</td>
+      <td>Audit de fuite automatisé et revue humaine structurée ; confondant de longueur de contexte non isolé, biais de sélection des Skills (quartile supérieur, 9/12 vs. moyenne 6,2/12)</td>
     </tr>
     <tr>
-      <td><strong>Reproductibilité</strong></td>
-      <td style="text-align: center;">4</td>
-      <td>Containerisation Docker, vérificateurs déterministes, appendices détaillés. Dépendance aux APIs commerciales volatiles.</td>
+      <td>Reproductibilité</td>
+      <td>3</td>
+      <td>Conteneurs Docker reproductibles et versions documentées ; dépendance aux API commerciales et absence de dépôt public référencé</td>
     </tr>
     <tr>
-      <td><strong>Transparence / limitations</strong></td>
-      <td style="text-align: center;">5</td>
-      <td>Discussion exemplaire des limites : attribution causale, écart benchmark-écosystème, couverture, contamination. Rares dans le domaine.</td>
+      <td>Transparence et limitations</td>
+      <td>4</td>
+      <td>Limites clairement énoncées ; écart benchmark/écosystème explicitement reconnu ; processus de construction documenté avec détail inhabituel</td>
     </tr>
     <tr>
-      <td><strong>Impact / nouveauté</strong></td>
-      <td style="text-align: center;">4</td>
-      <td>Premier benchmark augmentation-centrique pour Skills agents. Résultats directement actionnables. Changement de paradigme évaluatif.</td>
-    </tr>
-    <tr style="background-color: var(--muted, #f5f5f5); font-weight: bold;">
-      <td><strong>Note globale</strong></td>
-      <td style="text-align: center;"><strong>4.0 / 5</strong></td>
-      <td>Étude empirique solide et pionnière, limitée par l'absence de contrôles causaux stricts et le déséquilibre des domaines.</td>
+      <td>Impact et nouveauté</td>
+      <td>4</td>
+      <td>Premier benchmark du genre avec principes de conception actionables ; résultat contre-intuitif sur l'inefficacité de l'auto-génération de Skills</td>
     </tr>
   </tbody>
 </table>

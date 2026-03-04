@@ -129,93 +129,59 @@
   <div class="companion-content">
     <h2>Lecture Critique d'Article</h2>
 <h3>Memento : Fine-tuning LLM Agents without Fine-tuning LLMs</h3>
-<p><strong>Auteurs :</strong> Zhou, H., Chen, Y., Guo, S., Yan, X., Lee, K.H., Wang, Z., Lee, K.Y., Zhang, G., Shao, K., Yang, L., Wang, J.</p>
-<p><strong>Affiliation :</strong> UCL AI Centre, Huawei Noah's Ark Lab UK, Jilin University, Institute of Automation CAS</p>
-<p><strong>Date :</strong> 2025 — arXiv preprint</p>
+<p>Zhou, H., Chen, Y., Guo, S., Yan, X., Lee, K.H., Wang, Z., Lee, K.Y., Zhang, G., Shao, K., Yang, L., Wang, J.</p>
+<p>UCL AI Centre, Huawei Noah's Ark Lab UK, Jilin University, Institute of Automation CAS</p>
+<p>2025 — arXiv preprint</p>
 
 <h2>1. Objectif et contexte</h2>
-<p>L'article aborde une question fondamentale dans le domaine des agents LLM : comment permettre à un agent d'apprendre continuellement de son environnement sans le coût prohibitif du fine-tuning des modèles de langage sous-jacents. Les auteurs identifient deux paradigmes dominants — les workflows rigides codés en dur et le fine-tuning paramétrique — et proposent une troisième voie basée sur la mémoire épisodique et le raisonnement par cas (Case-Based Reasoning, CBR).</p>
-<p>La motivation est clairement articulée et s'appuie sur des analogies cognitives solides avec la mémoire humaine (mémoire épisodique, consolidation, assignation de crédit dopaminergique). La question de recherche est pertinente et d'actualité, particulièrement dans le contexte de la montée en puissance des agents de recherche profonde (deep research agents).</p>
-<p>Le positionnement par rapport aux approches existantes (RAG, ReAct, ExpeL, DS-Agent, Agent-K) est bien articulé, avec une distinction claire entre les approches paramétriques et non-paramétriques.</p>
+<p>Les agents LLM actuels se heurtent à un dilemme : soit ils suivent des workflows rigides incapables d'évoluer après déploiement, soit ils nécessitent un fine-tuning coûteux en calcul pour s'adapter. Memento propose une troisième voie — l'apprentissage continu par mémoire épisodique, sans modification des poids du modèle.</p>
+<p>Le cadre théorique repose sur le raisonnement par cas (Case-Based Reasoning, CBR), un paradigme classique en IA qui résout de nouveaux problèmes en s'appuyant sur des solutions passées similaires. Les auteurs ancrent leur approche dans des analogies cognitives : mémoire épisodique, consolidation mnésique, assignation de crédit dopaminergique. Ces analogies restent superficielles — aucune validation neuroscientifique ne les sous-tend — mais elles motivent un design technique cohérent.</p>
+<p>La question de recherche est formulée avec précision : comment construire des agents LLM capables d'apprentissage continu à partir d'un environnement changeant, sans le coût prohibitif du fine-tuning ? Cette question est pertinente dans le contexte des agents de recherche profonde (deep research), où l'adaptation en temps réel à des tâches hétérogènes est critique.</p>
 
 <h2>2. Méthodologie</h2>
-<p>La contribution méthodologique principale est la formalisation du <strong>Memory-Based Markov Decision Process (M-MDP)</strong>, qui étend le MDP standard avec un espace mémoire. Cette formalisation est rigoureuse et permet de dériver proprement :</p>
-<ul>
-<li>Une politique de sélection de cas via soft Q-learning (Eq. 7)</li>
-<li>Une approximation par noyau basée sur le contrôle épisodique (Eq. 9)</li>
-<li>Un objectif d'apprentissage par différence temporelle (Eq. 10)</li>
-</ul>
-<p>L'architecture Memento s'instancie comme un framework planificateur-exécuteur avec trois modules de mémoire (Case Memory, Subtask Memory, Tool Memory). Le planificateur utilise GPT-4.1 et l'exécuteur o3 (pour GAIA) ou o4-mini (pour les autres benchmarks).</p>
-<p><strong>Points forts méthodologiques :</strong></p>
-<ul>
-<li>Formalisation théorique complète avec dérivations détaillées</li>
-<li>Deux variantes de mémoire (paramétrique et non-paramétrique) comparées systématiquement</li>
-<li>Simplification justifiée du M-MDP multi-étapes en cadre mono-étape pour le planificateur CBR</li>
-<li>Utilisation du protocole MCP pour l'intégration des outils externes</li>
-</ul>
-<p><strong>Limites méthodologiques :</strong></p>
-<ul>
-<li>Le choix d'utiliser des modèles différents pour le planificateur et l'exécuteur, et des exécuteurs différents selon les benchmarks (o3 vs o4-mini), complique l'attribution des gains de performance à la méthode elle-même</li>
-<li>La fonction de récompense binaire (r ∈ {0,1}) est une simplification importante non pleinement discutée</li>
-<li>L'infrastructure d'outils (searxng, Crawl4AI, Chunkr AI) est complexe et potentiellement fragile</li>
-</ul>
+<p>La contribution méthodologique principale est le Memory-Based Markov Decision Process (M-MDP), qui étend le MDP classique par un espace mémoire ℳ = (𝒮×𝒜×ℝ)*. La formalisation est rigoureuse. Elle permet de dériver une politique optimale de sélection de cas sous forme de softmax sur les Q-valeurs (Eq. 7), d'approximer la Q-fonction via un noyau de similarité d'états (Eq. 9), et d'optimiser les paramètres du noyau par différence temporelle (Eq. 10).</p>
+<p>L'architecture Memento adopte un schéma planificateur-exécuteur. Le planificateur (GPT-4.1) décompose la tâche en sous-tâches, guidé par des cas récupérés depuis une Case Bank. L'exécuteur (o3 pour GAIA, o4-mini pour les autres benchmarks) exécute chaque sous-tâche via le protocole MCP, avec accès à des outils de recherche web, d'analyse de documents et d'exécution de code.</p>
+<p>Deux variantes de mémoire sont implémentées. La variante non-paramétrique récupère les K cas les plus proches par similarité cosinus entre embeddings SimCSE. La variante paramétrique entraîne une Q-fonction (MLP à deux couches) par perte d'entropie croisée binaire, ce qui remplace la similarité brute par un score d'utilité appris. La simplification du M-MDP multi-étapes en cadre mono-étape pour le planificateur est justifiée : dans le scénario de recherche profonde, le CBR n'intervient qu'à l'étape de planification, ce qui élimine le bootstrap de la différence temporelle.</p>
+<p>Plusieurs choix méthodologiques affaiblissent la clarté de l'évaluation. L'exécuteur varie selon les benchmarks (o3 pour GAIA, o4-mini ailleurs), ce qui empêche d'isoler proprement l'apport du CBR. La fonction de récompense binaire (r ∈ {0,1}) est une simplification forte dont les implications ne sont pas discutées — un gradient de récompense plus fin pourrait produire des comportements de retrieval différents. L'infrastructure d'outils (searxng auto-hébergé, Crawl4AI, Chunkr AI, AssemblyAI) est lourde et introduit des sources de variabilité non contrôlées.</p>
 
 <h2>3. Résultats principaux</h2>
-<p>Les résultats sont présentés sur quatre benchmarks complémentaires :</p>
+<p>Memento est évalué sur quatre benchmarks couvrant des capacités complémentaires :</p>
 <ul>
-<li><strong>GAIA :</strong> Top-1 sur le set de validation (87.88% Pass@3), 79.40% sur le test set, surpassant des frameworks comme Manus, OWL et OpenAI Deep Research</li>
-<li><strong>DeepResearcher :</strong> 66.6% F1 et 80.4% PM en moyenne sur 7 datasets de QA, surpassant la méthode training-based DeepResearcher (51.8% F1, 60.5% PM)</li>
-<li><strong>SimpleQA :</strong> 95.0% PM, état de l'art devant WebSailor (93.5%) et WebDancer (90.5%)</li>
-<li><strong>HLE :</strong> 24.4% PM, second derrière GPT-5 (25.32%)</li>
+<li><strong>GAIA</strong> (planification long-horizon, orchestration d'outils) : 87.88% Pass@3 sur la validation (rang 1), 79.40% sur le test (rang 3 parmi les systèmes open-source)</li>
+<li><strong>DeepResearcher</strong> (recherche web multi-hop, 7 datasets QA) : 66.6% F1 et 80.4% PM en moyenne, dépassant le meilleur système basé sur l'entraînement (51.8% F1)</li>
+<li><strong>SimpleQA</strong> (précision factuelle) : 95.0% PM, devant WebSailor (93.5%) et WebDancer (90.5%)</li>
+<li><strong>HLE</strong> (raisonnement académique long-tail) : 24.4% PM, à 0.92 point de GPT-5</li>
 </ul>
-<p>Les études d'ablation montrent que :</p>
-<ul>
-<li>Le CBR apporte un gain additif consistant de +4.5 à +6.7 F1 selon les benchmarks</li>
-<li>K=4 cas récupérés est optimal, au-delà la performance stagne</li>
-<li>Le CBR paramétrique surpasse légèrement le non-paramétrique sur les courbes d'apprentissage continu</li>
-<li>Sur les tâches hors-distribution, la mémoire par cas ajoute 4.7% à 9.6% de points absolus</li>
-</ul>
+<p>Les ablations internes (Table 5) apportent les résultats les plus instructifs. L'ajout des outils en ligne au-dessus de l'exécuteur offline produit des gains variables : +28.8 F1 sur SimpleQA mais −18.0 F1 sur DeepResearcher, un phénomène que les auteurs attribuent à la contamination de données dans les benchmarks QA. L'ajout du planificateur (Memento w/o CBR) produit des gains robustes sur tous les benchmarks (+11.0 à +32.5 F1). Le CBR ajoute une couche supplémentaire de +3.7 à +6.7 F1.</p>
+<p>L'étude de sensibilité sur le nombre de cas récupérés (K) montre un optimum à K=4. Au-delà, la performance stagne ou décline légèrement, ce qui distingue le CBR du few-shot prompting classique où davantage d'exemples aide généralement.</p>
+<p>Sur les courbes d'apprentissage continu (Table 4), le CBR paramétrique dépasse le non-paramétrique à chaque itération, avec un écart de ~0.6 point de PM après 5 itérations. La convergence est rapide — l'essentiel du gain se réalise entre les itérations 1 et 3.</p>
 
 <h2>4. Discussion et limites</h2>
-<p><strong>Comparaisons asymétriques :</strong> La comparaison principale avec les méthodes training-based (Table 1) oppose Memento (GPT-4.1 + o4-mini, modèles propriétaires de pointe) à des baselines utilisant Qwen2.5-7B, un modèle open-source 7B. Cette asymétrie rend difficile l'évaluation de la contribution réelle de la méthode CBR par rapport à la puissance brute des modèles sous-jacents. Les ablations internes (Table 5) sont plus informatives car elles comparent des configurations utilisant les mêmes modèles.</p>
-<p><strong>Contamination de données :</strong> Les auteurs identifient un phénomène de contamination sur les benchmarks DeepResearcher (baisse de performance en passant du mode offline au online sans planning), mais ne proposent pas de solution ni d'analyse approfondie.</p>
-<p><strong>Coûts :</strong> Bien qu'une analyse des coûts en tokens soit mentionnée en ablation, les coûts réels en dollars des appels API (GPT-4.1, o3, o4-mini) ne sont pas détaillés, ce qui est une omission importante pour évaluer la praticité de l'approche.</p>
-<p><strong>Scalabilité de la mémoire :</strong> Le problème classique du « swamping » en CBR (coûts de retrieval croissants) est mentionné dans la revue de littérature mais n'est pas expérimentalement étudié pour Memento. Les expériences utilisent des case banks relativement petits accumulés sur 3-5 itérations.</p>
-<p><strong>Généralisation :</strong> Les gains OOD (Figure 1d) sont encourageants mais limités à des tâches de QA structurellement proches des données d'entraînement du case bank.</p>
+<p>Le problème le plus sérieux de l'article est l'asymétrie des comparaisons. La Table 1 oppose Memento (GPT-4.1 + o4-mini, modèles propriétaires frontier) à des baselines construites sur Qwen2.5-7B, un modèle open-source 200 fois plus petit. Cette comparaison ne permet pas de conclure que les gains proviennent du CBR plutôt que de la puissance brute des modèles sous-jacents. Les auteurs ne mentionnent pas cette asymétrie. Seules les ablations internes (même modèle, avec et sans CBR) isolent réellement la contribution de la méthode.</p>
+<p>La contamination de données est reconnue sur les benchmarks DeepResearcher : la performance chute de 48.8 à 30.8 F1 en passant de l'exécuteur offline à l'exécuteur online sans planning. Cette observation suggère que le modèle offline bénéficie de connaissances mémorisées lors de son entraînement, un biais non résolu dans l'analyse.</p>
+<p>Les coûts sont absents. La Figure 6 rapporte les tokens consommés par niveau de difficulté GAIA, mais aucun chiffrage en dollars n'est fourni. Pour un système mobilisant GPT-4.1, o3, o4-mini, GPT-4o et Gemini 2.5 Pro simultanément, le coût par requête est probablement élevé. Cette omission rend difficile l'évaluation de la praticité réelle de l'approche.</p>
+<p>Le « swamping problem » — la dégradation des performances lorsque la case bank devient trop volumineuse — est évoqué dans la revue de littérature mais jamais testé. Les expériences se limitent à 5 itérations avec ~3 000 points de données, un régime où la saturation arrive vite. Le comportement à l'échelle (dizaines de milliers de cas) reste inconnu.</p>
+<p>L'analyse fast vs. slow think (Table 6) apporte un résultat contre-intuitif : le planificateur rapide (GPT-4.1) surpasse le planificateur délibératif (o3) de 7.9 points. Les auteurs l'expliquent par le fait que o3 tend à court-circuiter la planification ou à produire des plans trop verbeux. Ce résultat mériterait une analyse qualitative plus poussée avec des exemples concrets.</p>
 
 <h2>5. Reproductibilité</h2>
-<p>Le code est annoncé comme disponible sur GitHub (https://github.com/Agent-on-the-Fly/Memento), ce qui est un point positif. Cependant, la reproductibilité effective est limitée par :</p>
-<ul>
-<li>La dépendance à des modèles propriétaires (GPT-4.1, o3, o4-mini, GPT-4o, Gemini 2.5 Pro)</li>
-<li>L'utilisation d'APIs commerciales dont les comportements peuvent évoluer dans le temps</li>
-<li>Une infrastructure d'outils complexe (searxng auto-hébergé, Crawl4AI, AssemblyAI, Chunkr AI)</li>
-<li>L'absence de détails sur les coûts computationnels et les temps d'exécution</li>
-</ul>
-<p>La formalisation mathématique est suffisamment détaillée pour permettre une réimplémentation, mais la reproduction des résultats exacts nécessiterait un accès aux mêmes APIs et une configuration identique de l'infrastructure.</p>
+<p>Le code est disponible sur GitHub. La formalisation mathématique est détaillée, avec des dérivations complètes en appendice. Les hyperparamètres principaux sont spécifiés (K=4, encodeur SimCSE, MLP à deux couches pour la Q-fonction paramétrique).</p>
+<p>La reproductibilité effective se heurte à plusieurs obstacles. Le système repose sur cinq modèles propriétaires différents (GPT-4.1, o3, o4-mini, GPT-4o, Gemini 2.5 Pro) dont le comportement évolue au fil des mises à jour API. L'infrastructure d'outils requiert un déploiement searxng auto-hébergé, Crawl4AI, et des API tierces (AssemblyAI, Chunkr AI). Les temps d'exécution et coûts API ne sont pas documentés. Reproduire les résultats exacts de la Table 2 nécessite un accès à la version exacte des APIs utilisées, ce qui est impossible rétrospectivement.</p>
 
 <h2>6. Impact et applications</h2>
-<p>L'article propose une avancée significative dans la conception d'agents LLM adaptatifs. Les applications potentielles incluent :</p>
-<ul>
-<li><strong>Agents de recherche profonde :</strong> amélioration continue sans retraining, directement applicable aux scénarios de recherche web complexe</li>
-<li><strong>Systèmes de question-réponse :</strong> la réduction de l'hallucination (SimpleQA 95%) est prometteuse pour les applications factuelles</li>
-<li><strong>Apprentissage continu :</strong> le paradigme learn-on-the-fly pourrait être étendu à d'autres domaines d'agents</li>
-</ul>
-<p>L'impact pratique est cependant conditionné par les coûts d'API et la complexité de l'infrastructure, qui peuvent limiter l'adoption hors des laboratoires de recherche bien dotés.</p>
+<p>L'apport principal de Memento est la démonstration qu'un agent LLM peut améliorer sa performance de façon continue sans mise à jour des poids, grâce à une mémoire épisodique structurée. Le gain du CBR (+4.7 à +9.6 points absolus sur les tâches OOD) est modeste mais consistant, et le mécanisme est orthogonal aux améliorations du modèle sous-jacent — il pourrait bénéficier de chaque nouvelle génération de LLM sans modification.</p>
+<p>Les applications directes concernent les agents de recherche profonde, où la capacité à capitaliser sur des résolutions passées réduit le temps de résolution et les hallucinations. Le score de 95.0% PM sur SimpleQA confirme cette réduction des hallucinations factuelles.</p>
+<p>La dépendance aux modèles frontier et à une infrastructure complexe limite l'adoption au-delà des laboratoires de recherche disposant de budgets API conséquents. Un portage vers des modèles open-source serait nécessaire pour démocratiser l'approche.</p>
 
 <h2>7. Positionnement dans la littérature</h2>
-<p>Memento se positionne à l'intersection de plusieurs courants :</p>
-<ul>
-<li><strong>Case-Based Reasoning (CBR) :</strong> héritier de la tradition Aamodt & Plaza (1994), avec une modernisation via les embeddings et le Q-learning</li>
-<li><strong>Apprentissage continu pour LLM :</strong> alternative non-paramétrique aux approches de fine-tuning (GRPO, SFT) et de reflection (ReAct, Reflexion)</li>
-<li><strong>Agents augmentés par mémoire :</strong> se distingue de Mem0, A-MEM et MemInsight par la formalisation MDP et l'optimisation Q-learning de la politique de retrieval</li>
-<li><strong>Deep Research :</strong> concurrent direct de Manus, OWL et OpenAI Deep Research, avec des résultats supérieurs sur GAIA</li>
-</ul>
-<p>La contribution principale réside dans la formalisation théorique (M-MDP) qui fournit un cadre principiel pour l'apprentissage continu par mémoire, là où les travaux antérieurs restaient plus heuristiques.</p>
+<p>Memento s'inscrit dans la lignée du Case-Based Reasoning (Aamodt &amp; Plaza, 1994), modernisé par les embeddings neuronaux et le Q-learning. Par rapport aux systèmes de mémoire récents — Mem0 (opérations CRUD sur la mémoire), A-MEM (réseau typologique), MemInsight (enrichissement sémantique) — Memento se distingue par la formalisation MDP qui fournit un objectif d'optimisation explicite pour la politique de retrieval, plutôt que des heuristiques de sélection.</p>
+<p>Face aux approches d'apprentissage continu paramétrique (START, Search-R1, DeepResearcher), Memento propose un paradigme complémentaire qui évite le fine-tuning et le risque d'oubli catastrophique. La comparaison directe reste difficile en raison de l'asymétrie des modèles sous-jacents.</p>
+<p>Sur le terrain des agents de recherche profonde, Memento dépasse Manus, OWL et OpenAI Deep Research sur GAIA, mais se situe derrière SuZeroUltra et h2oGPTeAgent sur le test set. Le classement dépend fortement de la combinaison de modèles utilisée et de l'infrastructure d'outils, ce qui rend les comparaisons entre frameworks fragiles.</p>
+<p>La contribution durable de l'article réside moins dans les performances absolues — qui seront dépassées à chaque nouvelle génération de modèle — que dans le cadre formel M-MDP, qui offre un langage mathématique pour raisonner sur l'apprentissage par mémoire des agents LLM.</p>
 
 <h2>Tableau récapitulatif des critères de robustesse</h2>
-<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<table>
 <thead>
-<tr style="background-color: #f0f0f0;">
+<tr>
 <th>Critère</th>
 <th>Score (0-5)</th>
 <th>Justification</th>
@@ -223,51 +189,51 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>Question de recherche</strong></td>
-<td>4</td>
-<td>Question claire, originale et bien motivée par des analogies cognitives. Pertinence élevée pour le domaine des agents LLM.</td>
+<td>Question de recherche</td>
+<td class="score-4">4</td>
+<td>Question claire et bien motivée : adaptation continue des agents LLM sans fine-tuning. Ancrage cognitif et pertinence pour les agents de recherche profonde.</td>
 </tr>
 <tr>
-<td><strong>Design expérimental</strong></td>
-<td>4</td>
-<td>Évaluation sur 4 benchmarks complémentaires, ablations détaillées, études de sensibilité. Utilisation de modèles différents selon les benchmarks réduit la clarté.</td>
+<td>Design expérimental</td>
+<td class="score-4">4</td>
+<td>Quatre benchmarks complémentaires, ablations composant par composant, étude de sensibilité sur K, courbes d'apprentissage continu, évaluation OOD. L'utilisation d'exécuteurs différents selon les benchmarks réduit la comparabilité.</td>
 </tr>
 <tr>
-<td><strong>Taille d'échantillon</strong></td>
-<td>4</td>
-<td>Benchmarks standards avec tailles raisonnables (GAIA 450, SimpleQA 4330, HLE 2500). Couverture adéquate des niveaux de difficulté.</td>
+<td>Taille d'échantillon</td>
+<td class="score-3">3</td>
+<td>Benchmarks de taille standard (GAIA 450, SimpleQA 4330, HLE 2500). Les expériences d'apprentissage continu — le cœur de la contribution — se limitent à ~3000 points sur 5 itérations avec saturation rapide.</td>
 </tr>
 <tr>
-<td><strong>Qualité des métriques</strong></td>
-<td>4</td>
-<td>Métriques appropriées (EM, F1, PM). L'utilisation de GPT-4o-mini comme évaluateur PM est standard mais introduit une variabilité non quantifiée.</td>
+<td>Qualité des métriques</td>
+<td class="score-4">4</td>
+<td>Métriques standard et complémentaires (EM, F1, PM). L'évaluateur GPT-4o-mini pour le PM est un choix courant mais introduit une variabilité non quantifiée. Pas d'intervalles de confiance.</td>
 </tr>
 <tr>
-<td><strong>Contrôle des biais</strong></td>
-<td>3</td>
-<td>Comparaison asymétrique avec des baselines 7B. Contamination de données identifiée mais non résolue. Pas de contrôle du coût computationnel dans les comparaisons.</td>
+<td>Contrôle des biais</td>
+<td class="score-2">2</td>
+<td>La comparaison principale oppose des modèles frontier propriétaires (GPT-4.1, o3) à Qwen2.5-7B. Aucun test de significativité statistique. Contamination de données reconnue mais non traitée.</td>
 </tr>
 <tr>
-<td><strong>Reproductibilité</strong></td>
-<td>3</td>
-<td>Code disponible sur GitHub. Mais dépendance critique aux APIs propriétaires (GPT-4.1, o3) et infrastructure complexe limitant la reproduction effective.</td>
+<td>Reproductibilité</td>
+<td class="score-3">3</td>
+<td>Code publié sur GitHub et formalisation mathématique détaillée. La dépendance à cinq APIs propriétaires et une infrastructure complexe (searxng, Crawl4AI, AssemblyAI) compromet la reproduction effective.</td>
 </tr>
 <tr>
-<td><strong>Transparence / Limitations</strong></td>
-<td>3</td>
-<td>Limites partiellement discutées (Level 3 GAIA, contamination). Coûts, scalabilité mémoire et équité des comparaisons insuffisamment traités.</td>
+<td>Transparence / Limitations</td>
+<td class="score-3">3</td>
+<td>Limites de la saturation de la case bank et des tâches Level 3 discutées. L'asymétrie des comparaisons et les coûts API sont passés sous silence.</td>
 </tr>
 <tr>
-<td><strong>Impact / Nouveauté</strong></td>
-<td>4</td>
-<td>Formalisation M-MDP originale, résultats SOTA sur plusieurs benchmarks. Paradigme prometteur pour l'apprentissage continu d'agents sans fine-tuning.</td>
+<td>Impact / Nouveauté</td>
+<td class="score-4">4</td>
+<td>Formalisation M-MDP originale qui fournit un cadre mathématique au CBR pour agents LLM. Résultats état de l'art sur GAIA et SimpleQA. Le paradigme learn-on-the-fly est transférable à d'autres domaines d'agents.</td>
 </tr>
 </tbody>
 <tfoot>
-<tr style="background-color: #f0f0f0;">
+<tr>
 <td><strong>Note globale</strong></td>
-<td><strong>3.7 / 5</strong></td>
-<td>Contribution théorique et empirique solide, mais la reproductibilité limitée et l'asymétrie des comparaisons réduisent la robustesse globale.</td>
+<td><strong>3.5 / 5</strong></td>
+<td>Travail théorique solide avec une formalisation M-MDP bien conduite et des résultats empiriques forts. L'asymétrie des comparaisons avec des modèles 200× plus petits, l'absence de chiffrage des coûts et la reproductibilité limitée empêchent de valider pleinement les prétentions d'efficacité de la méthode indépendamment de la puissance des modèles sous-jacents.</td>
 </tr>
 </tfoot>
 </table>

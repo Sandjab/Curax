@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doc-to-LoRA: Learning to Instantly Internalize Contexts — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Doc-to-LoRA: Learning to Instantly Internalize Contexts</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Introduction</h2>
+
+<p>Chaque fois qu'on envoie un long document à un modèle de langage, celui-ci le relit intégralement. Mot par mot. La facture d'un rapport de 50 pages envoyé à GPT-4 ou Claude ? Plusieurs secondes de calcul, des gigaoctets de mémoire GPU mobilisés, et un coût en tokens qui grimpe de façon quadratique avec la longueur du texte. Multipliez cela par des milliers d'utilisateurs qui posent chacun dix questions sur leurs documents, et l'addition devient salée.</p>
+
+<p>La distillation de contexte — une technique qui « grave » l'information d'un document dans les paramètres du modèle — résout en théorie ce problème. Une fois le document absorbé, le modèle répond sans le relire. Mais le processus de gravure lui-même prend des dizaines de secondes et consomme autant de mémoire que la lecture directe. On déplace le problème plus qu'on ne le résout.</p>
+
+<p>Une équipe de Sakana AI (Tokyo) propose une approche différente avec Doc-to-LoRA (D2L) : un petit réseau de neurones auxiliaire qui apprend, une fois pour toutes, à transformer n'importe quel document en un adaptateur LoRA — un patch léger appliqué au modèle principal. Le tout en une fraction de seconde, sans rétropropagation, sans optimisation coûteuse.</p>
+
+<h2>2. Le problème : le coût caché des longs contextes</h2>
+
+<p>Les Transformers, l'architecture derrière tous les grands modèles de langage actuels, ont un talon d'Achille : le mécanisme d'attention compare chaque token à tous les autres. Doubler la longueur du texte d'entrée quadruple le coût computationnel. Pour un document de 128 000 tokens (environ 200 pages), le cache de clés-valeurs (KV cache) consomme à lui seul plus de 12 Go de mémoire GPU — juste pour que le modèle puisse « se souvenir » de ce qu'il vient de lire pendant qu'il génère sa réponse.</p>
+
+<p>Deux familles de solutions existent. L'apprentissage en contexte (in-context learning, ICL) place le document directement dans la fenêtre du modèle. C'est simple et efficace, mais cher et éphémère : le modèle « oublie » tout dès la requête suivante. La qualité des réponses se dégrade aussi quand le texte s'allonge — un phénomène documenté sous le nom de « lost in the middle », où l'information située au centre d'un long contexte est partiellement ignorée.</p>
+
+<p>La distillation de contexte (CD) emprunte un autre chemin. Le modèle avec accès au document (le « professeur ») génère des réponses que le modèle sans accès (l'« élève ») apprend à reproduire. Après entraînement, l'élève peut répondre à des questions sur le document sans jamais le relire. Le résultat est durable et peu coûteux à l'inférence.</p>
+
+<p>Mais la phase d'entraînement de la CD est lente. Il faut générer des questions pertinentes, calculer les réponses du professeur, puis optimiser les poids de l'élève par descente de gradient. Pour un seul passage du benchmark SQuAD, la CD classique avec 20 questions générées prend plus de 100 secondes et consomme plus de 40 Go de VRAM. Même la CD « oracle » — qui triche en utilisant la question de test comme signal — nécessite 40 secondes et 8 Go. Ce coût rend la CD inadaptée à la personnalisation en temps réel et au déploiement sur appareils mobiles.</p>
+
+<h2>3. La méthode : pré-apprendre le processus de distillation</h2>
+
+<p>L'idée centrale de D2L est de méta-apprendre le processus de distillation lui-même. Au lieu de distiller chaque document individuellement, les chercheurs entraînent un réseau auxiliaire — un hyperréseau — à réaliser cette distillation en une seule passe.</p>
+
+<p>Une analogie aide à saisir le principe. La CD classique ressemble à un étudiant qui, pour chaque nouveau chapitre, crée manuellement ses fiches de révision : il relit le texte plusieurs fois, rédige des questions-réponses, puis les mémorise par répétition espacée. D2L, c'est un étudiant qui a tellement fait de fiches au cours de sa scolarité qu'il peut désormais parcourir n'importe quel chapitre une seule fois et produire instantanément une fiche de qualité équivalente.</p>
+
+<h3>Le méta-entraînement</h3>
+
+<p>Pendant cette phase unique, réalisée une seule fois, l'hyperréseau est exposé à des millions de documents accompagnés de questions générées automatiquement. Pour chaque document, il apprend à produire les mêmes modifications de poids que la CD classique aurait obtenues après des dizaines d'itérations d'optimisation. Le signal d'entraînement mesure l'écart entre la distribution de sortie du modèle lorsqu'il a le document en contexte et celle du modèle équipé de l'adaptateur LoRA généré par l'hyperréseau. Le corpus d'entraînement comprend environ 900 millions de tokens issus de FineWeb-Edu et de jeux de données de compréhension de lecture, pour un total de 3,2 millions de contextes uniques.</p>
+
+<h3>En production</h3>
+
+<p>Le document est envoyé au modèle de base (dont les poids sont gelés) pour en extraire les activations internes — les représentations que le Transformer construit à chaque couche. Ces activations alimentent l'hyperréseau, qui produit un ensemble de matrices LoRA, une paire par couche. Les matrices sont appliquées au modèle de base, qui peut alors répondre à n'importe quelle question sur le document sans jamais le relire.</p>
+
+<p>L'architecture de l'hyperréseau repose sur le Perceiver, un modèle conçu pour traiter des entrées de taille variable et les projeter vers une représentation de taille fixe. Un mécanisme d'attention croisée permet à un petit ensemble de vecteurs « requête » apprenables (8 par couche, correspondant au rang du LoRA) d'interroger les activations du document, quelle que soit sa longueur.</p>
+
+<h3>Le découpage pour les longs documents</h3>
+
+<p>Pour les documents dépassant la fenêtre du modèle de base, D2L découpe le texte en segments de taille égale (jusqu'à 8 192 tokens chacun), traite chaque segment indépendamment, puis concatène les matrices LoRA le long de la dimension de rang. Un document de 32 000 tokens découpé en 4 segments produit un LoRA de rang 32 (4 × 8). Cette composition permet à D2L de dépasser la fenêtre de contexte du modèle cible — un avantage structurellement impossible avec l'ICL classique.</p>
+
+<p>L'hyperréseau entier ne compte que 309 millions de paramètres, contre 2 milliards pour le modèle cible (Gemma-2-2B). Son entraînement a nécessité environ 5 jours sur 8 GPU H200.</p>
+
+<h2>4. Résultats clés</h2>
+
+<p>Le premier test est spectaculaire par sa simplicité. La tâche « needle-in-a-haystack » (NIAH) consiste à cacher un nombre à 4 chiffres dans un long document rempli de texte parasite, puis à demander au modèle de le retrouver. Le modèle Gemma-2-2B (fenêtre de 8K tokens) atteint une précision parfaite jusqu'à 8K tokens, puis s'effondre au-delà. D2L, entraîné sur des séquences de 32 à 256 tokens seulement, maintient une précision quasi parfaite jusqu'à 40K tokens — cinq fois la fenêtre du modèle de base. Le système n'a jamais vu de séquences aussi longues pendant son entraînement.</p>
+
+<p>Côté mémoire, la différence est encore plus nette. Pour un haystack de 128K tokens, le modèle de base consomme plus de 12 Go de VRAM supplémentaire. Le modèle avec LoRA D2L : moins de 50 Mo, quelle que soit la longueur du document original. L'information est « absorbée » dans les poids — elle n'occupe plus de mémoire pendant l'inférence.</p>
+
+<p>Sur des benchmarks de question-réponse réalistes, D2L atteint 82,5 % de la performance du modèle avec accès direct au texte sur SQuAD. Il surpasse la CD classique sous budget limité de requêtes tout en ramenant le temps d'internalisation sous la seconde, contre 40 à 100+ secondes pour la CD. Sur les tâches à contexte long (2WikiMultihopQA, MultiFieldQA, QASPER), D2L généralise de façon zéro-shot à des documents de plus de 32K tokens alors que le plus long exemple d'entraînement ne faisait que 2 344 tokens.</p>
+
+<p>Un effet secondaire inattendu : quand le modèle adapté par D2L reçoit en plus une version tronquée du document original, sa performance s'améliore légèrement. L'adaptateur LoRA semble compenser le phénomène « lost in the middle » en stockant l'information de façon distribuée dans les poids, là où le Transformer la perd quand elle est enfouie au milieu d'un long contexte.</p>
+
+<p>Le résultat le plus surprenant concerne le transfert cross-modal. En utilisant un modèle vision-langage (Gemma-3-4B) comme encodeur et un modèle texte pur (Gemma-2-2B) comme cible, D2L transfère de l'information visuelle dans un modèle qui n'a jamais vu d'image. Sur Imagenette (10 classes), le modèle texte atteint 75 % de précision en classification d'images, purement via les poids LoRA générés. Ni l'hyperréseau ni le modèle cible n'ont été exposés à des données visuelles pendant l'entraînement.</p>
+
+<h2>5. Implications pratiques</h2>
+
+<p>La latence sous la seconde change la donne pour les assistants conversationnels. Un chatbot d'entreprise pourrait internaliser le profil client, l'historique des échanges et la documentation pertinente avant chaque réponse, sans surcoût perceptible pour l'utilisateur. Les agents IA qui travaillent sur des bases de code pourraient absorber les fichiers modifiés récemment à chaque itération, gardant leur « mémoire de travail » synchronisée avec le code réel.</p>
+
+<p>Le gain en mémoire rend le déploiement sur appareil mobile réaliste. Avec moins de 50 Mo pour internaliser un document de 128K tokens, un smartphone récent pourrait héberger un assistant personnel qui a « lu » des dizaines de documents — manuels, notes, e-mails — sans jamais les recharger dans le contexte. Le coût d'inférence se réduit alors à celui d'un modèle sans contexte, soit une fraction du coût habituel.</p>
+
+<p>Pour les architectes de systèmes IA, D2L suggère un changement de stratégie. Plutôt que de dimensionner des pipelines RAG complexes pour alimenter le modèle en contexte à chaque requête, on pourrait pré-internaliser les corpus stables (documentation, politiques internes, FAQ) sous forme de LoRA, et ne réserver le contexte actif qu'aux informations éphémères.</p>
+
+<p>Le transfert cross-modal entre modèle vision et modèle texte laisse entrevoir des applications en accessibilité et en embarqué. Un modèle texte léger, déployé sur un appareil à ressources limitées, pourrait « voir » à travers les yeux d'un modèle vision distant, l'information visuelle étant compressée en un adaptateur LoRA transmissible par le réseau.</p>
+
+<h2>6. Pour aller plus loin</h2>
+
+<p>D2L n'élimine pas le coût — il le déplace vers le méta-entraînement. Cinq jours sur 8 GPU H200, cela représente un investissement conséquent. L'hyperréseau est aussi spécifique au modèle cible : changer de LLM impose de tout réentraîner. Les chercheurs reconnaissent que réduire ce coût est une priorité de recherche.</p>
+
+<p>L'interférence de connaissances reste un problème ouvert. Quand D2L internalise un document, les modifications de poids peuvent dégrader les connaissances préexistantes du modèle. Les expériences montrent que le modèle adapté performe moins bien sur des questions sans rapport avec le document internalisé. Une piste serait d'inclure des requêtes non pertinentes dans les données d'entraînement pour régulariser l'hyperréseau, ou d'appliquer des techniques d'édition contrainte qui protègent les poids existants.</p>
+
+<p>L'écart avec l'ICL (le modèle lit directement le document) reste de 15 à 20 % sur SQuAD. Les chercheurs proposent une approche hybride : utiliser D2L comme point de départ rapide, puis affiner avec quelques étapes de CD classique. Le passage de rang 8 à 16 pour les LoRA générés comble aussi une partie de l'écart, ce qui indique que la capacité de l'adaptateur — pas l'architecture — est le facteur limitant actuel.</p>
+
+<p>La connexion avec l'apprentissage continu est directe. Un modèle déployé en production qui doit absorber de nouvelles informations chaque jour — actualités, tickets de support, données de marché — pourrait utiliser D2L comme mécanisme de mise à jour rapide, sans passer par un cycle complet de fine-tuning. Le coût de la personnalisation baisserait de plusieurs ordres de grandeur, rendant viable l'adaptation individuelle de modèles à chaque utilisateur. C'est un scénario que la CD classique ne peut pas servir à cette échelle — mais qu'un hyperréseau amortissant le coût sur des millions de documents rend envisageable.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balancing Faithfulness and Performance in Reasoning via Multi-Listener Soft Execution — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Balancing Faithfulness and Performance in Reasoning via Multi-Listener Soft Execution</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les modèles de langage produisent des chaînes de raisonnement (chain-of-thought) dont la fidélité au processus computationnel réel reste incertaine. Les approches par apprentissage par renforcement (RL), qui récompensent la justesse de la réponse finale sans contrainte sur le raisonnement intermédiaire, aggravent ce problème. REMUL (Reasoning Execution by Multiple Listeners) reformule la fidélité comme une propriété multi-agents : un raisonnement est fidèle si d'autres modèles, recevant un préfixe tronqué de la trace, parviennent à la même conclusion que le locuteur.</p>
+<p>L'originalité tient à ce cadrage communicationnel. Plutôt que de vérifier la fidélité par introspection ou exécution programmatique, REMUL s'appuie sur la convergence d'un pool d'auditeurs hétérogènes comme signal d'entraînement. Le locuteur apprend à produire des raisonnements suffisamment clairs pour être « exécutés » par des tiers — une exécution dite « douce » par opposition à l'exécution déterministe via code Python.</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole repose sur deux composantes distinctes :</p>
+<ul>
+<li><strong>RL multi-auditeurs pour la fidélité :</strong> le locuteur (Qwen3-14B ou Phi-4-reasoning-plus) génère une trace de raisonnement, tronquée à 25 %, 50 % et 75 %. Chaque préfixe est transmis à trois modèles auditeurs (Ministral-3-14B-Reasoning, Phi-4-reasoning-plus, Qwen3-14B) qui le complètent indépendamment. La récompense r<sub>match</sub> compte les convergences réponse-locuteur sur l'ensemble des troncatures et auditeurs. L'optimisation utilise GRPO (Group Relative Policy Optimization).</li>
+<li><strong>SFT masqué pour la précision :</strong> un adaptateur LoRA (rang 32) est fine-tuné sur les seuls tokens de réponse finale, en masquant la trace de raisonnement. Cette séparation évite que le signal de justesse interfère avec les comportements de raisonnement acquis via RL.</li>
+</ul>
+<p>L'entraînement porte sur 1 250 paires question-réponse de cinq tâches BIG-Bench Hard, pendant 3 époques GRPO puis 5 époques SFT. L'évaluation couvre quatre benchmarks hors domaine : BBEH (120 questions), ZebraLogicBench (3 259), MuSR (250 questions murder mysteries) et FOLIO (202 questions).</p>
+<p>Ce découplage fidélité/justesse est la décision architecturale centrale. Les auteurs montrent qu'un reward combiné (balanced rewards) produit des signaux contradictoires : les courbes de récompense stagnent quand fidélité et justesse sont optimisées conjointement sous un même objectif RL (Figure 3 de l'article).</p>
+
+<h2>Résultats principaux</h2>
+<p>REMUL améliore la fidélité sur les trois métriques utilisées tout en préservant ou améliorant la précision :</p>
+<ul>
+<li><strong>Hint attribution :</strong> +2,5 % en moyenne pour Qwen3 et Phi4 par rapport au modèle de base, contre +4,1 % pour le mode fidélité seule (qui perd 3,2 % en précision).</li>
+<li><strong>AOC troncature :</strong> +0,033 points en moyenne sur les quatre benchmarks. Le modèle fidélité-seule atteint +0,054 mais au prix de la précision.</li>
+<li><strong>AOC injection d'erreurs :</strong> gains similaires, REMUL second meilleur sur les quatre benchmarks.</li>
+<li><strong>Précision :</strong> +1,8 % pour Qwen3, +1,5 % pour Phi4 par rapport au modèle original.</li>
+</ul>
+<p>Le mode correctness-only produit la plus faible fidélité et la meilleure précision (+2,9 %). L'optimisation directe pour les hints augmente massivement l'attribution de hints mais dégrade toutes les autres métriques, y compris l'AOC — ce qui suggère qu'elle corrige un symptôme sans traiter la cause.</p>
+<p>Les analyses complémentaires révèlent que REMUL réduit le backtracking (−0,63 occurrences de marqueurs type « Wait », « Hold on » sur BBEH) et produit des traces plus courtes (−4,88 % de tokens en moyenne, hors MuSR). Les scores de lisibilité (auto-évaluation par GPT-OSS-20B) augmentent de 1 à 2 points sur l'échelle 0-100.</p>
+
+<h2>Discussion et limites</h2>
+<p>Plusieurs faiblesses méritent attention :</p>
+<p>Le sous-ensemble BBEH d'évaluation ne contient que 120 questions après filtrage des questions à choix multiples. Sur un échantillon de cette taille, des variations de 2-3 % en précision représentent 2-3 questions — une marge trop étroite pour tirer des conclusions statistiquement robustes. Aucun test de significativité n'est rapporté.</p>
+<p>L'augmentation de la sycophantie (+3,2 % avec REMUL, Table 12) pose un problème d'interprétation pour la métrique d'attribution de hints. Si le modèle est plus enclin à adopter les suggestions de l'utilisateur, l'amélioration mesurée en hint usage pourrait partiellement refléter cette docilité accrue plutôt qu'une fidélité réelle au raisonnement. Les auteurs reconnaissent le phénomène sans proposer de mécanisme correctif ni quantifier la part de chaque effet.</p>
+<p>La métrique de lisibilité repose sur un auto-évaluateur (GPT-OSS-20B) dont la fiabilité pour juger la clarté de raisonnements logiques n'est pas validée. Aucune évaluation humaine n'est présentée.</p>
+<p>L'expérience in-domain (Table 7) montre que l'entraînement sur FOLIO améliore la précision de 5,7 % mais dégrade l'attribution de hints de 3,3 %. Ce résultat affaiblit l'argument d'une compétence de fidélité généralisable : la fidélité semble dépendre de la diversité des données d'entraînement plutôt que d'un apprentissage transférable.</p>
+<p>Le coût d'entraînement (trois modèles auditeurs à 14B paramètres, rollouts multiples par prompt) n'est pas discuté en termes de GPU-heures ou de budget carbone, ce qui limite l'évaluation de la praticabilité de l'approche.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est publié sur GitHub (github.com/nsivaku/remul). Les hyperparamètres sont détaillés en annexe : taux d'apprentissage, taille de batch, coefficients de régularisation, configuration LoRA. Les prompts exacts sont fournis (Annexe C). Les trois modèles auditeurs utilisent des poids publics sous licence Apache-2.0.</p>
+<p>Les données d'entraînement proviennent de BIG-Bench Hard, un benchmark public. La procédure de troncature par retour à la ligne est documentée, et une variante par phrases est testée en ablation (Table 8) avec des résultats comparables.</p>
+<p>La détection de backtracking et d'utilisation de hints repose sur des listes de tokens fournies en annexe. Ces choix, bien que raisonnables, restent des heuristiques dont la sensibilité n'est pas testée.</p>
+
+<h2>Impact et applications</h2>
+<p>REMUL propose un mécanisme concret pour améliorer la transparence des modèles de raisonnement sans sacrifier la performance. L'approche est applicable à tout modèle générant des chaînes de pensée et ne requiert les modèles auditeurs qu'à l'entraînement, pas à l'inférence — un avantage pratique par rapport aux méthodes multi-agents en déploiement.</p>
+<p>Le découplage fidélité/justesse via deux mécanismes d'optimisation distincts (RL + SFT masqué) est une contribution technique réutilisable au-delà de la fidélité : toute paire d'objectifs antagonistes dans l'entraînement RL pourrait bénéficier de cette architecture.</p>
+<p>L'application directe concerne les domaines où la traçabilité du raisonnement est exigée (médecine, droit, recherche scientifique). Cependant, l'augmentation concomitante de la sycophantie tempère l'enthousiasme : un modèle plus fidèle dans ses explications mais plus influençable par les suggestions utilisateur ne remplit qu'à moitié la promesse de fiabilité.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Ce travail se situe à l'intersection de deux courants : la mesure de la fidélité du CoT (Lanham et al., 2023 ; Chen et al., 2025 ; Turpin et al., 2023) et l'entraînement multi-agents (Stengel-Eskin et al., 2024 ; West et al., 2025 ; Wan et al., 2025). REMUL se distingue par la combinaison de troncatures à granularité variable, d'auditeurs architecturalement hétérogènes, et d'un découplage explicite des objectifs.</p>
+<p>Par rapport à l'exécution « dure » via code Python (Lyu et al., 2023 ; Chen et al., 2023), l'exécution douce préserve la flexibilité du raisonnement en langage naturel. Par rapport au steering (MAT-Steer, Nguyen et al., 2025), REMUL obtient des gains de fidélité supérieurs (+2,5 % vs +1,3 % en hint attribution) grâce à un véritable entraînement plutôt qu'une intervention post-hoc.</p>
+<p>La tension fidélité-précision documentée ici confirme les observations de Kenny &amp; Shah (2024) et McMillan et al. (2025), tout en proposant une solution concrète plutôt qu'un simple constat. Le conflit entre récompenses (Figure 3) apporte une preuve empirique que ces objectifs ne sont pas simplement difficiles à optimiser ensemble mais génèrent des gradients contradictoires — une information utile pour la conception de futurs systèmes de récompense.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<thead>
+<tr style="background-color: #f0f0f0;">
+<th>Critère</th>
+<th>Score (/5)</th>
+<th>Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question de recherche</td>
+<td>4</td>
+<td>Problème bien défini, cadrage original de la fidélité comme propriété multi-agents, motivation claire par le conflit fidélité-performance.</td>
+</tr>
+<tr>
+<td>Design expérimental</td>
+<td>4</td>
+<td>Architecture speaker-listener créative, ablations sur la composition du pool d'auditeurs, comparaison avec 5 baselines dont un ceiling (hint-optimized). Absence de tests de significativité.</td>
+</tr>
+<tr>
+<td>Taille d'échantillon</td>
+<td>3</td>
+<td>Entraînement sur 1 250 paires. Évaluation sur 4 benchmarks mais BBEH ne contient que 120 questions — insuffisant pour des différences de 2-3 %. ZLB (3 259) est plus robuste.</td>
+</tr>
+<tr>
+<td>Qualité des métriques</td>
+<td>4</td>
+<td>Trois métriques de fidélité complémentaires (hint attribution, AOC troncature, AOC erreurs) plus lisibilité, calibration et estimation de solvabilité. Couverture multidimensionnelle.</td>
+</tr>
+<tr>
+<td>Contrôle des biais</td>
+<td>3</td>
+<td>Ablations sur la diversité des auditeurs et leur nombre. Mais l'interférence sycophantie/fidélité n'est pas déconvoluée, et l'évaluation de lisibilité par LLM introduit un biais non contrôlé.</td>
+</tr>
+<tr>
+<td>Reproductibilité</td>
+<td>4</td>
+<td>Code public, hyperparamètres détaillés, prompts en annexe, modèles open-source. Les heuristiques de détection (backtracking, hints) sont documentées.</td>
+</tr>
+<tr>
+<td>Transparence et limitations</td>
+<td>3</td>
+<td>Le conflit entre récompenses est analysé, la sycophantie est mentionnée. Mais le coût computationnel est absent, l'absence d'évaluation humaine n'est pas discutée, et la faible taille de BBEH n'est pas reconnue.</td>
+</tr>
+<tr>
+<td>Impact et nouveauté</td>
+<td>4</td>
+<td>Le cadre multi-auditeurs avec exécution douce est original. Le découplage RL/SFT pour objectifs antagonistes est réutilisable. Les résultats cohérents sur 4 benchmarks et 3 métriques renforcent la crédibilité.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Appréciation globale</h2>
+<p>REMUL apporte une réponse structurée au dilemme fidélité-performance dans le raisonnement des LLM. Le cadre multi-auditeurs est conceptuellement élégant et techniquement bien exécuté. Les gains mesurés sont modestes (2-3 % en hint attribution, 0,03 points AOC) mais cohérents sur l'ensemble des benchmarks et métriques. La principale réserve concerne la confusion possible entre fidélité accrue et sycophantie accrue, un problème reconnu mais non résolu. L'absence de tests statistiques et la petite taille de certains ensembles d'évaluation invitent à la prudence dans l'interprétation des marges rapportées. Le travail constitue néanmoins une avancée méthodologique tangible pour l'entraînement de modèles dont le raisonnement est vérifiable.</p>
+<p><strong>Note globale de robustesse : 3,7 / 5</strong></p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

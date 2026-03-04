@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discovering Multiagent Learning Algorithms with Large Language Models — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Discovering Multiagent Learning Algorithms with Large Language Models</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Introduction</h2>
+
+<p>En 2019, Pluribus battait les meilleurs joueurs de poker du monde en Texas Hold'em à six joueurs. Derrière cette prouesse se cachait un algorithme de minimisation de regret, peaufiné pendant des années par des chercheurs qui ajustaient manuellement des paramètres, testaient des variantes, revenaient en arrière, recommençaient. Un processus artisanal, guidé par l'intuition mathématique et beaucoup d'essais-erreurs.</p>
+
+<p>Une équipe de Google DeepMind vient de publier un article qui change la donne : au lieu de concevoir ces algorithmes à la main, ils ont confié la tâche à un système d'évolution piloté par un grand modèle de langage (LLM). Le système, baptisé AlphaEvolve, a produit deux algorithmes inédits — VAD-CFR et SHOR-PSRO — qui surpassent les meilleures méthodes connues sur la majorité des jeux testés. Et certains des mécanismes découverts sont si peu intuitifs qu'aucun chercheur humain ne les aurait vraisemblablement imaginés.</p>
+
+<h2>2. Le problème</h2>
+
+<p>L'apprentissage multi-agents dans les jeux à information imparfaite — poker, menteur, enchères — repose sur deux grandes familles d'algorithmes. La première, CFR (Counterfactual Regret Minimization), fonctionne par itérations : à chaque tour, l'algorithme mesure le « regret » de ne pas avoir joué chaque action possible, accumule ces regrets, et ajuste sa stratégie en conséquence. La seconde, PSRO (Policy Space Response Oracles), maintient une population de stratégies et les fait évoluer en calculant la meilleure réponse à un mélange de stratégies adverses.</p>
+
+<p>Ces deux familles ont un problème commun : leur performance dépend de choix structurels fins. Comment pondérer les regrets anciens par rapport aux récents ? Faut-il oublier les premières itérations, trop bruitées ? Comment doser l'exploration de nouvelles stratégies face à l'exploitation des meilleures connues ? Chaque réponse à ces questions définit une variante algorithmique. Le nombre de combinaisons possibles est astronomique.</p>
+
+<p>Historiquement, les chercheurs naviguaient dans cet espace à la main. CFR+ a introduit un seuil plancher sur les regrets négatifs. Discounted CFR a ajouté des facteurs d'oubli fixes. Predictive CFR+ a emprunté des techniques d'optimisation prédictive. Chaque avancée résultait d'une intuition humaine traduite en une modification ciblée du code. Le processus fonctionnait, mais lentement, et rien ne garantissait que les pistes explorées étaient les meilleures.</p>
+
+<h2>3. La méthode</h2>
+
+<p>L'idée de l'équipe DeepMind est simple à énoncer : traiter le code source de l'algorithme comme un « génome » et le faire évoluer par sélection naturelle, en utilisant un LLM comme opérateur de mutation. Concrètement, le système AlphaEvolve fonctionne en boucle. Il part d'une implémentation de référence — par exemple le code Python de CFR+. Un LLM (Gemini 2.5 Pro, en l'occurrence) reçoit ce code avec l'instruction : « modifie-le pour réduire l'exploitabilité ». Le LLM propose des modifications : ajout de variables, réécriture de boucles, introduction de nouvelles opérations mathématiques. Chaque variante est testée automatiquement sur un ensemble de jeux. Les meilleures survivent et servent de base à la génération suivante.</p>
+
+<p>La différence avec la programmation génétique classique tient à la nature des mutations. Un algorithme génétique traditionnel modifie le code de façon aléatoire — inverser un signe, changer une constante. Le LLM, lui, comprend la sémantique du programme. Il peut réécrire une logique entière, introduire un nouveau flux de contrôle, injecter une opération symbolique cohérente. C'est la différence entre tirer au hasard des lettres du Scrabble et reformuler une phrase en gardant son sens.</p>
+
+<p>Pour CFR, les chercheurs ont exposé trois composants au système : la fonction d'accumulation des regrets, la dérivation de la stratégie courante à partir des regrets, et le calcul de la stratégie moyenne. Pour PSRO, deux composants étaient modifiables : le « méta-solveur » d'entraînement (qui génère les mélanges de stratégies contre lesquels entraîner de nouvelles réponses) et le méta-solveur d'évaluation (qui mesure la qualité de la population). Chaque composant est une classe Python avec une interface fixe — le LLM peut réécrire le contenu des méthodes, mais pas modifier la signature. Ce cadre est assez souple pour représenter toutes les variantes connues de CFR et de PSRO comme des cas particuliers.</p>
+
+<p>L'évaluation se fait sur quatre jeux d'entraînement : Kuhn Poker à trois joueurs, Leduc Poker, Goofspiel à quatre cartes et Liar's Dice à cinq faces. La mesure de performance est l'exploitabilité — l'avantage maximal qu'un adversaire parfait pourrait tirer contre la stratégie produite. Plus elle est basse, plus la stratégie est proche d'un équilibre de Nash. Les algorithmes retenus sont ensuite testés sur des jeux plus grands et plus difficiles, jamais vus pendant l'évolution.</p>
+
+<h2>4. Résultats clés</h2>
+
+<h3>VAD-CFR : un algorithme qui oublie intelligemment</h3>
+
+<p>Le premier algorithme découvert, VAD-CFR (Volatility-Adaptive Discounted CFR), a surpris ses propres créateurs. Là où les variantes existantes appliquent des facteurs d'oubli fixes — « oublie 10 % de l'historique à chaque itération » —, VAD-CFR adapte son oubli en temps réel. Il suit la volatilité du processus d'apprentissage via une moyenne mobile exponentielle de l'amplitude des regrets. Quand la stratégie est instable (regrets qui oscillent fort), l'algorithme oublie plus vite l'historique turbulent. Quand elle se stabilise, il conserve davantage de mémoire pour affiner la solution.</p>
+
+<p>Deuxième surprise : VAD-CFR traite les regrets positifs et négatifs de façon asymétrique, non pas sur l'historique accumulé (ce que fait déjà DCFR), mais sur la mise à jour instantanée elle-même. Les regrets positifs — ceux qui correspondent à des actions prometteuses — sont amplifiés de 10 %. Cette asymétrie permet d'exploiter immédiatement les bonnes déviations sans attendre qu'elles s'accumulent.</p>
+
+<p>Le mécanisme le plus inattendu concerne la stratégie moyenne. Les algorithmes CFR classiques commencent à accumuler les stratégies dès la première itération pour calculer une moyenne convergente. VAD-CFR, lui, attend 500 itérations avant de commencer. Les 500 premières itérations servent uniquement à explorer, sans polluer la solution finale avec du bruit précoce. Et quand l'accumulation démarre, les stratégies ne sont pas simplement pondérées par le temps : elles sont aussi pondérées par l'amplitude du regret instantané, ce qui donne plus de poids aux itérations « informatives ». Le LLM a généré ce seuil de 500 sans connaître l'horizon d'évaluation fixé à 1 000 itérations — un choix émergent, pas prescrit.</p>
+
+<p>Sur les 11 jeux testés, VAD-CFR égale ou dépasse les meilleures performances existantes dans 10 cas. Sur certains jeux, l'écart est spectaculaire : plusieurs ordres de grandeur d'exploitabilité en moins par rapport à DCFR ou Predictive CFR+ après 1 000 itérations.</p>
+
+<h3>SHOR-PSRO : un chef d'orchestre qui change de partition en cours de route</h3>
+
+<p>Pour PSRO, le système a produit SHOR-PSRO (Smoothed Hybrid Optimistic Regret PSRO). L'algorithme construit sa méta-stratégie en mélangeant deux approches : le Regret Matching optimiste, stable et théoriquement fondé, et une distribution de Boltzmann (softmax) sur les meilleures stratégies pures, agressive et orientée exploitation.</p>
+
+<p>La clé réside dans la dynamique du mélange. Au début de l'entraînement, le poids de la composante softmax est élevé (30 %), poussant le système à explorer les modes de récompense les plus forts. Au fil des itérations PSRO, ce poids tombe à 5 %, laissant le Regret Matching stabiliser la convergence vers un équilibre. Un bonus de diversité suit la même trajectoire décroissante : fort au début pour élargir la population de stratégies, quasi nul à la fin pour concentrer l'effort sur la qualité.</p>
+
+<p>Autre trouvaille : le système a découvert qu'il fallait utiliser des configurations différentes pour l'entraînement et l'évaluation. Le solveur d'entraînement renvoie la stratégie moyennée sur ses itérations internes, pour la stabilité. Le solveur d'évaluation renvoie la dernière itérée, plus réactive, avec des paramètres quasi déterministes (blending de 1 %, température de 0,001). Cette asymétrie entre entraînement et évaluation n'était prescrite dans aucun article antérieur — elle a émergé de la pression évolutive.</p>
+
+<p>SHOR-PSRO égale ou surpasse les méthodes existantes sur 8 des 11 jeux testés. Sur Liar's Dice à six faces, où les solveurs statiques peinent face à l'explosion combinatoire, l'avantage est net : SHOR-PSRO converge là où les autres stagnent.</p>
+
+<h2>5. Implications pratiques</h2>
+
+<p>Ce travail déplace le curseur de la recherche en apprentissage multi-agents. Jusqu'ici, améliorer un algorithme de théorie des jeux demandait une expertise rare : comprendre la théorie, avoir l'intuition de ce qui pourrait marcher, implémenter, tester, itérer. Le cycle prenait des mois. AlphaEvolve compresse ce cycle en automatisant la boucle « hypothèse → implémentation → évaluation → sélection ».</p>
+
+<p>Les algorithmes découverts sont lisibles. Contrairement aux approches de méta-apprentissage neuronal, qui produisent des réseaux de neurones opaques encodant des règles de mise à jour, VAD-CFR et SHOR-PSRO sont du code Python interprétable. On peut lire le code, comprendre chaque mécanisme, le transposer à d'autres contextes. Cette transparence est un atout considérable pour la communauté de recherche : les découvertes ne sont pas des boîtes noires, mais des briques réutilisables.</p>
+
+<p>Pour l'industrie, les retombées touchent tous les domaines où des agents en compétition ou en négociation doivent trouver des équilibres : enchères publicitaires, tarification dynamique, routage réseau, cybersécurité. Un algorithme qui converge plus vite vers un équilibre de Nash consomme moins de calcul pour un meilleur résultat. Les mécanismes d'annealing automatique de SHOR-PSRO éliminent un réglage manuel fastidieux — le passage de l'exploration à l'exploitation se fait tout seul.</p>
+
+<p>Un aspect subtil mérite attention : certains des mécanismes découverts contredisent l'intuition des experts. Le warm-start de 500 itérations de VAD-CFR, par exemple, va à l'encontre de la pratique standard qui commence l'accumulation le plus tôt possible. L'amplification asymétrique des regrets positifs instantanés n'avait jamais été proposée. Ces « contre-intuitions productives » suggèrent que l'espace des algorithmes contient des solutions efficaces que le raisonnement humain seul peine à atteindre — non par manque de compétence, mais parce que l'espace est trop vaste pour être exploré manuellement.</p>
+
+<h2>6. Pour aller plus loin</h2>
+
+<p>Les auteurs reconnaissent plusieurs limites. Les jeux utilisés pour l'entraînement et l'évaluation restent de taille modérée — suffisamment petits pour calculer l'exploitabilité exacte par traversée complète de l'arbre de jeu. Dans les jeux de grande échelle (poker Texas Hold'em complet, StarCraft), cette mesure exacte est impossible. Appliquer le même cadre évolutif nécessitera des métriques proxy fiables, ce qui n'est pas un problème résolu.</p>
+
+<p>VAD-CFR présente une exception notable : sur Kuhn Poker à quatre joueurs, il ne dépasse pas les baselines. Ce cas isolé soulève une question : les mécanismes découverts sont-ils universellement robustes, ou spécialisés pour certaines topologies de jeu ? La réponse demandera des tests sur une gamme encore plus large de domaines.</p>
+
+<p>L'extension au renforcement profond est la piste la plus ambitieuse. Les algorithmes actuels utilisent des oracles exacts (résolution par itération de valeur). Remplacer ces oracles par des réseaux de neurones introduit du bruit et de la variance qui pourraient interagir de façon imprévisible avec les mécanismes évolués. Un warm-start de 500 itérations reste-t-il pertinent quand chaque itération implique l'entraînement d'un réseau ?</p>
+
+<p>Les jeux à somme générale — où la coopération et la compétition coexistent — constituent un autre terrain vierge. Tous les jeux testés ici sont à somme nulle. Les dynamiques coopératives introduisent des équilibres multiples et des problèmes de sélection d'équilibre que CFR et PSRO ne gèrent pas naturellement.</p>
+
+<p>Enfin, la question de la généralisabilité du cadre AlphaEvolve lui-même reste ouverte. Les auteurs l'ont appliqué à deux familles d'algorithmes avec succès. Mais le système dépend d'un choix humain critique : quels composants exposer à l'évolution et quels jeux utiliser pour l'entraînement. Ce méta-design reste artisanal. On peut imaginer un jour un système qui choisirait aussi ses propres axes d'évolution — mais ce jour n'est pas encore arrivé.</p>
+
+<p>Ce que cette recherche démontre concrètement, c'est qu'un LLM couplé à une boucle d'évaluation automatisée peut explorer des territoires algorithmiques inaccessibles à l'intuition humaine, et en rapporter des solutions qui fonctionnent. Le chercheur ne disparaît pas du processus : il définit le cadre, choisit les métriques, interprète les résultats. Mais la part d'exploration brute, celle qui demandait des mois de tâtonnement, est désormais déléguée à la machine.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

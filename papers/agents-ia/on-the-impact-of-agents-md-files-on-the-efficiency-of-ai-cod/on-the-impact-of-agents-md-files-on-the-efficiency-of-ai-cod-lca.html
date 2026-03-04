@@ -127,102 +127,106 @@
     <p class="doc-type">Lecture Critique d'Article</p>
   </div>
   <div class="companion-content">
-    <h2>Lecture Critique d'Article</h2>
+    <h2>Objectif et contexte</h2>
 
-<h3>1. Objectif et contexte</h3>
-<p>Cette etude s'inscrit dans le contexte de l'adoption croissante des agents de codage IA autonomes (OpenAI Codex, Claude Code) dans les workflows de developpement logiciel. Les auteurs s'interessent a un artefact emergent : le fichier <strong>AGENTS.md</strong>, un fichier d'instructions persistant place a la racine d'un repository pour guider le comportement des agents. Plus de 60 000 repositories ont adopte ce format a ce jour.</p>
-<p>La question de recherche est claire et pertinente : <em>la presence d'un AGENTS.md reduit-elle les ressources (tokens, temps) necessaires a un agent pour completer une tache de developpement ?</em> L'originalite reside dans le fait qu'aucune etude anterieure n'avait isole empiriquement l'effet de ces fichiers sur l'efficacite operationnelle des agents, les travaux precedents s'etant limites a la caracterisation de leur contenu et de leur adoption.</p>
-<p>Toutefois, la question reste etroite : elle se limite a l'efficacite (cout computationnel) sans aborder la qualite ou la correctitude des sorties produites, ce qui limite la portee des conclusions.</p>
+<p>Les fichiers AGENTS.md — des documents de configuration déposés à la racine d'un dépôt logiciel — fournissent aux agents de codage autonomes des instructions sur l'architecture, les conventions et les commandes du projet. Plus de 60 000 dépôts GitHub en contiennent déjà. Cette étude mesure leur effet sur l'efficacité opérationnelle d'un agent de codage IA (OpenAI Codex, modèle gpt-5.2-codex) lorsqu'il traite des pull requests réelles.</p>
 
-<h3>2. Methodologie</h3>
-<p>Le protocole experimental repose sur un <strong>design apparie intra-tache</strong> : chaque pull request est executee deux fois par l'agent (avec et sans AGENTS.md), toutes autres conditions etant identiques. C'est un choix methodologique solide qui controle efficacement les variables confondantes liees au repository et a la tache.</p>
+<p>La question de recherche est directe : la présence d'un fichier AGENTS.md à la racine du dépôt réduit-elle les ressources (tokens, temps d'exécution) nécessaires à l'agent pour compléter une tâche de développement ? Le design adopté est apparié — chaque tâche est exécutée deux fois, avec et sans le fichier, sur un snapshot identique du dépôt.</p>
 
-<p><strong>Points forts du protocole :</strong></p>
-<ul>
-<li>Isolation dans des conteneurs Docker, reinitialisation complete entre chaque tache</li>
-<li>Reconstruction de l'etat pre-merge du repository pour chaque PR</li>
-<li>Generation standardisee des descriptions de taches via LLM pour uniformiser l'input</li>
-<li>Filtrage rigoureux des AGENTS.md par categories de contenu (conventions, architecture, description du projet)</li>
-<li>Test statistique adapte (Wilcoxon signed-rank) pour donnees appariees non-parametriques</li>
-</ul>
+<h2>Méthodologie</h2>
 
-<p><strong>Faiblesses du protocole :</strong></p>
-<ul>
-<li><strong>Agent unique</strong> : seul OpenAI Codex (gpt-5.2-codex) est evalue, ce qui empeche toute generalisation a d'autres systemes d'agents</li>
-<li><strong>Filtrage agressif</strong> : de 132 repositories initiaux, seuls 10 sont retenus apres application successive des criteres, ce qui pose un risque de biais de selection</li>
-<li><strong>Taches artificielles</strong> : les descriptions de taches sont generees par un LLM (gpt-oss-120b) a partir des diffs, et non issues de vraies issues GitHub, ce qui peut introduire un biais de circularite</li>
-<li><strong>Contraintes de taille</strong> : PRs limitees a ≤100 LoC et ≤5 fichiers, excluant les taches complexes ou la valeur d'un AGENTS.md pourrait etre plus marquee (ou inversement)</li>
-<li><strong>Pas de controle de la stochasticite</strong> : aucune mention d'executions repetees, de temperature fixee ou de seed, alors que les LLM sont non-deterministes</li>
-</ul>
+<p>Le protocole suit une chaîne de filtrage en entonnoir. Les auteurs partent de 132 dépôts issus d'un corpus antérieur, conservent les 89 qui possèdent un seul AGENTS.md à la racine, puis éliminent ceux dont le contenu ne couvre pas les conventions de codage, l'architecture ou la description du projet. Restent 26 dépôts, dont 10 sont échantillonnés aléatoirement. Jusqu'à 15 pull requests fusionnées sont sélectionnées par dépôt, sous contrainte de taille (≤ 100 lignes modifiées, ≤ 5 fichiers) et de type (code uniquement). Le total atteint 124 PRs.</p>
 
-<h3>3. Resultats principaux</h3>
-<p>Les resultats montrent une association entre la presence d'AGENTS.md et une reduction des ressources :</p>
-<ul>
-<li><strong>Temps d'execution</strong> : reduction du temps median de 98.57s a 70.34s (<strong>-28.64%</strong>), statistiquement significative (p &lt; 0.05)</li>
-<li><strong>Tokens de sortie</strong> : reduction mediane de 2 925 a 2 440 tokens (<strong>-16.58%</strong>), statistiquement significative</li>
-<li><strong>Tokens d'entree</strong> : reduction moyenne de ~9.7%, mais medianes quasi-stables voire legerement superieures, difference non significative</li>
-</ul>
-<p>L'asymetrie entre la reduction des moyennes et des medianes pour les tokens de sortie suggere que l'effet est concentre sur les runs a cout eleve, plutot qu'uniformement reparti. En revanche, pour le temps d'execution, moyennes et medianes convergent, indiquant un effet plus generalise.</p>
-<p>Il est important de noter que <strong>aucune evaluation de correctitude</strong> n'est realisee. Le sanity check manuel sur 50 PRs confirme seulement que les sorties sont non-vides et non-triviales, sans verifier l'equivalence fonctionnelle avec les PRs originales. L'agent pourrait produire du code plus rapide mais moins correct.</p>
+<p>Chaque PR est reconstituée à l'état pré-fusion. Comme les descriptions de PRs sont souvent lacunaires, un LLM local (gpt-oss-120b) génère un énoncé de tâche structuré à partir du diff et de l'arborescence du dépôt. L'agent est exécuté dans un conteneur Docker isolé, une fois avec AGENTS.md, une fois sans. Les métriques collectées sont les tokens consommés (entrée, cache, sortie) et le temps mur d'exécution.</p>
 
-<h3>4. Discussion et limites</h3>
-<p>Les auteurs interpretent leurs resultats avec prudence, ce qui est appreciable. Ils suggerent que l'AGENTS.md reduit le besoin d'exploration du repository par l'agent en fournissant directement des informations sur la structure et les conventions, reduisant ainsi les iterations de planification.</p>
+<p>Aucune évaluation de la correction du code produit n'est réalisée. Une vérification manuelle de 50 tâches confirme que les sorties sont non triviales et cohérentes avec l'intention, sans aller plus loin.</p>
 
-<p><strong>Limites majeures :</strong></p>
-<ul>
-<li><strong>Absence de mesure de qualite</strong> : la reduction de tokens pourrait refleter des sorties tronquees ou de moindre qualite, pas necessairement une meilleure efficacite</li>
-<li><strong>Generalisation limitee</strong> : un seul agent, un seul modele, 10 repositories, petites PRs uniquement</li>
-<li><strong>Effet de taille</strong> : les reductions, bien que statistiquement significatives, sont de magnitude moderee (~30s de gain median sur des taches deja courtes)</li>
-<li><strong>Pas d'analyse des traces d'execution</strong> : les auteurs speculentque l'AGENTS.md reduit l'exploration, mais ne le demontrent pas par l'analyse des traces</li>
-<li><strong>Confondant potentiel</strong> : les repositories avec un AGENTS.md de qualite sont peut-etre aussi ceux qui sont mieux structures globalement, ce qui pourrait contribuer independamment a l'efficacite de l'agent</li>
-</ul>
+<h2>Résultats principaux</h2>
 
-<h3>5. Reproductibilite</h3>
-<p>La reproductibilite est un <strong>point fort</strong> de cette etude :</p>
-<ul>
-<li>Code source du wrapper Python, Dockerfiles et descriptions de taches generees disponibles via un appendice en ligne (Zenodo, DOI : 10.5281/zenodo.18348507)</li>
-<li>Protocole experimental decrit avec un niveau de detail suffisant pour la replication</li>
-<li>Criteres de selection des repositories et PRs explicites</li>
-</ul>
-<p>Cependant, la dependance a un modele proprietaire (gpt-5.2-codex) et a l'API OpenAI Codex constitue une <strong>limitation structurelle</strong> : la replication exacte depend de la disponibilite continue et de la stabilite de ce modele, ce qui n'est pas garanti.</p>
+<p>La présence d'AGENTS.md est associée à une réduction du temps médian d'exécution de 28,64 % (de 98,57 s à 70,34 s) et du nombre médian de tokens de sortie de 16,58 % (de 2 925 à 2 440). Les différences en temps mur et tokens de sortie sont statistiquement significatives au seuil de 5 % (test de Wilcoxon signé). Les tokens d'entrée et les tokens d'entrée en cache montrent une baisse en moyenne (~10 %) mais pas en médiane, ce qui indique un effet concentré sur les exécutions les plus coûteuses.</p>
 
-<h3>6. Impact et applications</h3>
-<p>L'etude a une <strong>pertinence pratique immediate</strong> : elle fournit une premiere evidence empirique que les fichiers d'instructions repository-level ont un effet mesurable sur le cout operationnel des agents. Cela conforte la pratique deja repandue d'utiliser des AGENTS.md/CLAUDE.md.</p>
-<p>Toutefois, les implications pratiques restent limitees car :</p>
-<ul>
-<li>Les gains sont modestes en valeur absolue pour les petites taches</li>
-<li>L'absence d'evaluation de la qualite des sorties empeche de recommander sans reserve l'adoption d'AGENTS.md pour l'efficacite</li>
-<li>L'etude ne fournit pas de guidance sur le contenu optimal d'un AGENTS.md</li>
-</ul>
-<p>Le papier contribue principalement a ouvrir un <strong>agenda de recherche</strong> bien structure (Section 5) qui identifie clairement les prochaines etapes necessaires.</p>
+<p>La réduction plus marquée des moyennes que des médianes pour les tokens de sortie suggère que le fichier AGENTS.md bénéficie surtout aux tâches qui, sans lui, déclenchent des explorations longues ou des itérations de planification répétées.</p>
 
-<h3>7. Positionnement dans la litterature</h3>
-<p>L'etude se positionne a l'intersection de trois courants :</p>
-<ul>
-<li><strong>Benchmarking d'agents SE</strong> (SWE-bench, SWE-agent, AutoCodeRover) : elle etend cette ligne en s'interessant non pas a la performance fonctionnelle mais au cout operationnel</li>
-<li><strong>Context engineering pour agents</strong> (Mohsenimofidi et al. 2026, Chatlatanagulchai et al. 2025) : elle passe de l'observation descriptive a l'evaluation causale (bien qu'observationnelle)</li>
-<li><strong>Sustainable SE et cout des agents</strong> (Guo et al. 2026, Venters et al. 2023) : elle contribue a la reflexion sur l'efficacite des ressources computationnelles</li>
-</ul>
-<p>C'est un <strong>article de workshop</strong> (5 pages, ICSE JAWs 2026), ce qui explique le perimetre restreint. Il remplit bien son role d'etude exploratoire ouvrant un nouveau champ d'investigation, mais les conclusions doivent etre considerees comme preliminaires en attente de replications sur des echelles plus larges.</p>
+<h2>Discussion et limites</h2>
 
-<h3>Tableau recapitulatif des scores de robustesse</h3>
+<p>L'étude ne mesure que l'efficacité, pas la qualité. Un agent plus rapide qui produit du code incorrect n'a aucune valeur pratique. L'absence d'évaluation de la correction — ni tests automatisés, ni comparaison structurelle avec le diff fusionné, ni revue humaine systématique — est la faiblesse centrale du protocole. La vérification manuelle de 50 PRs sur 124 ne compense pas cette lacune.</p>
+
+<p>Le choix d'un seul agent (Codex) et d'un seul modèle (gpt-5.2-codex) empêche toute généralisation à d'autres systèmes. Claude Code, Cursor, Aider ou Devin pourraient réagir différemment à ces fichiers de contexte. De même, la restriction aux PRs de petite taille (≤ 100 LoC) exclut les refactorisations et les changements multi-modules où l'apport d'un fichier d'instructions pourrait être plus — ou moins — prononcé.</p>
+
+<p>Les descriptions de tâches générées par LLM introduisent un intermédiaire supplémentaire. Si le LLM produit des énoncés déjà structurés de façon optimale, il réduit peut-être l'avantage marginal du fichier AGENTS.md, ou au contraire l'amplifie en fournissant un cadrage homogène. Cette interaction n'est pas analysée.</p>
+
+<p>Le protocole ne précise pas si chaque condition (avec/sans) fait l'objet d'une seule exécution ou de plusieurs. L'agent étant stochastique, une seule exécution par condition ne capture pas la variance intra-tâche. L'absence de taille d'effet standardisée (d de Cohen ou équivalent non paramétrique) limite l'interprétation de la significativité statistique obtenue.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le matériel supplémentaire est déposé sur Zenodo (DOI : 10.5281/zenodo.18348507). Il inclut le code du wrapper Python, les Dockerfiles et les descriptions de tâches générées. Les dépôts source sont publics. La chaîne expérimentale semble reproductible sous réserve d'accès à l'API Codex et au modèle gpt-5.2-codex, dont la disponibilité future n'est pas garantie.</p>
+
+<p>La classification des fichiers AGENTS.md repose sur un LLM local (gpt-oss-120b via Ollama) suivi d'une vérification manuelle. Le prompt de classification et les critères de vérification ne sont pas détaillés dans l'article, ce qui complique la réplication de cette étape de filtrage.</p>
+
+<h2>Impact et applications</h2>
+
+<p>L'étude fournit la première mesure empirique de l'effet d'un fichier AGENTS.md sur les coûts d'exécution d'un agent de codage. Pour les équipes qui déploient des agents autonomes sur leurs dépôts, le résultat — environ 20 à 29 % de gain en temps et en tokens de sortie — justifie l'investissement rédactionnel d'un tel fichier, à condition que la qualité du code produit ne se dégrade pas. Cette condition reste non vérifiée.</p>
+
+<p>L'article ne propose pas de recommandations sur le contenu optimal d'un AGENTS.md. Aucune analyse ne relie des propriétés spécifiques du fichier (longueur, catégories couvertes, niveau de détail) aux gains observés. Cette absence limite la portée pratique des conclusions au-delà du constat binaire « mettre un fichier vaut mieux que ne pas en mettre ».</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Deux études récentes caractérisent les fichiers de contexte pour agents : Chatlatanagulchai et al. (2025) décrivent leur structure et leur contenu, Mohsenimofidi et al. (2026) documentent leur émergence comme mécanisme d'ingénierie de contexte. La présente étude complète ces travaux descriptifs par une évaluation quantitative de l'impact opérationnel. Elle s'inscrit aussi dans la lignée de SWE-bench (Jimenez et al., 2024) et des travaux sur le coût des agents (Guo et al., 2026), mais se distingue par son focus sur un artefact de configuration plutôt que sur l'architecture de l'agent.</p>
+
+<p>Le positionnement est pertinent, le champ reste naissant. Les conclusions demeurent préliminaires et l'étude elle-même le reconnaît sans ambiguïté — ce qui est à son crédit.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
 <table>
-<thead>
-<tr><th>Critere</th><th>Score (0-5)</th><th>Justification</th></tr>
-</thead>
-<tbody>
-<tr><td>Question de recherche</td><td><strong>3</strong></td><td>Claire et pertinente mais etroite (efficacite seule, sans qualite des sorties)</td></tr>
-<tr><td>Design experimental</td><td><strong>3</strong></td><td>Design apparie solide, isolation Docker, mais agent unique et taches generees par LLM</td></tr>
-<tr><td>Taille d'echantillon</td><td><strong>2</strong></td><td>10 repositories et 124 PRs apres filtrage agressif (132→10), puissance statistique limitee</td></tr>
-<tr><td>Qualite des metriques</td><td><strong>3</strong></td><td>Tokens et temps sont pertinents mais incomplets sans mesure de correctitude</td></tr>
-<tr><td>Controle des biais</td><td><strong>3</strong></td><td>Design apparie efficace, mais stochasticite non controlee et pas de repetitions</td></tr>
-<tr><td>Reproductibilite</td><td><strong>4</strong></td><td>Code, Dockerfiles et donnees sur Zenodo ; dependance a un modele proprietaire</td></tr>
-<tr><td>Transparence et limitations</td><td><strong>4</strong></td><td>Roadmap de recherche detaille, limites clairement enoncees, interpretation prudente</td></tr>
-<tr><td>Impact et nouveaute</td><td><strong>3</strong></td><td>Premier isolement empirique de l'effet AGENTS.md, mais resultats preliminaires</td></tr>
-</tbody>
-<tfoot>
-<tr><td><strong>Note globale</strong></td><td><strong>3.0 / 5</strong></td><td>Etude exploratoire bien conduite avec un design apparie rigoureux et une bonne reproductibilite, mais limitee par un echantillon restreint, un seul agent, et l'absence d'evaluation de la qualite des sorties</td></tr>
-</tfoot>
+  <thead>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Justification</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td>3</td>
+      <td>Claire et pertinente, mais étroite : présence/absence binaire sans analyse des mécanismes sous-jacents</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td>3</td>
+      <td>Design apparié rigoureux avec isolation Docker ; limité à un seul agent et aux petites PRs uniquement</td>
+    </tr>
+    <tr>
+      <td>Taille de l'échantillon</td>
+      <td>2</td>
+      <td>10 dépôts et 124 PRs après un filtrage agressif (132 → 26 → 10) ; puissance statistique restreinte</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td>2</td>
+      <td>Tokens et temps mur sont valides mais incomplets : aucune évaluation de la correction du code produit</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td>3</td>
+      <td>Bonne isolation expérimentale ; stochasticité de l'agent et effet de l'ordre des exécutions non contrôlés</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td>4</td>
+      <td>Code, Dockerfiles et données sur Zenodo ; dépendance à l'API Codex et à un modèle spécifique</td>
+    </tr>
+    <tr>
+      <td>Transparence et limitations</td>
+      <td>4</td>
+      <td>Section dédiée détaillant honnêtement les limites et la feuille de route ; pas de surinterprétation des résultats</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td>3</td>
+      <td>Première mesure empirique de l'effet des fichiers AGENTS.md sur l'efficacité ; résultats préliminaires à confirmer</td>
+    </tr>
+  </tbody>
 </table>
   </div>
   <script>

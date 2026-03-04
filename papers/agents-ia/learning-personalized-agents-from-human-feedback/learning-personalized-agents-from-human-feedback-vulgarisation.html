@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Personalized Agents from Human Feedback — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Learning Personalized Agents from Human Feedback</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Introduction</h2>
+
+<p>Votre assistant vocal préféré vous commande un café noir chaque matin depuis deux ans. Un jour, vous passez au thé vert — raisons de santé. Pendant les trois semaines suivantes, l'assistant continue de commander du café. Vous le corrigez. Il recommande du café. Vous le corrigez encore. Ce scénario, banal et agaçant, résume un problème fondamental des agents IA actuels : ils ne savent pas apprendre de leurs erreurs en temps réel, et encore moins s'adapter quand vos goûts changent.</p>
+
+<p>Une équipe de chercheurs de Meta, Princeton et Duke a publié en février 2026 un cadre méthodologique baptisé PAHF — <em>Personalized Agents from Human Feedback</em>. Leur proposition : doter les agents d'une mémoire explicite par utilisateur, alimentée par deux canaux de retour complémentaires. L'un intervient avant l'action (clarification), l'autre après (correction). Le résultat est un agent capable d'apprendre les préférences d'un nouvel utilisateur à partir de zéro, puis de se recalibrer quand ces préférences évoluent.</p>
+
+<h2>2. Le problème</h2>
+
+<p>Les systèmes de personnalisation actuels reposent sur des données statiques. Soit on entraîne un modèle sur l'historique d'interactions passées, soit on pré-remplit un profil utilisateur que l'agent consulte ensuite comme une fiche figée. Ces deux approches partagent une hypothèse fragile : les préférences de l'utilisateur existent déjà quelque part, et elles ne bougent pas.</p>
+
+<p>Dans la réalité, trois situations mettent ces systèmes en échec. D'abord, un nouvel utilisateur arrive sans historique — l'agent part à l'aveugle. Ensuite, quand l'agent se trompe, il n'a aucun mécanisme pour intégrer la correction et éviter la même erreur demain. Enfin, les préférences humaines dérivent : vous aimiez le Coca en été, vous êtes passé au Sprite, et depuis peu vous préférez l'eau gazeuse quand il fait chaud. Un profil statique ne capte pas cette trajectoire.</p>
+
+<p>Les auteurs identifient deux sources d'erreur distinctes. La première est l'observabilité partielle : l'agent manque d'information (il ne connaît pas encore vos goûts). La seconde est la non-stationnarité : l'agent possède une information devenue fausse (il croit que vous aimez le Coca, mais ce n'est plus le cas). Ces deux types d'erreur appellent des remèdes différents — et c'est précisément là que la contribution de PAHF se concentre.</p>
+
+<h2>3. La méthode</h2>
+
+<p>PAHF fonctionne comme un serveur de restaurant attentif qui tient un carnet de notes personnel pour chaque client régulier.</p>
+
+<p>Quand un nouveau client s'installe, le serveur n'a rien dans son carnet. Le client demande « mon plat habituel ». Le serveur, plutôt que de deviner et de risquer une erreur, pose une question : « Quel est votre plat préféré ? » Le client répond « des pâtes carbonara ». Le serveur note cette préférence, sert le plat, et inscrit l'information dans son carnet. C'est le <strong>canal pré-action</strong> : avant d'agir, l'agent détecte l'ambiguïté, interroge l'utilisateur, et stocke la réponse en mémoire.</p>
+
+<p>Trois mois plus tard, le même client revient. Le serveur consulte son carnet, lit « carbonara », et lance la commande. Mais le client goûte et fait la moue : « En fait, j'ai arrêté les pâtes, je préfère une salade César maintenant. » Le serveur corrige son carnet. C'est le <strong>canal post-action</strong> : après une erreur, l'agent reçoit un retour correctif et met à jour sa mémoire.</p>
+
+<p>La boucle PAHF enchaîne trois étapes à chaque interaction :</p>
+
+<ul>
+<li><strong>Étape 1 — Interaction pré-action.</strong> L'agent reçoit une instruction (« apporte-moi ma boisson préférée ») et observe la scène (un Coca, un Sprite, un thé glacé sur le comptoir). Il interroge sa mémoire. Si aucune préférence pertinente n'est trouvée, ou si l'instruction est ambiguë, il pose une question ciblée à l'utilisateur avant d'agir. La réponse est enregistrée immédiatement.</li>
+<li><strong>Étape 2 — Exécution.</strong> L'agent combine l'instruction, l'observation de la scène, les préférences récupérées en mémoire et l'éventuelle clarification pour choisir son action.</li>
+<li><strong>Étape 3 — Intégration du retour post-action.</strong> Si l'action était incorrecte, l'utilisateur fournit un retour correctif. Un détecteur de pertinence filtre les réponses vides (« merci ») des informations exploitables (« en fait, je préfère le Sprite maintenant »). Les informations pertinentes sont écrites en mémoire, soit en créant une nouvelle entrée, soit en mettant à jour une entrée existante si le sujet est déjà couvert.</li>
+</ul>
+
+<p>La mémoire elle-même est volontairement simple : des notes en langage naturel, associées à des embeddings vectoriels, stockées dans une base SQLite ou un index FAISS. Chaque note est isolée par utilisateur. L'agent peut ajouter, récupérer, mettre à jour ou fusionner des notes. Les chercheurs ont fait ce choix de sobriété architecturale pour isoler l'effet des canaux de retour — l'objectif n'était pas de proposer un nouveau système de mémoire, mais de montrer que le mécanisme de double feedback change la donne, même avec une mémoire basique.</p>
+
+<p>Un point subtil mérite attention. Le canal pré-action résout l'incertitude connue : l'agent sait qu'il ne sait pas, alors il demande. Le canal post-action résout la miscalibration : l'agent croit savoir, mais il se trompe — et seule l'observation du résultat erroné peut déclencher la correction. Sans le premier canal, l'agent apprend par essai-erreur, ce qui coûte cher en erreurs initiales. Sans le second, l'agent reste bloqué sur des croyances périmées quand les préférences changent. Les deux canaux sont complémentaires par construction.</p>
+
+<h2>4. Résultats clés</h2>
+
+<p>Les chercheurs ont évalué PAHF sur deux domaines : la manipulation robotique en environnement domestique (un robot doit apporter le bon objet ou le ranger au bon endroit) et le shopping en ligne (un agent doit recommander le bon produit parmi des candidats aux caractéristiques proches). Le protocole d'évaluation comporte quatre phases — apprentissage initial, test de personnalisation, adaptation après changement de préférences, et test post-adaptation — ce qui permet de mesurer séparément la capacité d'apprentissage et la capacité d'adaptation.</p>
+
+<p>En manipulation robotique, PAHF atteint un taux de réussite de 70,5 % en phase 2 (test initial) et 68,8 % en phase 4 (test après dérive des préférences). L'agent sans mémoire plafonne à 32,3 % et 44,8 %. L'agent avec uniquement le canal pré-action monte à 54,1 % en phase 2, mais chute à 35,7 % en phase 4 — pire que l'agent sans mémoire. Ce résultat est frappant : une mémoire qui ne se corrige pas devient un handicap quand les préférences changent.</p>
+
+<p>Le canal post-action seul (sans clarification préalable) atteint 67,9 % et 68,3 %. Des scores honorables, mais au prix d'erreurs initiales élevées : l'agent doit se tromper pour apprendre, ce qui impose un coût réel à l'utilisateur en interactions de correction.</p>
+
+<p>En shopping en ligne, le domaine est plus difficile. Les produits sont conçus comme des « quasi-doublons » avec un attribut disqualifiant caché — l'agent doit vérifier chaque caractéristique contre les préférences de l'utilisateur. PAHF atteint 41,3 % en phase 2 et 70,3 % en phase 4, contre 27,8 % et 27,0 % pour la baseline sans mémoire. L'écart se creuse après la dérive des préférences : le canal pré-action seul remonte à 56 % en phase 4 (car les nouvelles questions permettent de capter les nouveaux goûts), mais reste loin de PAHF.</p>
+
+<p>Les auteurs fournissent aussi une analyse théorique. Sans retour post-action, un agent face à des préférences qui changent accumule un nombre d'erreurs proportionnel au nombre total d'interactions — il ne peut pas détecter le moment du changement. Avec le retour post-action, il commet au maximum une erreur par changement de préférence. Sans retour pré-action, chaque situation ambiguë génère une erreur probable. Avec des questions de clarification, la probabilité d'erreur par tour ambigu décroît exponentiellement avec le nombre de questions posées.</p>
+
+<p>Les résultats restent cohérents quand on change le modèle de langage sous-jacent (GPT-4o, GPT-4.1) ou le simulateur humain (y compris Llama-4-Scout), et quand on substitue FAISS à SQLite comme backend mémoire. La robustesse du cadre ne dépend pas d'un modèle ou d'une architecture spécifique.</p>
+
+<h2>5. Implications pratiques</h2>
+
+<p>La plupart des assistants personnels actuels — Alexa, Siri, Google Assistant — fonctionnent sur le modèle statique critiqué par les auteurs. Ils accumulent un historique, en extraient des tendances, mais ne disposent pas d'un mécanisme structuré pour poser des questions avant d'agir ni pour intégrer une correction après coup de manière persistante. Quand votre assistant se trompe, vous pouvez le corriger sur l'instant, mais cette correction se perd dans le flux conversationnel.</p>
+
+<p>PAHF propose un patron d'architecture transférable. Un développeur qui construit un agent conversationnel, un robot domestique ou un système de recommandation peut implémenter la boucle en trois étapes avec des briques existantes : un LLM, un système de retrieval vectoriel, et un détecteur de pertinence. Le choix délibéré d'une mémoire simple (notes textuelles + embeddings) rend le cadre accessible sans infrastructure lourde.</p>
+
+<p>L'impact sur l'expérience utilisateur est double. D'un côté, le canal pré-action réduit les erreurs dès la première interaction — l'agent demande plutôt que de deviner. De l'autre, le canal post-action transforme chaque erreur en opportunité d'apprentissage persistant. L'utilisateur corrige une fois, et l'agent retient la leçon. Ce mécanisme reproduit ce que nous attendons d'un collaborateur humain compétent : il pose des questions quand il ne sait pas, et il ne refait pas deux fois la même erreur.</p>
+
+<p>Pour la robotique domestique, les résultats sur le benchmark de manipulation sont directement pertinents. Un robot d'assistance qui sert des boissons ou range des objets doit gérer des préférences conditionnelles (« du thé quand je suis fatigué, du café sinon »). Le protocole en quatre phases des auteurs fournit aussi un cadre d'évaluation réutilisable pour quiconque travaille sur la personnalisation d'agents.</p>
+
+<p>Le commerce en ligne est un autre terrain d'application évident. Les systèmes de recommandation actuels capturent les préférences via le comportement d'achat passé. PAHF ajoute un canal de dialogue explicite — l'agent peut demander « quel type de capteur photo préférez-vous ? » plutôt que d'inférer la réponse à partir de dix achats précédents. Cette approche est plus efficace en termes de données : quelques questions ciblées remplacent des mois d'historique implicite.</p>
+
+<h2>6. Pour aller plus loin</h2>
+
+<p>Les auteurs reconnaissent plusieurs limites. Le feedback humain est supposé fiable — en pratique, les utilisateurs se trompent, se contredisent, ou donnent des retours ambigus. Le cadre actuel filtre les retours non informatifs, mais ne gère pas les conflits entre deux corrections contradictoires. Un utilisateur qui dit « je préfère le thé » un jour et « je préfère le café » le lendemain (sans changement réel de préférence) perturberait la mémoire.</p>
+
+<p>L'agent est limité à une seule question de clarification par tâche. Ce choix réaliste — personne ne veut répondre à cinq questions avant de recevoir sa boisson — contraint la capacité de désambiguïsation, surtout dans le shopping en ligne où les préférences portent sur de multiples attributs. Des stratégies d'allocation intelligente du « budget de questions » restent à explorer.</p>
+
+<p>La mémoire adoptée est délibérément rudimentaire. Des architectures plus sophistiquées — mémoire hiérarchique, graphes de connaissances, résumés progressifs — pourraient améliorer la mise à l'échelle quand le nombre de notes par utilisateur augmente. Les auteurs positionnent ces systèmes comme complémentaires, intégrables en remplacement direct du backend actuel.</p>
+
+<p>Le benchmark de shopping reste difficile : même PAHF ne dépasse pas 41 % de réussite en phase 2 sur ce domaine. Les scénarios sont conçus pour piéger l'agent avec des produits « presque parfaits » dont un seul attribut est disqualifiant. Améliorer le raisonnement fin sur des contraintes conjonctives (tous les critères doivent être satisfaits simultanément) reste un défi ouvert pour les LLM.</p>
+
+<p>Enfin, l'évaluation repose sur des utilisateurs simulés par des LLM. La transition vers des études avec de vrais utilisateurs humains — avec leur patience limitée, leurs formulations imprécises et leurs changements d'avis non annoncés — sera le vrai test de robustesse du cadre PAHF. Le code est disponible en open source, ce qui devrait faciliter cette prochaine étape.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

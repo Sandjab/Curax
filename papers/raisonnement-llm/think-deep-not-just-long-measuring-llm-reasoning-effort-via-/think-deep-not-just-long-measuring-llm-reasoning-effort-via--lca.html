@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Think Deep, Not Just Long: Measuring LLM Reasoning Effort via Deep-Thinking Tokens — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Think Deep, Not Just Long: Measuring LLM Reasoning Effort via Deep-Thinking Tokens</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Les modèles de langage améliorent leurs performances de raisonnement en générant des chaînes de pensée (Chain-of-Thought) plus longues. Pourtant, la longueur brute des séquences générées corrèle mal — voire négativement — avec la qualité des réponses. Chen et al. proposent le <em>deep-thinking ratio</em> (DTR), une mesure de l'effort de raisonnement fondée sur l'évolution interne des prédictions à travers les couches du modèle, plutôt que sur le nombre de tokens produits.</p>
+
+<p>L'intuition centrale : un token dont la distribution prédictive se stabilise dès les premières couches du transformeur mobilise peu de calcul. À l'inverse, un token dont la prédiction continue d'évoluer jusqu'aux couches profondes traduit un effort computationnel réel. Le DTR mesure la proportion de ces tokens « à pensée profonde » dans une séquence.</p>
+
+<h2>Méthodologie</h2>
+
+<p>Le protocole repose sur la projection des états cachés intermédiaires dans l'espace du vocabulaire via la matrice d'unembedding du modèle. Pour chaque token généré et chaque couche intermédiaire, la divergence de Jensen-Shannon (JSD) entre la distribution de la couche courante et celle de la couche finale est calculée. Un token est classé « deep-thinking » si sa distribution ne converge vers la distribution finale qu'au-delà d'un seuil de profondeur fixé (ρ = 0.85, soit les 15 % de couches les plus profondes), avec un seuil de convergence g = 0.5.</p>
+
+<p>Huit variantes de modèles issus de trois familles sont évaluées : GPT-OSS (20B et 120B, à trois niveaux de raisonnement), DeepSeek-R1-70B et Qwen3-30B-Thinking. Quatre benchmarks de raisonnement mathématique et scientifique servent de terrain d'évaluation : AIME 2024, AIME 2025, HMMT 2025 et GPQA-Diamond. Pour chaque question, 25 réponses sont échantillonnées, et les statistiques sont moyennées sur 30 graines aléatoires.</p>
+
+<p>Le DTR est comparé à cinq métriques de référence : le nombre de tokens (et son inverse), la log-probabilité moyenne, la perplexité négative, l'entropie négative et le Self-Certainty. La corrélation de Pearson entre chaque métrique et la précision des réponses sert de critère principal.</p>
+
+<h3>Think@n</h3>
+
+<p>Les auteurs introduisent aussi Think@n, une stratégie de scaling à l'inférence. Parmi n réponses échantillonnées en parallèle, seules celles dont le DTR estimé sur un préfixe court (50 tokens) dépasse un seuil sont conservées pour un vote majoritaire. Les réponses peu prometteuses sont arrêtées précocement, réduisant le coût d'inférence.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>Le DTR atteint une corrélation moyenne avec la précision de r = 0.683 sur les 32 configurations modèle-benchmark testées. Le nombre de tokens brut affiche r = −0.594 — une corrélation négative cohérente avec la littérature sur l'« overthinking ». Les métriques de confiance (log-probabilité, entropie, Self-Certainty) se situent entre r = 0.219 et r = 0.605, avec une variabilité notable selon les modèles.</p>
+
+<p>Le DTR ne produit que 2 corrélations négatives sur 32 configurations, contre des résultats hétérogènes pour les métriques concurrentes. Sa stabilité inter-modèles et inter-tâches représente son principal avantage.</p>
+
+<p>Think@n égale ou dépasse la self-consistency standard (Cons@n) sur les quatre benchmarks, tout en réduisant le coût d'inférence d'environ 50 %. Sur AIME 2025 avec GPT-OSS-120B-medium, Think@n atteint 94.7 % de précision contre 92.7 % pour Cons@n, avec un budget tokens divisé par deux (155k contre 308k).</p>
+
+<p>Un préfixe de seulement 50 tokens suffit pour estimer le DTR de façon fiable. Des préfixes plus longs (100, 500, 1000) ne font pas mieux, voire dégradent légèrement les résultats — un résultat contre-intuitif qui renforce l'intérêt pratique de la méthode.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>Le DTR exige un accès complet aux états cachés intermédiaires du modèle. Cette contrainte d'accès boîte blanche exclut son utilisation avec les API commerciales fermées (GPT-4, Claude), ce qui restreint sa portée pratique aux environnements de recherche. Les auteurs ne discutent pas cette limitation.</p>
+
+<p>Les benchmarks sélectionnés couvrent exclusivement le raisonnement mathématique et scientifique. Rien ne garantit que le DTR conserve sa corrélation avec la précision sur des tâches de raisonnement de sens commun, de génération créative ou de compréhension linguistique. La généralisation au-delà du domaine STEM reste une hypothèse non testée.</p>
+
+<p>Les hyperparamètres g = 0.5 et ρ = 0.85 sont sélectionnés sur les mêmes données que celles servant à l'évaluation. L'analyse de sensibilité (Section 3.2) ne porte que sur un seul modèle (GPT-OSS-20B-high) et un seul benchmark (GPQA-D). Un protocole de validation croisée — ou à défaut une analyse sur plusieurs configurations — aurait renforcé la crédibilité de ces choix.</p>
+
+<p>Le DTR n'est pas comparable entre modèles ou entre niveaux de raisonnement d'un même modèle (la Section B de l'appendice le reconnaît). Les modèles à raisonnement « high » affichent un DTR plus faible que les modèles « low », tout en étant plus précis. Cette non-comparabilité réduit l'utilité du DTR comme métrique universelle : il ne fonctionne qu'en intra-modèle, intra-configuration.</p>
+
+<p>Le lien causal entre profondeur de stabilisation et qualité de raisonnement n'est pas établi. Le DTR pourrait capturer la difficulté intrinsèque des questions plutôt que la qualité du raisonnement lui-même. Aucune expérience de contrôle ne distingue ces deux hypothèses.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Les modèles GPT-OSS (20B et 120B) sont propriétaires. L'accès aux états cachés intermédiaires de ces modèles n'est pas disponible publiquement, ce qui rend la reproduction des résultats principaux impossible pour la communauté académique. DeepSeek-R1-70B et Qwen3-30B sont en accès libre sur Hugging Face, permettant une reproduction partielle.</p>
+
+<p>Aucune mention de publication du code source n'apparaît dans l'article. L'algorithme 1 fournit un pseudo-code suffisamment détaillé pour une réimplémentation, mais les détails d'infrastructure (extraction des hidden states, gestion mémoire GPU pour les modèles 120B) ne sont pas documentés.</p>
+
+<p>Les prompts sont fournis en appendice (Tables 4 et 5), et les paramètres d'échantillonnage sont spécifiés. Ces éléments facilitent la reproduction des conditions expérimentales pour les modèles ouverts.</p>
+
+<h2>Impact et applications</h2>
+
+<p>Think@n réduit de 50 % le coût d'inférence sans perte de précision — un gain pratique substantiel pour les déploiements à grande échelle utilisant le repeated sampling. La détection précoce des séquences non prometteuses via un préfixe de 50 tokens est le résultat le plus directement exploitable.</p>
+
+<p>La mesure du DTR fournit aussi un outil d'interprétabilité mécaniste. La Figure 2 de l'article révèle que les tokens fonctionnels (articles, connecteurs) se stabilisent tôt, tandis que les tokens de réponse et les opérations arithmétiques nécessitent une computation profonde. Cette observation enrichit la compréhension du fonctionnement interne des transformeurs au-delà du cas d'usage spécifique du DTR.</p>
+
+<p>L'application reste cantonnée aux environnements disposant d'un accès aux poids et activations du modèle. Une adaptation pour les modèles servis via API — par exemple via des proxies statistiques du DTR calculables sans accès aux hidden states — n'est pas proposée et représenterait une extension naturelle de ce travail.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Ce travail se situe au croisement de deux courants : l'analyse de l'overthinking dans les LLM (Gema et al., 2025 ; Wu et al., 2025 ; Su et al., 2025) et l'exploitation des représentations internes des transformeurs (Nostalgebraist, 2020 ; Chuang et al., 2023 ; Belrose et al., 2023).</p>
+
+<p>Par rapport aux travaux sur l'overthinking, la contribution réside dans la proposition d'un signal interne mécaniste plutôt que d'heuristiques de surface. Hassid et al. (2025) et Agarwal et al. (2025) exploitent la brièveté comme signal de qualité — une approche post hoc que Chen et al. dépassent en proposant un mécanisme explicatif ancré dans l'architecture du modèle.</p>
+
+<p>Le DTR reprend la technique du « logit lens » (Nostalgebraist, 2020) et l'étend de l'analyse statique à la caractérisation dynamique de l'effort de raisonnement, token par token. La parenté avec DoLa (Chuang et al., 2023) est explicite : les deux approches exploitent les divergences entre couches, mais DoLa modifie le décodage pour améliorer la factualité tandis que le DTR mesure l'effort sans intervenir sur la génération.</p>
+
+<p>Vilas et al. (2025) proposent une approche complémentaire via des signaux latents temporels (évolution séquentielle des hidden states), là où le DTR capture l'évolution en profondeur. La combinaison des deux axes — séquentiel et en profondeur — reste un territoire inexploré qui pourrait affiner la caractérisation du raisonnement.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien identifié et motivé ; approche mécaniste originale de la mesure du raisonnement</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Protocole solide avec 8 variantes de modèles, 4 benchmarks et 6 métriques de comparaison ; évaluation restreinte aux tâches STEM</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>25 réponses par question et 30 graines aléatoires, mais les benchmarks sont petits (30 questions pour AIME, ~198 pour GPQA-D)</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>DTR formalisé rigoureusement ; comparaison JSD vs KLD vs cosine justifiée empiriquement ; corrélation de Pearson appropriée</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Hyperparamètres sélectionnés sur les données d'évaluation ; analyse de sensibilité limitée à un seul modèle et benchmark</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Modèles GPT-OSS propriétaires ; pas de code publié ; reproduction possible uniquement avec les modèles ouverts</td></tr>
+<tr><td>Transparence et limitations</td><td>3</td><td>Non-comparabilité inter-modèles reconnue ; contrainte boîte blanche non discutée ; absence de contrôle causal</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Signal mécaniste original ; Think@n divise les coûts par deux ; limité aux environnements de recherche avec accès aux poids</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

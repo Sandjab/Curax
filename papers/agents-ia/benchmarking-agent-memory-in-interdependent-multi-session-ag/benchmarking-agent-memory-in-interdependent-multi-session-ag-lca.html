@@ -128,133 +128,111 @@
   </div>
   <div class="companion-content">
     <h2>Lecture Critique d'Article</h2>
+<h3>Publication évaluée</h3>
+<p><strong>Benchmarking Agent Memory in Interdependent Multi-Session Agentic Tasks</strong> — He, Wang, Zhi, Hu, Chen, Yin, Chen, Wu, Ouyang, Wang, Pei, McAuley, Choi, Pentland — arXiv, février 2026.</p>
 
-<h3>1. Objectif et contexte</h3>
-<p>Cette publication identifie un écart fondamental dans l'évaluation des agents LLM : les benchmarks existants évaluent soit la <strong>mémorisation</strong> (rappel de conversations passées via QA), soit l'<strong>action</strong> (exécution en session unique), mais jamais les deux de manière couplée. Or, dans les scénarios réalistes, un agent doit acquérir de l'information en interagissant avec son environnement, la distiller en mémoire, puis la réutiliser pour résoudre des tâches futures.</p>
-<p>Les auteurs introduisent <strong>MEMORYARENA</strong>, un « gym d'évaluation unifié » structuré autour de boucles <em>Mémoire-Agent-Environnement</em>. Le benchmark se compose de tâches multi-sessions avec des sous-tâches <strong>explicitement interdépendantes</strong> : la résolution d'une sous-tâche ultérieure est sous-spécifiée sans les informations acquises lors des sessions précédentes.</p>
-<p>Le positionnement est solide et bien argumenté. La Table 1 de comparaison avec les benchmarks existants (LoCoMo, LongMemEval, WebArena, AgencyBench, etc.) démontre clairement que MEMORYARENA est le premier à combiner évaluation de la mémoire, actions agentiques, retour d'environnement, multi-sessions ET interdépendance des sous-tâches.</p>
+<h2>1. Objectif et contexte</h2>
+<p>Les benchmarks existants pour évaluer la mémoire des agents LLM souffrent d'un clivage structurel : d'un côté, les tests de mémorisation (LoCoMo, LongMemEval) mesurent le rappel factuel sur des conversations statiques sans action agentique ; de l'autre, les benchmarks d'action (WebArena, SWE-Bench) évaluent l'exécution en session unique sans solliciter la mémoire à long terme. MEMORYARENA se positionne à l'intersection en proposant des tâches multi-sessions où les sous-tâches sont causalement dépendantes les unes des autres.</p>
+<p>L'intuition centrale est que mémorisation et action forment une boucle indissociable : l'agent acquiert de l'information via ses interactions avec l'environnement, la distille en mémoire, puis la réutilise pour guider ses décisions futures. Ce couplage, que les auteurs formalisent sous le nom de boucle Mémoire-Agent-Environnement, n'était testé par aucun benchmark antérieur de manière systématique.</p>
 
-<h3>2. Méthodologie</h3>
-<p>Le benchmark couvre <strong>quatre environnements</strong> distincts, chacun ciblant des compétences mémorielles différentes :</p>
+<h2>2. Méthodologie</h2>
+<p>Le benchmark couvre quatre environnements distincts, chacun ciblant un type de dépendance inter-sessions différent :</p>
 <ul>
-  <li><strong>Bundled Web Shopping</strong> (150 tâches, 6 sous-tâches chacune) : achat d'articles compatibles nécessitant le rappel des attributs des achats précédents. Construction rigoureuse via arbres de compatibilité, filtrage par attributs, puis vérification humaine.</li>
-  <li><strong>Group Travel Planning</strong> (270 tâches, 5-9 sous-tâches) : planification de voyage de groupe avec contraintes JOIN et RELATION s'accumulant. Basé sur TravelPlanner avec extension multi-voyageurs.</li>
-  <li><strong>Progressive Web Search</strong> (256 tâches, 2-16 sous-tâches) : recherche d'information compositionnelle où chaque étape ajoute une contrainte. Dérivé de BrowseComp-Plus avec filtrage et décomposition en sous-requêtes vérifiées par des annotateurs humains.</li>
-  <li><strong>Formal Reasoning</strong> (60 tâches : 40 math, 20 physique) : raisonnement séquentiel sur des chaînes de dérivation extraites d'articles de recherche, curé par des experts PhD.</li>
+<li><strong>Achats web groupés (150 tâches)</strong> : achats séquentiels de produits compatibles, construits à partir de WebShop avec filtrage hiérarchique par catégorie, cartes d'acceptation/rejet par attributs, et vérification humaine des chaînes de compatibilité.</li>
+<li><strong>Planification de voyage de groupe (270 tâches)</strong> : itinéraires à 30 créneaux par sous-tâche, avec contraintes JOIN (partager une activité) et RELATION (préférences relatives à un autre voyageur), construits à partir de TravelPlanner.</li>
+<li><strong>Recherche web progressive (256 tâches)</strong> : décomposition de requêtes composites issues de BrowseComp-Plus en sous-requêtes ordonnées causalement, avec double vérification humaine de la cohérence sémantique.</li>
+<li><strong>Raisonnement formel séquentiel (60 tâches)</strong> : chaînes de dérivation extraites d'articles de recherche en mathématiques (40) et physique (20), annotées par des experts de niveau doctorat.</li>
 </ul>
-<p>Le protocole expérimental évalue trois paradigmes de mémoire :</p>
-<ul>
-  <li><strong>Long-context (0D)</strong> : historique verbatim en contexte (GPT-5.1-mini, GPT-4.1-mini, Gemini-3-Flash, Claude-Sonnet-4.5)</li>
-  <li><strong>Mémoire externe (1D/2D)</strong> : Letta/MemGPT, Mem0, Mem0-g, ReasoningBank</li>
-  <li><strong>RAG (0D/1D/2D)</strong> : BM25, embeddings, MemoRAG, GraphRAG</li>
-</ul>
-<p>La taxonomie 0D/1D/2D (brut / plat consolidé / structuré) offre une grille de lecture claire des systèmes de mémoire. L'agent de tâche est fixé à GPT-5.1-mini pour l'ensemble des expériences avec mémoire externe et RAG, ce qui limite la généralisation mais assure la comparabilité.</p>
+<p>766 tâches au total, avec en moyenne 6,9 sous-tâches et 57 pas d'action par tâche. Les traces de raisonnement dépassent 40 000 tokens en moyenne.</p>
+<p>Trois paradigmes de mémoire sont comparés : agents à contexte long (GPT-5.1-mini, GPT-4.1-mini, Gemini-3-Flash, Claude-Sonnet-4.5), agents avec mémoire externe (Letta/MemGPT, Mem0, Mem0-g, ReasoningBank), et agents avec systèmes RAG (BM25, embedding, MemoRAG, GraphRAG). Une taxonomie 0D/1D/2D classe ces méthodes par complexité structurelle de la mémoire. GPT-5.1-mini sert d'agent de tâche pour toutes les configurations sauf les agents à contexte long qui utilisent chacun leur propre modèle.</p>
+<p>Deux métriques principales : le taux de succès de tâche (SR, succès complet) et le score de progression (PS, fraction de sous-tâches réussies). Un PS souple (sPS) est ajouté pour la planification de voyage où SR et PS sont tous deux proches de zéro.</p>
 
-<h3>3. Résultats principaux</h3>
-<p>Les résultats sont frappants et constituent la contribution empirique majeure :</p>
-<ul>
-  <li><strong>Taux de succès globalement très bas</strong> : le meilleur système (Text-Embedding-3-Small en RAG) n'atteint que 0.23 de SR moyen. Le Group Travel Planning affiche un SR de 0.00 pour <em>toutes</em> les méthodes.</li>
-  <li><strong>La mémoire externe n'est pas universellement bénéfique</strong> : les agents long-context restent compétitifs voire supérieurs dans certains environnements (Web Shopping, Travel Planning). L'article identifie un double mismatch : représentationnel (l'information compressée s'intègre mal au raisonnement in-context) et d'entraînement (la mémoire n'est pas co-optimisée avec l'agent).</li>
-  <li><strong>Décroissance avec la profondeur</strong> (Figure 3) : le SR@k décroît systématiquement avec k pour toutes les méthodes, aucune ne maintenant une région plate — preuve directe de la dérive de croyance (belief drift) dans le cadre POMDP.</li>
-  <li><strong>La mémoire externe aide sélectivement</strong> : dans Progressive Web Search (traces > 120k tokens) et Formal Reasoning (raisonnement complexe), la mémoire externe et le RAG surpassent le long-context en atténuant la saturation attentionnelle.</li>
-  <li><strong>Latence</strong> : les agents long-context sont les plus rapides ; la complexité architecturale de la mémoire ne prédit pas la latence de manière systématique.</li>
-</ul>
+<h2>3. Résultats principaux</h2>
+<p>Le résultat le plus frappant : aucune méthode ne dépasse 0,23 de SR moyen sur l'ensemble des environnements. Le meilleur système (Text-Embedding-3-Small en RAG) atteint 0,23, suivi de Claude-Sonnet-4.5 en contexte long et BM25 à 0,19. Les agents à mémoire externe ne surpassent pas systématiquement le contexte long brut — un résultat contre-intuitif.</p>
+<p>La planification de voyage de groupe est l'environnement le plus difficile : SR et PS sont à zéro pour toutes les méthodes. Chaque sous-tâche impose la gestion simultanée de 30 créneaux soumis à des contraintes croisées entre voyageurs, ce qui dépasse la capacité de raisonnement combinatoire des agents actuels.</p>
+<p>L'analyse SR@k (succès par profondeur de sous-tâche) montre une décroissance systématique : aucune méthode ne maintient un taux stable lorsque la profondeur de dépendance augmente. En recherche web progressive, où les traces dépassent 122 000 tokens, les agents à contexte long décrochent plus vite que les systèmes RAG, car le contexte cumulé dépasse la fenêtre effective de raisonnement.</p>
+<p>La mémoire externe aide dans deux cas précis : la recherche web progressive (traces longues nécessitant une abstraction sélective) et le raisonnement formel (réutilisation de résultats intermédiaires hautement spécifiques). Dans ces régimes, le contexte long seul souffre de saturation attentionnelle et de propagation d'erreurs.</p>
+<p>L'évaluation de latence révèle que les agents à contexte long sont les plus rapides (74 secondes en moyenne pour GPT-5.1-mini), tandis que les systèmes à mémoire externe induisent la latence la plus élevée (jusqu'à 133 secondes pour Letta). Aucune corrélation systématique n'apparaît entre complexité de la mémoire (0D/1D/2D) et latence d'exécution.</p>
 
-<h3>4. Discussion et limites</h3>
-<p><strong>Forces de la discussion :</strong></p>
-<ul>
-  <li>Le cadrage POMDP (Section 4.6) est particulièrement éclairant : il formalise la mémoire comme un mécanisme d'estimation d'état de croyance, et la décroissance du SR@k comme une dérive de croyance. Cette perspective théorique ouvre des pistes concrètes (optimisation conjointe mémoire-agent, statistiques suffisantes).</li>
-  <li>L'identification des deux bottlenecks (côté mémoire : mécanismes non optimisés pour le suivi d'état ; côté agent : incapacité à formuler des requêtes efficaces et intégrer les résultats) est pertinente.</li>
-</ul>
-<p><strong>Limites identifiées :</strong></p>
-<ul>
-  <li><strong>Agent de tâche unique</strong> : toutes les expériences avec mémoire externe/RAG utilisent GPT-5.1-mini. L'interaction entre le modèle de base et le système de mémoire reste inexplorée.</li>
-  <li><strong>Taille d'échantillon hétérogène</strong> : 270 tâches pour Travel Planning mais seulement 20 pour Physics Reasoning. La puissance statistique sur les environnements de raisonnement formel est limitée.</li>
-  <li><strong>Construction des tâches</strong> : le filtrage initial de Progressive Web Search utilise un LLM pour éliminer les instances résolubles en une seule interaction, introduisant un biais potentiel de sélection.</li>
-  <li><strong>Absence de section limitations formelle</strong> : la déclaration d'impact est minimale et ne discute pas les limitations du benchmark lui-même (couverture des domaines, biais de difficulté, validité écologique).</li>
-  <li><strong>Reproductibilité partielle</strong> : bien que le benchmark soit publié, les configurations exactes des systèmes de mémoire externes ne sont pas toujours spécifiées en détail.</li>
-</ul>
+<h2>4. Discussion et limites</h2>
+<p>Les auteurs proposent une lecture POMDP (processus de décision markovien partiellement observable) du benchmark : l'agent n'observe jamais l'état latent complet de la tâche et doit maintenir une estimation de croyance à travers les sessions. La décroissance de performance avec la profondeur s'interprète comme une dérive de croyance — les erreurs d'estimation s'accumulent et finissent par dominer les décisions.</p>
+<p>Cette formalisation est intellectuellement séduisante mais reste descriptive. Aucune expérience ne teste directement si un agent doté d'une mémoire « oracle » (retournant exactement les statistiques suffisantes) résoudrait effectivement les tâches, ce qui validerait le diagnostic POMDP de manière causale.</p>
+<p>Le choix de GPT-5.1-mini comme agent de tâche unique pour toutes les configurations à mémoire externe et RAG est une limitation méthodologique significative. L'interaction entre capacité du modèle de base et type de mémoire reste inexplorée. Un modèle plus puissant pourrait mieux formuler ses requêtes de mémoire et intégrer les résultats récupérés — l'effet « 1+1 ≤ 2 » identifié par les auteurs pourrait être un artefact de ce choix.</p>
+<p>La construction des environnements repose sur des benchmarks préexistants (WebShop, TravelPlanner, BrowseComp-Plus) augmentés de dépendances inter-sessions. Cette approche garantit un réalisme de base, mais les dépendances ajoutées sont mécaniques (compatibilité produit, contraintes JOIN/RELATION). Des dépendances émergentes, où l'agent découvre les contraintes au fil de l'interaction, ne sont pas testées.</p>
+<p>Le raisonnement formel (60 tâches, dont 20 en physique) est le sous-ensemble le plus restreint. La puissance statistique pour comparer les méthodes sur ce seul environnement est limitée.</p>
+<p>La section « Impact Statement » est vide de contenu réel — une formulation évasive qui ne discute ni les usages concrets du benchmark, ni les risques potentiels liés à l'optimisation excessive de la mémoire agentique (surveillance, profilage comportemental à long terme).</p>
 
-<h3>5. Reproductibilité</h3>
-<p>Le benchmark est diffusé publiquement via <em>memoryarena.github.io</em>. Le processus de construction des données est décrit avec un niveau de détail raisonnable, incluant les étapes de filtrage, d'annotation humaine, et les critères de validation. La taxonomie des systèmes de mémoire (0D/1D/2D) est clairement définie. Cependant, les hyperparamètres spécifiques des systèmes de mémoire testés (paramètres de chunking, de consolidation, de retrieval) ne sont pas tous explicités dans le corps de l'article, bien que l'appendice fournisse des détails supplémentaires. La reproductibilité est jugée <strong>bonne mais pas complète</strong>.</p>
+<h2>5. Reproductibilité</h2>
+<p>Les données et le code sont annoncés comme disponibles sur memoryarena.github.io. L'appendice fournit les prompts détaillés pour chaque environnement, les workflows d'évaluation, et les configurations expérimentales (températures, limites de tokens, APIs utilisées). Les expériences GPU utilisent des NVIDIA H100.</p>
+<p>La dépendance aux APIs propriétaires (OpenAI, Anthropic, Vertex AI) pose un problème de reproductibilité à long terme : les modèles évoluent, les versions changent, et les résultats rapportés pourraient ne pas être réplicables dans six mois. Les auteurs ne mentionnent pas de versionnage des modèles au-delà des noms commerciaux.</p>
+<p>La procédure de construction des données implique des vérifications humaines à plusieurs étapes (compatibilité produits, ordonnancement causal des sous-requêtes, dérivations mathématiques), ce qui rend la reproduction de la construction du benchmark elle-même coûteuse. Le benchmark figé est toutefois réutilisable directement.</p>
 
-<h3>6. Impact et applications</h3>
-<p>L'impact potentiel est <strong>significatif</strong> pour le domaine des agents IA :</p>
-<ul>
-  <li><strong>Révélation d'un angle mort majeur</strong> : démontrer que des systèmes quasi-saturés sur LoCoMo échouent massivement sur des tâches agentiques interdépendantes remet en question les prétentions des systèmes de mémoire actuels.</li>
-  <li><strong>Cadre d'évaluation unifié</strong> : MEMORYARENA offre un testbed standardisé pour comparer les paradigmes de mémoire (long-context vs. externe vs. RAG) sur un pied d'égalité.</li>
-  <li><strong>Orientation de la recherche</strong> : le cadrage POMDP et l'identification des bottlenecks (mismatch représentationnel et d'entraînement) fournissent des directions concrètes pour la recherche future.</li>
-  <li><strong>Applications pratiques</strong> : les résultats informent directement le design d'agents conversationnels multi-sessions, d'assistants personnels, et de systèmes de planification à long horizon.</li>
-</ul>
+<h2>6. Impact et applications</h2>
+<p>MEMORYARENA remplit un vide empirique réel. La démonstration que des systèmes quasi-saturés sur LoCoMo (rappel factuel) échouent dès que la mémoire doit guider l'action est un résultat négatif précieux. Ce résultat devrait réorienter la recherche sur la mémoire agentique vers des architectures qui intègrent mémorisation et planification, plutôt que de traiter la mémoire comme un module de rappel indépendant.</p>
+<p>Le diagnostic des deux goulets d'étranglement — côté mémoire (les mécanismes actuels ne préservent pas les variables d'état pertinentes pour la tâche) et côté agent (les modèles ne savent pas formuler des requêtes efficaces vers la mémoire) — trace une feuille de route concrète pour les travaux futurs.</p>
+<p>La diversité des quatre environnements permet de discriminer les forces et faiblesses relatives des approches : le RAG excelle quand les traces sont longues, le contexte long suffit quand les traces tiennent en fenêtre, et la mémoire externe aide uniquement quand l'abstraction sélective est nécessaire. Ce profil différencié a plus de valeur qu'un classement unique.</p>
 
-<h3>7. Positionnement dans la littérature</h3>
-<p>MEMORYARENA se positionne à l'intersection de deux lignes de recherche jusqu'ici disjointes :</p>
-<ul>
-  <li>Les <strong>benchmarks de mémoire</strong> (LoCoMo, LongMemEval, MemoryAgentBench, MemoryBench) qui évaluent le rappel statique sans actions agentiques.</li>
-  <li>Les <strong>benchmarks agentiques</strong> (WebArena, SWE-Bench, WebShop) qui évaluent l'action en session unique sans mémoire persistante.</li>
-</ul>
-<p>Par rapport aux travaux concurrents récents (AgencyBench, Evo-Memory, VeriGUI), MEMORYARENA se distingue par l'<strong>interdépendance explicite</strong> des sous-tâches et l'évaluation systématique de multiples mécanismes de mémoire. La comparaison avec AgencyBench (qui intègre aussi mémoire et action mais via des outils add-and-retrieve simples) est pertinente.</p>
-<p>Le parallèle avec les POMDP est original dans ce contexte et connecte le travail à une littérature plus large en planification sous observabilité partielle, enrichissant la compréhension théorique du problème.</p>
-<p>Ce travail devrait rapidement devenir une <strong>référence incontournable</strong> pour l'évaluation des systèmes de mémoire dans le contexte agentique, comblant un vide reconnu par la communauté.</p>
+<h2>7. Positionnement dans la littérature</h2>
+<p>MEMORYARENA se distingue des benchmarks de mémoire conversationnelle (LoCoMo, LongMemEval, MemoryBench) par l'ajout explicite de l'action agentique et du retour environnemental. Par rapport à AgencyBench, qui intègre aussi mémoire et exécution multi-sessions, MEMORYARENA impose des dépendances causales plus strictes entre sous-tâches et évalue les mécanismes de mémoire de manière plus systématique (trois paradigmes, taxonomie 0D/1D/2D).</p>
+<p>Evo-Memory exécute des tâches indépendantes en séquence sans dépendance causale inter-sessions — une différence fondamentale avec l'approche de MEMORYARENA où chaque sous-tâche est sous-spécifiée sans l'information acquise dans les sessions précédentes.</p>
+<p>Les benchmarks récents comme Mem2ActBench, MemTrack et AgentLongBench testent le rappel d'information depuis des traces d'outils statiques. MEMORYARENA va plus loin en exigeant que l'information mémorisée soit effectivement utilisée pour modifier le comportement de l'agent, pas simplement récitée.</p>
+<p>La formalisation POMDP rapproche ce travail de la littérature en apprentissage par renforcement sur la planification sous observabilité partielle, mais sans exploiter les algorithmes existants de cette tradition (filtrage bayésien, QMDP). Ce pont reste à construire.</p>
 
-<h3>Tableau récapitulatif des scores de robustesse</h3>
+<h2>Tableau récapitulatif des scores de robustesse</h2>
 <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-  <thead>
-    <tr style="background-color: #f0f0f0;">
-      <th>Critère</th>
-      <th>Score (/5)</th>
-      <th>Justification</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>Question de recherche</strong></td>
-      <td>4</td>
-      <td>Lacune clairement identifiée entre benchmarks de mémoire et d'action ; question originale et bien motivée.</td>
-    </tr>
-    <tr>
-      <td><strong>Design expérimental</strong></td>
-      <td>4</td>
-      <td>4 environnements diversifiés, 3 paradigmes de mémoire, taxonomie 0D/1D/2D. Agent de tâche unique limite la portée.</td>
-    </tr>
-    <tr>
-      <td><strong>Taille d'échantillon</strong></td>
-      <td>3</td>
-      <td>766 tâches au total, mais distribution inégale (270 Travel vs. 20 Physics). Puissance statistique limitée sur le raisonnement formel.</td>
-    </tr>
-    <tr>
-      <td><strong>Qualité des métriques</strong></td>
-      <td>4</td>
-      <td>SR, PS et sPS bien définis et complémentaires. SR@k pour l'analyse en profondeur. Métriques adaptées à chaque environnement.</td>
-    </tr>
-    <tr>
-      <td><strong>Contrôle des biais</strong></td>
-      <td>3</td>
-      <td>Vérification humaine des données, mais filtrage LLM initial dans Progressive Web Search. Pas de discussion des biais de construction.</td>
-    </tr>
-    <tr>
-      <td><strong>Reproductibilité</strong></td>
-      <td>4</td>
-      <td>Benchmark publié, processus de construction détaillé. Configurations des systèmes de mémoire partiellement spécifiées.</td>
-    </tr>
-    <tr>
-      <td><strong>Transparence / Limitations</strong></td>
-      <td>3</td>
-      <td>Limites implicitement reconnues mais pas de section dédiée. Impact statement minimal.</td>
-    </tr>
-    <tr>
-      <td><strong>Impact / Nouveauté</strong></td>
-      <td>4</td>
-      <td>Premier benchmark couplant mémoire et action avec interdépendances. Résultats révélateurs. Cadrage POMDP original.</td>
-    </tr>
-  </tbody>
-  <tfoot>
-    <tr style="background-color: #f0f0f0;">
-      <td><strong>Note globale</strong></td>
-      <td colspan="2"><strong>3.8 / 5</strong> — Contribution de benchmark solide et bien exécutée, comblant un vide réel dans l'évaluation des agents avec mémoire. Les résultats empiriques sont convaincants et le cadrage théorique enrichit l'analyse. Quelques faiblesses méthodologiques (tailles d'échantillon, agent unique, transparence sur les limites) empêchent une note plus élevée.</td>
-    </tr>
-  </tfoot>
+<thead>
+<tr style="background-color: #f0f0f0;">
+<th>Critère</th>
+<th>Score (/5)</th>
+<th>Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question de recherche</td>
+<td>4</td>
+<td>Problème clairement identifié et motivé par un vide empirique démontré entre benchmarks de mémoire et benchmarks d'action.</td>
+</tr>
+<tr>
+<td>Design expérimental</td>
+<td>4</td>
+<td>Quatre environnements diversifiés, trois paradigmes de mémoire, taxonomie structurelle 0D/1D/2D. Agent de tâche unique pour la majorité des expériences.</td>
+</tr>
+<tr>
+<td>Taille d'échantillon</td>
+<td>4</td>
+<td>766 tâches au total — adéquat pour les trois premiers environnements, plus limité pour le raisonnement formel (60 tâches).</td>
+</tr>
+<tr>
+<td>Qualité des métriques</td>
+<td>4</td>
+<td>SR et PS bien définis. Ajout du sPS pour les cas dégénérés. Analyse SR@k par profondeur. Évaluation de latence complémentaire.</td>
+</tr>
+<tr>
+<td>Contrôle des biais</td>
+<td>3</td>
+<td>Vérification humaine des données à plusieurs étapes. Mais agent de tâche fixe (GPT-5.1-mini), pas de variation systématique de ce facteur. Environnements hérités de benchmarks antérieurs.</td>
+</tr>
+<tr>
+<td>Reproductibilité</td>
+<td>4</td>
+<td>Code et données annoncés publics, prompts détaillés en annexe. Dépendance aux APIs propriétaires sans versionnage précis.</td>
+</tr>
+<tr>
+<td>Transparence et limitations</td>
+<td>3</td>
+<td>Discussion POMDP pertinente. Limitations propres du benchmark peu discutées. Impact statement creux.</td>
+</tr>
+<tr>
+<td>Impact et nouveauté</td>
+<td>4</td>
+<td>Premier benchmark à évaluer systématiquement la mémoire agentique dans une boucle complète mémorisation-action-environnement avec dépendances causales inter-sessions.</td>
+</tr>
+</tbody>
 </table>
+
+<h2>Note globale de robustesse : 3.8 / 5</h2>
+<p>Travail solide qui identifie et comble un angle mort réel dans l'évaluation des agents LLM. La diversité des environnements et la rigueur de la construction des tâches (vérifications humaines, ordonnancement causal) compensent les limites liées au choix d'un agent de tâche unique et à une discussion trop succincte des faiblesses propres du benchmark. Les résultats négatifs — l'échec généralisé des systèmes de mémoire actuels dans ce cadre — constituent la contribution la plus précieuse du papier.</p>
   </div>
   <script>
   (function(){

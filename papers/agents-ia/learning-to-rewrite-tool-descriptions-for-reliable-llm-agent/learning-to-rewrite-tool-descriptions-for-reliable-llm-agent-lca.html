@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning to Rewrite Tool Descriptions for Reliable LLM-Agent Tool Use — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Learning to Rewrite Tool Descriptions for Reliable LLM-Agent Tool Use</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Les agents LLM qui utilisent des outils externes dépendent de deux facteurs : leur propre capacité de raisonnement et la qualité des interfaces d'outils qu'ils consomment. La recherche s'est massivement concentrée sur l'amélioration des agents eux-mêmes, laissant les descriptions d'outils — rédigées pour des humains — comme un goulot d'étranglement non traité. Ce problème s'aggrave quand le nombre d'outils candidats dépasse la centaine.</p>
+
+<p>L'article attaque ce déséquilibre en proposant Trace-Free+, un cadre d'apprentissage par curriculum qui entraîne des LLM open-weight (Qwen3-4B) à réécrire automatiquement les descriptions d'outils API. L'originalité réside dans le scénario ciblé : le déploiement à froid (cold-start), où aucune trace d'exécution n'est disponible pour les outils de test. Les méthodes existantes (DRAFT, Play2Prompt) exigent des pipelines multi-tours d'interaction avec les outils cibles, ce qui les rend inapplicables dans des contextes à contraintes de sécurité ou de confidentialité.</p>
+
+<h2>Méthodologie</h2>
+
+<h3>Pipeline de synthèse de données</h3>
+
+<p>La construction du jeu d'entraînement repose sur quatre étapes successives. D'abord, un annotateur agentique (basé sur Smolagents) explore les 9 640 fournisseurs d'API de ToolBench, évalue la santé de chaque endpoint et collecte des exemples d'appels réussis. Ce filtrage ne retient que 107 fournisseurs dont tous les endpoints fonctionnent — un taux de rétention d'environ 1,1 %, qui reflète la dégradation connue du benchmark ToolBench original.</p>
+
+<p>Les requêtes utilisateur sont ensuite synthétisées avec une stratégie dependency-aware : le LLM analyse d'abord les dépendances inter-API à partir de l'historique d'appels annotés, sélectionne un sous-ensemble cohérent d'API, puis génère une requête en langage naturel qui les mobilise séquentiellement. Cette conception force des trajectoires multi-étapes avec des dépendances authentiques entre appels.</p>
+
+<p>Les traces d'exécution sont collectées en faisant tourner un agent sur ces requêtes synthétiques. Les trajectoires échouées servent à extraire des règles comportementales via le cadre RIMRULE. L'amélioration des descriptions se fait en deux passes : D1 (améliorations indépendantes des données, fondées sur des guidelines générales) puis D2 (intégration des contraintes extraites des traces d'échec).</p>
+
+<h3>Entraînement par curriculum</h3>
+
+<p>Trace-Free+ mélange des exemples avec traces et sans traces selon un curriculum progressif. La première phase privilégie les exemples riches en traces (90 %), la seconde phase inverse la proportion (90 % sans traces). Cette transition enseigne au modèle les patterns de correspondance interface-usage avant de le forcer à les reproduire sans information d'exécution. Le ratio (0.1, 0.9) entre les deux phases s'avère optimal dans l'étude paramétrique (Table 7).</p>
+
+<h3>Protocole d'évaluation</h3>
+
+<p>L'évaluation utilise un teacher-forcing par étapes : à chaque sous-tâche, l'API ground truth est appelée pour fournir un contexte correct, isolant ainsi les erreurs dues aux descriptions d'outils de celles propagées par des erreurs antérieures. Ce choix méthodologique est bien motivé — sans teacher-forcing, les erreurs se composent et rendent l'attribution causale impossible. GPT-4.1 sert d'agent d'évaluation sur tous les benchmarks.</p>
+
+<h2>Résultats principaux</h2>
+
+<h3>Évaluation trace-free (in-domain)</h3>
+
+<p>Sur les six sous-ensembles de StableToolBench, Trace-Free+ atteint un taux de succès moyen de 70,1 % au niveau sous-tâche et 54,0 % au niveau requête (Table 1). Le gain sur D0 (descriptions originales) est de +2,8 points SL et +6,0 points QL. L'écart se creuse sur les sous-ensembles difficiles : sur G3 Instruction (requêtes multi-hop complexes), le gain QL atteint +21,8 points par rapport à D0 et +4,6 points par rapport à Trace-Free sans curriculum.</p>
+
+<p>EasyTool, la baseline prompting-based, se situe systématiquement en dessous de D0 sur les sous-ensembles G3, ce que les auteurs attribuent à l'optimisation de ses prompts pour des modèles plus anciens (ChatGPT, Vicuna-30B).</p>
+
+<h3>Généralisation cross-domaine</h3>
+
+<p>Entraîné sur les outils StableToolBench (Split B), Trace-Free+ est évalué sur RestBench (TMDB et Spotify) sans aucune exposition préalable à ces domaines. Sur TMDB, le gain QL atteint +25,4 points par rapport à D0 (74,9 % vs 49,5 %). Sur Spotify, le gain est de +14,4 points (49,3 % vs 34,9 %). La généralisation cross-domaine est donc plus marquée que les gains in-domain, ce qui suggère que le modèle apprend des patterns transférables de rédaction d'interfaces.</p>
+
+<h3>Passage à l'échelle</h3>
+
+<p>Les expériences de scaling (Figure 3) montrent que Trace-Free+ résiste mieux à l'augmentation du nombre d'outils candidats. Quand le pool dépasse 100 outils, la dégradation du taux de succès QL reste plus faible qu'avec D0 ou D1 sur les sous-ensembles G2 et G3. Cette robustesse à l'échelle est un résultat pratique significatif.</p>
+
+<h3>Résultats trace-based</h3>
+
+<p>En contexte trace-based, le modèle Trace-Based atteint 70,3 % SL et 54,6 % QL en moyenne (Table 4), surpassant DRAFT et Play2Prompt tout en nécessitant des traces nettement plus simples (appels single-turn avec descriptions originales, sans pipeline multi-tours).</p>
+
+<h2>Discussion et limites</h2>
+
+<p>La principale faiblesse de l'évaluation est l'utilisation d'un seul modèle agent (GPT-4.1) pour toutes les expériences. Les gains observés sur les descriptions pourraient varier avec un agent différent — un modèle plus faible bénéficierait peut-être davantage de descriptions améliorées, tandis qu'un modèle plus fort pourrait compenser seul les lacunes des descriptions originales. L'absence de tests avec plusieurs agents d'évaluation limite la portée des conclusions.</p>
+
+<p>Le filtrage agressif des outils d'entraînement (107 fournisseurs sur 9 640) soulève une question de biais de sélection. Les outils retenus sont ceux dont tous les endpoints fonctionnent, ce qui exclut les API partiellement fonctionnelles — un cas fréquent en production. La capacité du modèle à gérer des outils dégradés ou instables reste non testée.</p>
+
+<p>L'évaluation par teacher-forcing, bien que méthodologiquement justifiée pour l'attribution causale, ne reflète pas les conditions réelles d'utilisation où les erreurs se propagent. Les gains mesurés en conditions teacher-forcing pourraient être amplifiés ou atténués en exécution libre selon la robustesse de l'agent aux erreurs composées.</p>
+
+<p>La correction préalable des schémas de paramètres dans StableToolBench (Section B.2) améliore la propreté de l'évaluation mais introduit un doute : les gains mesurés dépendent en partie de cette correction, et les résultats pourraient différer sur des schémas bruts non corrigés.</p>
+
+<p>Le modèle fine-tuné (Qwen3-4B) est relativement petit. Aucune ablation n'explore l'effet de la taille du modèle de base, ni la comparaison avec un modèle plus grand entraîné sur les mêmes données.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Les prompts de chaque composant (annotateur agentique, synthèse de requêtes, correction de schémas, génération de descriptions) sont fournis intégralement en annexe — un effort de transparence rare. Les hyperparamètres d'entraînement (Table 8), l'architecture (LoRA rank 64, 2 epochs, ZeRO-3) et la configuration d'inférence (vLLM, top-p 0.9, température 0.3) sont documentés.</p>
+
+<p>Cependant, ni le code ni le jeu de données synthétisé ne semblent être publiés ou référencés par un lien. La dépendance aux API RapidAPI, dont la disponibilité varie dans le temps, rend la reproduction exacte du pipeline de données difficile. La correction manuelle des schémas StableToolBench n'est pas accompagnée des schémas corrigés eux-mêmes.</p>
+
+<h2>Impact et applications</h2>
+
+<p>L'approche répond à un besoin concret : déployer des agents sur de nouvelles API sans période d'exploration préalable. Le scénario cold-start (nouvelles API sans traces) est réaliste dans les plateformes d'intégration d'API comme RapidAPI, où des milliers d'endpoints apparaissent régulièrement.</p>
+
+<p>Le coût d'inférence est faible — un modèle 4B paramètres génère les descriptions améliorées — comparé aux pipelines itératifs de DRAFT ou Play2Prompt qui nécessitent de multiples appels à des LLM puissants et des interactions réelles avec les outils. Cette frugalité rend le déploiement viable à grande échelle.</p>
+
+<p>La généralisation cross-domaine (entraînement sur ToolBench, test sur TMDB/Spotify) est encourageante pour les cas où les domaines cibles n'ont aucune donnée d'entraînement. Le gain de +25 points QL sur TMDB sans aucune exposition au domaine cinématographique est un résultat marquant.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Ce travail se situe à l'intersection de deux axes de recherche : l'optimisation des interfaces d'outils (EasyTool, DRAFT, Play2Prompt) et l'apprentissage par curriculum pour les LLM. Par rapport à EasyTool (Yuan et al., 2025), qui repose sur des prompts manuels optimisés pour des modèles spécifiques, Trace-Free+ apprend des patterns généralisables via fine-tuning. Par rapport à DRAFT (Qu et al., 2025) et Play2Prompt (Fang et al., 2025), la méthode élimine la dépendance aux traces d'exécution au moment de l'inférence.</p>
+
+<p>L'idée de transférer la connaissance des traces vers un régime sans traces par curriculum est l'apport conceptuel central. Les travaux antérieurs traitaient chaque outil isolément ; ici, le modèle fine-tuné abstrait des patterns réutilisables à travers les outils. La comparaison avec les baselines est honnête : les auteurs reconnaissent que EasyTool a été conçu pour des modèles plus anciens et que ses résultats inférieurs reflètent ce décalage.</p>
+
+<p>Le protocole teacher-forcing, absent des évaluations précédentes, représente une contribution méthodologique secondaire mais utile pour la communauté. Les métriques tool-level (F1 par outil, taux de succès API par outil) comblent une lacune des évaluations existantes, qui agrègent tout au niveau requête et masquent les disparités entre outils.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien délimité (trace-free tool description improvement), motivation pratique claire, gap identifié par rapport aux méthodes existantes</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Évaluation multi-benchmark (StableToolBench, RestBench), settings trace-free et trace-based, cross-domaine, scaling, teacher-forcing justifié ; un seul agent d'évaluation limite la portée</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>107 fournisseurs API d'entraînement, ~7 000 requêtes synthétiques, mais filtrage agressif (1,1 % de rétention) et tests sur 2 benchmarks seulement</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Métriques à trois niveaux (sous-tâche, requête, outil), F1 tool-level plus informative que le recall query-level standard, écarts-types rapportés sur 3 runs</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Séparation stricte train/test sur les outils et requêtes, teacher-forcing pour l'attribution causale ; mais correction préalable des schémas et agent unique introduisent des confondants potentiels</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Prompts complets en annexe, hyperparamètres détaillés ; ni code ni données publiés, dépendance aux API RapidAPI dynamiques</td></tr>
+<tr><td>Transparence et limitations</td><td>3</td><td>Section future work mentionne des extensions, impact statement présent ; discussion limitée des cas d'échec, pas d'analyse qualitative des descriptions générées</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Curriculum learning pour le transfert trace→trace-free est original, gains cross-domaine significatifs (+25 pts QL sur TMDB), contribution pratique pour le cold-start</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
