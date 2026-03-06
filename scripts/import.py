@@ -20,10 +20,10 @@ except ImportError:
     _HAS_TERMIOS = False
 
 try:
-    import pdfplumber
-    _HAS_PDFPLUMBER = True
+    import fitz  # PyMuPDF
+    _HAS_PYMUPDF = True
 except ImportError:
-    _HAS_PDFPLUMBER = False
+    _HAS_PYMUPDF = False
 
 # ---------------------------------------------------------------------------
 # Repertoires
@@ -404,13 +404,14 @@ def extract_content_fingerprint(content):
 # ---------------------------------------------------------------------------
 
 def extract_pdf_text(pdf_path):
-    """Extrait le texte complet d'un PDF via pdfplumber."""
+    """Extrait le texte complet d'un PDF via PyMuPDF."""
     text_parts = []
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text_parts.append(page_text)
+    doc = fitz.open(pdf_path)
+    for page in doc:
+        page_text = page.get_text()
+        if page_text:
+            text_parts.append(page_text)
+    doc.close()
     return '\n\n'.join(text_parts)
 
 
@@ -1661,7 +1662,7 @@ def main():
                     lca_result['authors']
                 ),
                 PAPER_VULGARISATION_SCHEMA,
-                timeout=300
+                timeout=600
             )
             return (info, lca_result, vulg_result)
 
@@ -1825,9 +1826,9 @@ def main():
 
     # ===== Pipeline publications PDF =====
     if pdf_files:
-        if not _HAS_PDFPLUMBER:
-            print("\nERREUR : pdfplumber est requis pour importer des PDFs.", file=sys.stderr)
-            print("  pip install pdfplumber", file=sys.stderr)
+        if not _HAS_PYMUPDF:
+            print("\nERREUR : PyMuPDF est requis pour importer des PDFs.", file=sys.stderr)
+            print("  pip install pymupdf", file=sys.stderr)
             sys.exit(1)
 
         print("\n" + "=" * 60)
@@ -1901,7 +1902,7 @@ def main():
                             lca_result['authors']
                         ),
                         PAPER_VULGARISATION_SCHEMA,
-                        timeout=300
+                        timeout=600
                     )
 
                     return (info, lca_result, vulg_result)
