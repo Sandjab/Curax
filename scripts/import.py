@@ -1653,7 +1653,7 @@ def main():
             lca_result = call_claude_with_retry(
                 build_paper_lca_prompt(info['text'], papers_catalog["domains"]),
                 PAPER_LCA_SCHEMA,
-                timeout=300
+                timeout=600
             )
             vulg_result = call_claude_with_retry(
                 build_paper_vulgarisation_prompt(
@@ -1891,7 +1891,7 @@ def main():
                     lca_result = call_claude_with_retry(
                         build_paper_lca_prompt(info['text'], paper_taxonomy["domains"]),
                         PAPER_LCA_SCHEMA,
-                        timeout=300
+                        timeout=600
                     )
 
                     # Appel vulgarisation (utilise title/authors du LCA)

@@ -129,56 +129,82 @@
   <div class="companion-content">
     <h2>Lecture Critique d'Article</h2>
 <h3>Publication analysée</h3>
-<p><em>Everything is Context: Agentic File System Abstraction for Context Engineering</em> — Xu, Mao, Bai, Gu, Li, Zhu (CSIRO Data61, ArcBlock Inc., University of Tasmania) — arXiv, décembre 2025.</p>
+<p><strong>Everything is Context: Agentic File System Abstraction for Context Engineering</strong><br>
+Xu, X., Gu, X., Mao, R., Li, Y., Bai, Q., Zhu, L. — arXiv:2512.05470 (cs.SE), décembre 2025</p>
 
 <h2>1. Objectif et contexte</h2>
-<p>L'ingénierie de contexte — comment capturer, structurer et gouverner les connaissances externes, la mémoire, les outils et les entrées humaines pour le raisonnement des LLM — manque d'un socle architectural unifié. Les pratiques actuelles (prompt engineering, RAG, intégration d'outils) produisent des artefacts transitoires, opaques et difficilement traçables. Le papier propose de transposer la philosophie Unix « everything is a file » à la gestion du contexte des agents IA : chaque ressource contextuelle (mémoire, outil, connaissance, contribution humaine) est montée dans un système de fichiers virtuel hiérarchique avec métadonnées et contrôle d'accès uniformes.</p>
-<p>L'idée centrale est séduisante par sa simplicité : un espace de noms unique, des opérations standardisées (list, read, write, search), et une traçabilité par journalisation des transactions. Le problème adressé est réel — la fragmentation des pratiques de gestion de contexte dans les systèmes agentiques — mais la formulation reste celle d'un patron d'architecture plutôt que d'une question de recherche falsifiable.</p>
+
+<p>L'ingénierie de contexte — la gestion structurée des connaissances, mémoires, outils et entrées humaines alimentant le raisonnement des LLM — manque de fondations architecturales unifiées. Les frameworks existants (LangChain, AutoGen, MemGPT) traitent mémoire, RAG et intégration d'outils comme des modules indépendants, produisant des artefacts transitoires difficiles à tracer et auditer.</p>
+
+<p>Xu et al. proposent de transposer le principe Unix « everything is a file » au domaine du context engineering. Leur abstraction de système de fichiers (AFS) fournit un namespace hiérarchique où toutes les sources de contexte — bases vectorielles, graphes de connaissances, serveurs MCP, profils utilisateur — sont montées et accédées via une interface uniforme de lecture/écriture/recherche. Un pipeline de context engineering à trois composants (Constructor, Updater, Evaluator) orchestre la sélection, compression et validation du contexte sous contrainte de fenêtre de tokens.</p>
+
+<p>L'implémentation repose sur AIGNE, un framework open-source développé par ArcBlock, Inc. Deux exemplars illustrent l'approche : un agent avec mémoire persistante et un assistant GitHub via MCP.</p>
 
 <h2>2. Méthodologie</h2>
-<p>Le papier adopte une approche purement conceptuelle et architecturale. Aucun protocole expérimental n'est défini. La contribution se décline en trois volets :</p>
+
+<p>Ce travail relève du position paper architectural. Aucun protocole expérimental n'est défini. La méthodologie se limite à :</p>
+
 <ul>
-<li>Une abstraction de système de fichiers (AFS) appliquant les principes du génie logiciel (modularité, encapsulation, séparation des préoccupations, composabilité) à la gestion de contexte.</li>
-<li>Un pipeline d'ingénierie de contexte en trois composants : Context Constructor (sélection et compression), Context Updater (injection et rafraîchissement dans la fenêtre de tokens), Context Evaluator (vérification des sorties et mise à jour du dépôt persistant).</li>
-<li>Deux « exemplaires » d'implémentation dans le framework open-source AIGNE : un agent avec mémoire persistante et un assistant GitHub via MCP.</li>
+<li>Une analogie conceptuelle entre systèmes de fichiers Unix et gestion du contexte GenAI</li>
+<li>Le découpage de l'architecture en principes de génie logiciel (abstraction, modularité, encapsulation, séparation des préoccupations, traçabilité, composabilité)</li>
+<li>La description d'un pipeline à trois étages (Constructor → Updater → Evaluator)</li>
+<li>Deux listings de code TypeScript (~20 lignes chacun) montrant l'API du framework AIGNE</li>
 </ul>
-<p>Les exemplaires se limitent à des extraits de code (listings de 16 et 20 lignes respectivement). Aucune mesure de performance, de qualité du contexte, de latence, de consommation de tokens, ou de comparaison avec des systèmes existants (LangChain, AutoGen, MemGPT, Zep) n'est présentée. Le papier ne définit aucune métrique d'évaluation. Les contraintes de conception identifiées (fenêtre de tokens, absence d'état, non-déterminisme) sont correctement formulées mais relèvent de connaissances établies plutôt que de contributions originales.</p>
-<p>La taxonomie des types de mémoire (Table I) recense sept catégories (scratchpad, épisodique, factuelle, expérientielle, procédurale, utilisateur, historique) sans justification empirique de cette décomposition ni comparaison avec les taxonomies existantes dans la littérature cognitive ou en IA.</p>
+
+<p>L'absence de protocole expérimental est le défaut central du papier. Aucune hypothèse testable n'est formulée. Les auteurs ne définissent aucune métrique pour évaluer si l'abstraction file-system améliore la traçabilité, réduit la dérive contextuelle, ou facilite le développement par rapport aux approches existantes. Les deux exemplars sont des snippets d'initialisation d'agents — ils montrent une API, pas une évaluation.</p>
+
+<p>La taxonomie des types de mémoire (Table I : scratchpad, épisodique, factuelle, expérientielle, procédurale, utilisateur, historique) est descriptive. Elle synthétise la littérature existante sans apporter de validation empirique sur l'utilité de cette catégorisation dans un système réel.</p>
 
 <h2>3. Résultats principaux</h2>
-<p>En l'absence d'évaluation expérimentale, les « résultats » se réduisent à la description de l'architecture et à la démonstration de faisabilité via le framework AIGNE :</p>
+
+<p>En l'absence d'expériences, les « résultats » sont des contributions architecturales :</p>
+
 <ul>
-<li>L'AFS unifie les ressources hétérogènes sous un espace de noms cohérent avec des résolveurs programmatiques (similaires à GraphQL/OpenAPI).</li>
-<li>Le module SystemFS supporte les opérations de base avec intégration ripgrep, métadonnées configurables et accès sandboxé.</li>
-<li>Le Context Constructor génère un « manifeste de contexte » documentant les artefacts sélectionnés, exclus, et les raisons associées.</li>
-<li>Le Context Evaluator déclenche une revue humaine lorsque les seuils de confiance sont bas ou que des contradictions sont détectées.</li>
+<li><strong>Abstraction AFS</strong> : chaque source de contexte est projetée dans un namespace hiérarchique (/context/memory/, /context/tool/, /context/history/) via des résolveurs programmables. Les agents interagissent avec le contexte par des opérations list/read/write/search, indépendamment du backend de stockage.</li>
+<li><strong>Persistent Context Repository</strong> : cycle de vie History → Memory → Scratchpad avec transitions versionnées. L'historique est immuable et global ; la mémoire est spécifique à l'agent et mutable ; le scratchpad est éphémère et lié à une tâche.</li>
+<li><strong>Pipeline de context engineering</strong> : le Constructor sélectionne et compresse le contexte pertinent ; l'Updater synchronise la fenêtre de tokens en mode statique, incrémental ou adaptatif ; l'Evaluator vérifie les sorties et réintègre les résultats validés dans le repository.</li>
+<li><strong>Actions méta-définies</strong> : chaque fichier ou répertoire peut exposer des comportements appelables (résumé, validation, synchronisation), transformant les nœuds passifs en nœuds actifs.</li>
 </ul>
-<p>Ces éléments décrivent une architecture logicielle, pas des résultats de recherche. La question de savoir si cette abstraction améliore effectivement la traçabilité, la qualité du raisonnement, ou l'efficacité de la gestion de contexte par rapport aux approches existantes reste entièrement ouverte.</p>
+
+<p>Les deux exemplars de code montrent comment monter une mémoire SQLite et un serveur MCP GitHub dans l'espace AFS. Le code est lisible mais trivial — il démontre une API sans illustrer les mécanismes de sélection, compression ou évaluation du contexte.</p>
 
 <h2>4. Discussion et limites</h2>
-<p>Le papier présente plusieurs faiblesses majeures :</p>
-<p>L'absence totale d'évaluation empirique est le défaut le plus critique. Aucun benchmark, aucune étude utilisateur, aucune comparaison quantitative ne vient étayer les bénéfices revendiqués. Les affirmations sur la traçabilité, la gouvernance et la vérifiabilité restent programmatiques.</p>
-<p>L'analogie avec le système de fichiers Unix, bien que pédagogiquement utile, n'est pas examinée dans ses limites. Un système de fichiers classique gère des données relativement statiques avec des opérations CRUD simples. Le contexte d'un agent LLM est dynamique, sémantiquement riche, et soumis à des contraintes de pertinence temporelle que l'abstraction fichier ne capture pas naturellement. Le papier ne discute pas de cette tension.</p>
-<p>La distinction entre cette proposition et les travaux antérieurs (AIOS, MemGPT, Letta) reste floue. Le papier cite ces systèmes mais n'explique pas précisément ce que l'AFS apporte de différent au-delà d'une couche de nommage uniforme. MemGPT propose déjà une hiérarchie mémoire avec pagination ; AIOS implémente déjà des primitives OS pour les agents.</p>
-<p>Le conflit d'intérêt potentiel mérite mention : quatre des six auteurs sont affiliés à ArcBlock Inc., l'entreprise derrière le framework AIGNE. Le papier fonctionne en partie comme une documentation architecturale de ce framework, ce qui pose question sur l'objectivité de l'évaluation (ou plutôt son absence).</p>
-<p>La section VII (Conclusion and Future Work) ne contient aucune discussion des limitations. Les pistes futures (navigation agentique dans l'AFS, co-travail humain-IA renforcé) sont vagues et sans feuille de route concrète.</p>
+
+<p>Le papier souffre de faiblesses structurelles qui limitent sa portée scientifique.</p>
+
+<p><strong>Aucune validation.</strong> Pas de benchmark, pas d'étude utilisateur, pas de comparaison quantitative avec LangChain, AutoGen, MemGPT ou Letta. Les auteurs affirment que leur abstraction améliore la traçabilité et la gouvernance sans jamais le mesurer. La phrase « the implementation demonstrates how the architecture can be operationalised » résume le problème : démontrer qu'un code s'exécute n'est pas démontrer qu'il résout un problème mieux que les alternatives.</p>
+
+<p><strong>Exemplars insuffisants.</strong> Les deux listings de code sont des appels d'API d'initialisation. Ils ne montrent ni le fonctionnement du Constructor sous contrainte de tokens, ni le comportement de l'Updater en session multi-tours, ni la détection d'hallucinations par l'Evaluator. Les mécanismes centraux de l'architecture restent à l'état de description textuelle.</p>
+
+<p><strong>Métaphore non questionnée.</strong> L'analogie « everything is a file » est présentée comme naturellement bénéfique. Les auteurs ne discutent pas ses limites : les systèmes de fichiers Unix ont été critiqués pour leur sémantique trop pauvre (pas de typage, pas de relations), et des décennies de recherche en bases de données ont montré que tout réduire à des fichiers n'est pas toujours optimal. Cette réflexion est absente.</p>
+
+<p><strong>Conflit d'intérêts non déclaré.</strong> Trois des six auteurs travaillent chez ArcBlock, Inc., l'entreprise qui développe AIGNE. Le papier promeut directement ce framework sans le signaler comme une limitation potentielle de l'objectivité de l'évaluation (qui, de toute façon, n'existe pas).</p>
+
+<p><strong>Section limitations quasi inexistante.</strong> La conclusion mentionne des « future extensions » (navigation agentique, co-travail humain-IA renforcé) mais ne reconnaît aucune faiblesse de l'approche actuelle.</p>
 
 <h2>5. Reproductibilité</h2>
-<p>Le framework AIGNE est disponible en open-source sur GitHub (<code>github.com/AIGNE-io/aigne-framework</code>). Les extraits de code fournis sont suffisamment explicites pour reproduire les deux exemplaires. La stack technique (Node.js, SQLite, Docker pour le MCP GitHub) est standard.</p>
-<p>Cependant, la reproductibilité au sens scientifique est impossible puisqu'il n'y a aucune expérience à reproduire, aucun jeu de données, aucun protocole de mesure. On peut instancier le framework, mais on ne peut pas vérifier les prétentions du papier sur la supériorité de l'approche.</p>
+
+<p>Le framework AIGNE est publié en open-source sur GitHub (github.com/AIGNE-io/aigne-framework). Les modules mentionnés (AFS, SystemFS, FSMemory, UserProfileMemory, MCPAgent) sont référencés avec leurs API. Les deux exemplars sont reproductibles en tant que code exécutable.</p>
+
+<p>La reproductibilité scientifique est cependant sans objet : en l'absence d'expériences, il n'y a rien à reproduire au-delà de la compilation du code. Aucun jeu de données, aucun scénario de test, aucune métrique ne sont fournis pour qu'un tiers puisse évaluer indépendamment les bénéfices revendiqués.</p>
 
 <h2>6. Impact et applications</h2>
-<p>La contribution réside dans la formalisation d'un patron d'architecture pour l'ingénierie de contexte. L'idée de monter des ressources hétérogènes dans un espace de noms unifié avec métadonnées et contrôle d'accès est un patron de conception utile pour les développeurs de systèmes agentiques. Le pipeline Constructor/Updater/Evaluator offre un cadre mental structurant.</p>
-<p>L'impact scientifique est limité par l'absence de validation. Pour les praticiens, le framework AIGNE peut avoir une utilité concrète, mais le papier n'apporte pas de preuve que cette abstraction surpasse les alternatives existantes en termes de qualité de raisonnement, de maintenabilité, ou de coût opérationnel.</p>
-<p>L'intégration du protocole MCP (Model Context Protocol) comme module montable est un aspect pratique pertinent dans le contexte actuel de standardisation des interfaces outil-agent.</p>
+
+<p>L'idée d'unifier la gestion du contexte GenAI via une abstraction de système de fichiers a un intérêt conceptuel réel. La séparation entre repository persistant et fenêtre de tokens bornée reflète une tension architecturale que tous les développeurs d'agents rencontrent. Le pipeline Constructor/Updater/Evaluator formalise des étapes que les praticiens effectuent de manière ad hoc.</p>
+
+<p>L'impact reste cependant hypothétique. Sans données montrant que cette abstraction réduit les erreurs de contexte, améliore la cohérence multi-tours, ou simplifie le développement par rapport à LangChain ou AutoGen, l'adoption repose uniquement sur l'attrait de la métaphore. Le cadre « human-in-the-loop » est mentionné à plusieurs reprises mais jamais instancié concrètement — les mécanismes de vérification humaine et d'injection de connaissances tacites restent vagues.</p>
 
 <h2>7. Positionnement dans la littérature</h2>
-<p>Le papier se situe à l'intersection du paradigme LLM-as-OS (AIOS, Mei et al. 2025 ; MemGPT, Packer et al. 2024) et de l'ingénierie de contexte émergente (LangChain 2024 ; Hua et al. 2025). La référence fondatrice au système Unix de Ritchie et Thompson (1974) est pertinente mais l'exécution ne va pas au-delà de l'analogie.</p>
-<p>Comparé à MemGPT qui implémente une hiérarchie mémoire concrète avec pagination et évaluation, ou à Zep/Graphiti qui proposent des graphes de connaissance temporels avec benchmarks, ce papier reste au stade de la proposition architecturale. Les travaux de Dai et al. (2025) sur le framework intégré pour le context engineering et le ranking en cascade sont plus avancés en termes de validation empirique.</p>
-<p>La littérature sur les systèmes de fichiers virtuels et sémantiques (Plan 9, FUSE, le semantic file system de Shi et al. 2025 cité dans le papier) offrait des bases de comparaison technique que les auteurs n'exploitent pas suffisamment.</p>
 
-<h2>Tableau récapitulatif des scores de robustesse</h2>
-<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<p>Le papier se situe à l'intersection du paradigme LLM-as-OS (AIOS, Ge et al. 2023 ; Mei et al. 2025), des architectures de mémoire pour agents (MemGPT/Letta, Packer et al. 2024 ; Zep/Graphiti, Rasmussen et al. 2025), et de l'ingénierie de contexte émergente (Mei et al. 2025 ; Hua et al. 2025).</p>
+
+<p>Par rapport à AIOS, qui propose des primitives OS (scheduling, allocation de ressources) pour systèmes multi-agents, ce travail se concentre sur la couche de gestion du contexte plutôt que sur l'orchestration de processus. Par rapport à MemGPT, qui implémente une hiérarchie mémoire court-terme/long-terme, l'abstraction AFS est plus générale (elle englobe aussi les outils et les sources externes) mais moins concrète (MemGPT a des benchmarks sur la rétention conversationnelle).</p>
+
+<p>La bibliographie est récente (2023-2025) et couvre les travaux pertinents, mais reste dominée par des références à des blogs et documentations de frameworks (LangChain, Anthropic, Chroma) plutôt qu'à des publications évaluées par les pairs. Sur 30 références, environ un tiers sont des sources non académiques.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
 <thead>
 <tr style="background-color: rgba(0,0,0,0.05);">
 <th style="text-align: left;">Critère</th>
@@ -190,49 +216,49 @@
 <tr>
 <td>Question de recherche</td>
 <td style="text-align: center;">3</td>
-<td>Problème pertinent mais formulé comme patron d'architecture, pas comme question falsifiable.</td>
+<td>Problème pertinent et bien motivé, mais formulé comme une proposition architecturale sans hypothèse testable.</td>
 </tr>
 <tr>
 <td>Design expérimental</td>
 <td style="text-align: center;">1</td>
-<td>Aucune évaluation empirique. Deux exemples de code sans mesure ni comparaison.</td>
+<td>Aucun protocole expérimental. Deux snippets de code en guise de validation.</td>
 </tr>
 <tr>
 <td>Taille d'échantillon</td>
 <td style="text-align: center;">0</td>
-<td>Pas d'étude empirique, pas d'échantillon.</td>
+<td>Aucune évaluation empirique : ni benchmark, ni étude utilisateur, ni mesure de performance.</td>
 </tr>
 <tr>
 <td>Qualité des métriques</td>
 <td style="text-align: center;">0</td>
-<td>Aucune métrique définie ou mesurée.</td>
+<td>Aucune métrique définie ou mesurée. Les bénéfices (traçabilité, gouvernance) restent des assertions.</td>
 </tr>
 <tr>
 <td>Contrôle des biais</td>
 <td style="text-align: center;">1</td>
-<td>Conflit d'intérêt potentiel (4/6 auteurs affiliés à ArcBlock/AIGNE). Pas de comparaison avec les alternatives.</td>
+<td>Conflit d'intérêts non déclaré (3 auteurs chez ArcBlock/AIGNE). Pas de discussion des alternatives.</td>
 </tr>
 <tr>
 <td>Reproductibilité</td>
 <td style="text-align: center;">3</td>
-<td>Framework open-source avec extraits de code exploitables, mais rien à reproduire scientifiquement.</td>
+<td>Code open-source disponible sur GitHub. Mais rien à reproduire expérimentalement.</td>
 </tr>
 <tr>
-<td>Transparence et limitations</td>
+<td>Transparence des limitations</td>
 <td style="text-align: center;">1</td>
-<td>Aucune section dédiée aux limites. Les faiblesses de l'analogie fichier ne sont pas discutées.</td>
+<td>Les limites de l'approche ne sont pas discutées. La conclusion ne mentionne que des extensions futures.</td>
 </tr>
 <tr>
 <td>Impact et nouveauté</td>
 <td style="text-align: center;">2</td>
-<td>Patron de conception utile mais incrémental par rapport à AIOS, MemGPT et Letta.</td>
+<td>Métaphore intéressante, formalisation utile du pipeline de contexte. Mais idées proches de AIOS et MemGPT, sans démonstration d'avantage concret.</td>
 </tr>
 </tbody>
 <tfoot>
 <tr style="background-color: rgba(0,0,0,0.05);">
 <td><strong>Note globale de robustesse</strong></td>
-<td style="text-align: center;"><strong>1.5 / 5</strong></td>
-<td>Proposition architecturale sans validation empirique, portée par un framework commercial.</td>
+<td style="text-align: center;"><strong>2.0 / 5</strong></td>
+<td>Contribution conceptuelle à l'architecture des systèmes GenAI, non étayée par des preuves empiriques.</td>
 </tr>
 </tfoot>
 </table>

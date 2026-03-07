@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>No One Size Fits All: QueryBandits for LLM Hallucination Mitigation — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>No One Size Fits All: QueryBandits for LLM Hallucination Mitigation</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les hallucinations des grands modèles de langage — la production de réponses factuellement fausses — posent un problème croissant, d'autant que les modèles fermés (GPT-4o, Claude) dominent les déploiements institutionnels. Les méthodes existantes de mitigation (DoLa, TruthX, édition de représentations internes) exigent un accès aux poids du modèle, ce qui les rend inapplicables aux API propriétaires. Cho et al. proposent QueryBandits, un cadre de bandits contextuels qui agit exclusivement sur la couche d'entrée : avant chaque appel au LLM, un algorithme en ligne sélectionne la stratégie de réécriture de requête la plus prometteuse parmi cinq options (paraphrase, simplification, désambiguïsation, expansion, clarification de termes). La sélection s'appuie sur un vecteur de 17 traits linguistiques binaires extraits de la requête.</p>
+<p>Le positionnement est clair : combler le fossé entre la recherche sur les hallucinations, majoritairement centrée sur les modèles ouverts, et la réalité des déploiements commerciaux. L'approche se distingue par son caractère model-agnostic et plug-and-play, sans fine-tuning ni accès aux logits.</p>
+
+<h2>Méthodologie</h2>
+<h3>Cadre bandit et espace d'actions</h3>
+<p>Cinq stratégies de réécriture constituent les « bras » du bandit : PARAPHRASE, SIMPLIFY, DISAMBIGUATE, EXPAND et CLARIFY TERMS. Chaque requête est d'abord encodée en un vecteur binaire de 17 dimensions capturant des propriétés linguistiques (polysémie, subordination, ambiguïté, spécialisation de domaine, etc.). L'extraction de ces traits est réalisée par GPT-4o avec température 0, et les auteurs rapportent une stabilité de ~99,3 % sur 5 passes répétées pour 1 000 requêtes.</p>
+<p>Neuf algorithmes de bandits sont comparés : trois non-contextuels (EXP3, FTPL, Thompson Sampling) et six contextuels linéaires (LinUCB, LinUCB+KL, ε-FTRL, LinearEXP3, LinearFTPL, Thompson Sampling contextuel). Les baselines incluent cinq stratégies statiques (une seule réécriture appliquée uniformément) et l'absence de réécriture (NO-REWRITE).</p>
+
+<h3>Fonction de récompense</h3>
+<p>La récompense composite r<sub>t</sub> = 0,6·s<sub>llm</sub> + 0,3·s<sub>fuzz</sub> + 0,1·s<sub>bleu</sub> combine un jugement binaire LLM-as-judge, un score de similarité floue (RapidFuzz) et un score BLEU-1. Les poids (α, β, γ) = (0,6, 0,3, 0,1) sont sélectionnés sur la frontière de Pareto à 1 % d'un ensemble de validation humain de 1 000 échantillons. Le ROC-AUC moyen atteint 0,973 avec un intervalle de confiance à 95 % dont la borne inférieure dépasse 0,97 dès 150 échantillons.</p>
+<p>La validation inter-modèles (GPT-5, GPT-4.1, GPT-4o) montre un accord moyen de ~0,9 et un κ de Cohen d'environ 0,79 sur 1 000 requêtes, ce qui indique une stabilité raisonnable du signal de récompense à travers les architectures de juges.</p>
+
+<h3>Construction des requêtes</h3>
+<p>Les auteurs ne travaillent pas sur les requêtes canoniques des benchmarks. Pour chaque question, cinq perturbations lexicales sémantiquement invariantes sont générées ; seules les requêtes pour lesquelles entre une et trois perturbations induisent une réponse incorrecte de GPT-4o sont retenues. Cette sélection vise à contourner la mémorisation des benchmarks par le modèle — un phénomène documenté à la Figure 8 : sur les requêtes non perturbées, le bandit contextuel converge presque exclusivement vers NO-REWRITE.</p>
+<p>Ce choix de design est à double tranchant. Il cible précisément les requêtes « fragiles » où la réécriture a le plus de chances d'aider, mais il crée un biais de sélection qui gonfle mécaniquement les gains mesurés.</p>
+
+<h3>Protocole expérimental</h3>
+<p>L'évaluation porte sur 13 benchmarks QA couvrant 16 scénarios (SQuAD, TruthfulQA, MMLU, HotpotQA, ARC, etc.), avec ~1 050 requêtes par dataset. Le nombre total de tirages atteint ~252 000 (15 algorithmes × 16 scénarios × ~1 050 requêtes). Trois métriques complémentaires sont rapportées : la récompense ajustée à l'exploration (intégrant l'entropie de Shannon des sélections de bras, pondérée par λ = 0,1), le regret cumulatif moyen, et le taux de victoire contre la baseline NO-REWRITE.</p>
+
+<h2>Résultats principaux</h2>
+<p>Thompson Sampling contextuel (TS-C) obtient un taux de victoire de 87,5 % contre NO-REWRITE et une précision macro-moyennée de 0,766 (contre 0,681 pour la baseline, +8,5 points de pourcentage). Cet algorithme remporte 8 des 16 scénarios ; la famille LinUCB prend les 8 restants. Aucune stratégie statique ni aucun bandit non-contextuel ne gagne sur un seul dataset en précision.</p>
+<p>L'ablation du vecteur de 17 traits fait chuter le taux de victoire de TS de 87,5 % à 81,7 % et la récompense ajustée de 819,04 à 754,66. La précision macro-moyenne passe de 76,6 % à 72,2 %. Ces écarts confirment que les traits linguistiques portent un signal prédictif sur la stratégie de réécriture optimale.</p>
+<p>Un résultat négatif mérite attention : certaines stratégies statiques — EXPAND en particulier, avec un taux de victoire de 27,2 % et un regret cumulé de 315,71 — accumulent un regret supérieur à NO-REWRITE (225,85). Une réécriture systématique et non adaptative peut donc aggraver les hallucinations plutôt que les réduire.</p>
+<p>Sur TruthfulQA MC1, QueryBandits (LinUCB) porte GPT-4o de 80,7 % à 88,8 % (+8,1 pp), un gain obtenu sans modification des poids du modèle. Les méthodes internes sur Llama-2-7B-Chat restent loin derrière (TruthX : 54,2 %, DoLa : 32,2 %), bien que la comparaison soit asymétrique du fait de la différence de calibre entre les modèles.</p>
+<p>Les analyses par bras (Figure 5) révèlent des profils de sensibilité distincts : la spécialisation de domaine favorise EXPAND mais pénalise SIMPLIFY, tandis que les indices pragmatiques favorisent SIMPLIFY. Ces associations, corrélationnelles et non causales, corroborent la thèse centrale selon laquelle aucune stratégie unique ne domine uniformément.</p>
+
+<h2>Discussion et limites</h2>
+<h3>Circularité du dispositif d'évaluation</h3>
+<p>Le LLM-as-judge (GPT-4o) évalue les sorties de GPT-4o. Même si l'accord inter-modèles est élevé (κ ≈ 0,79 avec GPT-5 et GPT-4.1), cette circularité introduit un biais systémique : le juge partage les mêmes biais de surface que le modèle évalué. La validation sur 1 000 étiquettes humaines atténue partiellement ce risque, mais le ratio étiquettes humaines / étiquettes automatiques reste faible (~0,4 % du corpus total de tirages).</p>
+
+<h3>Biais de sélection des requêtes</h3>
+<p>Le filtre de perturbation — ne retenir que les requêtes où 1 à 3 perturbations lexicales cassent la réponse — crée un sous-ensemble non représentatif. Ces requêtes sont par construction fragiles aux reformulations, ce qui favorise mécaniquement les stratégies de réécriture. Les gains rapportés ne sont donc pas directement transférables à un flux de requêtes arbitraires. La Figure 8 le montre sans ambiguïté : sur les requêtes canoniques, le bandit converge vers NO-REWRITE, ce qui suggère que le bénéfice réel en production serait considérablement moindre que les +8,5 pp annoncés.</p>
+
+<h3>Indépendance des traits et absence d'interactions</h3>
+<p>Le modèle linéaire traite les 17 traits comme indépendants. Des interactions d'ordre supérieur (ambiguïté × polysémie, subordination × spécialisation) pourraient modifier la sélection optimale de bras. Les auteurs reconnaissent cette limite mais ne tentent aucune modélisation d'interactions, même exploratoire — pas de termes croisés, pas de noyau polynomial.</p>
+
+<h3>Coût et latence non mesurés</h3>
+<p>Chaque requête nécessite en moyenne ~688 tokens supplémentaires (extraction de traits + réécriture). Le surcoût financier reste modeste (~0,00035 $ par requête), mais la latence additionnelle (deux appels LLM séquentiels avant l'inférence réelle, plus le jugement post-hoc) n'est jamais mesurée. Pour des applications temps réel ou à haut débit, cette latence pourrait être prohibitive.</p>
+
+<h3>Portée de la comparaison avec les méthodes internes</h3>
+<p>La comparaison avec DoLa et TruthX (Tableau 5) souffre d'une asymétrie fondamentale : ces méthodes sont évaluées sur Llama-2-7B-Chat, un modèle radicalement plus faible que GPT-4o. L'argument selon lequel les gains sur modèles faibles « ne se transfèrent pas additivement à des baselines plus élevées » est plausible mais non démontré. Une comparaison équitable nécessiterait d'appliquer DoLa/TruthX à des modèles ouverts de calibre comparable (Llama-3-70B, Mixtral) ou d'appliquer QueryBandits à un modèle ouvert pour une confrontation directe.</p>
+
+<h3>Un seul modèle cible</h3>
+<p>Tous les résultats portent exclusivement sur GPT-4o. La transférabilité des politiques de réécriture à d'autres LLM (Claude, Gemini, Llama) n'est pas testée. Les traits linguistiques prédisent-ils la même stratégie optimale d'un modèle à l'autre ? La question reste ouverte.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les auteurs fournissent les templates de prompts pour les cinq bras de réécriture (Tableau 9), la définition complète des 17 traits linguistiques (Tableaux 10-11), les paramètres API (température 0,2, top-p 1,0, pénalités à 0), et les algorithmes détaillés en appendice avec les règles de mise à jour. Les 13 datasets utilisés sont publics avec licences documentées (Tableau 3).</p>
+<p>Deux obstacles à la reproduction subsistent. Aucun dépôt de code n'est mentionné dans l'article. La dépendance à l'API GPT-4o (version gpt-4o-2024-08-06 pour l'inférence, gpt-4o-2024-11-20 pour le tagging et le jugement) rend les résultats non reproductibles si OpenAI retire ou modifie ces versions. Le processus de perturbation des requêtes — étape critique pour la construction du jeu de données d'évaluation — manque de détails suffisants pour être reproduit indépendamment : les critères exacts de validation sémantique des perturbations ne sont pas formalisés.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport principal est pragmatique : QueryBandits propose une approche légère, sans fine-tuning, applicable aux modèles fermés — c'est-à-dire la majorité des modèles déployés en entreprise. Le coût marginal par requête (~0,035 ¢) rend le déploiement économiquement viable à l'échelle.</p>
+<p>La découverte que les bandits non-contextuels convergent vers un bras unique par dataset, tandis que les contextuels diversifient leurs choix conditionnellement aux traits, valide empiriquement la thèse centrale : la stratégie de réécriture optimale dépend de la requête. Ce résultat a des implications directes pour toute pipeline de réécriture de requête, y compris en RAG où les approches de reformulation restent largement statiques.</p>
+<p>La mise en évidence de la mémorisation des benchmarks par GPT-4o (convergence vers NO-REWRITE sur requêtes canoniques, gains substantiels sur requêtes perturbées) est un sous-produit précieux. Elle remet en question la validité des évaluations standard sur des modèles ayant potentiellement ingéré les benchmarks pendant l'entraînement — une préoccupation croissante dans la communauté.</p>
+<p>L'absence de baselines de prompting avancé (chain-of-thought, self-consistency, décomposition de requête) reste un angle mort. Ces stratégies, qui ne requièrent pas non plus d'accès aux poids, auraient constitué des compétiteurs plus exigeants que les cinq réécritures statiques testées.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>QueryBandits se situe à l'intersection de trois courants : la mitigation des hallucinations (Ji et al., 2023 ; Huang et al., 2025), la réécriture de requêtes pour le RAG (Ma et al., 2023 ; Liu &amp; Mozafari, 2024), et les bandits contextuels appliqués au NLP (Nogueira &amp; Cho, 2017). Par rapport à H4R (Watson et al., 2025a) qui estime le risque d'hallucination avant génération via des perturbations de requêtes, QueryBandits va plus loin en apprenant une politique de réécriture adaptative plutôt qu'un simple score de risque.</p>
+<p>La formalisation comme bandit contextuel plutôt que comme RL complet est bien justifiée : les interactions sont single-shot, le crédit à long terme est inutile, et la modélisation des transitions token par token est disproportionnée pour cet objectif. L'observation que GRPO et ReMax suppriment déjà le critique dans les variantes PPO pour LLM renforce cette position.</p>
+<p>La principale lacune par rapport à la littérature est l'absence de comparaison avec des approches de prompting sophistiquées. Chain-of-thought (Wei et al., 2023), self-consistency, ou des méthodes de vérification par décomposition opèrent aussi sans accès aux poids et auraient constitué des baselines bien plus exigeantes. L'article de Jeong et al. (2024) sur Adaptive-RAG, qui adapte la stratégie de retrieval à la complexité de la requête, partage une intuition similaire d'adaptation conditionnelle — une connexion que les auteurs ne discutent pas.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td><span class="score-4">4</span></td><td>Problème bien défini, motivation claire pour les modèles fermés, originalité du cadrage bandit contextuel</td></tr>
+<tr><td>Design expérimental</td><td><span class="score-4">4</span></td><td>13 benchmarks, 16 scénarios, comparaison systématique de 15 algorithmes ; protocole de perturbation ingénieux mais restrictif</td></tr>
+<tr><td>Taille d'échantillon</td><td><span class="score-4">4</span></td><td>~252 000 tirages au total, ~1 050 requêtes par dataset ; puissance statistique suffisante pour les conclusions avancées</td></tr>
+<tr><td>Qualité des métriques</td><td><span class="score-3">3</span></td><td>Récompense composite validée (ROC-AUC 0,973), mais circularité GPT-4o juge/jugé et validation humaine limitée à 1 000 échantillons sur ~252 000 tirages</td></tr>
+<tr><td>Contrôle des biais</td><td><span class="score-3">3</span></td><td>Biais de sélection des requêtes par filtre de perturbation, LLM-as-judge de même famille que le modèle évalué, un seul modèle cible testé</td></tr>
+<tr><td>Reproductibilité</td><td><span class="score-3">3</span></td><td>Algorithmes et prompts détaillés, datasets publics ; pas de code publié, dépendance à des versions API propriétaires potentiellement éphémères</td></tr>
+<tr><td>Transparence des limitations</td><td><span class="score-4">4</span></td><td>Section limitations honnête sur l'indépendance des traits, la nature corrélationnelle des poids, et le biais du juge LLM</td></tr>
+<tr><td>Impact et nouveauté</td><td><span class="score-4">4</span></td><td>Approche originale et déployable en production pour modèles fermés ; découverte collatérale de la mémorisation des benchmarks par GPT-4o</td></tr>
+</tbody>
+<tfoot>
+<tr><td><strong>Note globale</strong></td><td><strong>3,8</strong></td><td>Étude solide avec un cadre original et une évaluation à grande échelle, freinée par la circularité de l'évaluation et le biais de sélection des requêtes qui limitent la transférabilité des conclusions</td></tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

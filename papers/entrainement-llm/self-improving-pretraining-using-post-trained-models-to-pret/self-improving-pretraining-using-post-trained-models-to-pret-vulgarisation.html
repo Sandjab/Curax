@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Improving Pretraining: Using Post-Trained Models to Pretrain Better Models — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Self-Improving Pretraining: Using Post-Trained Models to Pretrain Better Models</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Les grands modèles de langage apprennent en prédisant le mot suivant sur des milliards de documents issus d'Internet. Le problème : Internet contient du contenu toxique, biaisé, factuellement faux — et le modèle absorbe tout sans discrimination. On tente ensuite de corriger ces défauts après coup, lors d'une phase de « post-entraînement ». Une équipe de chercheurs de Meta (FAIR) propose une approche radicalement différente : corriger le tir dès le pré-entraînement lui-même, en utilisant un modèle déjà mature comme superviseur en temps réel.</p>
+
+<p>Leur méthode, baptisée <em>Self-Improving Pretraining</em>, affiche des résultats frappants : jusqu'à 86,3 % de taux de victoire en qualité de génération face au pré-entraînement classique, et des améliorations relatives de 36,2 % en factualité et 18,5 % en sécurité. L'article, publié en février 2026 sur arXiv, remet en question l'architecture même du pipeline d'entraînement des LLM.</p>
+
+<h2>Le problème : des fondations contaminées</h2>
+
+<p>Le pré-entraînement standard fonctionne par prédiction du prochain token. Le modèle lit un texte et apprend à deviner ce qui suit. Cette mécanique est redoutablement efficace pour capturer la structure du langage, mais elle a un défaut fondamental : elle traite un passage Wikipedia vérifié et un post complotiste de forum avec le même signal d'apprentissage. Le modèle intègre les deux.</p>
+
+<p>La réponse habituelle consiste à filtrer les données en amont — retirer les documents de mauvaise qualité ou dangereux — puis à appliquer des phases successives de fine-tuning et d'alignement après le pré-entraînement. Deux problèmes persistent malgré cela. D'abord, le filtrage est imparfait : des contenus problématiques passent entre les mailles. Ensuite, et c'est plus subtil, retirer tout le contenu toxique empêche le modèle d'apprendre à <em>gérer</em> des entrées toxiques. Face à un prompt malveillant en production, il n'a jamais appris à rediriger la conversation vers une réponse sûre.</p>
+
+<p>Quant au post-entraînement, des travaux récents montrent que les comportements acquis pendant le pré-entraînement sont profondément ancrés. Les phases d'alignement peuvent les masquer sans les éliminer — d'où la vulnérabilité persistante aux attaques de type jailbreak. C'est un peu comme repeindre un mur fissuré : la surface semble propre, mais la fissure réapparaît au premier choc.</p>
+
+<h2>La méthode : un rédacteur en chef intégré au processus d'apprentissage</h2>
+
+<p>L'idée centrale de <em>Self-Improving Pretraining</em> tient en une phrase : utiliser un modèle déjà entraîné et aligné comme superviseur pendant le pré-entraînement d'un nouveau modèle. Concrètement, imaginez un rédacteur en chef expérimenté qui relit chaque paragraphe écrit par un journaliste débutant, propose des corrections et note la qualité du travail — le tout en temps réel, pendant la formation.</p>
+
+<h3>Le découpage prefix-suffix</h3>
+
+<p>Au lieu de prédire un seul token à la fois, la méthode redéfinit le pré-entraînement comme une tâche de génération de séquences. Le flux de données est découpé en blocs de 128 tokens. À chaque étape, le modèle en cours d'entraînement (appelé « policy ») reçoit un contexte (le prefix) et doit générer la suite (le suffix). Ce suffix peut être comparé au texte original présent dans les données.</p>
+
+<h3>Trois candidats en compétition</h3>
+
+<p>Pour chaque prefix, trois types de suites sont mis en concurrence :</p>
+
+<ul>
+<li>Le <strong>suffix original</strong>, tel qu'il apparaît dans les données de pré-entraînement. Parfois excellent, parfois médiocre ou dangereux.</li>
+<li>Une <strong>réécriture</strong> du suffix par le modèle superviseur. Si le texte original est toxique, le superviseur propose une version sûre qui reste cohérente avec le contexte. Si le texte est déjà de bonne qualité, il le laisse intact.</li>
+<li>Des <strong>rollouts</strong> : les propres tentatives du modèle en cours d'entraînement. Au début, elles sont mauvaises. Avec le temps, elles s'améliorent.</li>
+</ul>
+
+<h3>Le juge entre en scène</h3>
+
+<p>Le même modèle superviseur endosse un second rôle : celui de juge. Il évalue chaque candidat selon trois axes — qualité globale, sécurité et factualité — via des prompts dédiés. Ces scores alimentent un entraînement par apprentissage par renforcement (RL), en l'occurrence une variante appelée <em>online DPO</em>. Le juge sélectionne le meilleur candidat comme exemple positif et le pire comme exemple négatif. Le modèle apprend à produire des séquences qui ressemblent au meilleur et s'éloignent du pire.</p>
+
+<h3>Une dynamique qui évolue</h3>
+
+<p>Au démarrage, les rollouts du modèle sont médiocres. L'entraînement repose donc sur le suffix original et la réécriture du superviseur. Mais à mesure que le modèle progresse, ses propres générations deviennent compétitives. Le juge commence à les sélectionner comme meilleurs candidats. Les données de l'équipe montrent cette bascule : la proportion de rollouts choisis par le juge augmente progressivement au fil de l'entraînement. Le modèle finit par surpasser les données d'entraînement elles-mêmes.</p>
+
+<h2>Résultats clés</h2>
+
+<p>Les expériences ont été menées sur un modèle Llama 2 de 1,4 milliard de paramètres, dans deux configurations : pré-entraînement continu (à partir d'un checkpoint existant) et pré-entraînement from scratch (poids réinitialisés).</p>
+
+<h3>Qualité de génération</h3>
+
+<p>En pré-entraînement continu optimisé pour la qualité, le modèle atteint un taux de victoire de 86,3 % contre le baseline standard, évalué par un juge GPT-OSS-120B. Le score de cohérence monte à 87,9 %. Le pré-entraînement classique, lui, stagne autour de 49 % — en dessous du modèle de base non modifié.</p>
+
+<h3>Factualité</h3>
+
+<p>L'amélioration en factualité est massive. Le score moyen sur cinq benchmarks passe de 42,3 à 57,6, soit une amélioration relative de 36,2 %. Sur le benchmark HaluEval (tâche de résumé), le taux grimpe de 50 % à 84,7 %. Sur FActScore, qui mesure la précision factuelle fine, le modèle passe de 50,0 à 69,3 en évaluation pairwise.</p>
+
+<h3>Sécurité</h3>
+
+<p>Le score moyen de sécurité passe de 76,9 à 91,1 sur cinq benchmarks. Le gain le plus spectaculaire concerne les données RedPajama (contenu explicitement dangereux) : de 68,0 à 93,4. Sur RealToxicityPrompts, le score monte de 88,1 à 96,0. Ces chiffres signifient que le modèle apprend à rediriger vers des réponses sûres même lorsque le contexte d'entrée est toxique — exactement le comportement qu'un simple filtrage des données ne peut pas enseigner.</p>
+
+<h3>From scratch : des gains encore plus marqués en sécurité</h3>
+
+<p>En partant de zéro, la méthode pousse la sécurité à 97,5 % (contre 85,2 % pour le baseline), tout en multipliant par 25 le taux de victoire en qualité de génération (32,4 % contre 1,3 %). Le pré-entraînement standard sur données brutes, lui, produit des générations quasi inutilisables avec un taux de victoire de 1,3 %.</p>
+
+<h3>Un résultat contre-intuitif sur les benchmarks standards</h3>
+
+<p>Les évaluations classiques (BoolQ, PIQA, HellaSwag, ARC, MMLU) progressent aussi, passant en moyenne de 47,6 à 50,8. Ce gain peut sembler modeste, mais il est significatif : la méthode améliore la qualité, la sécurité et la factualité <em>sans sacrifier</em> les capacités de raisonnement général. Le modèle de 1,4 milliard de paramètres surpasse même le Llama 3.1 8B sur la sécurité et la qualité — un modèle six fois plus gros.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Cette recherche remet en question l'architecture séquentielle du pipeline d'entraînement des LLM, où le pré-entraînement et le post-entraînement sont des phases distinctes et indépendantes.</p>
+
+<p>La première implication concerne la <strong>boucle d'auto-amélioration</strong>. Le modèle superviseur utilisé dans cette étude provient lui-même d'un cycle précédent de pré-entraînement puis post-entraînement. La prochaine itération peut utiliser le modèle produit par <em>Self-Improving Pretraining</em> — une fois post-entraîné — comme nouveau superviseur. Chaque génération de modèle améliore potentiellement la suivante. Ce cercle vertueux pourrait atténuer le problème du « mur des données » : quand on a épuisé les données humaines disponibles, la qualité du signal d'entraînement devient plus importante que sa quantité.</p>
+
+<p>La deuxième implication touche les coûts d'alignement. Si les comportements problématiques sont corrigés pendant le pré-entraînement, le post-entraînement devient moins critique — et potentiellement moins coûteux. Les entreprises dépensent aujourd'hui des sommes considérables en annotation humaine et en RLHF pour aligner leurs modèles. Réduire cette dépendance représenterait un avantage économique concret.</p>
+
+<p>Troisième point : la gestion du contenu toxique en entrée. La méthode permet au modèle de s'entraîner sur des données dangereuses tout en apprenant à y répondre de façon sûre. Le suffix réécrit par le superviseur offre un exemple de redirection : le prefix reste toxique, mais la suite générée est appropriée. Le modèle apprend ainsi à naviguer dans des contextes difficiles plutôt qu'à les ignorer. Pour les applications en production — chatbots, assistants, modération — cette robustesse face aux entrées adversariales est déterminante.</p>
+
+<p>L'étude montre aussi que les objectifs ne sont pas interchangeables : optimiser pour la sécurité n'améliore pas la factualité, et inversement. Les développeurs devront combiner explicitement les récompenses selon les propriétés souhaitées. Les auteurs suggèrent que fusionner les signaux (qualité + sécurité + factualité) dans un seul prompt de jugement serait faisable, mais cette piste reste à valider expérimentalement.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>La question du coût computationnel est l'éléphant dans la pièce. <em>Self-Improving Pretraining</em> nécessite, à chaque étape, de générer plusieurs rollouts, d'appeler un juge et éventuellement un réécriveur. Avec 16 rollouts par exemple, le budget calcul explose par rapport à la simple prédiction du prochain token. Les auteurs reconnaissent le surcoût, mais argumentent que cette approche exploitera mieux les futures augmentations de puissance de calcul — et deviendra rentable quand les données humaines de qualité viendront à manquer.</p>
+
+<p>Le choix du juge reste un point sensible. Les expériences comparent un petit modèle Llama 3.1 8B fine-tuné et un GPT-OSS-120B utilisé directement via prompting. Le second performe mieux, mais le premier n'est pas loin. Entraîner un juge spécialisé et compact qui rivalise avec un modèle 15 fois plus gros est encourageant pour la viabilité à grande échelle.</p>
+
+<p>Une limitation non explorée : le raisonnement. Les auteurs mentionnent que leur framework pourrait intégrer du chain-of-thought — le superviseur réécrirait les suffixes pour inclure des étapes de raisonnement explicites. Mais aucune expérience ne le démontre encore. Combiner auto-amélioration du pré-entraînement et apprentissage du raisonnement constituerait une avancée majeure si les résultats suivent.</p>
+
+<p>La question de la sécurité fine mérite aussi attention. Rendre un modèle systématiquement « sûr » peut produire un effet de bord documenté : le refus excessif. Un modèle trop prudent refuse de générer le dialogue d'un personnage fictif méchant ou de discuter de sujets sensibles dans un contexte éducatif. Les auteurs évoquent l'utilisation de tokens de contrôle pour activer ou désactiver le mode sécurisé selon le contexte, mais cette piste reste théorique.</p>
+
+<p>Enfin, l'étude porte sur des modèles de 1,4 milliard de paramètres. L'extrapolation aux modèles de plusieurs dizaines ou centaines de milliards — ceux déployés en production — reste une inconnue. Le surcoût computationnel, déjà significatif à petite échelle, pourrait devenir prohibitif. Ou au contraire, les gains pourraient s'amplifier avec la taille du modèle, comme c'est souvent le cas en deep learning. La réponse viendra des prochaines expériences à grande échelle.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

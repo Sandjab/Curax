@@ -134,92 +134,100 @@
 
 <h2>1. Objectif et contexte</h2>
 
-<p>La conception d'algorithmes d'apprentissage multi-agents dans les jeux à information imparfaite repose historiquement sur l'intuition humaine et l'ajustement manuel de règles de mise à jour. Les familles algorithmiques fondatrices — Counterfactual Regret Minimization (CFR) et Policy Space Response Oracles (PSRO) — possèdent des garanties théoriques solides, mais leurs variantes les plus efficaces (DCFR, PCFR+, etc.) résultent d'heuristiques trouvées par essai-erreur dans un espace combinatoire immense.</p>
+<p>La conception d'algorithmes d'apprentissage multi-agents dans les jeux à information imparfaite repose, depuis deux décennies, sur l'intuition humaine et l'ajustement manuel de règles de mise à jour. Les familles algorithmiques Counterfactual Regret Minimization (CFR) et Policy Space Response Oracles (PSRO) disposent de fondations théoriques solides, mais leurs variantes les plus efficaces — DCFR, PCFR+, DPCFR+ — résultent d'heuristiques trouvées par essai-erreur dans un espace combinatoire immense.</p>
 
-<p>Li et al. proposent d'automatiser ce processus de conception en utilisant AlphaEvolve, un système évolutionnaire distribué qui exploite les capacités de génération de code des LLM (Gemini 2.5 Pro) pour effectuer des mutations sémantiques sur le code source des algorithmes. L'objectif : traiter la conception algorithmique comme un problème de recherche dans l'espace des programmes exécutables, plutôt que comme un simple réglage de paramètres.</p>
+<p>Li et al. proposent d'automatiser ce processus en utilisant AlphaEvolve, un système évolutionnaire distribué qui exploite les capacités de génération de code de Gemini 2.5 Pro pour effectuer des mutations sémantiques directement sur le code source des algorithmes. La conception algorithmique devient un problème de recherche dans l'espace des programmes exécutables, pas un simple réglage de paramètres.</p>
 
-<p>Deux résultats concrets émergent : VAD-CFR, une variante de CFR dotée de mécanismes d'actualisation adaptatifs à la volatilité, et SHOR-PSRO, un méta-solveur hybride qui mélange dynamiquement Optimistic Regret Matching et stratégie pure lissée par softmax.</p>
+<p>Le travail produit deux algorithmes : VAD-CFR, une variante de CFR dotée de mécanismes d'actualisation adaptatifs à la volatilité, et SHOR-PSRO, un méta-solveur hybride qui mélange dynamiquement Optimistic Regret Matching et stratégie pure lissée par softmax.</p>
 
 <h2>2. Méthodologie</h2>
 
-<h3>2.1 Cadre expérimental AlphaEvolve</h3>
+<h3>2.1 Cadre AlphaEvolve</h3>
 
-<p>Le cadre repose sur une boucle évolutionnaire où le LLM agit comme opérateur génétique intelligent. Une population de programmes est maintenue ; à chaque génération, un parent est sélectionné selon sa fitness (exploitabilité négative), son code source est présenté au LLM avec l'instruction de le modifier pour améliorer les performances, et le candidat résultant est évalué automatiquement sur un ensemble de jeux proxy.</p>
+<p>La boucle évolutionnaire maintient une population de programmes. À chaque génération, un parent est sélectionné selon sa fitness (exploitabilité négative), son code source est présenté au LLM avec l'instruction de le modifier, et le candidat résultant est évalué automatiquement sur un ensemble de jeux proxy. L'optimisation multi-objectif permet de sélectionner les parents selon différentes métriques de fitness.</p>
 
-<p>L'espace de recherche est défini par des squelettes Python explicites. Pour CFR, trois composants sont modifiables : l'accumulateur de regret, la dérivation de politique à partir du regret, et l'accumulateur de politique moyenne. Pour PSRO, deux méta-solveurs sont évolutifs : celui d'entraînement et celui d'évaluation. Cette architecture permet de représenter toutes les variantes connues comme cas particuliers.</p>
+<p>L'espace de recherche est défini par des squelettes Python explicites. Pour CFR, trois composants sont modifiables : l'accumulateur de regret, la dérivation de politique, et l'accumulateur de politique moyenne. Pour PSRO, deux méta-solveurs sont évolutifs : entraînement et évaluation. Cette architecture englobe toutes les variantes connues comme cas particuliers.</p>
 
 <h3>2.2 Protocole d'évaluation</h3>
 
-<p>Le protocole sépare strictement jeux d'entraînement et jeux de test. L'entraînement AlphaEvolve utilise quatre jeux : Kuhn Poker (3 joueurs), Leduc Poker (2 joueurs), Goofspiel (4 cartes) et Liar's Dice (5 faces). L'évaluation se fait sur des variantes plus grandes et plus complexes de ces mêmes familles, ainsi que sur un ensemble étendu de 11 jeux au total.</p>
+<p>Le protocole sépare strictement jeux d'entraînement et jeux de test. Quatre jeux d'entraînement : Kuhn Poker (3 joueurs), Leduc Poker (2 joueurs), Goofspiel (4 cartes), Liar's Dice (5 faces). L'évaluation porte sur des variantes plus grandes de ces mêmes familles, avec un ensemble étendu de 11 jeux au total.</p>
 
-<p>La métrique principale est l'exploitabilité exacte, calculée par traversée complète de l'arbre de jeu. Pour CFR, l'horizon est fixé à 1000 itérations ; pour PSRO, à 100 itérations avec un oracle de meilleure réponse exact. L'absence d'approximation Monte Carlo élimine le bruit stochastique de l'évaluation.</p>
+<p>La métrique est l'exploitabilité exacte, calculée par traversée complète de l'arbre de jeu. Pour CFR, l'horizon est de 1000 itérations ; pour PSRO, 100 itérations avec un oracle de meilleure réponse exact par itération de valeur. L'absence d'approximation Monte Carlo élimine le bruit stochastique.</p>
 
 <h3>2.3 Baselines</h3>
 
-<p>Les comparaisons incluent sept variantes de CFR (standard, CFR+, LCFR, DCFR, PCFR+, DPCFR+, HS-PCFR+) et cinq méta-solveurs PSRO (Uniform, Nash, AlphaRank, PRD, Regret Matching). Ce panel couvre l'état de l'art publié jusqu'en 2026.</p>
+<p>Sept variantes de CFR sont comparées : standard, CFR+, LCFR, DCFR, PCFR+, DPCFR+, HS-PCFR+(30). Cinq méta-solveurs PSRO : Uniform, Nash, AlphaRank, PRD, Regret Matching. Le panel couvre l'état de l'art publié jusqu'en 2026. CFR+ sert de programme semence pour la recherche CFR, Uniform pour PSRO.</p>
 
 <h2>3. Résultats principaux</h2>
 
 <h3>3.1 VAD-CFR</h3>
 
-<p>L'algorithme découvert abandonne l'actualisation statique au profit de trois mécanismes inattendus :</p>
+<p>L'algorithme découvert abandonne l'actualisation statique au profit de trois mécanismes :</p>
 <ul>
-<li>Un <strong>actualisation adaptative à la volatilité</strong> qui ajuste dynamiquement les facteurs d'oubli selon une moyenne mobile exponentielle de la magnitude du regret instantané. Quand la stratégie fluctue, l'algorithme oublie plus vite l'historique instable.</li>
-<li>Un <strong>boost asymétrique instantané</strong> qui amplifie les regrets positifs d'un facteur 1.1, accélérant l'exploitation des déviations bénéfiques sans attendre leur accumulation.</li>
-<li>Un <strong>démarrage à chaud rigide</strong> qui reporte le début du moyennage de politique à l'itération 500, pondéré ensuite par la magnitude du regret. Le LLM a généré ce seuil sans connaître l'horizon fixe de 1000 itérations — un résultat frappant.</li>
+<li>Une actualisation adaptative à la volatilité qui ajuste dynamiquement les facteurs d'oubli selon une EWMA de la magnitude du regret instantané. Quand la stratégie fluctue, l'historique instable est oublié plus rapidement.</li>
+<li>Un boost asymétrique instantané : les regrets positifs sont amplifiés d'un facteur 1.1, accélérant l'exploitation des déviations bénéfiques sans attendre leur accumulation.</li>
+<li>Un démarrage à chaud rigide : le moyennage de politique est reporté à l'itération 500, puis pondéré par la magnitude du regret. Le LLM a fixé ce seuil sans connaître l'horizon de 1000 itérations.</li>
 </ul>
 
-<p>Sur les jeux d'entraînement, VAD-CFR atteint une exploitabilité significativement inférieure à toutes les baselines. En généralisation, l'algorithme égale ou surpasse les performances état de l'art sur 10 des 11 jeux testés, avec le Kuhn Poker à 4 joueurs comme seule exception.</p>
+<p>VAD-CFR atteint une exploitabilité inférieure à toutes les baselines sur les jeux d'entraînement. En généralisation, l'algorithme égale ou surpasse l'état de l'art sur 10 des 11 jeux. Le Kuhn Poker à 4 joueurs reste la seule exception.</p>
 
 <h3>3.2 SHOR-PSRO</h3>
 
-<p>Le méta-solveur découvert mélange linéairement deux composantes : Optimistic Regret Matching (stabilité) et une distribution de Boltzmann sur les stratégies pures (exploitation agressive). Le facteur de mélange décroît de 0.3 à 0.05 au fil des itérations PSRO, automatisant la transition de la diversité populationnelle vers la convergence vers l'équilibre.</p>
+<p>Le méta-solveur mélange linéairement Optimistic Regret Matching (stabilité) et une distribution de Boltzmann sur les stratégies pures (exploitation). Le facteur de mélange décroît de 0.3 à 0.05 au fil des itérations, automatisant la transition de la diversité populationnelle vers la convergence vers l'équilibre.</p>
 
-<p>Un bonus de diversité explicite (décroissant de 0.05 à 0.001) garantit l'expansion précoce du graphe de jeu. L'asymétrie entre solveur d'entraînement (retourne la stratégie moyenne) et solveur d'évaluation (retourne le dernier itéré, paramètres fixes) est une découverte du processus évolutionnaire, pas une conception humaine.</p>
+<p>Un bonus de diversité explicite, décroissant de 0.05 à 0.001, garantit l'expansion précoce du graphe de jeu. L'asymétrie entre solveur d'entraînement (stratégie moyenne) et solveur d'évaluation (dernier itéré, paramètres fixes) est une découverte du processus évolutionnaire. SHOR-PSRO égale ou dépasse l'état de l'art sur 8 des 11 jeux.</p>
 
-<p>SHOR-PSRO égale ou dépasse les performances état de l'art sur 8 des 11 jeux. L'avantage est particulièrement net sur Liar's Dice (6 faces), où les solveurs statiques peinent face au facteur de branchement élargi.</p>
+<h3>3.3 AOD-CFR (appendice)</h3>
+
+<p>Une variante alternative, découverte sur un ensemble d'entraînement différent (2 joueurs au lieu de 3 pour Kuhn, 4 faces au lieu de 5 pour Liar's Dice), utilise des mécanismes plus conventionnels : actualisation linéaire des facteurs de discount, mise à l'échelle asymétrique du regret instantané selon le signe, optimisme basé sur une EMA des regrets cumulés, et moyennage polynomial adaptatif. Ses performances restent compétitives.</p>
 
 <h2>4. Discussion et limites</h2>
 
-<h3>4.1 Limites de l'évaluation</h3>
+<h3>4.1 Restriction aux petits jeux</h3>
 
-<p>Tous les jeux testés sont de taille petite à moyenne — quelques milliers à quelques millions d'états. L'exploitabilité exacte, calculable uniquement par traversée complète de l'arbre, impose cette contrainte. La capacité de VAD-CFR et SHOR-PSRO à s'adapter à des jeux de grande échelle (poker no-limit complet, StarCraft) reste inconnue. Cette limitation est structurelle : les jeux proxy utilisés pour l'entraînement AlphaEvolve doivent permettre une évaluation rapide et exacte.</p>
+<p>Tous les jeux testés sont de taille petite à moyenne — quelques milliers à quelques millions d'états. L'exploitabilité exacte impose la traversée complète de l'arbre, ce qui exclut les jeux de grande échelle. La capacité de VAD-CFR et SHOR-PSRO à fonctionner sur le poker no-limit complet ou StarCraft reste inconnue. Cette contrainte est structurelle : les jeux proxy d'AlphaEvolve doivent permettre une évaluation rapide.</p>
 
-<p>Le coût computationnel de la recherche AlphaEvolve n'est jamais mentionné. Combien de générations évolutionnaires, combien d'appels LLM, combien de GPU-heures ? Cette omission empêche toute évaluation du rapport coût-bénéfice de la découverte automatique par rapport à la conception manuelle.</p>
+<h3>4.2 Coût computationnel absent</h3>
 
-<h3>4.2 Sensibilité au choix des jeux d'entraînement</h3>
+<p>Le nombre de générations évolutionnaires, d'appels LLM et de GPU-heures n'est jamais mentionné. Cette omission empêche d'évaluer le rapport coût-bénéfice de la découverte automatique face à la conception manuelle. Un chercheur ne peut pas estimer si cette approche est praticable hors de l'infrastructure Google DeepMind.</p>
 
-<p>L'existence d'AOD-CFR (Appendice 7.2), une variante différente découverte sur un autre ensemble de jeux d'entraînement (2 joueurs au lieu de 3 pour Kuhn Poker, 4 faces au lieu de 5 pour Liar's Dice), démontre que le processus de découverte est sensible au choix des jeux proxy. Les auteurs présentent cela comme une richesse de l'espace de recherche, mais l'absence de critères pour sélectionner l'ensemble d'entraînement optimal fragilise la méthode.</p>
+<h3>4.3 Sensibilité au choix des jeux d'entraînement</h3>
 
-<h3>4.3 Interprétabilité et garanties théoriques</h3>
+<p>L'existence d'AOD-CFR, obtenu sur un ensemble d'entraînement légèrement différent, démontre que les résultats dépendent du choix des jeux proxy. Aucun critère de sélection de cet ensemble n'est proposé, et aucune ablation systématique ne quantifie cette sensibilité.</p>
 
-<p>Les algorithmes découverts sont interprétables — le code source est lisible et les mécanismes identifiables. Cependant, aucune analyse de convergence théorique n'est fournie. VAD-CFR utilise un seuil rigide (itération 500), un facteur de boost (1.1) et un plafond de regret négatif (-20.0) dont l'optimalité n'est ni justifiée ni caractérisée. Ces constantes semblent ajustées implicitement par le processus évolutionnaire aux jeux d'entraînement.</p>
+<h3>4.4 Absence de garanties théoriques</h3>
 
-<h3>4.4 Programme initial et biais de recherche</h3>
+<p>Aucune analyse de convergence n'accompagne les algorithmes découverts. VAD-CFR contient des constantes (seuil 500, boost 1.1, plafond -20.0) dont l'optimalité n'est ni justifiée ni caractérisée au-delà des benchmarks empiriques. Ces valeurs sont ajustées implicitement par le processus évolutionnaire aux jeux d'entraînement.</p>
 
-<p>VAD-CFR est initialisé à partir de CFR+, SHOR-PSRO à partir du solveur Uniform. Le choix du programme semence influence le bassin d'attraction de la recherche évolutionnaire. Aucune ablation ne compare les résultats obtenus avec différents programmes initiaux.</p>
+<h3>4.5 Biais de programme semence</h3>
+
+<p>VAD-CFR est initialisé à partir de CFR+, SHOR-PSRO à partir du solveur Uniform. Le choix du programme initial influence le bassin d'attraction de la recherche. Aucune ablation ne compare les résultats avec différentes semences.</p>
+
+<h3>4.6 Absence d'intervalles de confiance</h3>
+
+<p>Les courbes d'exploitabilité ne comportent ni barres d'erreur ni intervalles de confiance. L'exploitabilité est certes déterministe pour un algorithme fixé sur un jeu fixé, mais la variabilité du processus de découverte (stochasticité des mutations LLM, sélection évolutionnaire) n'est pas quantifiée. Un seul run de découverte est rapporté par paradigme.</p>
 
 <h2>5. Reproductibilité</h2>
 
-<p>Le code source complet des algorithmes découverts (VAD-CFR, AOD-CFR, SHOR-PSRO) est fourni dans les appendices. L'implémentation utilise OpenSpiel, un framework open source bien documenté. Ces deux éléments facilitent la reproduction des résultats d'évaluation.</p>
+<p>Le code source complet des trois algorithmes découverts (VAD-CFR, AOD-CFR, SHOR-PSRO) est fourni dans les appendices, sous forme de classes Python directement intégrables dans OpenSpiel. Un chercheur peut reproduire les évaluations d'exploitabilité sans difficulté.</p>
 
-<p>En revanche, la reproduction du processus de découverte est impossible en l'état. AlphaEvolve est un système propriétaire de Google DeepMind, adossé à Gemini 2.5 Pro. Ni l'infrastructure distribuée, ni les prompts exacts utilisés pour les mutations, ni le nombre de candidats évalués ne sont entièrement spécifiés (les prompts de haut niveau sont fournis en appendice, mais pas les détails du processus évolutionnaire). Un chercheur externe peut vérifier les résultats des algorithmes découverts, mais pas reproduire la découverte elle-même.</p>
+<p>La reproduction du processus de découverte est en revanche impossible. AlphaEvolve est un système propriétaire de Google DeepMind, adossé à Gemini 2.5 Pro. Les prompts de haut niveau sont fournis (Listings 8 et 9), mais l'infrastructure distribuée, le nombre de candidats évalués, et les détails du processus de sélection ne sont pas spécifiés. Un chercheur externe peut vérifier les algorithmes, pas les redécouvrir.</p>
 
 <h2>6. Impact et applications</h2>
 
-<p>L'apport principal est méthodologique : démontrer que l'évolution symbolique de code par LLM peut produire des algorithmes multi-agents performants et non triviaux. Les mécanismes découverts — actualisation adaptative à la volatilité, boost asymétrique instantané, démarrage à chaud — sont des idées que des chercheurs humains auraient pu concevoir individuellement, mais leur combinaison spécifique semble hors de portée de l'intuition.</p>
+<p>L'apport principal est méthodologique. L'évolution symbolique de code par LLM produit des algorithmes multi-agents performants dont les mécanismes — actualisation adaptative à la volatilité, boost asymétrique, démarrage à chaud — sont des idées que des chercheurs humains auraient pu concevoir séparément. Leur combinaison spécifique échappe à l'intuition.</p>
 
-<p>L'approche est transposable à d'autres familles algorithmiques au-delà des jeux. Toute boucle d'apprentissage dont les règles de mise à jour sont exprimables en code Python pourrait bénéficier de ce type de recherche évolutionnaire, à condition de disposer d'une métrique d'évaluation automatisable.</p>
+<p>Le cadre est transposable à toute boucle d'apprentissage dont les règles de mise à jour sont exprimables en code et évaluables automatiquement. La limite pratique reste l'accès à AlphaEvolve et aux ressources de calcul. Sans alternative open source, l'impact sera concentré chez les acteurs disposant d'une infrastructure LLM à grande échelle.</p>
 
-<p>La limite pratique reste l'accès à AlphaEvolve et aux ressources de calcul associées. Sans démocratisation de l'outil (ou publication d'une alternative open source), l'impact restera concentré chez les acteurs disposant d'une infrastructure LLM à grande échelle.</p>
+<p>Les algorithmes découverts eux-mêmes sont directement utilisables par la communauté, indépendamment de l'outil de découverte. VAD-CFR et SHOR-PSRO peuvent remplacer leurs prédécesseurs dans toute implémentation OpenSpiel existante.</p>
 
 <h2>7. Positionnement dans la littérature</h2>
 
-<p>Ce travail s'inscrit dans la lignée d'AutoML-Zero (Real et al., 2020), qui avait montré que des algorithmes de ML complets pouvaient émerger par évolution à partir d'opérations mathématiques élémentaires. La différence clé : AlphaEvolve utilise un LLM comme opérateur de mutation, ce qui permet des sauts sémantiques impossibles avec la programmation génétique classique. Les modifications ne sont plus syntaxiques (permutation de sous-arbres) mais conceptuelles (introduction de nouvelles structures de contrôle, injection d'opérations symboliques).</p>
+<p>Ce travail prolonge AutoML-Zero (Real et al., 2020), qui avait montré que des algorithmes de ML complets pouvaient émerger par évolution à partir d'opérations mathématiques élémentaires. La différence : AlphaEvolve utilise un LLM comme opérateur de mutation, autorisant des sauts sémantiques impossibles avec la programmation génétique classique. Les modifications ne sont plus syntaxiques mais conceptuelles — introduction de structures de contrôle, injection d'opérations symboliques nouvelles.</p>
 
-<p>Par rapport aux approches neuronales de méta-apprentissage appliquées au MARL (Feng et al., 2021 ; Xu et al., 2022), l'avantage principal est l'interprétabilité : le résultat est du code lisible, pas un réseau opaque. Par rapport à Sychrovsky et al. (2024) qui méta-apprennent la minimisation de regret dans un cadre no-regret, l'espace de recherche est ici beaucoup plus large — l'ensemble des programmes Python valides, pas un espace paramétrique prédéfini.</p>
+<p>Par rapport aux approches neuronales de méta-apprentissage pour le MARL (Feng et al., 2021 ; Xu et al., 2022), l'avantage est l'interprétabilité : le résultat est du code lisible. Par rapport à Sychrovský et al. (2024), qui méta-apprennent la minimisation de regret dans un cadre no-regret, l'espace de recherche est ici l'ensemble des programmes Python valides, pas un espace paramétrique prédéfini.</p>
 
-<p>La concurrent la plus directe est HS-PCFR+ (Zhang et al., 2026), qui optimise des schémas d'hyperparamètres pour PCFR+ de manière automatisée mais reste dans un espace de recherche paramétrique. VAD-CFR opère dans un espace strictement plus expressif et atteint des performances supérieures sur la majorité des benchmarks.</p>
+<p>La concurrente directe est HS-PCFR+ (Zhang et al., 2026), qui optimise des schémas d'hyperparamètres pour PCFR+ de manière automatisée mais reste dans un espace paramétrique. VAD-CFR opère dans un espace strictement plus expressif et atteint des performances supérieures sur la majorité des benchmarks. Cette hiérarchie — recherche paramétrique &lt; recherche symbolique guidée par LLM — constitue un résultat empirique en soi.</p>
 
 <h2>Tableau récapitulatif des scores de robustesse</h2>
 
@@ -228,18 +236,18 @@
 <tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
 </thead>
 <tbody>
-<tr><td>Question de recherche</td><td>4</td><td>Formulation claire, originale et bien motivée ; automatiser la conception d'algorithmes multi-agents via évolution LLM</td></tr>
-<tr><td>Design expérimental</td><td>4</td><td>Séparation train/test rigoureuse, deux paradigmes distincts, exploitabilité exacte ; mais limité aux petits jeux</td></tr>
-<tr><td>Taille d'échantillon</td><td>3</td><td>4 jeux d'entraînement, 11 de test — diversité correcte mais restreinte aux jeux tabulaires de petite/moyenne taille</td></tr>
-<tr><td>Qualité des métriques</td><td>4</td><td>Exploitabilité exacte, métrique standard en théorie des jeux ; absence de mesure de coût computationnel</td></tr>
-<tr><td>Contrôle des biais</td><td>3</td><td>Split train/test solide mais sensibilité au choix des jeux proxy démontrée (AOD-CFR vs VAD-CFR) sans ablation systématique</td></tr>
-<tr><td>Reproductibilité</td><td>2</td><td>Code des algorithmes découverts publié, OpenSpiel utilisé ; mais AlphaEvolve et Gemini 2.5 Pro sont propriétaires</td></tr>
-<tr><td>Transparence / Limitations</td><td>3</td><td>Limites aux petits jeux reconnues, variante alternative présentée ; coût de recherche et sensibilité aux semences non discutés</td></tr>
-<tr><td>Impact / Nouveauté</td><td>4</td><td>Approche originale combinant évolution symbolique et LLM ; mécanismes découverts non intuitifs et performants sur la majorité des benchmarks</td></tr>
+<tr><td>Question de recherche</td><td><span class="score-4">4</span></td><td>Formulation claire et originale : automatiser la conception d'algorithmes multi-agents via évolution symbolique par LLM, au-delà du simple réglage paramétrique</td></tr>
+<tr><td>Design expérimental</td><td><span class="score-4">4</span></td><td>Séparation train/test rigoureuse, deux paradigmes distincts (CFR et PSRO), exploitabilité exacte ; restreint aux petits jeux par construction</td></tr>
+<tr><td>Taille d'échantillon</td><td><span class="score-3">3</span></td><td>4 jeux d'entraînement, 11 jeux de test couvrant 4 familles ; diversité correcte mais limitée aux jeux tabulaires de petite et moyenne taille</td></tr>
+<tr><td>Qualité des métriques</td><td><span class="score-4">4</span></td><td>Exploitabilité exacte par traversée complète de l'arbre — métrique standard et sans bruit ; aucune mesure de coût computationnel</td></tr>
+<tr><td>Contrôle des biais</td><td><span class="score-3">3</span></td><td>Split train/test solide ; sensibilité au choix des jeux proxy et du programme semence démontrée mais non quantifiée systématiquement</td></tr>
+<tr><td>Reproductibilité</td><td><span class="score-2">2</span></td><td>Code des algorithmes découverts publié, OpenSpiel utilisé ; AlphaEvolve et Gemini 2.5 Pro sont propriétaires, la découverte n'est pas reproductible</td></tr>
+<tr><td>Transparence / Limitations</td><td><span class="score-3">3</span></td><td>Limite aux petits jeux reconnue, variante alternative (AOD-CFR) présentée ; coût de recherche et sensibilité aux semences non discutés</td></tr>
+<tr><td>Impact / Nouveauté</td><td><span class="score-4">4</span></td><td>Combinaison originale d'évolution symbolique et LLM appliquée à la théorie des jeux ; mécanismes découverts non intuitifs et performants sur 10/11 et 8/11 jeux</td></tr>
 </tbody>
 </table>
 
-<p><strong>Note globale de robustesse : 3.5 / 5</strong> — Travail méthodologiquement solide sur l'évaluation des algorithmes découverts, avec une contribution conceptuelle réelle. Les faiblesses principales sont le caractère propriétaire de l'outil de découverte, l'absence d'analyse de coût computationnel, et l'évaluation restreinte aux jeux de petite taille.</p>
+<p><strong>Note globale de robustesse : 3.5 / 5</strong> — Travail méthodologiquement solide sur l'évaluation des algorithmes découverts, avec une contribution conceptuelle réelle à l'intersection de la méta-optimisation et de la théorie des jeux. Les faiblesses principales : le caractère propriétaire de l'outil de découverte interdit la reproduction du processus central, l'absence de données sur le coût computationnel empêche l'analyse coût-bénéfice, et l'évaluation reste confinée aux jeux tabulaires de petite taille.</p>
   </div>
   <script>
   (function(){

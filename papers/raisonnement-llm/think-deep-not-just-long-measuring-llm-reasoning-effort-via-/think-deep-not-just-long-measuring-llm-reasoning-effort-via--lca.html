@@ -129,69 +129,69 @@
   <div class="companion-content">
     <h2>Objectif et contexte</h2>
 
-<p>Les modèles de langage améliorent leurs performances de raisonnement en générant des chaînes de pensée (Chain-of-Thought) plus longues. Pourtant, la longueur brute des séquences générées corrèle mal — voire négativement — avec la qualité des réponses. Chen et al. proposent le <em>deep-thinking ratio</em> (DTR), une mesure de l'effort de raisonnement fondée sur l'évolution interne des prédictions à travers les couches du modèle, plutôt que sur le nombre de tokens produits.</p>
+<p>Les modèles de langage raisonneurs (o1, DeepSeek-R1, Qwen3) génèrent des chaînes de pensée de plus en plus longues pour résoudre des problèmes complexes. La longueur brute de ces séquences corrèle pourtant mal — voire négativement — avec la qualité des réponses. Chen et al. introduisent le <em>deep-thinking ratio</em> (DTR), une métrique qui quantifie l'effort de raisonnement en examinant comment chaque token se forme à travers les couches internes du transformeur, plutôt qu'en comptant les tokens produits.</p>
 
-<p>L'intuition centrale : un token dont la distribution prédictive se stabilise dès les premières couches du transformeur mobilise peu de calcul. À l'inverse, un token dont la prédiction continue d'évoluer jusqu'aux couches profondes traduit un effort computationnel réel. Le DTR mesure la proportion de ces tokens « à pensée profonde » dans une séquence.</p>
+<p>L'idée repose sur une observation simple : un token dont la distribution prédictive se fige dès les premières couches mobilise peu de calcul interne. Un token dont la prédiction continue d'évoluer jusqu'aux couches profondes traduit, lui, un travail computationnel soutenu. Le DTR mesure la fraction de ces tokens « à pensée profonde » dans une séquence générée.</p>
 
 <h2>Méthodologie</h2>
 
-<p>Le protocole repose sur la projection des états cachés intermédiaires dans l'espace du vocabulaire via la matrice d'unembedding du modèle. Pour chaque token généré et chaque couche intermédiaire, la divergence de Jensen-Shannon (JSD) entre la distribution de la couche courante et celle de la couche finale est calculée. Un token est classé « deep-thinking » si sa distribution ne converge vers la distribution finale qu'au-delà d'un seuil de profondeur fixé (ρ = 0.85, soit les 15 % de couches les plus profondes), avec un seuil de convergence g = 0.5.</p>
+<p>Le protocole exploite la projection des états cachés intermédiaires dans l'espace du vocabulaire via la matrice d'unembedding du modèle — une technique connue sous le nom de « logit lens » (Nostalgebraist, 2020). Pour chaque token généré à chaque couche intermédiaire, la divergence de Jensen-Shannon (JSD) entre la distribution courante et celle de la couche finale est calculée. Un token est classé « deep-thinking » lorsque sa distribution ne converge qu'au-delà d'un seuil de profondeur fixé à ρ = 0.85 (les 15 % de couches les plus profondes), avec un seuil de convergence g = 0.5.</p>
 
-<p>Huit variantes de modèles issus de trois familles sont évaluées : GPT-OSS (20B et 120B, à trois niveaux de raisonnement), DeepSeek-R1-70B et Qwen3-30B-Thinking. Quatre benchmarks de raisonnement mathématique et scientifique servent de terrain d'évaluation : AIME 2024, AIME 2025, HMMT 2025 et GPQA-Diamond. Pour chaque question, 25 réponses sont échantillonnées, et les statistiques sont moyennées sur 30 graines aléatoires.</p>
+<p>Huit variantes de modèles issus de trois familles sont évaluées : GPT-OSS-20B et GPT-OSS-120B (chacun à trois niveaux de raisonnement low/medium/high), DeepSeek-R1-70B (distillé depuis Llama-3.3-70B) et Qwen3-30B-Thinking. Quatre benchmarks de raisonnement servent de terrain d'évaluation : AIME 2024 (30 questions), AIME 2025 (30 questions), HMMT 2025, et GPQA-Diamond (~198 questions de niveau doctoral en sciences). Pour chaque question, 25 réponses sont échantillonnées, et les statistiques sont moyennées sur 30 graines aléatoires.</p>
 
-<p>Le DTR est comparé à cinq métriques de référence : le nombre de tokens (et son inverse), la log-probabilité moyenne, la perplexité négative, l'entropie négative et le Self-Certainty. La corrélation de Pearson entre chaque métrique et la précision des réponses sert de critère principal.</p>
+<p>Le DTR est confronté à cinq métriques de référence : le nombre de tokens (et son inverse), la log-probabilité moyenne, la perplexité négative, l'entropie négative et le Self-Certainty (Kang et al., 2025). La corrélation de Pearson par bins de quantiles (5 bins) entre chaque métrique et la précision sert de critère d'évaluation principal.</p>
 
-<h3>Think@n</h3>
+<h3>Think@n : stratégie de scaling à l'inférence</h3>
 
-<p>Les auteurs introduisent aussi Think@n, une stratégie de scaling à l'inférence. Parmi n réponses échantillonnées en parallèle, seules celles dont le DTR estimé sur un préfixe court (50 tokens) dépasse un seuil sont conservées pour un vote majoritaire. Les réponses peu prometteuses sont arrêtées précocement, réduisant le coût d'inférence.</p>
+<p>Les auteurs exploitent le DTR pour proposer Think@n. Parmi n = 48 réponses échantillonnées en parallèle, le DTR est estimé sur un préfixe court (50 tokens). Les 50 % de réponses ayant le DTR le plus élevé sont conservées pour un vote majoritaire ; les autres sont interrompues. Cette sélection précoce réduit le coût d'inférence tout en ciblant les séquences les plus prometteuses.</p>
 
 <h2>Résultats principaux</h2>
 
-<p>Le DTR atteint une corrélation moyenne avec la précision de r = 0.683 sur les 32 configurations modèle-benchmark testées. Le nombre de tokens brut affiche r = −0.594 — une corrélation négative cohérente avec la littérature sur l'« overthinking ». Les métriques de confiance (log-probabilité, entropie, Self-Certainty) se situent entre r = 0.219 et r = 0.605, avec une variabilité notable selon les modèles.</p>
+<p>Le DTR atteint une corrélation moyenne avec la précision de r = 0.683 sur les 32 configurations modèle × benchmark testées (Table 1). Le nombre de tokens brut affiche r = −0.594, cohérent avec la littérature sur l'overthinking. Les métriques de confiance oscillent entre r = 0.219 (perplexité négative) et r = 0.605 (Self-Certainty), avec une forte variabilité selon les configurations.</p>
 
-<p>Le DTR ne produit que 2 corrélations négatives sur 32 configurations, contre des résultats hétérogènes pour les métriques concurrentes. Sa stabilité inter-modèles et inter-tâches représente son principal avantage.</p>
+<p>Le DTR ne produit que 2 corrélations négatives sur 32 configurations. Aucune autre métrique n'approche cette stabilité. Self-Certainty, le concurrent le plus proche, affiche 5 corrélations négatives et des effondrements ponctuels (r = −0.532 sur DeepSeek-R1-70B pour GPQA-D).</p>
 
-<p>Think@n égale ou dépasse la self-consistency standard (Cons@n) sur les quatre benchmarks, tout en réduisant le coût d'inférence d'environ 50 %. Sur AIME 2025 avec GPT-OSS-120B-medium, Think@n atteint 94.7 % de précision contre 92.7 % pour Cons@n, avec un budget tokens divisé par deux (155k contre 308k).</p>
+<p>Think@n égale ou dépasse la self-consistency (Cons@n) sur les quatre benchmarks tout en réduisant le coût d'environ 50 %. Sur AIME 2025 avec GPT-OSS-120B-medium : 94.7 % de précision contre 92.7 % pour Cons@n, avec un budget divisé par deux (155k tokens contre 308k). Les résultats se confirment sur Qwen3-4B-Thinking, un modèle bien plus petit.</p>
 
-<p>Un préfixe de seulement 50 tokens suffit pour estimer le DTR de façon fiable. Des préfixes plus longs (100, 500, 1000) ne font pas mieux, voire dégradent légèrement les résultats — un résultat contre-intuitif qui renforce l'intérêt pratique de la méthode.</p>
+<p>Un résultat contre-intuitif : un préfixe de 50 tokens suffit pour estimer le DTR de façon fiable. Des préfixes plus longs (100, 500, 1000, 2000) n'améliorent pas la performance et peuvent même la dégrader (Table 3). Les premiers tokens d'une séquence de raisonnement portent déjà un signal discriminant sur la qualité globale de la réponse.</p>
 
 <h2>Discussion et limites</h2>
 
-<p>Le DTR exige un accès complet aux états cachés intermédiaires du modèle. Cette contrainte d'accès boîte blanche exclut son utilisation avec les API commerciales fermées (GPT-4, Claude), ce qui restreint sa portée pratique aux environnements de recherche. Les auteurs ne discutent pas cette limitation.</p>
+<p>Le DTR exige un accès complet aux états cachés intermédiaires du modèle — contrainte de type boîte blanche qui exclut toute utilisation avec des API fermées (GPT-4o, Claude, Gemini). Cette restriction cantonne la méthode aux environnements de recherche disposant des poids du modèle. Les auteurs ne discutent pas cette limitation, alors qu'elle constitue l'obstacle principal à l'adoption.</p>
 
-<p>Les benchmarks sélectionnés couvrent exclusivement le raisonnement mathématique et scientifique. Rien ne garantit que le DTR conserve sa corrélation avec la précision sur des tâches de raisonnement de sens commun, de génération créative ou de compréhension linguistique. La généralisation au-delà du domaine STEM reste une hypothèse non testée.</p>
+<p>Les quatre benchmarks couvrent exclusivement le raisonnement mathématique et scientifique. La généralisation à des tâches de raisonnement de sens commun, de planification ou de compréhension linguistique n'est ni testée ni discutée. Le DTR pourrait ne capturer qu'un signal spécifique au raisonnement formel.</p>
 
-<p>Les hyperparamètres g = 0.5 et ρ = 0.85 sont sélectionnés sur les mêmes données que celles servant à l'évaluation. L'analyse de sensibilité (Section 3.2) ne porte que sur un seul modèle (GPT-OSS-20B-high) et un seul benchmark (GPQA-D). Un protocole de validation croisée — ou à défaut une analyse sur plusieurs configurations — aurait renforcé la crédibilité de ces choix.</p>
+<p>Les hyperparamètres g = 0.5 et ρ = 0.85 sont sélectionnés et évalués sur les mêmes données. L'analyse de sensibilité (Section 3.2) ne porte que sur un unique couple modèle-benchmark (GPT-OSS-20B-high sur GPQA-D). Un sweep sur plusieurs configurations aurait consolidé ces choix. Le risque de surapprentissage des hyperparamètres aux données d'évaluation reste présent.</p>
 
-<p>Le DTR n'est pas comparable entre modèles ou entre niveaux de raisonnement d'un même modèle (la Section B de l'appendice le reconnaît). Les modèles à raisonnement « high » affichent un DTR plus faible que les modèles « low », tout en étant plus précis. Cette non-comparabilité réduit l'utilité du DTR comme métrique universelle : il ne fonctionne qu'en intra-modèle, intra-configuration.</p>
+<p>Le DTR n'est pas comparable entre modèles ni entre niveaux de raisonnement d'un même modèle. L'appendice B montre que les configurations « high » (plus précises) affichent un DTR plus faible que les configurations « low ». L'explication proposée — redistribution du calcul de la profondeur vers la longueur — reste spéculative. Cette non-comparabilité réduit l'utilité du DTR comme métrique universelle : il ne fonctionne qu'en intra-configuration.</p>
 
-<p>Le lien causal entre profondeur de stabilisation et qualité de raisonnement n'est pas établi. Le DTR pourrait capturer la difficulté intrinsèque des questions plutôt que la qualité du raisonnement lui-même. Aucune expérience de contrôle ne distingue ces deux hypothèses.</p>
+<p>Le lien causal entre profondeur de stabilisation et qualité de raisonnement n'est pas établi. Le DTR pourrait capturer la difficulté intrinsèque des questions (les questions faciles induisent naturellement plus de tokens « deep-thinking » car le modèle converge vers la bonne réponse) plutôt que la qualité du processus de raisonnement. Aucune expérience d'intervention ou de contrôle ne distingue ces deux hypothèses.</p>
 
 <h2>Reproductibilité</h2>
 
-<p>Les modèles GPT-OSS (20B et 120B) sont propriétaires. L'accès aux états cachés intermédiaires de ces modèles n'est pas disponible publiquement, ce qui rend la reproduction des résultats principaux impossible pour la communauté académique. DeepSeek-R1-70B et Qwen3-30B sont en accès libre sur Hugging Face, permettant une reproduction partielle.</p>
+<p>Les modèles GPT-OSS (20B et 120B) — qui constituent 6 des 8 configurations testées — sont propriétaires. L'accès aux états cachés de ces modèles n'est pas public, rendant la reproduction des résultats principaux impossible pour la communauté académique. DeepSeek-R1-70B et Qwen3-30B sont disponibles sur Hugging Face et permettent une reproduction partielle.</p>
 
-<p>Aucune mention de publication du code source n'apparaît dans l'article. L'algorithme 1 fournit un pseudo-code suffisamment détaillé pour une réimplémentation, mais les détails d'infrastructure (extraction des hidden states, gestion mémoire GPU pour les modèles 120B) ne sont pas documentés.</p>
+<p>Aucun dépôt de code n'est mentionné. L'algorithme 1 fournit un pseudo-code clair, mais les détails d'implémentation (extraction batch des hidden states, gestion mémoire GPU pour des modèles de 120 milliards de paramètres, parallélisation de l'échantillonnage) ne sont pas documentés. Une réimplémentation demanderait un effort d'ingénierie non négligeable.</p>
 
-<p>Les prompts sont fournis en appendice (Tables 4 et 5), et les paramètres d'échantillonnage sont spécifiés. Ces éléments facilitent la reproduction des conditions expérimentales pour les modèles ouverts.</p>
+<p>Les prompts sont fournis en appendice (Tables 4 et 5), et les paramètres d'échantillonnage (température, top-p) sont spécifiés par famille de modèles. Ces éléments facilitent la reproduction des conditions expérimentales sur les modèles ouverts.</p>
 
 <h2>Impact et applications</h2>
 
-<p>Think@n réduit de 50 % le coût d'inférence sans perte de précision — un gain pratique substantiel pour les déploiements à grande échelle utilisant le repeated sampling. La détection précoce des séquences non prometteuses via un préfixe de 50 tokens est le résultat le plus directement exploitable.</p>
+<p>Think@n réduit de moitié le coût d'inférence par repeated sampling sans perte de précision. Pour les systèmes de production utilisant le majority voting (self-consistency), ce gain est directement exploitable sur les modèles open-weight. La détection précoce des séquences non prometteuses via un préfixe de 50 tokens représente le résultat le plus immédiatement applicable.</p>
 
-<p>La mesure du DTR fournit aussi un outil d'interprétabilité mécaniste. La Figure 2 de l'article révèle que les tokens fonctionnels (articles, connecteurs) se stabilisent tôt, tandis que les tokens de réponse et les opérations arithmétiques nécessitent une computation profonde. Cette observation enrichit la compréhension du fonctionnement interne des transformeurs au-delà du cas d'usage spécifique du DTR.</p>
+<p>Le DTR fournit aussi un outil d'interprétabilité mécaniste. La Figure 2 révèle des patterns cohérents : les tokens fonctionnels (articles, connecteurs, balises) se stabilisent dans les couches superficielles, tandis que les résultats de calcul et les symboles de réponse nécessitent une computation profonde. Un même token numérique (« 13 ») voit sa profondeur de stabilisation diminuer après sa première apparition — le modèle « apprend » au fil de la séquence. Ces observations enrichissent la compréhension du fonctionnement interne des transformeurs.</p>
 
-<p>L'application reste cantonnée aux environnements disposant d'un accès aux poids et activations du modèle. Une adaptation pour les modèles servis via API — par exemple via des proxies statistiques du DTR calculables sans accès aux hidden states — n'est pas proposée et représenterait une extension naturelle de ce travail.</p>
+<p>L'absence d'adaptation pour les modèles servis via API limite la portée industrielle. Une extension naturelle serait de rechercher des proxies du DTR calculables sans accès aux hidden states — par exemple via des perturbations de prompt ou des analyses de la distribution de sortie.</p>
 
 <h2>Positionnement dans la littérature</h2>
 
-<p>Ce travail se situe au croisement de deux courants : l'analyse de l'overthinking dans les LLM (Gema et al., 2025 ; Wu et al., 2025 ; Su et al., 2025) et l'exploitation des représentations internes des transformeurs (Nostalgebraist, 2020 ; Chuang et al., 2023 ; Belrose et al., 2023).</p>
+<p>Ce travail se situe au croisement de deux courants de recherche : l'analyse de l'overthinking dans les LLM et l'exploitation des représentations internes des transformeurs.</p>
 
-<p>Par rapport aux travaux sur l'overthinking, la contribution réside dans la proposition d'un signal interne mécaniste plutôt que d'heuristiques de surface. Hassid et al. (2025) et Agarwal et al. (2025) exploitent la brièveté comme signal de qualité — une approche post hoc que Chen et al. dépassent en proposant un mécanisme explicatif ancré dans l'architecture du modèle.</p>
+<p>Sur l'overthinking, Gema et al. (2025) identifient des régimes d'inverse scaling où la longueur dégrade systématiquement la précision. Wu et al. (2025) caractérisent la relation longueur-précision comme une courbe en U inversé. Hassid et al. (2025) et Agarwal et al. (2025) proposent de favoriser la brièveté comme heuristique de sélection. Chen et al. dépassent ces approches post hoc en proposant un signal ancré dans l'architecture du modèle, qui explique pourquoi certaines séquences courtes réussissent et d'autres échouent.</p>
 
-<p>Le DTR reprend la technique du « logit lens » (Nostalgebraist, 2020) et l'étend de l'analyse statique à la caractérisation dynamique de l'effort de raisonnement, token par token. La parenté avec DoLa (Chuang et al., 2023) est explicite : les deux approches exploitent les divergences entre couches, mais DoLa modifie le décodage pour améliorer la factualité tandis que le DTR mesure l'effort sans intervenir sur la génération.</p>
+<p>Sur les représentations internes, le DTR étend la technique du « logit lens » (Nostalgebraist, 2020) de l'analyse statique vers la caractérisation dynamique de l'effort de raisonnement. La parenté avec DoLa (Chuang et al., 2023) est directe : les deux approches mesurent des divergences entre couches, mais DoLa intervient sur le décodage pour améliorer la factualité tandis que le DTR reste une mesure passive. Vilas et al. (2025) proposent une approche complémentaire par signaux latents temporels (évolution séquentielle des hidden states le long de la séquence), là où le DTR capture l'évolution en profondeur pour chaque token. La combinaison des deux axes — séquentiel et en profondeur — reste un territoire inexploré.</p>
 
-<p>Vilas et al. (2025) proposent une approche complémentaire via des signaux latents temporels (évolution séquentielle des hidden states), là où le DTR capture l'évolution en profondeur. La combinaison des deux axes — séquentiel et en profondeur — reste un territoire inexploré qui pourrait affiner la caractérisation du raisonnement.</p>
+<p>La comparaison avec le choix entre métriques de distance (Appendice A) confirme la supériorité de la JSD sur la KL-divergence et la similarité cosinus, consolidant un choix technique déjà défendu par Chuang et al. (2023) dans un contexte différent.</p>
 
 <h2>Tableau récapitulatif des critères de robustesse</h2>
 
@@ -200,14 +200,14 @@
 <tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
 </thead>
 <tbody>
-<tr><td>Question de recherche</td><td>4</td><td>Problème bien identifié et motivé ; approche mécaniste originale de la mesure du raisonnement</td></tr>
-<tr><td>Design expérimental</td><td>4</td><td>Protocole solide avec 8 variantes de modèles, 4 benchmarks et 6 métriques de comparaison ; évaluation restreinte aux tâches STEM</td></tr>
-<tr><td>Taille d'échantillon</td><td>3</td><td>25 réponses par question et 30 graines aléatoires, mais les benchmarks sont petits (30 questions pour AIME, ~198 pour GPQA-D)</td></tr>
-<tr><td>Qualité des métriques</td><td>4</td><td>DTR formalisé rigoureusement ; comparaison JSD vs KLD vs cosine justifiée empiriquement ; corrélation de Pearson appropriée</td></tr>
-<tr><td>Contrôle des biais</td><td>3</td><td>Hyperparamètres sélectionnés sur les données d'évaluation ; analyse de sensibilité limitée à un seul modèle et benchmark</td></tr>
-<tr><td>Reproductibilité</td><td>2</td><td>Modèles GPT-OSS propriétaires ; pas de code publié ; reproduction possible uniquement avec les modèles ouverts</td></tr>
-<tr><td>Transparence et limitations</td><td>3</td><td>Non-comparabilité inter-modèles reconnue ; contrainte boîte blanche non discutée ; absence de contrôle causal</td></tr>
-<tr><td>Impact et nouveauté</td><td>4</td><td>Signal mécaniste original ; Think@n divise les coûts par deux ; limité aux environnements de recherche avec accès aux poids</td></tr>
+<tr><td>Question de recherche</td><td><span class="score-4">4</span></td><td>Problème bien identifié (longueur ≠ effort) avec une approche mécaniste originale ; la question reste descriptive plutôt qu'explicative</td></tr>
+<tr><td>Design expérimental</td><td><span class="score-4">4</span></td><td>8 variantes de modèles, 4 benchmarks, 6 métriques de comparaison, 25 échantillons × 30 graines ; évaluation restreinte aux tâches STEM</td></tr>
+<tr><td>Taille d'échantillon</td><td><span class="score-3">3</span></td><td>Réplication statistique correcte (25 × 30), mais benchmarks petits (30 questions AIME, ~198 GPQA-D) ; pas de test de significativité rapporté</td></tr>
+<tr><td>Qualité des métriques</td><td><span class="score-4">4</span></td><td>DTR formalisé avec rigueur ; choix JSD justifié empiriquement vs KLD et cosinus ; corrélation de Pearson par bins de quantiles adéquate</td></tr>
+<tr><td>Contrôle des biais</td><td><span class="score-3">3</span></td><td>Hyperparamètres optimisés sur les données d'évaluation ; analyse de sensibilité sur un seul couple modèle-benchmark ; pas de contrôle causal</td></tr>
+<tr><td>Reproductibilité</td><td><span class="score-2">2</span></td><td>6/8 configurations reposent sur des modèles propriétaires GPT-OSS ; pas de code publié ; pseudo-code clair mais insuffisant pour une reproduction fidèle</td></tr>
+<tr><td>Transparence et limitations</td><td><span class="score-3">3</span></td><td>Non-comparabilité inter-modèles reconnue en appendice ; contrainte boîte blanche non discutée dans le corps ; lien causal non établi</td></tr>
+<tr><td>Impact et nouveauté</td><td><span class="score-4">4</span></td><td>Signal mécaniste original combinant interprétabilité et gain pratique ; Think@n divise les coûts par deux ; applicabilité limitée aux modèles ouverts</td></tr>
 </tbody>
 </table>
   </div>

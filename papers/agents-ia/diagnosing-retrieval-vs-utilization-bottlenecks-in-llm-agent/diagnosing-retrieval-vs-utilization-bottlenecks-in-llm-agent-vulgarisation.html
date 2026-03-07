@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnosing Retrieval vs. Utilization Bottlenecks in LLM Agent Memory — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Diagnosing Retrieval vs. Utilization Bottlenecks in LLM Agent Memory</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Un agent IA doté de mémoire retient ce que vous lui avez dit la semaine dernière — vos préférences, vos décisions, le contexte de votre projet. En théorie. En pratique, ces agents se trompent souvent, et jusqu'ici, personne ne savait précisément où se situait la panne. L'erreur vient-elle de la façon dont l'information a été stockée ? De la façon dont elle a été retrouvée au moment de répondre ? Ou de la façon dont le modèle de langage l'a interprétée ?</p>
+
+<p>Trois chercheurs de UC San Diego, Carnegie Mellon et UNC — Yuan, Su et Yao — ont publié en mars 2026 une étude qui répond à cette question par une expérience contrôlée. Ils ont construit un cadre de diagnostic capable d'isoler chaque maillon du pipeline mémoire, puis ont systématiquement croisé trois façons de stocker l'information avec trois façons de la retrouver. Le résultat redistribue les priorités d'ingénierie de toute une filière : la méthode de recherche dans la mémoire compte trois à six fois plus que la sophistication du stockage. Et la stratégie la plus simple — conserver le texte brut sans aucune transformation — égale ou surpasse les alternatives coûteuses.</p>
+
+<h2>Le problème : un pipeline à trois étages où les pannes sont invisibles</h2>
+
+<p>Les agents à mémoire fonctionnent en trois temps. D'abord, l'écriture : le système décide quoi garder d'une conversation. Certains conservent le texte tel quel. D'autres font appel au modèle de langage pour extraire des faits structurés ou compresser la session en un résumé dense. Ensuite, la récupération : face à une nouvelle question, l'agent fouille sa mémoire pour retrouver les éléments pertinents. Enfin, l'utilisation : le modèle lit les souvenirs retrouvés et formule sa réponse.</p>
+
+<p>Les benchmarks existants ne mesurent que la sortie finale. Quand un agent se trompe, on obtient un score global sans savoir à quelle étape la chaîne a cassé. C'est comme évaluer un restaurateur en goûtant le plat fini, sans distinguer si le problème vient des ingrédients achetés, de la recette choisie pour les combiner, ou de l'exécution en cuisine.</p>
+
+<p>Cette opacité a des conséquences directes sur les investissements. L'industrie consacre des budgets significatifs à perfectionner l'étape d'écriture : extraction d'entités nommées, graphes de connaissances, résolution de conflits entre souvenirs contradictoires. Chaque session de conversation déclenche un ou plusieurs appels au LLM rien que pour décider comment stocker l'information. Si le vrai goulot d'étranglement se situe ailleurs, ces dépenses en inférence sont mal ciblées.</p>
+
+<h2>La méthode : neuf combinaisons et trois sondes diagnostiques</h2>
+
+<p>Les auteurs ont conçu un dispositif expérimental qui ressemble à un examen médical systématique. Plutôt que de traiter un symptôme au hasard, ils passent le pipeline entier au scanner, étape par étape.</p>
+
+<h3>La grille 3×3</h3>
+
+<p>Le dispositif croise deux dimensions. Sur l'axe du stockage, trois stratégies couvrent le spectre de la fidélité au texte original. La première, Basic RAG, découpe les conversations en blocs de trois tours de parole avec les noms des interlocuteurs et les horodatages — aucun appel au modèle, zéro transformation. La deuxième s'inspire du système Mem0 : un LLM extrait des faits autonomes (« Alice a adopté un golden retriever nommé Max en mars »), puis gère les contradictions quand une information nouvelle entre en conflit avec un souvenir existant. La troisième suit l'approche de MemGPT : chaque session entière est compressée en un paragraphe de résumé narratif.</p>
+
+<p>Sur l'axe de la récupération, trois méthodes montent en complexité. La similarité cosinus compare les représentations vectorielles de la question et des souvenirs — c'est le choix par défaut de la plupart des systèmes en production. BM25 fonctionne par correspondance de mots-clés : il repère les souvenirs qui partagent des termes exacts avec la question, mais échoue quand le vocabulaire diffère. Le reranking hybride fusionne les deux approches, récupère un pool élargi de candidats, puis demande à un second modèle de langage de trier les résultats par pertinence.</p>
+
+<p>En croisant ces deux axes, on obtient neuf configurations. Toutes sont évaluées sur LoCoMo, un benchmark de conversations longues : 1 540 questions non adversariales réparties sur dix conversations d'environ 600 tours chacune. Le modèle utilisé est GPT-5-mini, avec un budget fixe de cinq éléments récupérés par question. Chaque variable est isolée : même modèle, mêmes embeddings, même benchmark, même budget de récupération.</p>
+
+<h3>Les trois sondes</h3>
+
+<p>Le cadre diagnostique place des instruments de mesure à la frontière entre récupération et génération. La première sonde évalue si les souvenirs récupérés contenaient des informations pertinentes — une mesure de précision brute. La deuxième compare la réponse produite avec mémoire à celle produite sans aucune mémoire, révélant si les souvenirs ont aidé, gêné, ou été ignorés. La troisième classe chaque erreur dans une catégorie : échec de récupération (le bon souvenir n'a pas été retrouvé ou n'existait pas sous une forme exploitable), échec d'utilisation (le bon souvenir était là mais le modèle n'en a pas tenu compte), ou hallucination (la réponse contredit les souvenirs fournis).</p>
+
+<h2>Résultats clés : la récupération écrase le stockage</h2>
+
+<p>Le chiffre central de l'étude : 20 points d'écart de précision entre la pire et la meilleure méthode de récupération (57,1 % pour BM25 seul, 77,2 % pour le reranking hybride). La stratégie d'écriture, elle, ne fait varier les scores que de 3 à 8 points selon la configuration. Changer la façon de chercher dans la mémoire a un impact trois à six fois supérieur à changer la façon d'y stocker l'information.</p>
+
+<p>Le résultat le plus contre-intuitif concerne le stockage brut. Basic RAG — zéro appel LLM lors de l'écriture — atteint 81,1 % avec le reranking hybride et 77,9 % avec la similarité cosinus. L'extraction de faits structurés plafonne à 77,3 % dans sa meilleure configuration. La compression par résumé ne dépasse pas 73,3 %. Conserver le texte brut sans le transformer donne de meilleurs résultats que les deux alternatives plus sophistiquées. La seule exception : BM25, où le résumé (62,7 %) dépasse légèrement le stockage brut (59,2 %), car les paragraphes condensés facilitent la correspondance lexicale.</p>
+
+<p>Ce renversement a une explication simple. Résumer ou extraire des faits revient à jeter des détails conversationnels — ton, enchaînements, contexte temporel, nuances implicites. Le modèle de langage sait exploiter ces détails quand on les lui présente tels quels. La compression économise des tokens, mais elle appauvrit le signal disponible au moment de formuler la réponse.</p>
+
+<blockquote>La corrélation entre la précision de récupération et la précision de la réponse finale atteint r = 0,98 sur les neuf configurations. La qualité de la réponse est quasi entièrement prédictible à partir de la qualité de la récupération.</blockquote>
+
+<p>L'analyse des échecs confirme ce diagnostic sous un angle différent. Les erreurs de récupération représentent entre 11 % et 46 % de l'ensemble des questions. Sous BM25 avec extraction de faits, ce taux atteint 46,3 % — quasiment égal au taux d'erreur total. Les erreurs d'utilisation, elles, restent stables entre 4 % et 8 %, quelle que soit la configuration. Les hallucinations ne dépassent jamais 1,4 %. Quand le système fournit les bons souvenirs au modèle, celui-ci améliore sa réponse dans 79 % des cas (combinaison Basic RAG + hybride). Le LLM fait son travail dès qu'on lui donne le bon contexte.</p>
+
+<p>Le reranking hybride divise le taux d'échecs de récupération par deux ou davantage. Pour Basic RAG, ce taux passe de 35,3 % avec BM25 seul à 11,4 % avec l'hybride. Un seul appel LLM supplémentaire par question — consacré au classement des résultats candidats — produit un gain supérieur à tout ce qu'une stratégie d'écriture sophistiquée peut apporter.</p>
+
+<p>Un détail méthodologique mérite attention : le Token F1, une métrique classique qui mesure le chevauchement textuel entre réponse produite et réponse attendue, se révèle insensible à ces écarts de 20 points de précision. Un système à 57 % de précision et un système à 77 % affichent des Token F1 proches (0,168 contre 0,221). Les métriques de surface ne suffisent pas à distinguer des différences de performance pourtant considérables — d'où la nécessité de recourir à un juge LLM pour l'évaluation.</p>
+
+<h2>Implications pratiques : dépenser mieux, pas plus</h2>
+
+<p>Pour un ingénieur qui construit un agent à mémoire, la leçon opérationnelle tient en deux phrases. Stocker les conversations brutes, découpées en blocs avec leurs métadonnées, suffit comme point de départ — et ce point de départ est gratuit en appels LLM. L'effort et le budget doivent porter sur la récupération : combiner recherche sémantique et lexicale, ajouter une étape de reranking, travailler la reformulation des requêtes.</p>
+
+<p>Le ratio coût/bénéfice des différentes stratégies renforce cet argument. Basic RAG ne consomme rien à l'écriture. L'extraction de faits nécessite un ou plusieurs appels LLM par session, plus les appels de résolution de conflits. La summarisation demande un appel par session. Côté récupération, seul le reranking hybride ajoute un appel par question — et c'est précisément cet appel unique qui produit le gain le plus massif de toute l'étude. On peut schématiser ainsi : des dizaines d'appels LLM dépensés à l'écriture n'apportent que 3 à 8 points ; un seul appel de reranking en apporte 20.</p>
+
+<p>Le cadre diagnostique lui-même représente un outil réutilisable. Les trois sondes permettent à toute équipe de localiser où son pipeline échoue. Deux agents peuvent afficher 70 % de précision pour des raisons radicalement différentes : l'un souffre d'un problème de récupération, l'autre d'un problème d'utilisation. Le traitement n'est pas le même, et sans diagnostic, on risque de corriger la mauvaise étape.</p>
+
+<p>Ces résultats remettent aussi en perspective les systèmes commerciaux de mémoire pour agents. Beaucoup se différencient par la sophistication de leur pipeline d'écriture : extraction d'entités, liens entre souvenirs, oubli sélectif. L'étude ne dit pas que ces fonctionnalités sont inutiles — mais elle montre que, dans les conditions testées, elles pèsent peu face à la qualité de la récupération. Un système simple avec un bon reranker bat un système complexe avec un retriever médiocre.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>L'étude repose sur un seul modèle (GPT-5-mini), un seul benchmark (LoCoMo) et un budget de récupération fixe à cinq éléments. Ces choix garantissent un contrôle expérimental strict, mais limitent la portée des conclusions. Avec un budget plus serré — deux ou trois éléments seulement —, la compression pourrait retrouver un avantage, car chaque slot de mémoire devrait porter davantage d'information concentrée. Les auteurs le signalent eux-mêmes.</p>
+
+<p>Les trois stratégies d'écriture testées reposent toutes sur des prompts. Des approches par apprentissage par renforcement, comme Mem1 ou Mem-α, optimisent conjointement l'écriture et la récupération en apprenant quelles informations seront utiles plus tard. Leur performance dans ce cadre diagnostique reste inconnue. Si le RL parvient à anticiper les besoins futurs de récupération au moment du stockage, l'avantage du texte brut pourrait se réduire.</p>
+
+<p>La question du passage à l'échelle temporelle reste ouverte. LoCoMo simule des conversations de 600 tours. Un assistant personnel utilisé pendant des mois accumulerait des volumes de souvenirs d'un tout autre ordre. Le stockage brut, qui préserve tout sans compression, deviendrait un handicap si le mécanisme de récupération ne parvenait pas à filtrer efficacement dans une base beaucoup plus large. L'équilibre entre fidélité du stockage et efficacité de la recherche dépend probablement du volume de la base — un paramètre que cette étude ne fait pas varier.</p>
+
+<p>La validation humaine du cadre diagnostique donne des résultats solides : 92 % de concordance entre le juge LLM et les annotateurs pour la correction des réponses (κ de Cohen à 0,82), 85 % pour la classification des échecs. La zone de confusion se concentre entre échec de récupération et échec d'utilisation — une frontière qui reste floue même pour des annotateurs entraînés.</p>
+
+<p>Le code est disponible en accès libre. Pour les équipes qui construisent des agents à mémoire, brancher ces trois sondes sur leur propre pipeline avant d'investir dans une stratégie d'écriture complexe pourrait leur épargner des semaines de travail mal orienté — et quelques factures d'API conséquentes.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -127,101 +127,120 @@
     <p class="doc-type">Lecture Critique d'Article</p>
   </div>
   <div class="companion-content">
-    <h2>Objectif et contexte</h2>
+    
+<h2>Objectif et contexte</h2>
 
-<p>Les agents LLM qui utilisent des outils externes dépendent de deux facteurs : leur propre capacité de raisonnement et la qualité des interfaces d'outils qu'ils consomment. La recherche s'est massivement concentrée sur l'amélioration des agents eux-mêmes, laissant les descriptions d'outils — rédigées pour des humains — comme un goulot d'étranglement non traité. Ce problème s'aggrave quand le nombre d'outils candidats dépasse la centaine.</p>
+<p>Les agents à base de LLM qui utilisent des outils externes (API REST, bases de données, interpréteurs de code) dépendent de deux facteurs : la capacité de raisonnement de l'agent et la qualité des interfaces d'outils qu'il consomme — descriptions textuelles et schémas de paramètres. Cette publication cible le second facteur, largement négligé par la littérature qui se concentre sur le fine-tuning des agents eux-mêmes.</p>
 
-<p>L'article attaque ce déséquilibre en proposant Trace-Free+, un cadre d'apprentissage par curriculum qui entraîne des LLM open-weight (Qwen3-4B) à réécrire automatiquement les descriptions d'outils API. L'originalité réside dans le scénario ciblé : le déploiement à froid (cold-start), où aucune trace d'exécution n'est disponible pour les outils de test. Les méthodes existantes (DRAFT, Play2Prompt) exigent des pipelines multi-tours d'interaction avec les outils cibles, ce qui les rend inapplicables dans des contextes à contraintes de sécurité ou de confidentialité.</p>
+<p>Le problème concret : les descriptions d'outils sont rédigées pour des humains, pas pour des LLM. Quand un agent doit choisir parmi des dizaines ou centaines d'API candidates, ces descriptions deviennent un goulot d'étranglement. Les méthodes existantes (DRAFT, Play2Prompt) améliorent les descriptions en s'appuyant sur des traces d'exécution collectées via des pipelines multi-tours complexes. Or ces traces sont souvent indisponibles — démarrage à froid d'API nouvelles, contraintes de confidentialité, coût prohibitif d'interaction.</p>
+
+<p>Guo et al. proposent Trace-Free+, un framework de curriculum learning qui transfère la supervision depuis des contextes riches en traces vers des contextes de déploiement sans traces. L'objectif : entraîner un générateur de descriptions d'outils capable de produire des interfaces optimisées pour des outils jamais vus, sans exécution préalable.</p>
 
 <h2>Méthodologie</h2>
 
 <h3>Pipeline de synthèse de données</h3>
 
-<p>La construction du jeu d'entraînement repose sur quatre étapes successives. D'abord, un annotateur agentique (basé sur Smolagents) explore les 9 640 fournisseurs d'API de ToolBench, évalue la santé de chaque endpoint et collecte des exemples d'appels réussis. Ce filtrage ne retient que 107 fournisseurs dont tous les endpoints fonctionnent — un taux de rétention d'environ 1,1 %, qui reflète la dégradation connue du benchmark ToolBench original.</p>
+<p>Le pipeline part des 9 640 fournisseurs d'API de ToolBench (RapidAPI). Un annotateur agentique basé sur Smolagents explore chaque API, vérifie son état de santé via des appels réels, et collecte des exemples de réponses. Après filtrage (API fonctionnelles uniquement, exclusion des benchmarks d'évaluation, minimum 3 endpoints), 107 fournisseurs constituent le jeu d'outils « seeds ».</p>
 
-<p>Les requêtes utilisateur sont ensuite synthétisées avec une stratégie dependency-aware : le LLM analyse d'abord les dépendances inter-API à partir de l'historique d'appels annotés, sélectionne un sous-ensemble cohérent d'API, puis génère une requête en langage naturel qui les mobilise séquentiellement. Cette conception force des trajectoires multi-étapes avec des dépendances authentiques entre appels.</p>
+<p>La synthèse de requêtes adopte une stratégie originale : plutôt que de générer des requêtes isolées, le LLM analyse d'abord les dépendances inter-API au sein d'un même fournisseur, sélectionne un sous-ensemble d'API formant un workflow cohérent, puis génère une requête en langage naturel qui nécessite implicitement l'enchaînement de ces API. Cette approche produit des requêtes multi-étapes avec des dépendances non triviales entre appels.</p>
 
-<p>Les traces d'exécution sont collectées en faisant tourner un agent sur ces requêtes synthétiques. Les trajectoires échouées servent à extraire des règles comportementales via le cadre RIMRULE. L'amélioration des descriptions se fait en deux passes : D1 (améliorations indépendantes des données, fondées sur des guidelines générales) puis D2 (intégration des contraintes extraites des traces d'échec).</p>
+<h3>Amélioration des descriptions en deux étapes</h3>
 
-<h3>Entraînement par curriculum</h3>
+<p>À partir des descriptions originales D0, une première passe (D1) applique des bonnes pratiques génériques de rédaction de documentation d'outils — clarté de l'intention, distinction paramètres requis/optionnels, formats attendus. Une seconde passe (D2) incorpore des règles extraites des traces d'échec via le framework RIMRULE : contraintes comportementales, valeurs de paramètres invalides, hypothèses erronées sur les réponses. Les descriptions D2 servent de supervision pour le fine-tuning.</p>
 
-<p>Trace-Free+ mélange des exemples avec traces et sans traces selon un curriculum progressif. La première phase privilégie les exemples riches en traces (90 %), la seconde phase inverse la proportion (90 % sans traces). Cette transition enseigne au modèle les patterns de correspondance interface-usage avant de le forcer à les reproduire sans information d'exécution. Le ratio (0.1, 0.9) entre les deux phases s'avère optimal dans l'étude paramétrique (Table 7).</p>
+<h3>Curriculum learning</h3>
+
+<p>Trois variantes de modèles sont entraînées sur Qwen3-4B-Instruct-2507 via LoRA (rang 64) :</p>
+<ul>
+<li><strong>Trace-Based</strong> : entraîné uniquement sur des exemples avec traces d'exécution</li>
+<li><strong>Trace-Free</strong> : entraîné uniquement sur des exemples sans traces</li>
+<li><strong>Trace-Free+</strong> : curriculum en deux phases — 10 % d'exemples sans traces en phase 1, puis 90 % en phase 2</li>
+</ul>
+
+<p>L'intuition : le modèle apprend d'abord comment les traces informent les bonnes descriptions, puis s'adapte à en produire sans traces. Le ratio 10/90 s'avère optimal empiriquement face aux alternatives 30/70 et 50/50.</p>
 
 <h3>Protocole d'évaluation</h3>
 
-<p>L'évaluation utilise un teacher-forcing par étapes : à chaque sous-tâche, l'API ground truth est appelée pour fournir un contexte correct, isolant ainsi les erreurs dues aux descriptions d'outils de celles propagées par des erreurs antérieures. Ce choix méthodologique est bien motivé — sans teacher-forcing, les erreurs se composent et rendent l'attribution causale impossible. GPT-4.1 sert d'agent d'évaluation sur tous les benchmarks.</p>
+<p>L'évaluation teacher-forcing constitue une contribution méthodologique distincte. À chaque étape d'une requête multi-pas, l'API ground truth est appelée pour fournir un contexte intermédiaire correct. Ce choix isole les erreurs imputables aux descriptions d'outils des erreurs en cascade dues à des étapes précédentes ratées. L'agent évalué est GPT-4.1 (2025-05-14).</p>
 
 <h2>Résultats principaux</h2>
 
 <h3>Évaluation trace-free (in-domain)</h3>
 
-<p>Sur les six sous-ensembles de StableToolBench, Trace-Free+ atteint un taux de succès moyen de 70,1 % au niveau sous-tâche et 54,0 % au niveau requête (Table 1). Le gain sur D0 (descriptions originales) est de +2,8 points SL et +6,0 points QL. L'écart se creuse sur les sous-ensembles difficiles : sur G3 Instruction (requêtes multi-hop complexes), le gain QL atteint +21,8 points par rapport à D0 et +4,6 points par rapport à Trace-Free sans curriculum.</p>
+<p>Sur les six sous-ensembles de StableToolBench, Trace-Free+ atteint un taux de succès moyen de 70,1 % au niveau sous-tâche et 54,0 % au niveau requête, contre 67,3 % / 48,0 % pour les descriptions originales D0. Le gain est concentré sur les sous-ensembles G2 et G3, où les requêtes multi-hop exigent une compréhension des interdépendances entre outils. Sur G3 Instruction, le taux de succès requête passe de 24,6 % (D0) à 46,4 % (Trace-Free+) — un doublement.</p>
 
-<p>EasyTool, la baseline prompting-based, se situe systématiquement en dessous de D0 sur les sous-ensembles G3, ce que les auteurs attribuent à l'optimisation de ses prompts pour des modèles plus anciens (ChatGPT, Vicuna-30B).</p>
+<p>Le curriculum learning apporte un gain clair par rapport au Trace-Free pur : +2,3 points au niveau sous-tâche et +2,4 points au niveau requête en moyenne.</p>
 
 <h3>Généralisation cross-domaine</h3>
 
-<p>Entraîné sur les outils StableToolBench (Split B), Trace-Free+ est évalué sur RestBench (TMDB et Spotify) sans aucune exposition préalable à ces domaines. Sur TMDB, le gain QL atteint +25,4 points par rapport à D0 (74,9 % vs 49,5 %). Sur Spotify, le gain est de +14,4 points (49,3 % vs 34,9 %). La généralisation cross-domaine est donc plus marquée que les gains in-domain, ce qui suggère que le modèle apprend des patterns transférables de rédaction d'interfaces.</p>
+<p>Entraîné sur des outils StableToolBench (Split B), Trace-Free+ est testé sur TMDB et Spotify (RestBench) — des API jamais vues pendant l'entraînement, dans des domaines différents. Sur TMDB, le taux de succès requête atteint 74,9 % contre 49,5 % pour D0 (+25,4 points). Sur Spotify, 49,3 % contre 34,9 % (+14,4 points). Ces écarts cross-domaine sont nettement plus larges que les gains in-domain, ce qui suggère que les descriptions originales de RestBench sont de qualité particulièrement faible.</p>
 
 <h3>Passage à l'échelle</h3>
 
-<p>Les expériences de scaling (Figure 3) montrent que Trace-Free+ résiste mieux à l'augmentation du nombre d'outils candidats. Quand le pool dépasse 100 outils, la dégradation du taux de succès QL reste plus faible qu'avec D0 ou D1 sur les sous-ensembles G2 et G3. Cette robustesse à l'échelle est un résultat pratique significatif.</p>
+<p>Quand le nombre d'outils candidats augmente jusqu'à plus de 100, Trace-Free+ maintient mieux son taux de succès que les baselines. La dégradation sur G2 Category reste modérée comparée à D0 et D1 qui chutent plus rapidement.</p>
 
-<h3>Résultats trace-based</h3>
+<h3>Évaluation trace-based</h3>
 
-<p>En contexte trace-based, le modèle Trace-Based atteint 70,3 % SL et 54,6 % QL en moyenne (Table 4), surpassant DRAFT et Play2Prompt tout en nécessitant des traces nettement plus simples (appels single-turn avec descriptions originales, sans pipeline multi-tours).</p>
+<p>Avec traces d'exécution disponibles, le modèle Trace-Based atteint 70,3 % / 54,6 % (SL/QL), surpassant DRAFT (68,1 % / 50,0 %) et Play2Prompt (69,8 % / 52,5 %). L'avantage : le modèle n'a besoin que de traces collectées en single-turn avec les descriptions originales, pas de pipelines multi-tours complexes.</p>
 
 <h2>Discussion et limites</h2>
 
-<p>La principale faiblesse de l'évaluation est l'utilisation d'un seul modèle agent (GPT-4.1) pour toutes les expériences. Les gains observés sur les descriptions pourraient varier avec un agent différent — un modèle plus faible bénéficierait peut-être davantage de descriptions améliorées, tandis qu'un modèle plus fort pourrait compenser seul les lacunes des descriptions originales. L'absence de tests avec plusieurs agents d'évaluation limite la portée des conclusions.</p>
+<p>L'amplitude des améliorations in-domain reste modérée. Sur StableToolBench en trace-free, le gain moyen SL de Trace-Free+ sur D0 est de 2,8 points. Sur les sous-ensembles G1, la différence avec D0 est dans la marge d'erreur. L'essentiel du gain vient des requêtes multi-hop (G2, G3), qui ne représentent qu'une partie des cas d'usage.</p>
 
-<p>Le filtrage agressif des outils d'entraînement (107 fournisseurs sur 9 640) soulève une question de biais de sélection. Les outils retenus sont ceux dont tous les endpoints fonctionnent, ce qui exclut les API partiellement fonctionnelles — un cas fréquent en production. La capacité du modèle à gérer des outils dégradés ou instables reste non testée.</p>
+<p>L'évaluation repose sur un seul modèle agent (GPT-4.1). Rien ne garantit que les descriptions optimisées pour GPT-4.1 le soient aussi pour Claude, Gemini ou des modèles open-weight. Cette dépendance à l'agent consommateur est une menace sérieuse à la généralisabilité des conclusions.</p>
 
-<p>L'évaluation par teacher-forcing, bien que méthodologiquement justifiée pour l'attribution causale, ne reflète pas les conditions réelles d'utilisation où les erreurs se propagent. Les gains mesurés en conditions teacher-forcing pourraient être amplifiés ou atténués en exécution libre selon la robustesse de l'agent aux erreurs composées.</p>
+<p>Le modèle fine-tuné est unique : Qwen3-4B. Aucune ablation sur la taille du modèle (1B, 8B, 14B) n'est fournie. On ne sait pas si un modèle plus petit suffirait ou si un modèle plus grand améliorerait significativement les résultats.</p>
 
-<p>La correction préalable des schémas de paramètres dans StableToolBench (Section B.2) améliore la propreté de l'évaluation mais introduit un doute : les gains mesurés dépendent en partie de cette correction, et les résultats pourraient différer sur des schémas bruts non corrigés.</p>
+<p>Les métriques tool-level (Table 3) tempèrent l'enthousiasme. L'amélioration moyenne ∆ du F1 n'est que de 0,021 pour Trace-Free+, et le taux de succès d'exécution API montre autant de dégradations (11,2 %) que d'améliorations (11,5 %). La réécriture de descriptions peut donc nuire à certains outils — un risque absent de la discussion.</p>
 
-<p>Le modèle fine-tuné (Qwen3-4B) est relativement petit. Aucune ablation n'explore l'effet de la taille du modèle de base, ni la comparaison avec un modèle plus grand entraîné sur les mêmes données.</p>
+<p>La correction préalable des schémas de paramètres de StableToolBench (Section 4.1, Appendix B.2) est nécessaire mais pose un problème de comparabilité : les résultats ne sont pas directement comparables à ceux publiés par d'autres travaux sur le benchmark original non corrigé.</p>
+
+<p>Aucune section Limitations formelle n'apparaît dans l'article. Les futures directions sont mentionnées (optimisation jointe agent+interfaces, extension au-delà des API REST), mais les faiblesses du travail actuel ne sont pas explicitement discutées.</p>
 
 <h2>Reproductibilité</h2>
 
-<p>Les prompts de chaque composant (annotateur agentique, synthèse de requêtes, correction de schémas, génération de descriptions) sont fournis intégralement en annexe — un effort de transparence rare. Les hyperparamètres d'entraînement (Table 8), l'architecture (LoRA rank 64, 2 epochs, ZeRO-3) et la configuration d'inférence (vLLM, top-p 0.9, température 0.3) sont documentés.</p>
+<p>Les prompts complets de l'annotateur agentique, de la correction de schémas, de l'évaluation et de l'inférence sont reproduits en annexe — un effort de transparence appréciable. Les hyperparamètres d'entraînement sont détaillés (Table 8). Le modèle de base (Qwen3-4B-Instruct-2507) est open-weight et disponible sur Hugging Face.</p>
 
-<p>Cependant, ni le code ni le jeu de données synthétisé ne semblent être publiés ou référencés par un lien. La dépendance aux API RapidAPI, dont la disponibilité varie dans le temps, rend la reproduction exacte du pipeline de données difficile. La correction manuelle des schémas StableToolBench n'est pas accompagnée des schémas corrigés eux-mêmes.</p>
+<p>Deux obstacles majeurs à la reproduction subsistent. Le dataset synthétisé — pivot du travail — n'est pas explicitement annoncé comme publié ou à publier. Sans lui, refaire le pipeline complet depuis ToolBench/RapidAPI nécessiterait de reproduire l'annotation agentique des 9 640 fournisseurs, un processus coûteux et non déterministe puisqu'il dépend de l'état des API à un instant donné. Les API RapidAPI sont dynamiques : des endpoints fonctionnels en février 2026 peuvent être indisponibles six mois plus tard, rendant toute réplication exacte impossible.</p>
+
+<p>Le code source n'est pas mentionné comme disponible ou prévu.</p>
 
 <h2>Impact et applications</h2>
 
-<p>L'approche répond à un besoin concret : déployer des agents sur de nouvelles API sans période d'exploration préalable. Le scénario cold-start (nouvelles API sans traces) est réaliste dans les plateformes d'intégration d'API comme RapidAPI, où des milliers d'endpoints apparaissent régulièrement.</p>
+<p>L'approche répond à un besoin pratique réel : les plateformes d'API (RapidAPI, etc.) exposent des milliers d'outils avec des descriptions de qualité variable, et les agents LLM en souffrent directement. Un générateur de descriptions déployable — même modeste en taille (4B paramètres) — pourrait être intégré comme étape de prétraitement dans ces plateformes.</p>
 
-<p>Le coût d'inférence est faible — un modèle 4B paramètres génère les descriptions améliorées — comparé aux pipelines itératifs de DRAFT ou Play2Prompt qui nécessitent de multiples appels à des LLM puissants et des interactions réelles avec les outils. Cette frugalité rend le déploiement viable à grande échelle.</p>
+<p>Le protocole d'évaluation teacher-forcing est une contribution méthodologique transférable. En isolant l'effet des descriptions d'outils des erreurs en cascade, il fournit un signal plus propre que les évaluations end-to-end classiques. D'autres travaux sur l'optimisation d'interfaces pourraient l'adopter.</p>
 
-<p>La généralisation cross-domaine (entraînement sur ToolBench, test sur TMDB/Spotify) est encourageante pour les cas où les domaines cibles n'ont aucune donnée d'entraînement. Le gain de +25 points QL sur TMDB sans aucune exposition au domaine cinématographique est un résultat marquant.</p>
+<p>La limitation au domaine des API REST restreint la portée immédiate. L'article ne teste pas les environnements d'exécution de code ni les bases de données, deux catégories d'outils mentionnées en introduction mais absentes de l'évaluation.</p>
 
 <h2>Positionnement dans la littérature</h2>
 
-<p>Ce travail se situe à l'intersection de deux axes de recherche : l'optimisation des interfaces d'outils (EasyTool, DRAFT, Play2Prompt) et l'apprentissage par curriculum pour les LLM. Par rapport à EasyTool (Yuan et al., 2025), qui repose sur des prompts manuels optimisés pour des modèles spécifiques, Trace-Free+ apprend des patterns généralisables via fine-tuning. Par rapport à DRAFT (Qu et al., 2025) et Play2Prompt (Fang et al., 2025), la méthode élimine la dépendance aux traces d'exécution au moment de l'inférence.</p>
+<p>Ce travail se situe à l'intersection de deux lignes de recherche : l'optimisation des interfaces d'outils (EasyTool, DRAFT, Play2Prompt) et le curriculum learning pour le transfert de connaissances. Par rapport à EasyTool (Yuan et al., 2025), qui repose sur des prompts manuellement optimisés, Trace-Free+ apprend des patterns généralisables. Par rapport à DRAFT (Qu et al., 2025) et Play2Prompt (Fang et al., 2025), il élimine la dépendance aux pipelines de collecte de traces au moment du déploiement.</p>
 
-<p>L'idée de transférer la connaissance des traces vers un régime sans traces par curriculum est l'apport conceptuel central. Les travaux antérieurs traitaient chaque outil isolément ; ici, le modèle fine-tuné abstrait des patterns réutilisables à travers les outils. La comparaison avec les baselines est honnête : les auteurs reconnaissent que EasyTool a été conçu pour des modèles plus anciens et que ses résultats inférieurs reflètent ce décalage.</p>
+<p>Le passage d'approches par prompting (one-shot, optimisation manuelle) à une approche par apprentissage (SFT + curriculum) marque une inflexion dans le sous-domaine. La démonstration que des patterns d'interface transférables existent et sont apprenables à partir de 107 fournisseurs d'API est le résultat le plus significatif de l'article, au-delà des gains numériques sur les benchmarks.</p>
 
-<p>Le protocole teacher-forcing, absent des évaluations précédentes, représente une contribution méthodologique secondaire mais utile pour la communauté. Les métriques tool-level (F1 par outil, taux de succès API par outil) comblent une lacune des évaluations existantes, qui agrègent tout au niveau requête et masquent les disparités entre outils.</p>
+<p>Le choix de Qwen3-4B comme modèle de base positionne le travail dans la tendance des modèles spécialisés de petite taille, déployables localement. RIMRULE (Gao et al., 2025), utilisé pour l'extraction de règles depuis les traces d'échec, est un travail du même groupe de recherche (Intuit AI Research), ce qui crée une dépendance interne dans la chaîne méthodologique.</p>
 
-<h2>Tableau récapitulatif des critères de robustesse</h2>
+<h2>Tableau récapitulatif des scores de robustesse</h2>
 
 <table>
 <thead>
-<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
 </thead>
 <tbody>
-<tr><td>Question de recherche</td><td>4</td><td>Problème bien délimité (trace-free tool description improvement), motivation pratique claire, gap identifié par rapport aux méthodes existantes</td></tr>
-<tr><td>Design expérimental</td><td>4</td><td>Évaluation multi-benchmark (StableToolBench, RestBench), settings trace-free et trace-based, cross-domaine, scaling, teacher-forcing justifié ; un seul agent d'évaluation limite la portée</td></tr>
-<tr><td>Taille d'échantillon</td><td>3</td><td>107 fournisseurs API d'entraînement, ~7 000 requêtes synthétiques, mais filtrage agressif (1,1 % de rétention) et tests sur 2 benchmarks seulement</td></tr>
-<tr><td>Qualité des métriques</td><td>4</td><td>Métriques à trois niveaux (sous-tâche, requête, outil), F1 tool-level plus informative que le recall query-level standard, écarts-types rapportés sur 3 runs</td></tr>
-<tr><td>Contrôle des biais</td><td>3</td><td>Séparation stricte train/test sur les outils et requêtes, teacher-forcing pour l'attribution causale ; mais correction préalable des schémas et agent unique introduisent des confondants potentiels</td></tr>
-<tr><td>Reproductibilité</td><td>3</td><td>Prompts complets en annexe, hyperparamètres détaillés ; ni code ni données publiés, dépendance aux API RapidAPI dynamiques</td></tr>
-<tr><td>Transparence et limitations</td><td>3</td><td>Section future work mentionne des extensions, impact statement présent ; discussion limitée des cas d'échec, pas d'analyse qualitative des descriptions générées</td></tr>
-<tr><td>Impact et nouveauté</td><td>4</td><td>Curriculum learning pour le transfert trace→trace-free est original, gains cross-domaine significatifs (+25 pts QL sur TMDB), contribution pratique pour le cold-start</td></tr>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien identifié (cold-start, coût des traces), motivé par des cas d'usage réels. Question incrémentale mais pertinente.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Évaluation multi-benchmark, cross-domaine, avec protocole teacher-forcing original. Un seul agent évalué (GPT-4.1), une seule taille de modèle fine-tuné.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>921 requêtes d'évaluation au total, 107 fournisseurs d'API pour l'entraînement. Certaines configurations avec un seul run (écart-type nul dans Table 7).</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Métriques à trois niveaux (sous-tâche, requête, outil), sans LLM-as-judge. Annotation ground truth par GPT-4.1 (96 % de précision vérifiée sur 100 échantillons).</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Même famille de modèles pour la synthèse de données et l'évaluation. Correction préalable des schémas avantageuse. Baselines potentiellement désavantagées (EasyTool conçu pour des modèles plus anciens).</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Prompts et hyperparamètres détaillés, modèle de base open-weight. Dataset et code non annoncés comme publics. Dépendance à des API dynamiques.</td></tr>
+<tr><td>Transparence / limitations</td><td>3</td><td>Pas de section Limitations dédiée. Les dégradations tool-level (11 % des outils) ne sont pas discutées. Futures directions mentionnées sans autocritique.</td></tr>
+<tr><td>Impact / nouveauté</td><td>4</td><td>Passage du prompting à l'apprentissage pour l'optimisation d'interfaces. Protocole teacher-forcing réutilisable. Gains cross-domaine convaincants sur RestBench.</td></tr>
 </tbody>
 </table>
+
+<p><strong>Note globale de robustesse : 3,5 / 5.</strong> Travail appliqué solide avec un pipeline de bout en bout cohérent et des résultats expérimentaux étendus. Les gains in-domain restent modérés et la dépendance à un unique agent-évaluateur (GPT-4.1) limite la portée des conclusions. L'absence de publication du dataset et du code, combinée à la complexité du pipeline de synthèse, fragilise la reproductibilité.</p>
+
   </div>
   <script>
   (function(){

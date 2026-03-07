@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reinforcement Learning via Self-Distillation — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Reinforcement Learning via Self-Distillation</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les méthodes dominantes de post-entraînement des LLM par renforcement (RLVR) reposent sur une récompense scalaire — souvent binaire : le test passe ou échoue. Le modèle sait qu'il a échoué, mais pas où ni pourquoi. Ce goulot d'étranglement informationnel limite l'attribution de crédit à un signal constant sur l'ensemble de la séquence générée. Hübotter et al. partent d'un constat simple : beaucoup d'environnements vérifiables (compilation, tests unitaires, juges LLM) retournent un feedback textuel riche qui décrit <em>ce qui</em> a échoué. Ils formalisent ce cadre sous le nom de Reinforcement Learning with Rich Feedback (RLRF) et proposent Self-Distillation Policy Optimization (SDPO), un algorithme qui convertit ce feedback en signal dense sans recours à un modèle enseignant externe.</p>
+
+<p>L'idée centrale : conditionner le même modèle sur le feedback reçu pour créer un « auto-enseignant » qui réévalue rétrospectivement la tentative originale. La divergence entre les distributions étudiant et enseignant fournit un avantage token par token, au niveau du vocabulaire complet.</p>
+
+<h2>Méthodologie</h2>
+
+<p>SDPO échantillonne des rollouts depuis la politique courante, obtient le feedback de l'environnement, puis minimise une perte de distillation au niveau des logits (divergence KL, ou Jensen-Shannon pour la stabilité) entre l'étudiant π<sub>θ</sub>(· | x, y<sub>&lt;t</sub>) et l'auto-enseignant π<sub>θ</sub>(· | x, f, y<sub>&lt;t</sub>), où f inclut le feedback environnemental et éventuellement une solution correcte issue du même groupe de rollouts. Un opérateur stopgrad bloque les gradients côté enseignant pour éviter la régression vers l'étudiant.</p>
+
+<p>Les auteurs démontrent que le gradient SDPO est un gradient de politique dont les avantages sont estimés par l'auto-enseignant. Cette propriété rend l'implémentation triviale : remplacer les avantages GRPO par ceux de SDPO dans un pipeline existant. Une approximation top-K (K = 100) des logits réduit l'empreinte mémoire sans perte substantielle d'information. Deux mécanismes de stabilisation sont employés : une moyenne mobile exponentielle (EMA) des paramètres de l'enseignant, ou une contrainte trust-region explicite interpolant enseignant courant et initial.</p>
+
+<p>L'évaluation couvre trois régimes :</p>
+<ul>
+<li>RLVR standard (sans feedback riche) : raisonnement scientifique sur SciKnowEval (chimie, physique, biologie, sciences des matériaux) et utilisation d'outils sur ToolAlpaca, avec Qwen3-8B et Olmo3-7B-Instruct. Dans ce régime, SDPO utilise les tentatives réussies du même batch comme « feedback » pour les tentatives échouées.</li>
+<li>RLRF avec feedback riche : programmation compétitive sur LiveCodeBench v6 (131 problèmes, février-mai 2025), avec feedback de type LeetCode (erreurs d'exécution, tests échoués, erreurs mémoire). Tests publics pour l'entraînement, tests privés pour la validation.</li>
+<li>Test-time self-distillation : découverte de solutions sur des problèmes binaires difficiles (pass@64 &lt; 0.03 et pass@64 &lt; 0.5), où le modèle se spécialise sur une question unique par distillation itérative.</li>
+</ul>
+
+<p>Le baseline est une version renforcée de GRPO intégrant le clipping asymétrique (Yu et al., 2025), la correction de normalisation (Liu et al., 2025b) et la correction off-policy (Yao et al., 2025). Chaque configuration est exécutée avec 3 seeds d'entraînement sur des nœuds à 4 GPU NVIDIA GH200, pour une durée d'environ 6 heures par run. Le test-time utilise 5 seeds par question.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>En RLVR standard, SDPO atteint 70.2% de précision agrégée (avg@16) contre 66.6% pour GRPO. Les gains les plus marqués apparaissent sur la chimie avec Olmo3-7B-Instruct : SDPO atteint en 50 minutes la précision que GRPO met 5 heures à obtenir — un facteur d'accélération de 6×. Sur l'ensemble des tâches, la précision finale de SDPO dépasse celle de GRPO de plus de 10 points de pourcentage dans plusieurs cas.</p>
+
+<p>Les réponses SDPO sont en moyenne 3× plus courtes que celles de GRPO. Sur chimie/Olmo3, la réduction atteint 11× sans dégradation de la précision. L'analyse qualitative révèle que GRPO génère des remplissages (« Hmm », « Wait », « I'm going in circles ») et des boucles de raisonnement circulaire — des artefacts que SDPO évite grâce à son attribution de crédit dense et spécifique.</p>
+
+<p>Sur LiveCodeBench v6 avec feedback riche, SDPO atteint 48.8% contre 41.2% pour GRPO. Ce résultat surpasse Claude Sonnet 4 (40.5%) et Claude Opus 4 (39.7%) sur le leaderboard public. SDPO atteint la précision finale de GRPO en 4× moins de générations. L'étude de scaling (Qwen3-0.6B à 8B) montre que les gains de SDPO croissent avec la taille du modèle : l'auto-enseignant profite directement des capacités d'apprentissage en contexte des modèles plus grands. Sur Qwen2.5-1.5B, SDPO sous-performe GRPO — une limite honnêtement documentée.</p>
+
+<p>L'ablation du niveau de crédit (logit vs. token vs. séquence) confirme que feedback riche et attribution dense sont complémentaires : même le SDPO au niveau séquence (avantage scalaire moyen, comme GRPO) surpasse GRPO, et le SDPO au niveau logit surpasse les deux variantes moins granulaires.</p>
+
+<p>En test-time self-distillation, sur 9 problèmes très difficiles (pass@64 &lt; 0.03), SDPO atteint 53.2% de discovery@2750 contre 41.5% pour best-of-k et 35.6% pour multi-turn. La vitesse de découverte est 3× supérieure à celle des baselines. SDPO résout un problème (Q3) qu'aucune autre méthode ne parvient à résoudre en 2750 tentatives. L'auto-enseignant initial a une précision &lt; 1% sur presque toutes les questions — une seule itération de feedback en contexte ne suffit pas, mais la distillation itérative dans les poids du modèle finit par résoudre le problème.</p>
+
+<p>Sur les benchmarks de rétention (IFEval, ArenaHard-v2, MMLU-Pro), SDPO affiche un meilleur compromis performance/oubli que GRPO et que le SFT sur les générations de l'auto-enseignant.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>La contribution est à la fois conceptuellement propre et pratiquement accessible. L'idée d'utiliser le même modèle dans deux rôles — étudiant pour la tentative initiale, enseignant pour l'évaluation rétrospective — exploite une capacité existante (l'apprentissage en contexte) sans infrastructure additionnelle. La démonstration que l'auto-enseignant s'améliore au cours de l'entraînement, avec l'étudiant dépassant la précision initiale de l'enseignant, établit un véritable bootstrapping sans plafond imposé par les performances initiales.</p>
+
+<p>L'évaluation souffre de contraintes d'échelle. Tous les modèles testés ont au maximum 8B paramètres. Les auteurs argumentent que SDPO devrait bénéficier de modèles plus grands (l'apprentissage en contexte s'améliore avec l'échelle), mais cette hypothèse reste non vérifiée. LiveCodeBench v6 contient 131 problèmes — un corpus de taille modeste pour tirer des conclusions statistiques robustes. Le sous-ensemble test-time se réduit à 9 problèmes très difficiles et 19 problèmes difficiles. Les intervalles de confiance rapportés reflètent cette limitation.</p>
+
+<p>Le surcoût computationnel (5.8% sans environnement de code, 17.1% avec) est mesuré avec un micro-batch de 2. L'extrapolation à des configurations d'entraînement à grande échelle n'est pas documentée. L'approximation top-K (K = 100) pour la distillation logit est présentée comme capturant « la majeure partie de l'information », mais aucune ablation sur K n'est fournie.</p>
+
+<p>La dépendance à la qualité du feedback environnemental est reconnue mais non testée empiriquement. Que se passe-t-il si le feedback est ambigu, incomplet ou trompeur ? Cette question reste ouverte. Le régime RLVR standard, où SDPO utilise les solutions réussies comme proxy de feedback, suppose que le batch contient au moins une solution correcte — une condition non garantie sur des questions difficiles, ce qui crée un régime dégénéré que le test-time self-distillation adresse partiellement.</p>
+
+<p>L'entraînement strictement on-policy (un seul pas de gradient par batch de génération) est un choix conservateur. Les auteurs le reconnaissent et identifient l'extension off-policy comme direction future, mais l'absence de cette comparaison laisse ouverte la question de savoir si SDPO bénéficierait d'updates multiples par batch, comme GRPO le fait déjà.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le code est disponible sur GitHub (lasgroup/SDPO). Les hyperparamètres sont détaillés dans l'annexe E, avec les templates de reprompt dans l'annexe E.3. Les modèles de base (Qwen3, Olmo3) sont publics et téléchargeables. LiveCodeBench est un benchmark ouvert. La bibliothèque verl est open-source. Les erreurs standard et intervalles de confiance bootstrappés sont systématiquement rapportés. Le pseudo-code de la Figure 14 et l'Algorithme 1 permettent une réimplémentation indépendante. Le matériel requis (4× NVIDIA GH200) reste coûteux mais accessible dans un cadre académique disposant de clusters GPU. Chaque run d'environ 6 heures est reproductible à budget raisonnable.</p>
+
+<h2>Impact et applications</h2>
+
+<p>SDPO se substitue aux avantages GRPO dans un pipeline RLVR existant par un changement minimal — quelques lignes de code pour le calcul des avantages et le reprompt de l'enseignant. Cette propriété « drop-in » abaisse la barrière d'adoption. L'observation que le raisonnement SDPO est plus concis et évite les pathologies de GRPO (remplissages, boucles circulaires) a des implications directes sur le coût d'inférence : des réponses 3× à 11× plus courtes réduisent proportionnellement les tokens générés.</p>
+
+<p>L'application test-time est distincte et complémentaire. Sur des problèmes binaires difficiles, où RLVR ne peut rien apprendre tant qu'une première solution n'a pas été trouvée, SDPO commence à apprendre dès le premier feedback. La compression du contexte dans les poids du modèle (plutôt que dans la fenêtre de contexte) élimine la contrainte de longueur de contexte qui limite le multi-turn. Cette approche est applicable à tout environnement fournissant du feedback structuré : compilation, tests unitaires, validation de schémas, vérification formelle.</p>
+
+<p>Les extensions naturelles incluent les agents à horizon long (où les trajectoires exposent des états intermédiaires riches), l'entraînement multi-tâche à grande échelle, et les domaines sans vérificateur mais avec feedback textuel (alignement, génération ouverte).</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>SDPO occupe une position distincte parmi les méthodes de post-entraînement. Par rapport à GRPO (Shao et al., 2024) et aux variantes RLVR (DeepSeek-R1, Kimi k1.5, Olmo 3), SDPO passe d'un avantage scalaire constant à un avantage dense au niveau du vocabulaire — une extension directe plutôt qu'un remplacement. Par rapport à la distillation on-policy (Agarwal et al., 2024 ; Lu &amp; Thinking Machines Lab, 2025), SDPO élimine le besoin d'un enseignant externe plus puissant. Par rapport aux process reward models (Lightman et al., 2023 ; Setlur et al., 2025), SDPO montre que chaque LLM est implicitement son propre PRM lorsqu'il reçoit du feedback en contexte — sans modèle séparé ni surcoût mémoire associé.</p>
+
+<p>La connexion avec BYOL (Grill et al., 2020) et l'expert iteration (Anthony et al., 2017) est pertinente : dans les deux cas, un modèle s'améliore en imitant une version augmentée de lui-même. La différence réside dans la source de l'augmentation : recherche arborescente pour l'expert iteration, feedback environnemental en contexte pour SDPO. Les travaux concurrents de Chen et al. (2025c) appliquent l'auto-distillation on-policy à des mondes en grille avec récompense scalaire, tandis que Shenfeld et al. (2026a) et Zhao et al. (2026) étudient SDPO sur des données fixes sans interaction en ligne — deux restrictions que l'article complet lève.</p>
+
+<p>Par rapport aux approches de self-refine (Madaan et al., 2023) et Reflexion (Shinn et al., 2023) qui exploitent le feedback en contexte pour re-générer, SDPO intègre ce signal dans la boucle d'optimisation RL : le modèle ne se contente pas de mieux répondre en contexte, il modifie ses poids pour éviter les mêmes erreurs lors de futures générations indépendantes. La combinaison SDPO+GRPO (§4.5) montre que les avantages Monte Carlo non biaisés de GRPO et les avantages denses biaisés de SDPO sont complémentaires, avec un bénéfice clair de l'hybridation sur les modèles faibles.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Formulation claire du goulot RLVR, formalisation originale du RLRF, question centrale bien délimitée</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trois régimes distincts, ablations exhaustives (niveau de crédit, type de feedback, régularisation enseignant), baseline GRPO renforcé ; limité à ≤ 8B paramètres</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>131 problèmes LCBv6, 9 problèmes très difficiles en test-time, 3-5 seeds ; effectifs modestes pour certaines conclusions</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>avg@16, discovery@k (métrique bien définie), comparaisons en wall-clock time, erreurs standard systématiques</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Hyperparameter sweep pour SDPO et baselines, sélection sur validation 5h ; la composition des améliorations GRPO pourrait favoriser certaines comparaisons</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Code GitHub, modèles publics, hyperparamètres en annexe, pseudo-code détaillé, bibliothèque verl open-source</td></tr>
+<tr><td>Transparence des limitations</td><td>5</td><td>Sous-performance sur modèles faibles montrée empiriquement (Qwen2.5-1.5B), dépendance au feedback reconnue, surcoût computationnel mesuré</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Idée élégante (auto-enseignement par conditionnement), implémentation drop-in, application test-time originale, résultats compétitifs avec Claude Sonnet/Opus 4</td></tr>
+</tbody>
+</table>
+
+<p><strong>Note globale de robustesse : 4.0 / 5</strong> — Publication de haute qualité avec une contribution méthodologique propre, des expériences rigoureuses et des limitations honnêtement documentées. L'échelle d'évaluation (modèles ≤ 8B, 131 problèmes LCBv6) et l'absence de validation sur des modèles frontières constituent les principales réserves.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

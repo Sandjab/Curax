@@ -127,141 +127,101 @@
     <p class="doc-type">Lecture Critique d'Article</p>
   </div>
   <div class="companion-content">
-    <h2>Objectif et contexte</h2>
+    <h2>1. Objectif et contexte</h2>
 
-<p>Les agents autonomes fondés sur des LLM opèrent dans des environnements machine — bases de données, éditeurs de code, interfaces web — où les trajectoires d'interaction diffèrent radicalement des dialogues en langage naturel. Ces trajectoires contiennent des représentations symboliques denses (JSON, HTML, tables ASCII), des dépendances causales entre actions et états latents, et peu de redondance linguistique. Or, les benchmarks de mémoire existants (LoCoMo, LongMemEval, MemoryBench) évaluent la rétention dans des conversations humain-agent, un cadre inadapté aux contraintes réelles des agents.</p>
+<p>Les systèmes de mémoire pour agents LLM sont aujourd'hui évalués sur des benchmarks centrés sur le dialogue humain-agent (LoCoMo, LongMemEval, MemoryAgentBench). Or les agents autonomes interagissent avec des environnements machines — bases de données, interfaces web, exécuteurs de code — et produisent des trajectoires fondamentalement différentes : représentations symboliques hétérogènes (JSON, HTML, ASCII), dépendances causales entre actions et observations, information objective dense sans redondance conversationnelle.</p>
 
-<p>AMA-Bench cible ce décalage. Le benchmark propose deux sous-ensembles complémentaires : un corpus réel de 2 496 paires question-réponse annotées par des experts sur six domaines agents (web, SQL, ingénierie logicielle, IA incarnée, jeux, outils), et un corpus synthétique de 1 200 paires générées programmatiquement dans des environnements TextWorld et BabyAI, dont l'horizon peut être étendu de 8K à 128K tokens. L'article propose aussi AMA-Agent, un système mémoire à graphe de causalité et recherche augmentée par outils, qui surpasse les 13 baselines testées de 11,16 % en précision moyenne.</p>
+<p>AMA-Bench cible ce décalage. Le benchmark évalue la mémoire des agents sur des trajectoires agent-environnement réelles et synthétiques, selon quatre capacités : rappel temporel, inférence causale, suivi d'état et abstraction. Les auteurs proposent en parallèle AMA-Agent, un système de mémoire combinant graphe de causalité et recherche augmentée par outils.</p>
 
-<h2>Méthodologie</h2>
+<h2>2. Méthodologie</h2>
 
-<h3>Construction du benchmark</h3>
+<h3>2.1 Construction du benchmark</h3>
 
-<p>Le sous-ensemble réel agrège des trajectoires issues de six benchmarks agents reconnus : WebArena, SWE-bench, Spider 2.0, ALFWorld, BALROG/LMGame-Bench et GAIA. Les trajectoires proviennent de frameworks agents de référence (OpenHands, Co-Sight, Spider2-Agent) ou de démonstrations expertes. La sélection privilégie les trajectoires longues tout en maintenant la distribution originale des tâches par domaine. Chaque trajectoire reçoit 12 paires QA couvrant quatre capacités mémorielles : rappel temporel (type A), inférence causale (type B), mise à jour d'état (type C) et abstraction condensée (type D).</p>
+<p>AMA-Bench se compose de deux sous-ensembles complémentaires.</p>
 
-<p>L'annotation suit un protocole à deux passes : un annotateur de niveau doctoral rédige les QA, puis un second effectue une vérification croisée. Les réponses doivent être ancrées dans des preuves explicites et non ambiguës du log de trajectoire.</p>
+<p>Le <strong>sous-ensemble réel</strong> rassemble 208 trajectoires issues de six domaines applicatifs : navigation web (WebArena), ingénierie logicielle (SWE-bench via OpenHands), Text2SQL (Spider 2.0), IA embodied (ALFWorld), gaming (BALROG/LMGame-Bench) et QA open-world (GAIA via Co-Sight). Pour chaque trajectoire, 12 paires question-réponse ont été annotées par des chercheurs de niveau doctoral, puis vérifiées par un second annotateur. Le total atteint 2 496 paires QA.</p>
 
-<p>Le sous-ensemble synthétique repose sur la synthèse programmatique d'environnements exécutables. Un vecteur de difficulté φ contrôle la complexité (taille de la grille, chaînes de sous-objectifs), un paramètre ε injecte de la stochasticité dans les actions, et un paramètre γ module la verbosité des observations. L'accès complet au MDP sous-jacent permet de générer des QA vérifiables automatiquement et d'instancier un protocole needle-in-a-haystack avec des aiguilles traçables.</p>
+<p>Le <strong>sous-ensemble synthétique</strong> utilise BabyAI et TextWorld pour générer des trajectoires à horizon contrôlable (8K à 128K tokens). Les paires QA sont produites programmatiquement à partir de l'état complet du MDP, ce qui garantit leur vérifiabilité. Deux perturbations sont introduites : stochasticité des actions (ε) et verbosité des observations (γ). Ce sous-ensemble contient 1 200 paires QA.</p>
 
-<h3>Taxonomie des capacités mémorielles</h3>
+<h3>2.2 Taxonomie des capacités</h3>
 
-<p>Quatre capacités sont formalisées selon trois mécanismes : la récupération (rappel et inférence causale), l'évolution (mise à jour d'état) et la condensation (abstraction d'état). Cette taxonomie structure l'annotation et l'analyse des résultats, ce qui permet un diagnostic fin des faiblesses de chaque système.</p>
+<p>Quatre capacités mémoire sont évaluées, regroupées en trois mécanismes : la récupération (rappel temporel + inférence causale), l'évolution (suivi des mises à jour d'état) et la condensation (abstraction d'état). Cette taxonomie structure l'annotation des QA dans les deux sous-ensembles.</p>
 
-<h3>AMA-Agent</h3>
+<h3>2.3 Formalisation</h3>
 
-<p>Le système proposé construit un graphe de causalité à partir de paires de tours adjacents (o<sub>t-1</sub>, a<sub>t</sub>, o<sub>t</sub>). Les nœuds représentent des états d'environnement et d'objets ; les arêtes dirigées capturent les transitions causales, les arêtes non dirigées les associations état-objet. Les nœuds sont projetés dans un espace d'embeddings (Qwen3-4B-embedding) pour la recherche par similarité. La récupération procède en trois étapes : recherche top-K par similarité, auto-évaluation de suffisance, puis — si nécessaire — traversée de voisinage dans le graphe ou recherche par mots-clés via exécution de scripts Python.</p>
+<p>L'interaction agent-environnement est modélisée comme un POMDP (S, A, O, P, r). Le système de mémoire est décomposé en deux étapes : construction (Build : H → M_mem) et récupération (Retrieve : (m_t, q_t) → c_t). Cette formalisation est claire et standard.</p>
 
-<h3>Protocole d'évaluation</h3>
+<h3>2.4 Protocole d'évaluation</h3>
 
-<p>Tous les systèmes RAG et mémoire utilisent le même backbone (Qwen3-32B ou Qwen3-8B) pour garantir la comparabilité. Un juge LLM (Qwen3-32B) émet une décision binaire (correct/incorrect) sur chaque réponse. La fiabilité du juge est validée par accord humain sur 300 instances : 92,67 % d'exactitude, F1 de 94,53 %.</p>
+<p>L'évaluation repose sur un LLM-as-judge (Qwen3-32B) qui produit un jugement binaire (correct/incorrect) pour chaque prédiction. La calibration humaine sur 300 instances (50 par sous-ensemble) montre un accord de 92,67 % avec les annotateurs humains. L'accuracy et le F1-score sont rapportés.</p>
 
-<h2>Résultats principaux</h2>
+<h3>2.5 AMA-Agent</h3>
 
-<p>GPT-5.2 atteint 72,26 % de précision moyenne sur le sous-ensemble réel — loin d'une performance plafond, ce qui confirme la difficulté du benchmark même pour les modèles commerciaux frontière. Qwen3-32B en contexte long obtient 51,81 %, tandis que Claude Haiku 3.5 plafonne à 43,61 %.</p>
+<p>Le système proposé repose sur deux mécanismes. La <strong>construction par graphe de causalité</strong> analyse chaque triplet (o_{t-1}, a_t, o_t) pour extraire les états d'environnement et d'objets, les arêtes causales dirigées et les associations non dirigées. Les nœuds sont projetés dans un espace d'embedding (Qwen3-4B-embedding). La <strong>récupération augmentée par outils</strong> commence par un top-K par similarité (K=5), suivi d'une auto-évaluation de suffisance. Si l'évidence est insuffisante, l'agent invoque soit une traversée de graphe (voisinage à profondeur contrôlée), soit une recherche par mots-clés avec exécution de scripts Python.</p>
 
-<p>Les systèmes mémoire existants sous-performent la baseline long-contexte sur AMA-Bench. C'est un renversement par rapport aux benchmarks dialogiques où ces mêmes systèmes l'emportent. Mem1, Mem0 et SimpleMem descendent sous 20 % de précision moyenne. Seuls HippoRAG2 (44,80 %) et MemoRAG (46,06 %) approchent la baseline long-contexte sans la dépasser.</p>
+<h2>3. Résultats principaux</h2>
 
-<p>AMA-Agent atteint 57,22 % de précision moyenne avec le backbone Qwen3-32B, soit +11,16 points au-dessus de la meilleure baseline mémoire (MemoRAG). Les gains sont distribués sur les quatre capacités : rappel (62,38 %), inférence causale (61,45 %), mise à jour d'état (53,05 %), abstraction (47,19 %).</p>
+<p>Trois résultats structurent l'évaluation.</p>
 
-<p>L'analyse d'échelle (Figure 7) montre que passer de Qwen3-8B à 32B améliore la précision de 0,038 en moyenne, alors que le choix du système mémoire induit des écarts allant jusqu'à 0,45. Le goulot d'étranglement réside dans l'architecture mémoire, pas dans la capacité du modèle de base.</p>
+<p><strong>Les systèmes de mémoire existants sous-performent la baseline long-context.</strong> Sur le sous-ensemble réel avec Qwen3-32B comme backbone, la baseline long-context atteint 51,81 % d'accuracy moyenne. La majorité des systèmes de mémoire (MemAgent : 27,68 %, Mem1 : 12,29 %, Mem0 : 21,04 %, SimpleMem : 18,11 %) restent loin derrière. Seuls HippoRAG2 (44,80 %) et MemoRAG (46,06 %) s'en approchent sans la dépasser.</p>
 
-<p>Sur le sous-ensemble synthétique, la corrélation de rang entre performances réelles et synthétiques valide l'utilisation du synthétique comme proxy. AMA-Agent maintient une précision stable de 8K à 128K tokens, tandis que la baseline long-contexte se dégrade après 32K.</p>
+<p><strong>L'architecture mémoire pèse plus que la taille du modèle.</strong> Le passage de 8B à 32B paramètres n'apporte qu'un gain moyen de 0,038 en accuracy, alors que le choix du système de mémoire induit une variance de 0,45 (Figure 7). Le goulot d'étranglement est la conception de la mémoire, pas la capacité du backbone.</p>
 
-<h3>Ablations</h3>
+<p><strong>AMA-Agent établit un nouvel état de l'art.</strong> Avec Qwen3-32B, AMA-Agent atteint 57,22 % d'accuracy moyenne sur le sous-ensemble réel — 11,16 points au-dessus de MemoRAG. Les gains sont répartis sur les quatre capacités : rappel (62,38 %), inférence causale (61,45 %), suivi d'état (53,05 %), abstraction (47,19 %). L'étude d'ablation confirme que le graphe de causalité (−24,6 % sans) et la recherche augmentée (−22,8 % sans) contribuent chacun de façon substantielle.</p>
 
-<p>Retirer le graphe de causalité fait chuter la précision de 57 % à 43 % (−24,6 %). Retirer la recherche augmentée par outils la ramène à 44 % (−22,8 %). L'ablation needle (Table 3) isole deux goulots : la compression lossy (MemoryBank perd 41,3 % entre observation brute et mémoire construite) et la récupération par similarité (HippoRAG2 perd 43,2 % entre mémoire construite avec aiguille et pipeline complet).</p>
+<p>Sur le sous-ensemble synthétique, la corrélation de rang entre performances synthétiques et réelles est élevée (Figure 9A). AMA-Agent maintient des performances stables de 8K à 128K tokens, alors que la baseline long-context se dégrade au-delà de 32K.</p>
 
-<h2>Discussion et limites</h2>
+<h2>4. Discussion et limites</h2>
 
-<p>Le diagnostic est clair : les systèmes mémoire conçus pour le langage naturel échouent sur les trajectoires agents parce qu'ils compriment des informations denses et causales comme s'il s'agissait de bavardage redondant. La compression supprime des transitions d'état critiques ; la récupération par similarité sémantique ne capture pas les dépendances causales entre tours distants.</p>
+<p>Le protocole LLM-as-judge pose un problème de circularité. Qwen3-32B sert simultanément de backbone pour la majorité des expériences et de juge pour l'évaluation. L'accord humain de 92,67 % est acceptable, mais les 7,33 % d'erreur ne sont pas analysés par type : le juge pourrait systématiquement favoriser les réponses produites par son propre modèle, ou échouer sur certaines catégories de QA.</p>
 
-<p>Plusieurs limites tempèrent ces résultats. Le sous-ensemble réel comporte 208 trajectoires — un volume modeste qui contraint la diversité des situations évaluées par domaine (30 à 51 trajectoires chacun). L'annotation repose sur des étudiants doctoraux, avec vérification croisée mais sans accord inter-annotateurs chiffré. Le juge LLM, bien que validé sur 300 instances, partage le même modèle (Qwen3-32B) que certains backbones évalués, ce qui crée un biais potentiel de familiarité.</p>
+<p>La comparaison entre systèmes n'est pas à iso-coût computationnel. AMA-Agent nécessite la construction d'un graphe de causalité (un appel LLM par tour de trajectoire) plus des appels supplémentaires lors de la récupération (auto-évaluation, traversée de graphe, génération de code). Les baselines comme BM25 ou l'embedding dense n'ont aucun coût LLM à la construction. Aucune mesure de latence ou de coût n'est rapportée.</p>
 
-<p>Le sous-ensemble synthétique ne couvre que deux environnements (TextWorld et BabyAI), tous deux textuels et relativement simples. L'extrapolation à des environnements visuels, multimodaux ou à états continus reste non démontrée.</p>
+<p>La sélection des trajectoires réelles privilégie les séquences longues, ce qui introduit un biais de sélection. Les trajectoires courtes — fréquentes en production — sont sous-représentées. Le nombre de trajectoires par domaine reste modeste : 30 à 51 selon le domaine.</p>
 
-<p>AMA-Agent dépend d'un LLM pour l'extraction d'états causaux à chaque tour, ce qui implique un coût computationnel élevé non quantifié dans l'article. Aucune analyse de latence, de coût API ou de passage à l'échelle n'est fournie. Le choix K=5 pour la récupération top-K n'est pas justifié par une étude de sensibilité.</p>
+<p>Les scores F1 sont faibles pour tous les systèmes, y compris AMA-Agent (0,2992 en moyenne). Cette métrique secondaire suggère que même les réponses jugées « correctes » en accuracy restent partiellement imprécises. Les auteurs ne discutent pas cet écart.</p>
 
-<p>Les auteurs reconnaissent explicitement une limitation : le benchmark se restreint à la mémoire intra-épisode. Les scénarios d'apprentissage continu inter-tâches, où un agent réutilise l'expérience d'épisodes précédents, ne sont pas couverts.</p>
+<p>La limitation à la mémoire intra-épisode est reconnue. Les scénarios d'apprentissage continu ou de transfert inter-tâches — centraux pour les agents déployés en production — ne sont pas couverts.</p>
 
-<h2>Reproductibilité</h2>
+<h2>5. Reproductibilité</h2>
 
-<p>L'article fournit des détails d'implémentation pour les 15 baselines dans l'annexe B, incluant configurations par défaut, modèles d'embeddings et paramètres de chunking. Les templates de prompts d'AMA-Agent sont reproduits intégralement en annexe D. Le sous-ensemble synthétique est généré programmatiquement, ce qui le rend reproductible par construction.</p>
+<p>L'appendice fournit les prompts complets de construction mémoire (D.1), de jugement de suffisance (D.2) et de génération de code (D.3). Les détails d'implémentation des 13 baselines sont documentés avec précision : taille des chunks, modèles d'embedding, hyperparamètres par défaut. Les contextes maximaux de chaque modèle long-context sont listés (Table 9).</p>
 
-<p>Les trajectoires réelles proviennent de benchmarks open-source (WebArena, SWE-bench, etc.), et les auteurs confirment l'absence de données personnelles identifiables. Cependant, l'article ne mentionne pas de dépôt public du code ou des données annotées. La reproductibilité effective dépend donc de la publication ultérieure de ces ressources. Le protocole d'annotation est décrit mais les guidelines partagées entre annotateurs ne sont pas fournies.</p>
+<p>L'article ne mentionne pas d'URL de dépôt pour le code ou les données. Aucune licence n'est spécifiée pour le benchmark. Sans accès au code de génération des trajectoires synthétiques et aux trajectoires réelles annotées, la reproduction complète reste hypothétique. Les configurations matérielles (GPU, temps de calcul) sont absentes.</p>
 
-<h2>Impact et applications</h2>
+<h2>6. Impact et applications</h2>
 
-<p>AMA-Bench répond à un besoin concret : les développeurs d'agents autonomes manquaient d'un benchmark ciblant la mémoire dans les interactions agent-environnement réelles. Le résultat le plus actionnable est le diagnostic montrant que les systèmes mémoire actuels sous-performent le simple contexte long — un signal d'alarme pour la communauté qui investit dans des architectures mémoire sophistiquées sans évaluation adaptée.</p>
+<p>AMA-Bench comble un vide réel. Les benchmarks de mémoire existants (LoCoMo, LongMemEval, RULER) évaluent des compétences conversationnelles ou documentaires qui ne reflètent pas les défis de la mémoire agentique. La mise en évidence que les systèmes de mémoire actuels sous-performent une simple baseline long-context est un résultat diagnostique précieux pour la communauté.</p>
 
-<p>Le graphe de causalité proposé dans AMA-Agent offre un mécanisme explicite de préservation des dépendances causales. L'approche de recherche augmentée par outils — où l'agent peut écrire et exécuter du code Python pour extraire de l'information — est pragmatique et adaptée aux représentations machine.</p>
+<p>Le concept de graphe de causalité pour préserver les dépendances état-action est une piste architecturale concrète. La recherche augmentée par outils — où l'agent décide dynamiquement entre traversée de graphe et exécution de code — dépasse le cadre classique de la RAG par similarité.</p>
 
-<p>Le sous-ensemble synthétique, avec ses paramètres de difficulté contrôlables, constitue un outil de diagnostic utile pour les futurs travaux. La corrélation démontrée avec les performances réelles renforce sa valeur comme proxy à faible coût.</p>
+<p>L'applicabilité immédiate dépend du coût. Un appel LLM par tour de trajectoire pour construire le graphe rend le système difficilement déployable sur des trajectoires de plusieurs milliers de tours sans optimisation (batching, modèles spécialisés plus légers).</p>
 
-<h2>Positionnement dans la littérature</h2>
+<h2>7. Positionnement dans la littérature</h2>
 
-<p>AMA-Bench se distingue clairement des benchmarks dialogiques (LoCoMo, LongMemEval, MemoryBench, RealTalk) et des benchmarks de contexte long statique (RULER, LongBench v2, QuALITY). C'est le premier benchmark à évaluer la mémoire sur des trajectoires agent-environnement, avec des représentations machine et des dépendances causales explicites.</p>
+<p>AMA-Bench se distingue clairement des benchmarks existants sur trois axes. Face aux benchmarks dialogue-centriques (LoCoMo, LongMemEval, MemoryAgentBench, MemoryBench, RealTalk), il substitue des trajectoires machine-générées aux conversations en langage naturel. Face aux benchmarks long-context (QuALITY, RULER, LongBench v2), il évalue la mémoire dans un cadre interactif avec dépendances causales plutôt que sur des documents statiques. Face aux systèmes de mémoire évalués (MemGPT, Mem0, MemoRAG, MemoryBank, SimpleMem, A-Mem, Mem1, MemAgent, Mem-α), il révèle que la compression pensée pour le langage naturel échoue sur les représentations denses et structurées des trajectoires agentiques.</p>
 
-<p>L'article se positionne dans la lignée des travaux récents sur la mémoire agent (Mem0, Mem1, A-Mem, SimpleMem, MemAgent) en les évaluant de façon systématique sur un terrain nouveau. Le diagnostic de sous-performance de ces systèmes par rapport au contexte long est un résultat empirique fort qui remet en question l'hypothèse implicite que « structurer la mémoire aide toujours ».</p>
+<p>L'approche AMA-Agent s'inscrit dans la lignée des architectures RAG structurées (GraphRAG, HippoRAG2), mais en remplaçant le graphe entité-relation par un graphe causal explicite. Le mécanisme de recherche par outils rappelle les agents « code-augmented » (comme Co-Sight), appliqué ici à la récupération mémoire plutôt qu'à la résolution de tâches.</p>
 
-<p>Le graphe de causalité s'inscrit dans la continuité de GraphRAG et HippoRAG2, mais se distingue par l'extraction explicite de transitions d'état causales plutôt que de relations entité-document. La recherche augmentée par outils (exécution de scripts, traversée de graphe) dépasse les approches purement vectorielles et rejoint les travaux sur les agents augmentés par outils (ReAct, Voyager).</p>
+<p>Un travail concurrent non cité, Agent Workflow Memory (Wang et al., 2025b), aborde la mémoire agentique sous l'angle du transfert inter-tâches — précisément la limitation reconnue d'AMA-Bench. La convergence de ces travaux signale un tournant vers des architectures de mémoire spécifiquement conçues pour les agents, au-delà des adaptations de RAG conversationnelle.</p>
 
-<p>Par rapport aux travaux sur la mémoire de workflow agent (Wang et al., 2025b), AMA-Bench adopte une granularité plus fine en évaluant quatre capacités distinctes au lieu d'une performance globale de tâche. L'absence de comparaison avec des approches de mémoire paramétrique (fine-tuning, adaptation de poids) laisse un axe d'investigation ouvert.</p>
-
-<h2>Tableau récapitulatif des scores de robustesse</h2>
+<h2>Tableau récapitulatif des critères de robustesse</h2>
 
 <table>
-  <thead>
-    <tr>
-      <th>Critère</th>
-      <th>Score (/5)</th>
-      <th>Commentaire</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Question de recherche</td>
-      <td>4</td>
-      <td>Lacune bien identifiée entre benchmarks dialogiques et mémoire agent réelle ; formulation claire du problème via le formalisme POMDP</td>
-    </tr>
-    <tr>
-      <td>Design expérimental</td>
-      <td>4</td>
-      <td>Double sous-ensemble (réel + synthétique), 6 domaines, 15 baselines, ablations diagnostiques ; le synthétique se limite à deux environnements textuels</td>
-    </tr>
-    <tr>
-      <td>Taille d'échantillon</td>
-      <td>3</td>
-      <td>208 trajectoires réelles et 2 496 QA — correct pour un benchmark mais modeste par domaine (30-51 trajectoires) ; le synthétique compense partiellement</td>
-    </tr>
-    <tr>
-      <td>Qualité des métriques</td>
-      <td>4</td>
-      <td>Accuracy + F1, juge LLM validé par accord humain à 92,67 % sur 300 instances ; taxonomie à 4 capacités bien opérationnalisée</td>
-    </tr>
-    <tr>
-      <td>Contrôle des biais</td>
-      <td>3</td>
-      <td>Backbone unifié pour toutes les baselines, vérification croisée des annotations ; le juge LLM partage le même modèle que certaines baselines, pas d'accord inter-annotateurs chiffré</td>
-    </tr>
-    <tr>
-      <td>Reproductibilité</td>
-      <td>4</td>
-      <td>Détails d'implémentation complets, prompts fournis, environnements synthétiques reproductibles ; pas de dépôt public annoncé dans l'article</td>
-    </tr>
-    <tr>
-      <td>Transparence et limitations</td>
-      <td>3</td>
-      <td>Limitation intra-épisode reconnue ; absence d'analyse de coût computationnel d'AMA-Agent, pas d'étude de sensibilité sur K</td>
-    </tr>
-    <tr>
-      <td>Impact et nouveauté</td>
-      <td>4</td>
-      <td>Premier benchmark agent-centrique pour la mémoire ; diagnostic empirique fort sur la sous-performance des systèmes mémoire existants ; graphe de causalité comme alternative concrète</td>
-    </tr>
-  </tbody>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Gap clairement identifié entre benchmarks dialogue-centriques et mémoire agentique. Formulation précise, motivation empirique solide.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Double sous-ensemble (réel + synthétique), 13+ baselines, études d'ablation, protocole needle. Architecture expérimentale rigoureuse.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>2 496 QA réelles + 1 200 synthétiques. Raisonnable mais 30-51 trajectoires par domaine limitent la puissance statistique intra-domaine.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>LLM-as-judge à 92,67 % d'accord humain. Risque de biais circulaire (même famille de modèle comme backbone et juge). F1 scores bas non discutés.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Backbone unifié pour la comparaison. Mais pas de comparaison à iso-coût computationnel. Biais de sélection vers les trajectoires longues.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Prompts et configurations détaillés en appendice. Pas de dépôt code/données publié. Configurations matérielles absentes.</td></tr>
+<tr><td>Transparence des limitations</td><td>3</td><td>Limitation intra-épisode mentionnée. Biais du juge, coût computationnel et faiblesse du F1 non discutés.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier benchmark agent-centrique pour la mémoire. Résultat diagnostique (mémoire &lt; long-context) à forte valeur pour la communauté. Graphe de causalité comme piste architecturale concrète.</td></tr>
+</tbody>
 </table>
-
-<p><strong>Note globale de robustesse : 3,8 / 5.</strong> Travail substantiel qui pose un cadre d'évaluation manquant dans la littérature et produit des résultats empiriques exploitables. La rigueur expérimentale est bonne, avec un effort réel de comparabilité et de diagnostic. Les faiblesses portent sur la taille du corpus réel, l'absence d'analyse de coût du système proposé, et le manque de diversité des environnements synthétiques.</p>
   </div>
   <script>
   (function(){

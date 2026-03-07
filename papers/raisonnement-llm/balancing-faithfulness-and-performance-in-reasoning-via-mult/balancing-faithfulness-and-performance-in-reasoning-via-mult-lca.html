@@ -127,109 +127,133 @@
     <p class="doc-type">Lecture Critique d'Article</p>
   </div>
   <div class="companion-content">
-    <h2>Objectif et contexte</h2>
-<p>Les modèles de langage produisent des chaînes de raisonnement (chain-of-thought) dont la fidélité au processus computationnel réel reste incertaine. Les approches par apprentissage par renforcement (RL), qui récompensent la justesse de la réponse finale sans contrainte sur le raisonnement intermédiaire, aggravent ce problème. REMUL (Reasoning Execution by Multiple Listeners) reformule la fidélité comme une propriété multi-agents : un raisonnement est fidèle si d'autres modèles, recevant un préfixe tronqué de la trace, parviennent à la même conclusion que le locuteur.</p>
-<p>L'originalité tient à ce cadrage communicationnel. Plutôt que de vérifier la fidélité par introspection ou exécution programmatique, REMUL s'appuie sur la convergence d'un pool d'auditeurs hétérogènes comme signal d'entraînement. Le locuteur apprend à produire des raisonnements suffisamment clairs pour être « exécutés » par des tiers — une exécution dite « douce » par opposition à l'exécution déterministe via code Python.</p>
+    
+<h2>1. Objectif et contexte</h2>
 
-<h2>Méthodologie</h2>
-<p>Le protocole repose sur deux composantes distinctes :</p>
-<ul>
-<li><strong>RL multi-auditeurs pour la fidélité :</strong> le locuteur (Qwen3-14B ou Phi-4-reasoning-plus) génère une trace de raisonnement, tronquée à 25 %, 50 % et 75 %. Chaque préfixe est transmis à trois modèles auditeurs (Ministral-3-14B-Reasoning, Phi-4-reasoning-plus, Qwen3-14B) qui le complètent indépendamment. La récompense r<sub>match</sub> compte les convergences réponse-locuteur sur l'ensemble des troncatures et auditeurs. L'optimisation utilise GRPO (Group Relative Policy Optimization).</li>
-<li><strong>SFT masqué pour la précision :</strong> un adaptateur LoRA (rang 32) est fine-tuné sur les seuls tokens de réponse finale, en masquant la trace de raisonnement. Cette séparation évite que le signal de justesse interfère avec les comportements de raisonnement acquis via RL.</li>
-</ul>
-<p>L'entraînement porte sur 1 250 paires question-réponse de cinq tâches BIG-Bench Hard, pendant 3 époques GRPO puis 5 époques SFT. L'évaluation couvre quatre benchmarks hors domaine : BBEH (120 questions), ZebraLogicBench (3 259), MuSR (250 questions murder mysteries) et FOLIO (202 questions).</p>
-<p>Ce découplage fidélité/justesse est la décision architecturale centrale. Les auteurs montrent qu'un reward combiné (balanced rewards) produit des signaux contradictoires : les courbes de récompense stagnent quand fidélité et justesse sont optimisées conjointement sous un même objectif RL (Figure 3 de l'article).</p>
+<p>Les chaînes de raisonnement (CoT) générées par les LLM ne reflètent pas toujours le processus computationnel réel du modèle. Ce décalage entre trace verbalisée et calcul interne limite la fiabilité des explications, en particulier dans les domaines à enjeux élevés (médecine, droit, recherche). Le problème se double d'un compromis récurrent : optimiser la fidélité du raisonnement dégrade la précision des réponses, et inversement.</p>
 
-<h2>Résultats principaux</h2>
-<p>REMUL améliore la fidélité sur les trois métriques utilisées tout en préservant ou améliorant la précision :</p>
-<ul>
-<li><strong>Hint attribution :</strong> +2,5 % en moyenne pour Qwen3 et Phi4 par rapport au modèle de base, contre +4,1 % pour le mode fidélité seule (qui perd 3,2 % en précision).</li>
-<li><strong>AOC troncature :</strong> +0,033 points en moyenne sur les quatre benchmarks. Le modèle fidélité-seule atteint +0,054 mais au prix de la précision.</li>
-<li><strong>AOC injection d'erreurs :</strong> gains similaires, REMUL second meilleur sur les quatre benchmarks.</li>
-<li><strong>Précision :</strong> +1,8 % pour Qwen3, +1,5 % pour Phi4 par rapport au modèle original.</li>
-</ul>
-<p>Le mode correctness-only produit la plus faible fidélité et la meilleure précision (+2,9 %). L'optimisation directe pour les hints augmente massivement l'attribution de hints mais dégrade toutes les autres métriques, y compris l'AOC — ce qui suggère qu'elle corrige un symptôme sans traiter la cause.</p>
-<p>Les analyses complémentaires révèlent que REMUL réduit le backtracking (−0,63 occurrences de marqueurs type « Wait », « Hold on » sur BBEH) et produit des traces plus courtes (−4,88 % de tokens en moyenne, hors MuSR). Les scores de lisibilité (auto-évaluation par GPT-OSS-20B) augmentent de 1 à 2 points sur l'échelle 0-100.</p>
+<p>REMUL (Reasoning Execution by Multiple Listeners) reformule la fidélité comme une propriété multi-agents. Un modèle « speaker » génère une trace de raisonnement, tronquée puis transmise à un pool de modèles « listeners » qui la prolongent jusqu'à une réponse. Le speaker est récompensé lorsque les listeners convergent vers la même conclusion. La précision est préservée par un SFT masqué avec adaptateur LoRA, appliqué uniquement sur les tokens de réponse finale.</p>
 
-<h2>Discussion et limites</h2>
-<p>Plusieurs faiblesses méritent attention :</p>
-<p>Le sous-ensemble BBEH d'évaluation ne contient que 120 questions après filtrage des questions à choix multiples. Sur un échantillon de cette taille, des variations de 2-3 % en précision représentent 2-3 questions — une marge trop étroite pour tirer des conclusions statistiquement robustes. Aucun test de significativité n'est rapporté.</p>
-<p>L'augmentation de la sycophantie (+3,2 % avec REMUL, Table 12) pose un problème d'interprétation pour la métrique d'attribution de hints. Si le modèle est plus enclin à adopter les suggestions de l'utilisateur, l'amélioration mesurée en hint usage pourrait partiellement refléter cette docilité accrue plutôt qu'une fidélité réelle au raisonnement. Les auteurs reconnaissent le phénomène sans proposer de mécanisme correctif ni quantifier la part de chaque effet.</p>
-<p>La métrique de lisibilité repose sur un auto-évaluateur (GPT-OSS-20B) dont la fiabilité pour juger la clarté de raisonnements logiques n'est pas validée. Aucune évaluation humaine n'est présentée.</p>
-<p>L'expérience in-domain (Table 7) montre que l'entraînement sur FOLIO améliore la précision de 5,7 % mais dégrade l'attribution de hints de 3,3 %. Ce résultat affaiblit l'argument d'une compétence de fidélité généralisable : la fidélité semble dépendre de la diversité des données d'entraînement plutôt que d'un apprentissage transférable.</p>
-<p>Le coût d'entraînement (trois modèles auditeurs à 14B paramètres, rollouts multiples par prompt) n'est pas discuté en termes de GPU-heures ou de budget carbone, ce qui limite l'évaluation de la praticabilité de l'approche.</p>
+<p>Ce cadrage s'inscrit dans la continuité des travaux de Lanham et al. (2023) sur la mesure de fidélité et de Chen et al. (2025) sur l'attribution de hints, tout en proposant un mécanisme d'entraînement plutôt qu'un simple outil de diagnostic.</p>
 
-<h2>Reproductibilité</h2>
-<p>Le code est publié sur GitHub (github.com/nsivaku/remul). Les hyperparamètres sont détaillés en annexe : taux d'apprentissage, taille de batch, coefficients de régularisation, configuration LoRA. Les prompts exacts sont fournis (Annexe C). Les trois modèles auditeurs utilisent des poids publics sous licence Apache-2.0.</p>
-<p>Les données d'entraînement proviennent de BIG-Bench Hard, un benchmark public. La procédure de troncature par retour à la ligne est documentée, et une variante par phrases est testée en ablation (Table 8) avec des résultats comparables.</p>
-<p>La détection de backtracking et d'utilisation de hints repose sur des listes de tokens fournies en annexe. Ces choix, bien que raisonnables, restent des heuristiques dont la sensibilité n'est pas testée.</p>
+<h2>2. Méthodologie</h2>
 
-<h2>Impact et applications</h2>
-<p>REMUL propose un mécanisme concret pour améliorer la transparence des modèles de raisonnement sans sacrifier la performance. L'approche est applicable à tout modèle générant des chaînes de pensée et ne requiert les modèles auditeurs qu'à l'entraînement, pas à l'inférence — un avantage pratique par rapport aux méthodes multi-agents en déploiement.</p>
-<p>Le découplage fidélité/justesse via deux mécanismes d'optimisation distincts (RL + SFT masqué) est une contribution technique réutilisable au-delà de la fidélité : toute paire d'objectifs antagonistes dans l'entraînement RL pourrait bénéficier de cette architecture.</p>
-<p>L'application directe concerne les domaines où la traçabilité du raisonnement est exigée (médecine, droit, recherche scientifique). Cependant, l'augmentation concomitante de la sycophantie tempère l'enthousiasme : un modèle plus fidèle dans ses explications mais plus influençable par les suggestions utilisateur ne remplit qu'à moitié la promesse de fiabilité.</p>
+<p>L'entraînement repose sur deux composantes découplées. La première utilise GRPO (Group Relative Policy Optimization) avec une récompense de consensus : pour chaque prompt, le speaker génère une trace tronquée à 25 %, 50 % et 75 % de sa longueur (découpée par sauts de ligne). Trois listeners indépendants — Ministral-3-14B-Reasoning, Phi-4-reasoning-plus et Qwen3-14B — prolongent chaque préfixe. La récompense <em>r<sub>match</sub></em> est la somme des correspondances entre réponses des listeners et réponse du speaker.</p>
 
-<h2>Positionnement dans la littérature</h2>
-<p>Ce travail se situe à l'intersection de deux courants : la mesure de la fidélité du CoT (Lanham et al., 2023 ; Chen et al., 2025 ; Turpin et al., 2023) et l'entraînement multi-agents (Stengel-Eskin et al., 2024 ; West et al., 2025 ; Wan et al., 2025). REMUL se distingue par la combinaison de troncatures à granularité variable, d'auditeurs architecturalement hétérogènes, et d'un découplage explicite des objectifs.</p>
-<p>Par rapport à l'exécution « dure » via code Python (Lyu et al., 2023 ; Chen et al., 2023), l'exécution douce préserve la flexibilité du raisonnement en langage naturel. Par rapport au steering (MAT-Steer, Nguyen et al., 2025), REMUL obtient des gains de fidélité supérieurs (+2,5 % vs +1,3 % en hint attribution) grâce à un véritable entraînement plutôt qu'une intervention post-hoc.</p>
-<p>La tension fidélité-précision documentée ici confirme les observations de Kenny &amp; Shah (2024) et McMillan et al. (2025), tout en proposant une solution concrète plutôt qu'un simple constat. Le conflit entre récompenses (Figure 3) apporte une preuve empirique que ces objectifs ne sont pas simplement difficiles à optimiser ensemble mais génèrent des gradients contradictoires — une information utile pour la conception de futurs systèmes de récompense.</p>
+<p>La seconde composante est un SFT masqué : la perte de cross-entropie ne s'applique qu'aux tokens de la réponse finale, pas à la trace de raisonnement. Un adaptateur LoRA (rang 32, facteur d'échelle 128) est fusionné dans le checkpoint du speaker après entraînement. Cette séparation évite que le signal de précision interfère avec les comportements de fidélité acquis par RL.</p>
+
+<p>Les données d'entraînement proviennent de cinq tâches de BIG-Bench Hard (1 250 paires QA). Deux modèles speakers sont entraînés : Qwen3-14B et Phi4-reasoning-plus, sur 3 époques avec un taux d'apprentissage de 1e-6, batch de 64 et 5 rollouts par prompt.</p>
+
+<h3>Choix méthodologiques discutables</h3>
+
+<p>Le découpage par sauts de ligne produit des segments de longueur variable, ce qui rend les points de troncation hétérogènes d'un exemple à l'autre. L'appendice B montre que le découpage par phrases donne des résultats similaires, mais aucune analyse de sensibilité systématique aux pourcentages de troncation n'est fournie. Le pool de listeners est fixe et ne comporte que trois modèles — tous de taille 14B. Aucune justification n'est donnée pour ce choix de taille ou de diversité architecturale.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>L'évaluation porte sur quatre benchmarks : BBEH (120 questions après filtrage), ZebraLogicBench (3 259), MuSR (250, split murder mysteries) et FOLIO (202). Trois métriques de fidélité sont utilisées : hint usage (attribution de changement de réponse après injection d'un indice), AOC pour troncation de CoT (sensibilité de la précision à la longueur de raisonnement disponible) et AOC pour injection d'erreurs (sensibilité aux perturbations du raisonnement).</p>
+
+<p>REMUL améliore le hint usage de 2,5 % en moyenne pour Qwen3 et Phi4, tout en maintenant ou améliorant la précision (+1,8 % pour Qwen3, +1,5 % pour Phi4). L'AOC de troncation progresse de 0,033 points en moyenne, l'AOC d'injection d'erreurs de 0,030 points. L'entraînement fidélité seule obtient les meilleurs scores de fidélité mais au prix d'une chute de précision de 2 à 3 points.</p>
+
+<p>Les ablations confirment deux hypothèses de conception. Remplacer les trois listeners hétérogènes par trois instances du même modèle (avec température augmentée) réduit les gains de fidélité sans affecter la précision. Utiliser un seul listener aléatoire élimine les gains sur les deux axes. La récompense combinée (fidélité + précision dans un seul signal RL) produit des signaux contradictoires : la composante précision stagne tandis que la composante fidélité progresse plus lentement qu'en isolation (Figure 3).</p>
+
+<p>La légibilité, mesurée par un auto-évaluateur GPT-OSS 20B selon le protocole d'Emmons et al. (2025), s'améliore de 1 à 2 points sur une échelle 0-100. Les chaînes de raisonnement deviennent plus courtes (−4,88 % de tokens en moyenne pour le speaker) et plus linéaires (réduction des marqueurs de retour en arrière comme « Wait », « But wait », « Alternatively »).</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>Le gain de fidélité reste modeste en valeur absolue. Une amélioration de 2,5 % du hint usage et de 0,03 points d'AOC, bien que cohérente à travers les benchmarks, ne transforme pas radicalement la fiabilité des traces de raisonnement. La question de savoir si ces gains sont perceptibles pour un utilisateur humain n'est pas posée — aucune évaluation humaine n'est réalisée.</p>
+
+<p>La mesure de hint usage repose sur la détection de tokens spécifiques (« You said », « I agree », « Hint »…). Cette approche par mots-clés est fragile : un modèle peut reformuler l'attribution sans utiliser ces marqueurs, ou les utiliser sans réelle attribution causale. L'article ne discute pas cette fragilité.</p>
+
+<p>Le tableau 12 révèle une augmentation de la sycophantie (38,6 % → 41,8 %) après entraînement REMUL. Ce résultat fragilise partiellement les gains de hint usage : si le modèle change plus souvent de réponse face à un indice utilisateur, le dénominateur du hint usage augmente mécaniquement, et la proportion d'attributions explicites peut refléter une déférence accrue plutôt qu'une fidélité améliorée. L'article mentionne cette observation sans en analyser l'interaction avec les métriques principales.</p>
+
+<p>L'évaluation sur BBEH ne porte que sur 120 questions — un échantillon insuffisant pour des conclusions statistiquement robustes. Aucun intervalle de confiance ni test de significativité n'est rapporté, sur aucun des benchmarks. Pour des améliorations de l'ordre de 1 à 3 %, cette absence est problématique.</p>
+
+<p>L'expérience in-domain vs out-of-domain (Tableau 7) est informative : l'entraînement sur FOLIO augmente la précision de 5,7 % mais diminue le hint usage de 1,7 %. Ce résultat suggère que la fidélité et la précision spécifique au domaine empruntent des voies d'apprentissage distinctes, mais l'analyse reste descriptive.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Le code est publié sur GitHub. Les hyperparamètres d'entraînement sont détaillés dans l'appendice A : taux d'apprentissage, taille de batch, coefficients d'entropie et de KL, configuration LoRA. Les prompts utilisés pour chaque benchmark figurent dans l'appendice C. Les trois modèles listeners sont identifiés par nom et version.</p>
+
+<p>La reproductibilité pratique est limitée par les ressources matérielles. L'entraînement utilise un mélange de GPU A6000, A100 et H100 avec parallélisme tensoriel (taille 4). Le coût computationnel n'est pas chiffré. L'inférence des listeners pendant l'entraînement multiplie les besoins : chaque step nécessite les rollouts du speaker puis les générations de trois listeners sur trois niveaux de troncation, soit 9 inférences supplémentaires par rollout.</p>
+
+<p>Les données d'entraînement (sous-ensemble de BBH) et d'évaluation sont publiques, ce qui facilite la vérification indépendante des résultats.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>REMUL démontre qu'un signal de consensus multi-modèles peut servir de proxy pour la fidélité du raisonnement. L'idée que la fidélité est une propriété relationnelle (un raisonnement est fidèle s'il est exécutable par un tiers) est féconde et pourrait s'étendre à d'autres contextes : vérification de preuves, explicabilité dans les systèmes critiques, détection de raisonnements post-hoc.</p>
+
+<p>La contrainte de n'utiliser qu'un seul modèle à l'inférence (le speaker entraîné) rend l'approche déployable sans surcoût à l'usage. Le coût des listeners est confiné à l'entraînement.</p>
+
+<p>Les gains de légibilité et de concision sont un effet secondaire utile. Des chaînes de raisonnement plus courtes et plus linéaires réduisent la charge cognitive pour un vérificateur humain et le coût d'inférence.</p>
+
+<p>L'augmentation de la sycophantie constitue cependant un signal d'alarme pour les applications réelles. Un modèle qui cède davantage aux suggestions de l'utilisateur peut produire des réponses fidèles à sa trace mais infidèles à son raisonnement interne, déplaçant le problème plutôt que le résolvant.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>REMUL se situe au croisement de deux lignées de travaux. La première concerne la mesure de la fidélité du CoT : Lanham et al. (2023) ont introduit les métriques AOC, Turpin et al. (2023) ont montré que le CoT peut être infidèle face à des biais, Chen et al. (2025) ont proposé le protocole de hint usage. REMUL utilise ces métriques comme évaluation mais propose un mécanisme d'entraînement, ce qui manquait jusqu'ici.</p>
+
+<p>La seconde lignée est l'entraînement multi-agents. LACIE (Stengel-Eskin et al., 2024) utilise un setup speaker-listener pour la calibration de confiance. West et al. (2025) intercalent des tokens d'un modèle faible pour maintenir l'intelligibilité. REMUL se distingue par l'échange de préfixes tronqués (pas de messages complets) et par le découplage fidélité/précision via deux mécanismes d'optimisation distincts.</p>
+
+<p>Par rapport aux approches d'exécution « dure » (Lyu et al., 2023 ; Chen et al., 2023) qui traduisent le raisonnement en code exécutable, l'exécution « douce » de REMUL préserve la flexibilité du langage naturel au prix d'une garantie de fidélité plus faible. Le compromis est raisonnable pour des tâches de raisonnement en langage naturel où la formalisation programmatique est impraticable.</p>
+
+<p>L'absence de comparaison avec les approches de vérification par preuves (Kirchner et al., 2024, Prover-Verifier Games) est regrettable, car ces travaux partagent l'intuition que la vérifiabilité par un tiers améliore la qualité du raisonnement.</p>
 
 <h2>Tableau récapitulatif des critères de robustesse</h2>
-<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-<thead>
-<tr style="background-color: #f0f0f0;">
-<th>Critère</th>
-<th>Score (/5)</th>
-<th>Justification</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Question de recherche</td>
-<td>4</td>
-<td>Problème bien défini, cadrage original de la fidélité comme propriété multi-agents, motivation claire par le conflit fidélité-performance.</td>
-</tr>
-<tr>
-<td>Design expérimental</td>
-<td>4</td>
-<td>Architecture speaker-listener créative, ablations sur la composition du pool d'auditeurs, comparaison avec 5 baselines dont un ceiling (hint-optimized). Absence de tests de significativité.</td>
-</tr>
-<tr>
-<td>Taille d'échantillon</td>
-<td>3</td>
-<td>Entraînement sur 1 250 paires. Évaluation sur 4 benchmarks mais BBEH ne contient que 120 questions — insuffisant pour des différences de 2-3 %. ZLB (3 259) est plus robuste.</td>
-</tr>
-<tr>
-<td>Qualité des métriques</td>
-<td>4</td>
-<td>Trois métriques de fidélité complémentaires (hint attribution, AOC troncature, AOC erreurs) plus lisibilité, calibration et estimation de solvabilité. Couverture multidimensionnelle.</td>
-</tr>
-<tr>
-<td>Contrôle des biais</td>
-<td>3</td>
-<td>Ablations sur la diversité des auditeurs et leur nombre. Mais l'interférence sycophantie/fidélité n'est pas déconvoluée, et l'évaluation de lisibilité par LLM introduit un biais non contrôlé.</td>
-</tr>
-<tr>
-<td>Reproductibilité</td>
-<td>4</td>
-<td>Code public, hyperparamètres détaillés, prompts en annexe, modèles open-source. Les heuristiques de détection (backtracking, hints) sont documentées.</td>
-</tr>
-<tr>
-<td>Transparence et limitations</td>
-<td>3</td>
-<td>Le conflit entre récompenses est analysé, la sycophantie est mentionnée. Mais le coût computationnel est absent, l'absence d'évaluation humaine n'est pas discutée, et la faible taille de BBEH n'est pas reconnue.</td>
-</tr>
-<tr>
-<td>Impact et nouveauté</td>
-<td>4</td>
-<td>Le cadre multi-auditeurs avec exécution douce est original. Le découplage RL/SFT pour objectifs antagonistes est réutilisable. Les résultats cohérents sur 4 benchmarks et 3 métriques renforcent la crédibilité.</td>
-</tr>
-</tbody>
+
+<table>
+  <thead>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Commentaire</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td>4</td>
+      <td>Problème bien posé, cadrage original de la fidélité comme propriété relationnelle multi-agents</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td>3</td>
+      <td>Protocole cohérent avec ablations, mais seulement deux familles de speakers et un pool de listeners fixe</td>
+    </tr>
+    <tr>
+      <td>Taille d'échantillon</td>
+      <td>3</td>
+      <td>BBEH réduit à 120 questions ; aucun test de significativité rapporté malgré des gains de 1-3 %</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td>4</td>
+      <td>Trois métriques complémentaires issues de travaux établis ; détection de hints par mots-clés fragile</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td>3</td>
+      <td>Baselines multiples mais pas de tests statistiques ; la sycophantie accrue confond les gains de hint usage</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td>4</td>
+      <td>Code public, hyperparamètres et prompts détaillés ; coût computationnel élevé non chiffré</td>
+    </tr>
+    <tr>
+      <td>Transparence et limitations</td>
+      <td>3</td>
+      <td>Sycophantie mentionnée sans analyse de son impact sur les métriques ; pas de section limitations dédiée</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td>4</td>
+      <td>Approche créative et déployable (un seul modèle à l'inférence) ; gains cohérents mais modestes en valeur absolue</td>
+    </tr>
+  </tbody>
 </table>
 
-<h2>Appréciation globale</h2>
-<p>REMUL apporte une réponse structurée au dilemme fidélité-performance dans le raisonnement des LLM. Le cadre multi-auditeurs est conceptuellement élégant et techniquement bien exécuté. Les gains mesurés sont modestes (2-3 % en hint attribution, 0,03 points AOC) mais cohérents sur l'ensemble des benchmarks et métriques. La principale réserve concerne la confusion possible entre fidélité accrue et sycophantie accrue, un problème reconnu mais non résolu. L'absence de tests statistiques et la petite taille de certains ensembles d'évaluation invitent à la prudence dans l'interprétation des marges rapportées. Le travail constitue néanmoins une avancée méthodologique tangible pour l'entraînement de modèles dont le raisonnement est vérifiable.</p>
-<p><strong>Note globale de robustesse : 3,7 / 5</strong></p>
+<p><strong>Note globale de robustesse : 3,5 / 5.</strong> Travail méthodologiquement solide avec une contribution conceptuelle claire — la fidélité comme exécutabilité par des tiers. Les faiblesses principales résident dans l'absence de validation statistique formelle, le confond entre sycophantie et fidélité, et des échantillons d'évaluation parfois trop petits pour les tailles d'effet observées.</p>
+
   </div>
   <script>
   (function(){

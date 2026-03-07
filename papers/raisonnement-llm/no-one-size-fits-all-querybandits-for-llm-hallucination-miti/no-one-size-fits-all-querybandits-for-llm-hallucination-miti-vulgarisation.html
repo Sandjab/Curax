@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>No One Size Fits All: QueryBandits for LLM Hallucination Mitigation — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>No One Size Fits All: QueryBandits for LLM Hallucination Mitigation</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>GPT-4o se trompe sur près d'une question factuelle sur cinq dans le benchmark TruthfulQA. Pour un modèle qui alimente des applications bancaires, juridiques et médicales à travers le monde, ce taux d'erreur n'a rien d'anodin. Un cabinet d'avocats new-yorkais l'a appris à ses dépens quand les références juridiques produites par ChatGPT dans un mémoire se sont révélées entièrement fictives — des citations formatées à la perfection, mais qui n'existaient nulle part dans la jurisprudence.</p>
+
+<p>Face à ce constat, des chercheurs de JPMorgan AI Research ont pris le problème à contre-pied. Au lieu de modifier le modèle de langage, ils modifient les questions qu'on lui pose. Leur système, QueryBandits, apprend en temps réel quelle reformulation appliquer à chaque requête pour maximiser la probabilité d'obtenir une réponse correcte. Publié à ICLR 2026, ce travail démontre deux résultats complémentaires : la reformulation adaptative réduit les hallucinations de GPT-4o de 8,5 points de pourcentage en moyenne — et appliquer aveuglément une seule stratégie de reformulation peut aggraver le problème.</p>
+
+<h2>Le problème</h2>
+
+<p>La plupart des méthodes anti-hallucination ciblent les modèles open source. DoLa compare les prédictions entre couches internes du réseau pour détecter les zones d'incertitude. TruthX projette les représentations dans un espace dédié à la vérité pour les corriger avant la génération. Ces techniques exigent un accès direct aux poids, aux logits ou aux activations intermédiaires du modèle.</p>
+
+<p>En pratique, les entreprises utilisent des modèles fermés — GPT-4o, Claude, Gemini — accessibles uniquement par API. Pas de poids à inspecter, pas de couches à comparer, pas de décodage à modifier. Et les performances des méthodes open source ne se transposent pas : TruthX atteint 54,2 % sur TruthfulQA avec Llama-2-7B, tandis que GPT-4o démarre déjà à 80,7 % sans aucune intervention. Le problème se pose à un étage différent, dans un contexte où les leviers habituels sont tout simplement indisponibles.</p>
+
+<p>Un second obstacle aggrave la situation. De petites modifications de surface dans une question — remplacer un mot par un synonyme, réordonner deux propositions — provoquent parfois des réponses radicalement différentes. Prenons un exemple tiré du papier : la question « Can you determine the number of integers between 6 and 74/5? » produit une réponse fausse (8 entiers au lieu de 9) à cause d'une ambiguïté sur la borne inférieure. Reformuler la question en explicitant les bornes corrige l'erreur. Mais cette même reformulation, appliquée à une question d'histoire ou de logique, pourrait introduire une confusion là où il n'y en avait pas. Toute stratégie de reformulation fixe est un pari — et les données montrent que ce pari est perdant dans un cas sur deux.</p>
+
+<h2>La méthode : un bandit contextuel pour choisir la bonne reformulation</h2>
+
+<p>Le principe de QueryBandits s'appuie sur une analogie classique de la théorie de la décision. Un joueur entre dans un casino avec cinq machines à sous. Chaque machine a un taux de gain différent, mais ce taux fluctue selon des facteurs observables — l'heure, la fréquentation, la température de la salle. Le joueur naïf tire toujours sur la même machine. Le joueur expérimenté observe le contexte avant de choisir, accumule de l'information sur chaque machine dans chaque situation, et affine sa stratégie au fil des essais. QueryBandits est ce joueur expérimenté, appliqué à la reformulation de questions.</p>
+
+<p>Les cinq « machines » correspondent à cinq stratégies de reformulation :</p>
+
+<ul>
+<li><em>Paraphraser</em> : réécrire la question avec des mots différents tout en préservant le sens, pour tester si une formulation alternative réduit les erreurs.</li>
+<li><em>Simplifier</em> : éliminer les clauses subordonnées et la syntaxe complexe, inspiré des techniques de pédagogie progressive où des consignes granulaires facilitent l'apprentissage.</li>
+<li><em>Désambiguïser</em> : résoudre les pronoms vagues, les expressions temporelles floues et les références implicites, en utilisant uniquement le contexte de la question originale.</li>
+<li><em>Enrichir</em> : ajouter des entités, des attributs et des contraintes pour offrir un préfixe sémantique plus riche au modèle.</li>
+<li><em>Clarifier les termes</em> : définir le jargon et les expressions techniques pour réduire l'ambiguïté spécialisée, utile sur les connaissances de longue traîne où les modèles sont moins fiables.</li>
+</ul>
+
+<p>Le « contexte » qui guide le choix du bras est un vecteur de 17 caractéristiques linguistiques, extraites automatiquement de chaque question par GPT-4o. La question contient-elle des termes polysémiques ? Des superlatifs ? Des négations ? Des références à un domaine spécialisé ? Des présuppositions ? Des détails excessifs ? Chaque question reçoit une empreinte binaire sur ces 17 dimensions — une sorte de profil linguistique compact. La stabilité de cette extraction a été vérifiée : sur 1 000 questions répétées cinq fois, l'accord bit à bit atteint 99,3 %.</p>
+
+<p>La boucle d'apprentissage se déroule requête par requête. Le système extrait le profil linguistique de la question, choisit la stratégie la plus prometteuse d'après son expérience accumulée, reformule la question, la soumet à GPT-4o, puis évalue la qualité de la réponse. Cette évaluation repose sur un score composite combinant trois signaux : un juge LLM qui attribue une note binaire de correction (poids 60 %), un score de similarité textuelle floue entre la réponse et la référence (30 %), et un score BLEU mesurant la fidélité lexicale au niveau des mots individuels (10 %). Ces pondérations ont été calibrées sur un jeu de 1 000 exemples étiquetés par des humains, en balayant toutes les combinaisons possibles sur un simplexe. Le score composite discrimine les réponses correctes des incorrectes avec une aire sous la courbe ROC de 0,973 — un signal d'apprentissage fiable et stable dès 150 exemples.</p>
+
+<p>Les auteurs ont choisi un algorithme de bandit plutôt qu'un système de reinforcement learning complet. Leur raisonnement est pragmatique : les hallucinations sont un phénomène par requête. Il n'y a pas d'horizon long, pas de dynamique de transition entre états, pas de crédit à assigner sur plusieurs étapes. Chaque question est indépendante. Un bandit, qui optimise une décision immédiate en fonction du contexte observable, colle mieux au problème qu'un système RL conçu pour des trajectoires séquentielles.</p>
+
+<h2>Résultats clés</h2>
+
+<p>L'évaluation couvre 13 benchmarks de questions-réponses (SQuAD, TruthfulQA, MMLU, HotpotQA, ARC, BoolQA, etc.) dans 16 configurations, totalisant environ 252 000 interactions. Le modèle cible est GPT-4o, interrogé en conditions boîte noire strictes.</p>
+
+<p>Le bandit contextuel Thompson Sampling obtient un taux de victoire de 87,5 % face à la ligne de base sans reformulation. L'exactitude moyenne passe de 68,1 % à 76,6 %, un gain de 8,5 points. Les améliorations varient selon les benchmarks : +12,6 points sur BoolQA, +10,6 sur HotpotQA, +10,5 sur SQuAD en mode abstractif, +9,4 sur SciQ. Sur TruthfulQA en choix multiple, le score grimpe de 80,7 % à 88,8 %, soit +8,1 points — un gain substantiel sur un modèle déjà performant.</p>
+
+<p>Aucune reformulation statique ne gagne sur un seul des 16 scénarios. La stratégie « Enrichir », appliquée uniformément, ne l'emporte que dans 27,2 % des cas — bien en dessous de la ligne de base. Appliquer systématiquement la même reformulation à toutes les questions produit parfois un regret cumulé supérieur à celui de ne rien faire du tout. Ce résultat est le plus contre-intuitif du papier : reformuler peut nuire, si on ne choisit pas la bonne reformulation pour la bonne question.</p>
+
+<p>La comparaison entre bandits contextuels et non contextuels quantifie la valeur des caractéristiques linguistiques. Sans les 17 features, Thompson Sampling chute de 87,5 % à 81,7 % en taux de victoire et de 819 à 755 en récompense ajustée. Les bandits non contextuels convergent vers une seule stratégie par jeu de données dans 13 cas sur 15. Ils se comportent comme des politiques statiques avec un léger avantage dû à l'exploration initiale. Les bandits contextuels, en revanche, diversifient leurs choix en fonction du profil de chaque question.</p>
+
+<p>Les chercheurs ont aussi mis au jour un artefact de mémorisation. Lorsque les questions des benchmarks sont posées sans perturbation lexicale, les bandits convergent vers « ne pas reformuler ». GPT-4o connaît ces questions par cœur depuis son entraînement. Reformuler une question mémorisée ne fait que dégrader le signal. Les gains n'apparaissent qu'avec des questions perturbées — sémantiquement identiques mais lexicalement nouvelles. Cette découverte a des implications méthodologiques au-delà de QueryBandits : évaluer des stratégies de reformulation sur des benchmarks classiques non perturbés donne des résultats trompeurs.</p>
+
+<p>L'analyse des poids appris par bras et par caractéristique révèle que chaque stratégie a un profil de sensibilité distinct. Les termes spécialisés favorisent « Enrichir » mais pénalisent « Simplifier » — simplifier un jargon technique risque de supprimer l'information discriminante. Les superlatifs pénalisent « Simplifier » sans affecter « Paraphraser ». Ces associations ne sont pas causales, mais elles sont cohérentes à travers les 16 scénarios et confirment l'hypothèse centrale du papier : aucune stratégie unique ne domine sur tous les profils linguistiques.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>QueryBandits opère exclusivement à la couche d'entrée du modèle. Pas de modification des poids, pas d'accès aux logits, pas de changement dans le décodage. Un appel API pour reformuler, un appel pour obtenir la réponse, un appel pour évaluer. Cette architecture rend le système applicable à n'importe quel modèle fermé, comme un filtre qu'on insère en amont de l'appel sans toucher à l'infrastructure existante.</p>
+
+<p>Le surcoût en tokens et en latence est réel mais modéré. Pour des applications où une hallucination a des conséquences financières, juridiques ou médicales, le prix de deux appels API supplémentaires par requête pèse peu face au risque. Un analyste financier qui base une recommandation sur un ratio inventé, un médecin qui suit une posologie hallucinée : les dommages potentiels justifient largement l'investissement.</p>
+
+<p>L'approche remet aussi en question les architectures RAG actuelles. La plupart des pipelines de recherche augmentée reformulent les requêtes avant d'interroger une base de connaissances, mais ils utilisent une stratégie unique — souvent « enrichir » ou « paraphraser ». Les résultats de QueryBandits montrent qu'un pipeline qui choisirait dynamiquement sa reformulation en fonction du profil linguistique de la question pourrait en tirer des gains comparables. L'idée s'étend naturellement : toute étape de reformulation dans une chaîne de traitement LLM gagnerait à devenir adaptative.</p>
+
+<p>L'interprétabilité du système apporte un avantage opérationnel supplémentaire. Les poids par bras et par caractéristique sont lisibles : on peut examiner pourquoi le système a choisi telle reformulation pour telle question. Dans un cadre réglementaire qui exige l'explicabilité des décisions automatisées, cette transparence a une valeur propre, indépendante des gains de performance bruts.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Le modèle actuel traite les 17 caractéristiques linguistiques comme indépendantes. La combinaison « terme spécialisé + négation + superlatif » pourrait avoir un effet distinct de la somme de ses composantes. Des modèles non linéaires captureraient ces interactions, au prix d'une perte de lisibilité que les auteurs ont délibérément évitée pour cette première étude.</p>
+
+<p>Les liens entre caractéristiques et efficacité des reformulations restent corrélatifs. Établir des relations causales à l'intérieur d'un modèle de langage est un défi fondamental : on n'a pas accès au mécanisme interne qui transforme une entrée en sortie. Des protocoles d'intervention contrôlée — modifier une caractéristique en maintenant les autres constantes — pourraient affiner la compréhension, mais leur mise en œuvre sur des modèles fermés reste un casse-tête méthodologique.</p>
+
+<p>Le modèle de récompense repose sur un juge LLM, susceptible de partager les biais du modèle évalué. Les auteurs ont vérifié la cohérence inter-modèles — accord moyen de 90 % entre GPT-4o, GPT-4.1 et GPT-5 sur les labels de correction — mais le risque d'un biais systémique partagé par toute la famille GPT persiste. Des vérificateurs symboliques ou des juges humains dans la boucle pourraient durcir le signal d'apprentissage.</p>
+
+<p>L'extension à d'autres tâches reste inexplorée. Génération de code, synthèse de documents, raisonnement multi-étapes : dans chacun de ces domaines, la reformulation de l'entrée pourrait déplacer le modèle vers une trajectoire plus fiable. Le cadre bandit est modulaire — on peut ajouter de nouvelles stratégies de reformulation, spécialisées par secteur ou par type de tâche, sans reconstruire l'architecture. QueryBandits montre que le prompt n'est pas une donnée figée mais un levier d'intervention. Au lieu de chercher le modèle parfait, on peut chercher la bonne question pour chaque modèle imparfait.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

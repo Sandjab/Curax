@@ -127,121 +127,111 @@
     <p class="doc-type">Lecture Critique d'Article</p>
   </div>
   <div class="companion-content">
-    <h2>Lecture critique : Learning Personalized Agents from Human Feedback</h2>
+    <h2>Objectif et contexte</h2>
 
-<h3>1. Objectif et contexte</h3>
+<p>Les agents IA déployés auprès d'utilisateurs finaux échouent fréquemment à s'aligner sur des préférences individuelles, idiosyncrasiques et changeantes. Les approches existantes reposent sur des données statiques — historiques d'interactions ou profils prédéfinis — et ne gèrent ni les nouveaux utilisateurs (cold start), ni l'évolution des goûts dans le temps (preference drift), ni l'apprentissage réactif après erreur.</p>
 
-<p>Les agents IA déployés en contexte interactif — assistants numériques, robots domestiques — peinent à s'adapter aux préférences individuelles de chaque utilisateur, a fortiori lorsque celles-ci évoluent dans le temps. Les approches existantes reposent sur des données statiques : profils pré-remplis ou historiques d'interaction figés. Elles échouent face à trois situations concrètes : un nouvel utilisateur sans historique, une erreur de l'agent que le système ne sait pas corriger en ligne, et une dérive des préférences que le modèle ne détecte pas.</p>
+<p>Liang et al. proposent PAHF (Personalized Agents from Human Feedback), un framework de personnalisation continue où l'agent apprend en ligne via une mémoire explicite par utilisateur, alimentée par deux canaux de feedback complémentaires : clarification proactive avant l'action et correction réactive après l'action. L'objectif est de minimiser l'erreur cumulative de personnalisation sur des séquences de tâches longues, sans supposer l'existence de données utilisateur préalables.</p>
 
-<p>PAHF (Personalized Agents from Human Feedback) propose une boucle d'apprentissage continu en trois étapes. Avant d'agir, l'agent interroge sa mémoire et, en cas d'ambiguïté, demande une clarification à l'utilisateur (feedback pré-action). L'agent exécute ensuite son action. Si le résultat est incorrect, l'utilisateur fournit un retour correctif (feedback post-action), et la mémoire explicite est mise à jour. Ce double canal — proactif et réactif — vise à couvrir deux sources d'erreur complémentaires : l'observabilité partielle (préférences inconnues) et la non-stationnarité (préférences qui changent).</p>
+<h2>Méthodologie</h2>
 
-<h3>2. Méthodologie</h3>
+<h3>Formalisation</h3>
 
-<p>Le cadre formel modélise la personnalisation continue comme un problème d'apprentissage en ligne. À chaque interaction <em>t</em>, l'utilisateur possède un état de préférence latent M*<sub>t</sub>. L'agent maintient une mémoire explicite M̂<sub>t</sub> et choisit une action a<sub>t</sub>. La perte instantanée est binaire : 1 si l'action diffère de l'action optimale, 0 sinon. Les préférences suivent un modèle par morceaux stationnaires avec au plus K changements sur T tours.</p>
+<p>Le problème est modélisé comme un apprentissage en ligne. À chaque interaction t, l'utilisateur possède un état de préférence latent M*_t. L'agent maintient une mémoire explicite M̂_t et choisit une action a_t conditionnée sur l'instruction, l'observation et la mémoire. La perte instantanée est un 0-1 loss (action correcte ou non). Deux sources d'erreur sont formalisées : l'observabilité partielle (mémoire vide ou incomplète) et la non-stationnarité (préférences obsolètes stockées en mémoire).</p>
 
-<p>Trois propositions théoriques structurent l'argument. La Proposition 1 démontre que sans feedback post-action, toute politique accumule Ω(T) erreurs sous dérive de préférences, alors qu'une politique réactive se limite à O(K) erreurs. La Proposition 2 établit qu'en l'absence de clarification pré-action, les tours ambigus génèrent Ω(γT) erreurs. Le Théorème 1 combine les deux bornes : une politique PAHF avec k questions pré-action m-aires et mise à jour post-action immédiate atteint un regret dynamique de O(K + γTm<sup>−k</sup>), soit O(K + γ) pour k = Θ(log<sub>m</sub> T).</p>
+<h3>Boucle interactive en trois étapes</h3>
 
-<p>L'évaluation empirique couvre deux domaines. Le domaine de manipulation incarnée simule 40 utilisateurs avec 30 scénarios chacun par phase (1 200 scénarios/phase). Les préférences sont conditionnelles au contexte — un personnage qui préfère le thé quand il est somnolent mais le café en général. Le domaine d'achat en ligne modélise 20 utilisateurs avec 45 scénarios chacun (900 scénarios/phase), où chaque produit est décrit par des attributs discrets et les options incluent des « quasi-correspondances » trompeuses avec un attribut disqualifiant.</p>
+<p>L'agent suit un cycle répété : (1) interrogation pré-action — si la mémoire ne résout pas l'ambiguïté, l'agent pose une question de clarification à l'utilisateur et stocke la réponse ; (2) exécution de l'action en synthétisant instruction, observation, mémoire et clarification ; (3) intégration du feedback post-action — si l'action est incorrecte, l'utilisateur fournit un retour correctif, et la mémoire est mise à jour (ajout ou révision de notes). Un détecteur de saillance (LLM-as-a-judge) filtre les feedbacks non informatifs.</p>
 
-<p>Le protocole d'évaluation se déroule en quatre phases : apprentissage initial (Phase 1), test de personnalisation (Phase 2), adaptation à la dérive via inversion des personas (Phase 3), test post-adaptation (Phase 4). Quatre configurations sont comparées : sans mémoire, pré-action seul, post-action seul, et PAHF complet. L'agent utilise le cadre ReAct instancié avec GPT-4o. La mémoire repose sur un stockage SQLite avec embeddings DRAGON+ et recherche top-k.</p>
+<h3>Analyse théorique</h3>
 
-<h3>3. Résultats principaux</h3>
+<p>Trois résultats formels étayent le design. La Proposition 1 montre que sans feedback post-action, toute politique accumule Ω(T) erreurs sous preference drift, tandis qu'une politique réactive se limite à O(K) erreurs (K = nombre de changements). La Proposition 2 établit que sans clarification pré-action, l'erreur sur les tours ambigus est Ω(γT), réductible à O(γT·m⁻ᵏ) avec k questions m-aires. Le Théorème 1 combine les deux : le regret dynamique de PAHF est O(K + γT·m⁻ᵏ), soit O(K + γ) avec k = Θ(log_m T). Les preuves complètes figurent en annexe A.</p>
 
-<p>En Phase 2 (test initial, domaine incarné), PAHF atteint 70,5 % de taux de succès contre 54,1 % pour pré-action seul, 67,9 % pour post-action seul et 32,3 % pour la baseline sans mémoire. En Phase 4 (post-adaptation), PAHF obtient 68,8 % contre 35,7 % pour pré-action seul — cette chute spectaculaire du pré-action seul confirme sa fragilité face à la dérive des préférences.</p>
+<h3>Protocole d'évaluation</h3>
 
-<p>Le domaine d'achat en ligne se révèle nettement plus difficile. PAHF plafonne à 41,3 % en Phase 2, un gain modeste par rapport aux 27,8 % de la baseline. La discrimination fine entre attributs de produits reste un défi, même avec les deux canaux de feedback. En Phase 4, PAHF monte à 70,3 %, démontrant que l'adaptation post-dérive fonctionne mieux que l'apprentissage initial dans ce domaine.</p>
+<p>Un protocole en quatre phases sépare apprentissage initial et adaptation au drift :</p>
+<ul>
+<li>Phase 1 (apprentissage) : mémoire vide, l'agent interagit avec des personas fixes sur plusieurs époques</li>
+<li>Phase 2 (test) : évaluation sur de nouvelles instructions avec la mémoire acquise, sans feedback</li>
+<li>Phase 3 (adaptation) : mêmes scénarios que la Phase 1, mais les personas sont remplacées par des versions « évoluées » aux préférences inversées</li>
+<li>Phase 4 (test) : évaluation post-adaptation sur de nouvelles instructions</li>
+</ul>
 
-<p>Les courbes d'ACPE (erreur de personnalisation cumulative moyenne) confirment la complémentarité des deux canaux : le pré-action réduit l'erreur initiale dès la première itération, tandis que le post-action permet une récupération rapide après un changement de persona. Les ablations sur différents modèles (GPT-4.1, Llama-4-Scout) et backends mémoire (FAISS vs SQLite) montrent des tendances cohérentes.</p>
+<h3>Benchmarks</h3>
 
-<h3>4. Discussion et limites</h3>
+<p>Deux domaines sont évalués. Le domaine de manipulation embodied modélise des tâches de type « apporte-moi ma boisson préférée » dans un environnement de bureau, avec 40 utilisateurs × 30 scénarios par phase (2 400 scénarios d'apprentissage, 2 400 d'évaluation). Les préférences sont contextuelles : la boisson correcte dépend de l'état émotionnel, physiologique ou situationnel du persona. Le domaine de shopping en ligne présente des choix d'achat parmi 3 produits décrits par des attributs discrets, avec 20 utilisateurs × 45 scénarios par phase. Les distracteurs sont construits comme des « near-misses » avec un attribut disqualifiant (poison pill).</p>
 
-<p>La limite la plus sérieuse est l'absence totale d'utilisateurs humains. Les « humains » sont des LLM conditionnés par des personas structurées. Cette circularité — un LLM évalue la capacité d'un autre LLM à s'adapter à un troisième LLM jouant un humain — rend les résultats difficilement transférables à l'interaction réelle. Un humain peut fournir du feedback incohérent, incomplet, ou émotionnellement chargé. Rien de cela n'est capturé ici.</p>
+<p>Les quatre baselines comparées sont : sans mémoire, pré-action seul, post-action seul, et PAHF (les deux canaux). L'agent utilise GPT-4o dans le framework ReAct. Les ablations couvrent GPT-4.1 comme agent, GPT-4.1 et Llama-4-Scout comme simulateurs humains, et deux backends mémoire (SQLite, FAISS).</p>
 
-<p>Le protocole d'inversion des personas (Phase 3) constitue un test de dérive artificiellement extrême. En pratique, les préférences humaines dérivent de manière graduelle et partielle, pas par inversion complète d'un profil. Cette conception amplifie l'avantage du feedback post-action sans tester des scénarios de dérive plus subtils où la détection d'erreur serait moins évidente.</p>
+<h3>Limitation critique du protocole</h3>
 
-<p>La restriction à une seule question de clarification par tâche, justifiée par le « friction utilisateur », empêche d'évaluer le compromis entre nombre de questions et performance. Le Théorème 1 prédit un gain logarithmique en k (nombre de questions), mais l'évaluation empirique ne teste que k = 1.</p>
+<p>Aucun utilisateur réel ne participe à l'évaluation. Tous les « humains » sont simulés par des LLM conditionnés sur des prompts de persona. Le feedback est propre, cohérent et sans bruit — une simplification majeure par rapport aux interactions humaines réelles.</p>
 
-<p>Le taux de succès modeste en achat en ligne (41,3 % en Phase 2 pour PAHF) suggère que la mémoire explicite et le feedback dual ne suffisent pas pour des tâches nécessitant un raisonnement combinatoire sur plusieurs attributs simultanés. Les auteurs reconnaissent cette difficulté mais ne proposent pas de piste concrète pour la résoudre.</p>
+<h2>Résultats principaux</h2>
 
-<p>La mémoire est délibérément simple (stockage clé-valeur avec recherche dense). Ce choix facilite l'isolation de l'effet des canaux de feedback, mais laisse ouverte la question de la scalabilité : que se passe-t-il avec des centaines de préférences par utilisateur et des conflits entre notes mémorielles ?</p>
+<p>Le feedback pré-action réduit l'erreur initiale de personnalisation. Dès la première interaction de Phase 1, les agents avec clarification (Pre-action Only et PAHF) atteignent un taux de succès nettement supérieur aux agents sans mémoire ou post-action seul. Cette capacité de « warm start » se traduit par un ACPE (Average Cumulative Personalization Error) plus bas en début de phase.</p>
 
-<h3>5. Reproductibilité</h3>
+<p>Le feedback pré-action seul est fragile face au drift. En Phase 3, l'agent Pre-action Only ne récupère presque pas : une fois des notes confiantes écrites en mémoire, il ne perçoit plus d'ambiguïté et cesse de poser des questions. Dans le domaine embodied, il reste même en dessous de la baseline sans mémoire — un résultat frappant qui illustre le danger de la surconfiance.</p>
 
-<p>Le code source est disponible sur GitHub (facebookresearch/PAHF). L'appendice D reproduit l'intégralité des prompts système utilisés pour l'agent incarné, l'agent d'achat, le détecteur de saillance, le détecteur de dérive et l'intégration mémoire. Les détails de construction des datasets sont documentés en appendice C. Les embeddings utilisent DRAGON+, un modèle publié. Le seuil de similarité τ pour la fusion de notes mémorielles n'est toutefois pas explicitement spécifié dans le corps de l'article.</p>
+<p>Le feedback post-action est indispensable pour l'adaptation. Les agents Post-action Only et PAHF montrent une progression rapide en Phase 3, avec des courbes de succès en forte pente. Le mécanisme correctif permet de réécrire les croyances obsolètes. Post-action Only atteint 67.9% en Phase 2 embodied et 68.3% en Phase 4, proche de PAHF (70.5% et 68.8%).</p>
 
-<p>Les résultats incluent des barres d'erreur standard sur les courbes et des intervalles de confiance dans les tableaux. Les ablations couvrent deux backends mémoire, trois modèles de simulateur humain et deux modèles d'agent.</p>
+<p>PAHF domine sur l'ensemble des métriques. En combinant les deux canaux, PAHF obtient le meilleur taux de succès dans les quatre phases et les deux domaines (Table 1). L'écart est marqué dans le shopping en Phase 4 : 70.3% pour PAHF contre 66.9% pour Post-action Only et 56.0% pour Pre-action Only. Les résultats sont cohérents à travers les variantes de modèles et de backends mémoire (Tables 2-3).</p>
 
-<h3>6. Impact et applications</h3>
+<p>Le domaine shopping reste difficile. Le taux de succès Phase 2 plafonne à 41.3% pour PAHF, contre 70.5% en embodied. La structure conjonctive des critères d'achat (tous les attributs doivent correspondre) et les distracteurs adversariaux rendent la tâche résistante aux gains.</p>
 
-<p>PAHF formalise un problème concret : comment un agent peut-il s'adapter à un utilisateur sans données préexistantes et sous dérive de préférences ? La décomposition en deux canaux de feedback (proactif/réactif) est une abstraction utile qui peut structurer la conception de systèmes interactifs personnalisés.</p>
+<h2>Discussion et limites</h2>
 
-<p>L'applicabilité immédiate reste conditionnée à la validation avec de vrais utilisateurs. Le coût du feedback post-action (l'utilisateur doit corriger chaque erreur) pose un problème d'adoption : en pratique, les utilisateurs abandonnent un système qui se trompe trop souvent, plutôt que de le corriger patiemment pendant cinq itérations.</p>
+<p>La faiblesse la plus sérieuse de cette étude est l'absence totale de validation avec des utilisateurs humains. Les « personas » sont des prompts LLM qui fournissent un feedback parfaitement cohérent, exhaustif et sans contradiction. Un humain réel pourrait donner des retours vagues (« c'est pas ça »), contradictoires d'une session à l'autre, ou simplement cesser de répondre. Le détecteur de saillance et le mécanisme de mise à jour mémoire n'ont jamais été confrontés à ce bruit. La performance réelle de PAHF dans un déploiement avec de vrais utilisateurs reste inconnue.</p>
 
-<p>La contribution théorique est propre mais repose sur des hypothèses fortes : feedback sans bruit, questions m-aires équilibrées, mise à jour parfaite après une seule erreur. Ces hypothèses tiennent dans un environnement simulé avec des LLM coopératifs, moins dans un déploiement réel.</p>
+<p>Les tâches évaluées sont des choix discrets parmi 3 à 4 options prédéfinies. Ce format, s'il facilite l'évaluation automatique, ne capture pas la complexité d'actions en espace continu (formulation libre d'une requête, navigation dans un catalogue ouvert, planification multi-étapes). La généralisation à des environnements plus réalistes n'est pas démontrée.</p>
 
-<h3>7. Positionnement dans la littérature</h3>
+<p>La restriction à une seule question de clarification par tâche est présentée comme un choix réaliste (friction utilisateur), mais elle limite artificiellement le canal pré-action. Dans le shopping, où discriminer un produit peut nécessiter de vérifier 3 attributs indépendants, cette contrainte pénalise mécaniquement les agents pré-action.</p>
 
-<p>L'article se situe à l'intersection de trois courants : l'alignement personnalisé des LLM (RLHF, DPO), la mémoire pour agents LLM (Mem0, MemGPT, A-Mem), et la personnalisation en environnement interactif (TidyBot, PREFDISCO). Par rapport à Mem0 (Chhikara et al., 2025), PAHF ne propose pas de nouvelle architecture mémoire mais ajoute la dimension du feedback en ligne. Par rapport à PREFDISCO (Li et al., 2025), le cadre dépasse les dialogues courts à persona statique pour traiter des séquences de tâches longues avec dérive.</p>
+<p>La mémoire est volontairement simpliste (store de notes + recherche dense). Les auteurs le reconnaissent et le présentent comme un choix méthodologique pour isoler l'effet des canaux de feedback. Mais cela signifie que la contribution architecturale est mince : le cœur du framework repose sur des prompts bien conçus et un pipeline RAG standard.</p>
 
-<p>Le lien avec RLHS (Liang et al., 2025a) — par le même premier auteur — est assumé : la simulation rétrospective après action motive directement le canal post-action. La filiation avec l'apprentissage bayésien (Qiu et al., 2025 ; Griffiths et al., 2024) est mentionnée mais non exploitée formellement ; PAHF reste un système à base de prompts sans inférence bayésienne explicite.</p>
+<p>L'analyse théorique suppose un feedback correctif parfait (Assumption A2 : le signal post-action révèle l'action correcte). Cette hypothèse est forte et ne tient pas face à un feedback humain partiel ou ambigu.</p>
 
-<p>L'absence de comparaison avec des systèmes de personnalisation déployés (recommandation collaborative, bandits contextuels) constitue un angle mort. Ces méthodes traitent depuis longtemps la non-stationnarité des préférences avec des garanties de regret établies.</p>
+<h2>Reproductibilité</h2>
 
-<h3>Tableau récapitulatif des scores de robustesse</h3>
+<p>Le code source est disponible sur GitHub (github.com/facebookresearch/PAHF). Les prompts complets de l'agent, du simulateur humain, du détecteur de saillance et de l'intégrateur mémoire sont reproduits dans les annexes D et E — un effort de transparence appréciable. Les datasets des deux benchmarks sont décrits en détail (annexe C), avec la logique de construction des personas et des scénarios.</p>
 
-<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<p>La reproduction exacte nécessite un accès API à GPT-4o et GPT-4.1 (OpenAI), ce qui implique un coût financier non négligeable pour 4 200+ scénarios d'apprentissage par configuration. Les résultats avec Llama-4-Scout comme simulateur humain ouvrent une voie vers la reproduction avec des modèles ouverts, mais les performances diffèrent.</p>
+
+<p>Les deux backends mémoire (SQLite et FAISS) produisent des résultats proches (Table 3), ce qui renforce la robustesse des conclusions vis-à-vis de l'implémentation.</p>
+
+<h2>Impact et applications</h2>
+
+<p>PAHF formalise un problème que de nombreux systèmes affrontent de manière ad hoc : comment un agent peut-il apprendre les préférences d'un utilisateur sans données préalables, et s'adapter quand ces préférences changent ? La décomposition en deux canaux complémentaires (pré-action pour l'observabilité partielle, post-action pour le drift) est élégante et bien motivée théoriquement.</p>
+
+<p>Le protocole d'évaluation en 4 phases — séparant apprentissage initial, généralisation, adaptation au drift et généralisation post-drift — est une contribution méthodologique réutilisable. Les futurs travaux sur la personnalisation d'agents pourront adopter ce cadre pour des comparaisons standardisées.</p>
+
+<p>L'application directe concerne les assistants numériques personnels, les robots de service domestique et les systèmes de recommandation conversationnels. La transposition à des environnements réels nécessitera de gérer le bruit du feedback humain, les préférences implicites (non verbalisées) et les contextes sociaux plus complexes que les scénarios binaires testés ici.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>PAHF se distingue des approches de personnalisation par fine-tuning (Chen et al., 2024 ; Tan et al., 2024 ; Li et al., 2024b) qui requièrent des données utilisateur préexistantes et un réentraînement coûteux. Le framework se différencie également de Mem0 (Chhikara et al., 2025) et A-Mem (Xu et al., 2025b), qui proposent des architectures mémoire sophistiquées mais supposent des profils pré-remplis sans apprentissage en ligne.</p>
+
+<p>Par rapport à PREFDISCO (Li et al., 2025), qui évalue la découverte de préférences dans des dialogues courts à persona statique, PAHF étend le cadre à des horizons longs avec drift. La filiation avec RLHF (Christiano et al., 2017 ; Ouyang et al., 2022) et les travaux sur la simulation hindsight (Liang et al., 2025a) est explicite : le canal post-action est une opérationnalisation directe de l'apprentissage par correction rétrospective.</p>
+
+<p>La principale lacune dans le positionnement est l'absence de comparaison avec des systèmes de personnalisation déployés en production (assistants vocaux, recommandeurs e-commerce). Les auteurs restent dans un cadre académique avec des benchmarks construits, sans mesurer l'écart avec les solutions industrielles existantes.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
 <thead>
-<tr>
-<th>Critère</th>
-<th>Score (/5)</th>
-<th>Commentaire</th>
-</tr>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
 </thead>
 <tbody>
-<tr>
-<td>Question de recherche</td>
-<td>4</td>
-<td>Problème bien défini et pertinent ; la formalisation en apprentissage en ligne avec deux sources d'erreur est claire et originale.</td>
-</tr>
-<tr>
-<td>Design expérimental</td>
-<td>3</td>
-<td>Protocole en quatre phases bien conçu, deux domaines complémentaires. L'absence d'utilisateurs humains et l'inversion totale des personas réduisent la validité écologique.</td>
-</tr>
-<tr>
-<td>Taille d'échantillon</td>
-<td>3</td>
-<td>4 800 scénarios (incarné) et 3 600 (achat) avec 5 itérations. Volume adéquat pour du synthétique, mais 40 et 20 personas restent un espace de préférences restreint.</td>
-</tr>
-<tr>
-<td>Qualité des métriques</td>
-<td>4</td>
-<td>Trois métriques complémentaires (SR, FF, ACPE) bien définies. L'ACPE capture la dynamique d'apprentissage mieux qu'un score final. Erreurs standard systématiquement rapportées.</td>
-</tr>
-<tr>
-<td>Contrôle des biais</td>
-<td>3</td>
-<td>Ablations sur modèles et backends utiles. La circularité LLM-agent / LLM-simulateur crée un biais de distribution non contrôlé. Pas de test avec des préférences réelles.</td>
-</tr>
-<tr>
-<td>Reproductibilité</td>
-<td>4</td>
-<td>Code publié, prompts détaillés en appendice, construction des datasets documentée. Le seuil de similarité mémoire τ manque dans le texte principal.</td>
-</tr>
-<tr>
-<td>Transparence et limitations</td>
-<td>4</td>
-<td>Section dédiée couvrant feedback bruité, capacités de raisonnement, budget d'interaction limité. La limite fondamentale (pas d'humains réels) est reconnue implicitement mais pas assez mise en avant.</td>
-</tr>
-<tr>
-<td>Impact et nouveauté</td>
-<td>3</td>
-<td>Formalisation utile de la complémentarité pré/post-action. L'impact réel dépend d'une validation avec de vrais utilisateurs, absente de cette version.</td>
-</tr>
+<tr><td>Question de recherche</td><td>4</td><td>Problème clair, bien motivé, formalisé rigoureusement. La personnalisation continue sans données préalables est un angle pertinent et distinct des travaux antérieurs.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Protocole en 4 phases bien conçu, séparant apprentissage et adaptation. Deux domaines distincts. L'absence d'utilisateurs réels reste le défaut majeur.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>40 + 20 personas simulés, avec 1 200 à 900 scénarios par phase. Volume correct pour des benchmarks synthétiques, mais la puissance statistique face à la variance inter-personas n'est pas discutée formellement.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>SR, FF et ACPE capturent les dimensions pertinentes. L'ACPE est une contribution utile. Cependant, toutes les métriques reposent sur un choix discret parmi 3-4 options — aucune mesure de qualité graduelle ou de satisfaction utilisateur.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Ablations sur modèles agents, simulateurs et backends mémoire. Le biais principal (simulateurs LLM trop coopératifs par rapport à des humains réels) n'est pas contrôlé.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code GitHub, prompts complets en annexe, description détaillée des datasets. Reproduction dépendante d'API commerciales (GPT-4o/4.1).</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Section limitations explicite couvrant mémoire, bruit du feedback, difficulté résiduelle et budget d'interaction. Les auteurs ne surestiment pas la portée de leurs résultats.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>La combinaison pré/post-action avec justification théorique est une contribution nette. Le protocole 4 phases est réutilisable. L'impact reste conditionné à la validation sur utilisateurs réels.</td></tr>
 </tbody>
 </table>
-
-<p><strong>Note globale de robustesse : 3,5 / 5.</strong> Travail rigoureux sur le plan formel avec des preuves théoriques propres et un protocole expérimental structuré. La dépendance totale à la simulation par LLM et l'absence de validation humaine empêchent de conclure sur l'efficacité réelle du cadre proposé.</p>
   </div>
   <script>
   (function(){

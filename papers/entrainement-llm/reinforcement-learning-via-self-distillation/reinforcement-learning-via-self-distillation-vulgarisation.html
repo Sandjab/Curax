@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reinforcement Learning via Self-Distillation — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Reinforcement Learning via Self-Distillation</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un modèle de langage apprend à corriger ses propres copies</h2>
+
+<h3>Introduction</h3>
+
+<p>Un développeur soumet du code sur LeetCode et obtient un « Wrong Answer ». Il ne se contente pas de cette information binaire. Il lit le message d'erreur, identifie la ligne fautive, comprend pourquoi son raisonnement a déraillé, puis corrige. Les grands modèles de langage entraînés par renforcement, eux, n'ont pas ce luxe. La plupart des méthodes d'entraînement actuelles leur fournissent un signal brut : correct ou incorrect. Tout le reste — les erreurs d'exécution, les cas de test échoués, les détails sur ce qui a mal tourné — est jeté à la poubelle.</p>
+
+<p>Une équipe de chercheurs de l'ETH Zurich, du Max Planck Institute, du MIT et de Stanford propose de changer cette donne avec SDPO (Self-Distillation Policy Optimization). Leur idée : exploiter le feedback textuel riche que les environnements de vérification produisent déjà, et transformer le modèle en son propre professeur. Les résultats sont nets — sur des problèmes de programmation compétitive, SDPO dépasse la méthode de référence GRPO de plus de 7 points de précision et atteint les mêmes performances avec quatre fois moins de tentatives.</p>
+
+<h3>Le problème : un professeur qui ne corrige qu'au tampon</h3>
+
+<p>Prenons une analogie. Un professeur corrige 200 copies d'examen de mathématiques. Sa méthode est radicale : il regarde la réponse finale de chaque copie, tamponne « correct » ou « incorrect », et rend la copie sans aucune annotation. L'étudiant sait qu'il a échoué, mais ignore si c'est à cause d'une erreur de calcul à la ligne 3, d'une mauvaise compréhension de l'énoncé, ou d'un raisonnement qui tourne en rond.</p>
+
+<p>C'est exactement le problème que rencontrent les méthodes actuelles d'entraînement par renforcement des LLM. La méthode dominante, GRPO (Group Relative Policy Optimization), fonctionne ainsi : le modèle génère plusieurs réponses à une même question, reçoit une récompense scalaire pour chacune (typiquement 1 pour « tous les tests passent » et 0 sinon), puis utilise la différence relative entre ces scores pour ajuster ses paramètres. Chaque token de la réponse — du premier mot au dernier — reçoit le même signal. Si la réponse est mauvaise, chaque token est pénalisé de la même manière, qu'il soit la cause de l'erreur ou parfaitement correct.</p>
+
+<p>Ce problème porte un nom technique : le goulot d'étranglement de l'attribution de crédit. Le modèle ne peut pas distinguer les bons coups des mauvais au sein d'une même réponse. Pire : quand toutes les tentatives d'un groupe échouent (ce qui arrive souvent sur les problèmes difficiles), les avantages relatifs tombent à zéro. L'apprentissage stagne.</p>
+
+<p>On pourrait contourner le problème en faisant appel à un modèle plus puissant — un « professeur » externe qui annoterait les réponses en détail. Mais cette approche a une limite fondamentale : si l'objectif est de repousser les capacités au-delà des modèles existants, aucun professeur n'est disponible pour montrer le chemin.</p>
+
+<h3>La méthode : se relire après avoir vu le corrigé</h3>
+
+<p>L'idée centrale de SDPO repose sur une observation presque évidente une fois formulée : les LLM savent déjà utiliser du feedback. Quand on montre à un modèle son propre code accompagné du message « ZeroDivisionError: division by zero, ligne 73 », il est souvent capable d'identifier le problème et de proposer une correction. C'est de l'apprentissage en contexte, une capacité que ces modèles possèdent nativement.</p>
+
+<p>SDPO exploite cette capacité de façon ingénieuse. Le mécanisme se décompose en trois temps.</p>
+
+<p>Premier temps : le modèle (appelé « l'étudiant ») génère une réponse à une question, exactement comme dans GRPO.</p>
+
+<p>Deuxième temps : l'environnement fournit un feedback textuel — un message d'erreur d'exécution, les cas de test échoués, ou une solution correcte si une autre tentative du même lot a réussi. Ce feedback est injecté dans le contexte du même modèle, qui endosse alors le rôle de « professeur ». Le professeur n'est pas un modèle différent. C'est le même réseau de neurones, avec les mêmes poids, mais qui dispose d'informations supplémentaires grâce au feedback.</p>
+
+<p>Troisième temps : on compare les prédictions token par token du professeur (qui a vu le feedback) avec celles de l'étudiant (qui ne l'a pas vu). Là où le professeur est en désaccord avec l'étudiant, on sait que le feedback a révélé un problème. Cette divergence fournit un signal d'apprentissage dense — chaque token reçoit un avantage spécifique, positif si le professeur approuve, négatif s'il désapprouve.</p>
+
+<p>Imaginez que vous relisiez votre propre dissertation après avoir consulté le corrigé. Vous ne changeriez pas d'avis sur tout : certains de vos paragraphes étaient déjà bons, et vous le savez. Mais sur les passages où vous aviez commis une erreur de raisonnement, votre jugement change radicalement. SDPO capture exactement cette différence de jugement, position par position dans la séquence.</p>
+
+<p>Le surcoût de calcul reste modeste — entre 6 % et 17 % par rapport à GRPO selon la configuration. Le professeur ne génère rien de nouveau : on recalcule simplement les probabilités de la réponse originale sous le contexte enrichi par le feedback. Pas de génération supplémentaire, pas de modèle externe, pas de réseau de récompense à entraîner séparément.</p>
+
+<p>Un détail du mécanisme mérite attention : le professeur évolue au fil de l'entraînement. Comme il partage ses poids avec l'étudiant, il s'améliore à mesure que l'étudiant progresse. Les chercheurs ont constaté que la précision du professeur augmente pendant l'entraînement, et que l'étudiant finit par dépasser la précision initiale du professeur. Le modèle se hisse lui-même par ses propres bootstraps — une forme d'auto-amélioration sans supervision externe.</p>
+
+<h3>Résultats clés</h3>
+
+<p>Les résultats expérimentaux couvrent trois scénarios distincts qui testent la robustesse de l'approche.</p>
+
+<p><strong>Sans feedback riche</strong>, dans des environnements RLVR classiques où seul un score binaire est disponible, SDPO trouve un moyen de fonctionner : il utilise les tentatives réussies du même lot comme « feedback » pour les tentatives échouées. Sur cinq tâches de raisonnement scientifique et d'utilisation d'outils (chimie, physique, biologie, science des matériaux, appels d'API), SDPO atteint 70,2 % de précision agrégée contre 66,6 % pour GRPO. Sur la tâche de chimie avec le modèle Olmo3-7B, SDPO atteint en 50 minutes le score que GRPO met 5 heures à atteindre — un facteur d'accélération de 6.</p>
+
+<p><strong>Avec feedback riche</strong>, sur LiveCodeBench v6 — un benchmark de 131 problèmes de concours de programmation sortis entre février et mai 2025 — SDPO avec Qwen3-8B atteint 48,8 % de précision contre 41,2 % pour GRPO. Ce score dépasse aussi Claude Sonnet 4 (40,5 %) et Claude Opus 4 (39,7 %), les meilleurs modèles instruct du classement public à la date de l'étude. SDPO atteint le score final de GRPO en quatre fois moins de générations.</p>
+
+<p><strong>En mode découverte</strong>, sur des questions de LCBv6 où Qwen3-8B ne trouve une solution que dans moins de 3 % des cas en 64 essais, SDPO accélère la découverte d'un facteur 3 par rapport au sampling classique. SDPO résout même des questions qu'aucune autre méthode ne parvient à résoudre en 2 750 tentatives.</p>
+
+<p>Un résultat inattendu frappe à la lecture des données. SDPO produit des réponses trois fois plus courtes que GRPO en moyenne, et jusqu'à onze fois plus courtes sur certaines tâches — tout en maintenant une précision supérieure. L'examen qualitatif des réponses révèle pourquoi : les réponses de GRPO sont truffées de raisonnement circulaire. Des « Hmm », des « Wait », des calculs répétés mot pour mot. Le modèle génère parfois littéralement « Wait I'm going in circles ». SDPO élimine ces boucles parasites. Le raisonnement est plus court parce qu'il est plus efficace, pas parce qu'il est tronqué.</p>
+
+<p>L'effet d'échelle est aussi révélateur. La supériorité de SDPO sur GRPO croît avec la taille du modèle. Sur Qwen3-0.6B (600 millions de paramètres), le gain est marginal. Sur Qwen3-8B, il est substantiel. Sur des modèles plus faibles comme Qwen2.5-1.5B, SDPO peut même sous-performer GRPO. La capacité d'un modèle à jouer le rôle de professeur dépend directement de sa capacité d'apprentissage en contexte — une propriété qui s'amplifie avec l'échelle du modèle.</p>
+
+<h3>Implications pratiques</h3>
+
+<p>La première conséquence touche le coût d'entraînement. Si SDPO atteint les performances de GRPO en quatre à six fois moins de générations, le budget de calcul GPU diminue dans les mêmes proportions. Pour des entraînements qui mobilisent des centaines de GPU pendant des semaines, ce gain se chiffre en dizaines de milliers d'euros.</p>
+
+<p>La réduction de la longueur des réponses a elle aussi un impact direct en production. Des réponses trois fois plus courtes signifient des temps d'inférence divisés par trois. Les API de modèles facturent au token généré, et cette efficacité se traduit immédiatement en coûts réduits pour les utilisateurs finaux.</p>
+
+<p>L'absence de modèle professeur externe est un avantage opérationnel souvent sous-estimé. Les méthodes qui reposent sur la distillation depuis un modèle supérieur nécessitent l'accès — et le paiement — à ce modèle pendant tout l'entraînement. SDPO fonctionne en circuit fermé : un seul modèle, une seule infrastructure.</p>
+
+<p>La dimension « test-time self-distillation » ouvre un usage différent des modèles de langage. Au lieu d'entraîner un modèle généraliste, on peut spécialiser temporairement un modèle sur un problème unique et difficile. Le modèle tente, reçoit du feedback, ajuste ses poids, et recommence. Cette boucle compresse l'historique des interactions dans les poids du modèle plutôt que dans sa fenêtre de contexte, ce qui élimine la contrainte de longueur de contexte qui limite les approches multi-tours classiques.</p>
+
+<p>Pour les développeurs d'applications d'IA, SDPO suggère une leçon plus large : les environnements d'exécution produisent souvent des informations riches que les pipelines d'entraînement actuels ignorent. Les erreurs de compilation, les stack traces, les retours de linters, les résultats de tests unitaires — tout ce feedback textuel est un signal d'apprentissage que les méthodes à récompense binaire gaspillent.</p>
+
+<h3>Pour aller plus loin</h3>
+
+<p>La piste la plus évidente concerne le passage à l'échelle. Les expériences portent sur des modèles de 0,6 à 8 milliards de paramètres. Étant donné que les gains de SDPO croissent avec la taille du modèle, le comportement sur des modèles de 70 milliards de paramètres ou plus reste une question ouverte. Les tendances observées laissent penser que les résultats pourraient être spectaculaires, mais seule l'expérience le confirmera.</p>
+
+<p>Les environnements agentiques représentent un terrain d'application naturel. Quand un agent IA interagit avec un navigateur web, une API, ou un système de fichiers, chaque action produit un retour riche — pages HTML, réponses JSON, messages d'erreur. Ces trajectoires longues avec des états intermédiaires observables correspondent au cadre RLRF (Reinforcement Learning with Rich Feedback) formalisé par les auteurs.</p>
+
+<p>Une limitation assumée du travail mérite discussion. SDPO dépend de la qualité du feedback environnemental. Si l'environnement renvoie des messages d'erreur trompeurs ou peu informatifs, le professeur ne peut pas identifier les erreurs de l'étudiant. La méthode ne crée pas d'information à partir de rien — elle exploite mieux celle qui existe déjà.</p>
+
+<p>La question du raisonnement concis que SDPO produit naturellement soulève un problème de recherche en soi. Pourquoi GRPO engendre-t-il du raisonnement circulaire et verbeux ? L'hypothèse des auteurs est intuitive : quand chaque token reçoit un signal spécifique, les tokens parasites (« Hmm », « Wait », les répétitions de calculs) ne peuvent plus se cacher derrière le score global de la réponse. Ils sont identifiés et pénalisés individuellement. Confirmer ce mécanisme demandera des analyses plus fines de la dynamique d'entraînement.</p>
+
+<p>L'extension au-delà des récompenses vérifiables reste un chantier ouvert. Le code et les mathématiques offrent des environnements de vérification automatique — les tests passent ou échouent, la réponse numérique est juste ou fausse. Pour la génération de texte libre, la rédaction créative ou le dialogue, le feedback est moins structuré. Adapter le mécanisme de rétrospection de SDPO à ces domaines demandera de repenser ce que « feedback riche » signifie en l'absence de vérité terrain.</p>
+
+<p>Le code source de SDPO est disponible publiquement. Pour les équipes qui entraînent déjà des modèles avec GRPO, l'intégration est minimale : il suffit de remplacer le calcul des avantages. Cette simplicité d'adoption pourrait accélérer la validation de l'approche sur une diversité de tâches et de modèles bien au-delà de ce que les auteurs ont pu tester.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

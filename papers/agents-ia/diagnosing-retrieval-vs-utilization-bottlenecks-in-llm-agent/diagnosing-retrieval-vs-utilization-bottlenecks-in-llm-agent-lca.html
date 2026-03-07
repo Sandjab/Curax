@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnosing Retrieval vs. Utilization Bottlenecks in LLM Agent Memory — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Diagnosing Retrieval vs. Utilization Bottlenecks in LLM Agent Memory</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Les agents LLM dotés de mémoire persistante stockent et récupèrent des informations issues d'interactions passées, mais les systèmes actuels sont évalués de bout en bout : une seule mesure d'exactitude amalgame les erreurs d'écriture, de retrieval et de raisonnement. Yuan, Su et Yao proposent un cadre diagnostique qui décompose ces trois étapes pour identifier laquelle limite réellement la performance. Leur question est précise : la stratégie d'écriture en mémoire a-t-elle un impact comparable à la méthode de retrieval sur la qualité des réponses ?</p>
+
+<p>Les architectures mémorielles récentes (Mem0, MemGPT, A-MEM, MemoryBank) rivalisent d'ingénierie au moment de l'écriture — extraction de faits, résolution de conflits, résumés récursifs — sans que l'on sache si cet effort se traduit en gains mesurables par rapport à un stockage brut. Les benchmarks existants (LoCoMo, LongMemEval, MemoryAgentBench) ne décomposaient pas les sources d'erreur, ce qui rendait la question insoluble jusqu'ici.</p>
+
+<h2>Méthodologie</h2>
+
+<p>L'étude adopte un plan factoriel 3×3 croisant trois stratégies d'écriture avec trois méthodes de retrieval, évaluées sur 1 540 questions non adversariales du benchmark LoCoMo (10 conversations multi-sessions d'environ 600 tours chacune).</p>
+
+<h3>Stratégies d'écriture</h3>
+<ul>
+  <li><strong>Basic RAG</strong> : stockage de chunks bruts de 3 tours avec noms et horodatages, sans appel LLM.</li>
+  <li><strong>Extracted Facts</strong> : extraction de faits structurés par LLM avec résolution de conflits (ADD/UPDATE/NOOP), inspirée de Mem0.</li>
+  <li><strong>Summarized Episodes</strong> : compression de chaque session en un paragraphe résumé, inspirée de MemGPT.</li>
+</ul>
+
+<h3>Méthodes de retrieval</h3>
+<ul>
+  <li><strong>Cosine similarity</strong> : top-k par distance cosinus entre embeddings.</li>
+  <li><strong>BM25</strong> : scoring par chevauchement lexical terme-fréquence.</li>
+  <li><strong>Hybrid + Rerank</strong> : union des top-2k candidats cosine et BM25, reranking par GPT-5.2 vers top-k.</li>
+</ul>
+
+<p>Le cadre diagnostique repose sur trois sondes appliquées à chaque question. La sonde 1 (Retrieval Relevance) fait évaluer par un juge LLM si chaque entrée récupérée contient de l'information pertinente pour répondre à la question. La sonde 2 (Memory Utilization) compare la réponse produite avec mémoire à une réponse contrôle sans mémoire pour classer l'effet en quatre catégories : bénéfique, nuisible, ignoré ou neutre. La sonde 3 (Failure Classification) catégorise les erreurs en échec de retrieval (information absente ou mal classée), échec d'utilisation (information présente mais mal exploitée) ou hallucination (contradiction avec les mémoires récupérées).</p>
+
+<p>Toutes les configurations partagent le même backbone (GPT-5-mini), le même modèle d'embedding (text-embedding-3-small, 1 536 dimensions) et le même budget de retrieval (k=5). Ce contrôle strict des variables confondantes renforce la validité interne du plan factoriel.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>La méthode de retrieval domine la performance. L'exactitude moyenne varie de 57,1 % (BM25) à 77,2 % (hybrid reranking), soit un écart de 20 points. La stratégie d'écriture ne produit que 3 à 8 points de variation au sein d'une même colonne de retrieval. Le stockage brut (Basic RAG) atteint 77,9 % avec cosine et 81,1 % avec hybrid — des scores égaux ou supérieurs aux deux alternatives plus coûteuses.</p>
+
+<p>La corrélation entre précision du retrieval (Precision@5) et exactitude des réponses atteint r = 0,98 sur les neuf configurations. Ce chiffre confirme que la qualité du retrieval prédit directement la performance finale, indépendamment du format de stockage.</p>
+
+<p>L'analyse des échecs renforce ce diagnostic. Les échecs de retrieval représentent 11 % à 46 % des questions selon la configuration, contre 4 % à 8 % pour les échecs d'utilisation et 0,4 % à 1,4 % pour les hallucinations. Le hybrid reranking réduit les échecs de retrieval de moitié (35,3 % → 11,4 % pour Basic RAG). Les échecs d'utilisation restent stables quelle que soit la configuration : quand le modèle reçoit du contexte pertinent, il l'exploite correctement dans 79 % des cas (taux bénéfique sous Basic RAG + Hybrid).</p>
+
+<p>Le Token F1 se révèle insensible à ces écarts de performance (0,221 vs 0,168 pour un écart de 20 points d'exactitude). Cette observation valide le recours au jugement LLM plutôt qu'aux métriques de chevauchement lexical pour évaluer les réponses.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>Le résultat central — le retrieval compte davantage que l'écriture — a des implications directes pour l'ingénierie des agents mémoriels. Les pipelines d'écriture sophistiqués (extraction de faits, résumés) engendrent un coût LLM non négligeable à chaque session sans gain mesurable. La compression détruit des nuances contextuelles que le modèle saurait exploiter si elles lui étaient présentées intactes.</p>
+
+<p>Plusieurs limites réduisent la portée de ces conclusions. L'étude repose sur un unique modèle backbone (GPT-5-mini). Un modèle plus faible pourrait peiner à exploiter des chunks bruts longs, ce qui inverserait l'avantage du Basic RAG. LoCoMo, avec ses 10 conversations, offre une diversité limitée des patterns conversationnels. Les stratégies d'écriture sont des réimplémentations prompt-based, pas les systèmes originaux (Mem0, MemGPT) — des écarts d'implémentation pourraient biaiser la comparaison.</p>
+
+<p>Le budget fixe de k=5 entrées récupérées favorise mécaniquement le stockage brut : chaque chunk contient davantage de contexte qu'un fait isolé ou un résumé condensé. Sous un budget de tokens strict où la compression deviendrait nécessaire pour respecter la fenêtre de contexte, les résumés pourraient reprendre l'avantage. Les auteurs le reconnaissent mais ne testent pas cette hypothèse.</p>
+
+<p>L'absence de tests de significativité statistique affaiblit les conclusions quantitatives. Les écarts rapportés (3-8 points pour l'écriture, 14-23 points pour le retrieval) semblent convaincants par leur amplitude, mais sans intervalles de confiance ni tests, la part attribuable au hasard reste indéterminée — surtout pour les écarts entre stratégies d'écriture.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le code est publiquement disponible sur GitHub (github.com/boqiny/memory-probe). Les prompts complets de chaque composant — extraction de faits, résolution de conflits, résumé, QA avec et sans mémoire, trois sondes diagnostiques — sont documentés en annexe C. LoCoMo est un jeu de données public.</p>
+
+<p>La validation du juge LLM par annotation humaine porte sur 200 échantillons pour la correction des réponses (κ de Cohen = 0,82, accord substantiel) et 200 échantillons pour la classification des échecs (85 % d'accord). La confusion se concentre entre échecs de retrieval et d'utilisation — une frontière reconnue comme ambiguë même pour les annotateurs humains. Cette validation renforce la crédibilité des sondes diagnostiques.</p>
+
+<p>Un point de fragilité : la reproductibilité dépend de l'accès aux API OpenAI (GPT-5-mini, GPT-5.2, text-embedding-3-small), dont le comportement peut évoluer entre versions sans préavis.</p>
+
+<h2>Impact et applications</h2>
+
+<p>Cette étude réoriente les priorités de conception des agents mémoriels. Plutôt que d'investir dans des pipelines d'écriture toujours plus élaborés, les praticiens gagneraient à concentrer leurs efforts sur la qualité du retrieval : reranking hybride, compréhension de requête, diversification des signaux de recherche.</p>
+
+<p>Le cadre diagnostique à trois sondes est réutilisable au-delà de cette étude. Tout système RAG ou mémoriel peut l'adopter pour localiser ses goulots d'étranglement sans modifier son architecture. La décomposition retrieval / utilisation / hallucination fournit un vocabulaire partagé pour comparer des systèmes hétérogènes.</p>
+
+<p>L'implication économique est directe : le Basic RAG, qui ne requiert aucun appel LLM à l'écriture, égale ou surpasse des alternatives coûtant un ou plusieurs appels par session. Pour des systèmes à grande échelle traitant des milliers de sessions, cette différence de coût opérationnel est substantielle.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>L'article se situe à l'intersection de deux courants : les architectures mémorielles pour agents LLM (Mem0, MemGPT, A-MEM, MemoryBank, MEM1, Mem-α) et les benchmarks de mémoire longue (LoCoMo, LongMemEval, MemoryAgentBench, RealTalk). Sa contribution spécifique est de combler un manque identifié dans les deux courants — l'absence de diagnostic par étape permettant d'attribuer les erreurs à une phase précise du pipeline.</p>
+
+<p>Les systèmes appris de bout en bout (MEM1, Mem-α) qui optimisent conjointement écriture et retrieval par apprentissage par renforcement échappent au périmètre de cette étude. L'optimisation jointe pourrait modifier l'équilibre entre les deux étapes, et les conclusions ne s'y transposent pas directement. Les auteurs le signalent explicitement.</p>
+
+<p>La corrélation r = 0,98 entre précision de retrieval et exactitude constitue l'argument empirique le plus fort à ce jour en faveur d'un recentrage sur le retrieval. Aucune étude précédente n'avait isolé ce facteur avec un contrôle expérimental aussi strict sur les variables confondantes. Cette donnée complète les résultats récents d'AMA-Bench (Zhao et al., 2026) et de MemoryArena (He et al., 2026) qui évaluent la mémoire agentique sous des angles différents — trajectoires machine et tâches multi-sessions interdépendantes respectivement — sans décomposer le pipeline en étapes.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Commentaire</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td><span class="score-4">4</span></td>
+      <td>Question claire, ciblée et originale, répondant à un manque identifié dans la littérature sur la mémoire des agents LLM.</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td><span class="score-4">4</span></td>
+      <td>Plan factoriel 3×3 bien contrôlé. Backbone, embedding et budget de retrieval fixés. Trois sondes diagnostiques complémentaires.</td>
+    </tr>
+    <tr>
+      <td>Taille d'échantillon</td>
+      <td><span class="score-3">3</span></td>
+      <td>1 540 questions issues de seulement 10 conversations. Diversité limitée des patterns conversationnels. Aucun test de significativité.</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td><span class="score-4">4</span></td>
+      <td>Juge LLM validé par annotation humaine (κ = 0,82 pour la correction, 85 % pour la classification des échecs). Token F1 en métrique secondaire.</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td><span class="score-3">3</span></td>
+      <td>Bon contrôle interne, mais un seul modèle backbone, un seul benchmark et un budget k fixe. Stratégies d'écriture réimplémentées, pas les systèmes originaux.</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td><span class="score-4">4</span></td>
+      <td>Code public, prompts complets en annexe, benchmark ouvert. Dépendance aux API OpenAI pour reproduction exacte.</td>
+    </tr>
+    <tr>
+      <td>Transparence des limitations</td>
+      <td><span class="score-4">4</span></td>
+      <td>Limites clairement listées : modèle unique, benchmark unique, budget fixe, réimplémentations prompt-based, jugement LLM.</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td><span class="score-3">3</span></td>
+      <td>Cadre diagnostique réutilisable et conclusion pratique actionnable. Périmètre restreint limitant la généralisation.</td>
+    </tr>
+  </tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

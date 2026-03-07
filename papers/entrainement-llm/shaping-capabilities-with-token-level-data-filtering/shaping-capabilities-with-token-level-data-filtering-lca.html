@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shaping Capabilities with Token-Level Data Filtering — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Shaping Capabilities with Token-Level Data Filtering</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le filtrage de données au niveau des tokens pendant le pré-entraînement peut-il supprimer des capacités indésirables dans les modèles de langage, de manière plus efficace que le filtrage au niveau des documents et plus robuste que les interventions post hoc ? Rathi et Radford partent d'un constat empirique bien documenté : les gardes-fous appliqués après le pré-entraînement — RLHF, unlearning, classifieurs d'entrée/sortie — échouent face à des adversaires motivés. Le jailbreaking et le fine-tuning adversarial récupèrent des capacités que l'on croyait supprimées.</p>
+<p>L'alternative proposée : intervenir directement sur les données d'entraînement, non pas au niveau des documents (approche standard), mais au niveau des tokens individuels. Cette idée s'appuie sur la littérature d'attribution de données, qui montre que l'influence de tokens individuels sur les capacités fluctue considérablement au sein d'un même document. La médecine sert de domaine proxy pour les capacités dangereuses (biologie des armes, synthèse chimique), un choix pragmatique dicté par les ressources disponibles et la densité du signal dans les corpus éducatifs.</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole combine quatre étapes : étiquetage du corpus de pré-entraînement par un classifieur entraîné, filtrage des tokens liés aux capacités à supprimer, entraînement de modèles Transformer à six échelles (61M à 1.8B paramètres), et évaluation sur trois modalités complémentaires.</p>
+<p>Le corpus d'entraînement est FineWeb-Edu. Deux stratégies de filtrage token sont testées. Le masquage de perte (loss masking) retire les gradients des tokens « oubli » du passage arrière mais les laisse visibles en entrée. La suppression (removal) remplace ces tokens par un jeton spécial <code>&lt;|hidden|&gt;</code> et masque également la perte. Le filtrage au niveau des documents sert de baseline.</p>
+<p>Les modèles suivent les recommandations Chinchilla de compute-optimalité, avec une architecture GPT-2 augmentée, optimisée par AdamW et µP. Les modèles 1.8B sont ensuite instruits pour l'évaluation QCM (mix personnalisé multi-domaines) et entraînés au chat (smol-smoltalk) pour l'évaluation en réponse libre.</p>
+
+<h3>Pipeline de classification</h3>
+<p>La construction du classifieur est un apport méthodologique substantiel. Des autoencodeurs épars (SAE) pré-entraînés sur Gemma 2 9B (couche 31, largeur 16k) identifient environ 600 latents médicaux filtrés par scoring d'auto-interprétation. Un token est étiqueté médical s'il active au moins 2 de ces latents à plus de 4 écarts-types au-dessus de la moyenne, ou s'il est adjacent à un token déjà classifié et active au moins un latent. Ces étiquettes servent à entraîner une sonde linéaire (L-BFGS) sur un modèle bidirectionnel (biLM) de 224M paramètres, pré-entraîné sur un corpus avec surreprésentation de PubMed.</p>
+<p>Le classifieur final atteint 0.856 F1 en validation et 0.894 en test — surpassant ModernBERT-large (395M paramètres, 0.794 F1) pour une fraction du coût. Les classifieurs plus petits et spécialisés dominent les gros modèles généralistes sur cette tâche de classification token.</p>
+
+<h3>Évaluation</h3>
+<p>Trois modalités couvrent un spectre de difficulté croissant. La perplexité texte (articles PubMed, bioRxiv, arXiv, PhilPapers) vérifie directement l'effet du filtrage sur la perte. Les QCM (MedMCQA, MedQA-USMLE, sous-ensembles MMLU) testent les capacités de raisonnement médical après instruction tuning. Les réponses libres sur HealthSearchQA, jugées par Claude Sonnet 4 selon trois critères (pertinence, cohérence, correction), évaluent la dégradation en conditions réalistes.</p>
+
+<h2>Résultats principaux</h2>
+<p>Le filtrage token domine au sens de Pareto le filtrage document. À réduction égale des capacités médicales, il inflige moins de dommages aux capacités biologiques adjacentes. Ce résultat est stable à travers les seuils de classification, de 3% à 50% des tokens filtrés.</p>
+<p>L'efficacité augmente avec l'échelle. Pour les modèles 1.8B, le filtrage par suppression de tokens impose un ralentissement effectif de calcul de 7000× sur le domaine médical, contre environ 30× pour le filtrage document. Les lois d'échelle relatives montrent un écart croissant entre modèles entraînés sur données filtrées et non filtrées — les exposants de scaling sur le domaine cible sont de magnitude inférieure après filtrage.</p>
+<p>Sur les QCM, les modèles filtrés tombent au niveau du hasard sur MedMCQA et MedQA-USMLE. Aucune dégradation notable n'apparaît sur MMLU biologie, STEM ou non-STEM. En réponse libre, le filtrage token réduit la pertinence des réponses médicales d'un facteur 4 et la correction d'un facteur 10 par rapport à la baseline. Les réponses qualitatives oscillent entre l'incohérent (« a red eye is caused by a combination of factors such as a red eye ») et le faux plausible (« dry lips can be a symptom of cancer »).</p>
+
+<h3>Robustesse au fine-tuning adversarial</h3>
+<p>Le filtrage token par suppression nécessite 13× plus de tokens de fine-tuning que RMU (état de l'art en unlearning) pour récupérer la performance baseline à 1.8B paramètres. RMU perd sa robustesse plus rapidement avec l'échelle : sa courbe de dégradation est plus pentue que celles du filtrage, ce qui signifie que l'écart de robustesse se creuse à mesure que les modèles grandissent.</p>
+
+<h3>Préservation de l'alignement</h3>
+<p>Résultat contre-intuitif : le filtrage token par suppression améliore la capacité du modèle à apprendre le refus sur le domaine oublié. Le taux de refus sur HealthSearchQA est 2× supérieur à la baseline, sans augmentation des refus parasites sur Alpaca. Le filtrage document, en revanche, échoue à généraliser — le modèle refuse presque autant sur Alpaca que sur HealthSearchQA. L'explication avancée : discriminer tokens « vus en entraînement » versus « jamais vus » est une tâche plus simple que discriminer « toxique » versus « non toxique » quand les tokens toxiques ont été observés dans des contextes bénins.</p>
+
+<h3>Tolérance aux labels bruités</h3>
+<p>Le bruit d'étiquetage dégrade l'efficacité du filtrage selon une loi de puissance. Mais des classifieurs médiocres peuvent rester efficaces si l'on déplace le seuil de décision vers un rappel élevé et que l'on compense par davantage de compute de pré-entraînement. Les classifieurs token généralisent à partir de labels faibles (weak-to-strong generalization), contrairement aux classifieurs document qui régressent systématiquement dans ce régime.</p>
+
+<h2>Discussion et limites</h2>
+<p>La limite la plus sérieuse est le recours à un proxy. La médecine n'est pas un domaine dangereux. Les capacités que l'on souhaiterait réellement supprimer — synthèse d'agents pathogènes, fabrication d'armes — sont rares dans les corpus et pourraient se comporter différemment. Le signal médical dans FineWeb-Edu est dense (d'où le choix de la version Edu) ; rien ne garantit que le filtrage token conserve sa dominance de Pareto sur des signaux épars.</p>
+<p>L'échelle maximale de 1.8B paramètres reste loin des modèles frontière. Les auteurs évoquent un risque de scaling en U : des modèles suffisamment capables pourraient reconstituer des capacités dangereuses à partir de fragments résiduels, ou apprendre en contexte via des outils de recherche. La question est ouverte, et les 7000× de ralentissement à 1.8B ne se traduisent pas mécaniquement en chiffres comparables à 70B ou 400B.</p>
+<p>Le classifieur opère sur un proxy de proxy : il identifie les tokens « liés à un domaine de connaissance », pas ceux qui « améliorent causalement les capacités dangereuses en aval ». Des tokens influents mais indirects — ceux dont l'effet passe par des abstractions sémantiques plutôt que par du contenu factuel explicite — échappent à cette approche.</p>
+<p>La pipeline d'étiquetage par SAE introduit du bruit systématique. Le seuil de 4 écarts-types et de 2 latents minimum a été choisi par inspection visuelle, sans validation formelle de sensibilité. Le feature splitting des SAE et la qualité variable des auto-interprétations sont reconnus mais pas quantifiés.</p>
+<p>L'évaluation par Claude Sonnet 4 (produit Anthropic) pour les réponses libres et le nettoyage des données crée une dépendance circulaire non discutée : un modèle Anthropic évalue les travaux d'un chercheur Anthropic. L'absence de juges humains ou de LLM tiers sur cette composante est un angle mort.</p>
+<p>Le filtrage token empêche le contrôle fin intra-domaine. Le modèle distingue « médical » de « non médical » mais pas « neurologie » de « maladies infectieuses » (confirmé par les sondes linéaires). Pour un déploiement nécessitant des refus granulaires par sous-domaine, cette limitation réduit l'utilité pratique.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est disponible sur GitHub (neilrathi/token-filtering). Les hyperparamètres sont détaillés en annexe pour chaque configuration. Le corpus FineWeb-Edu et les données de fine-tuning adversarial (PubMed via Common Pile) sont publics. Les benchmarks d'évaluation (MedMCQA, MedQA-USMLE, MMLU, HealthSearchQA, Alpaca) sont établis et accessibles.</p>
+<p>La pipeline de classification dépend de SAE pré-entraînés sur Gemma 2 9B (Gemma Scope) et de prompts envoyés à Claude 3.5 Haiku et Claude Sonnet 4 pour l'interprétation et le nettoyage des latents. Les versions exactes de ces modèles ne sont pas figées. La reproducibilité de l'étiquetage est donc partielle : les mêmes prompts sur des versions ultérieures pourraient produire des résultats différents.</p>
+<p>Reproduire l'ensemble de la matrice expérimentale (6 tailles × 4 conditions de filtrage × multiples seuils) nécessite un accès à des GPU H200. Les modèles jusqu'à 521M tiennent sur 2 H200 ; les plus grands en demandent 8. Le budget total de calcul n'est pas chiffré explicitement.</p>
+
+<h2>Impact et applications</h2>
+<p>Le filtrage token offre une alternative crédible aux méthodes post hoc pour la suppression de capacités pendant le pré-entraînement. Sa robustesse supérieure au fine-tuning adversarial par rapport à RMU renforce l'argument en faveur de son intégration dans les pipelines des laboratoires frontière — plusieurs d'entre eux utilisent déjà un filtrage document rudimentaire.</p>
+<p>La méthodologie SAE → sonde linéaire bidirectionnelle est réutilisable au-delà de ce cas d'usage : détection de PII au niveau sous-document, identification de contenu toxique, enrichissement de corpus. Le résultat pratique selon lequel des biLM spécialisés de 224M surpassent ModernBERT-large (395M) est directement actionnable pour quiconque construit des classifieurs de tokens.</p>
+<p>La démonstration que le filtrage préserve — voire améliore — la capacité d'alignement dissipe une objection fréquente : un modèle ignorant un domaine peut malgré tout refuser de manière appropriée dans ce domaine. Ce résultat, s'il se confirme à plus grande échelle, modifie le calcul coût-bénéfice du filtrage pré-entraînement.</p>
+<p>La généralisation weak-to-strong des classifieurs token suggère que l'approche pourrait s'étendre à des domaines où les labels de haute qualité sont rares, à condition de disposer de suffisamment de compute pour compenser le bruit.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Ce travail prolonge directement O'Brien et al. (2025) et Chen et al. (2025), qui ont démontré l'efficacité du filtrage document pour les capacités CBRN sur des modèles jusqu'à 6.9B paramètres. L'apport est double : la granularité token et l'analyse de scaling systématique, deux dimensions absentes des travaux précédents. Le chiffre de 10× de robustesse au fine-tuning chez O'Brien et al. se retrouve ici avec un avantage accru du filtrage token sur le filtrage document.</p>
+<p>Par rapport à la littérature sur l'unlearning (Li et al., 2024 ; Tamirisa et al., 2025 ; Sheshadri et al., 2024), les résultats confirment la fragilité des interventions post hoc face au fine-tuning adversarial — un constat partagé par Łucki et al. (2024) et Thaker et al. (2025). Le gradient routing de Cloud et al. (2024) et Shilov et al. (2025) poursuit un objectif similaire par une voie complémentaire — segmentation interne des capacités plutôt que filtrage externe — mais sans démonstration comparable à cette échelle.</p>
+<p>Les résultats sur l'alignement contredisent partiellement Longpre et al. (2024) et Li et al. (2025), qui montrent que réduire le contenu toxique dans le pré-entraînement rend l'alignement plus difficile. La distinction proposée — la discrimination « vu/non vu » diffère structurellement de « toxique/non toxique » — est plausible mais non formellement validée. Elle mériterait un test dédié, par exemple en tentant l'entraînement au refus sur des sous-domaines médicaux spécifiques.</p>
+<p>L'utilisation des SAE pour l'étiquetage de données plutôt que pour l'interprétabilité représente un détournement productif de la littérature sur les autoencodeurs épars (Cunningham et al., 2023 ; Lieberum et al., 2024), en lien avec les travaux récents de Movva et al. (2025), Jiang et al. (2025) et Nguyen et al. (2025) qui explorent les latents SAE comme descripteurs sémantiques de tokens.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Claire, originale, ancrée dans un problème pressant de sûreté IA. Le passage du document au token est bien motivé par la littérature d'attribution.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Matrice expérimentale riche (6 tailles × 4 conditions × 3 modalités d'évaluation). Le proxy médical est bien justifié mais reste limitant.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>Deux ordres de grandeur en compute, de 61M à 1.8B paramètres. Insuffisant pour conclure aux échelles frontière, mais raisonnable pour une prépublication.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Le « compute slowdown » est une métrique élégante. Triangulation perplexité/QCM/réponse libre. LLM-as-judge reste imparfait.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Bons contrôles retain (biologie, non-médical). Pipeline d'étiquetage multi-LLM avec bruit systématique partiellement maîtrisé. Circularité Anthropic non discutée.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, hyperparamètres documentés, corpus accessibles. La dépendance aux API LLM pour l'étiquetage réduit la reproductibilité exacte.</td></tr>
+<tr><td>Transparence des limitations</td><td>5</td><td>Discussion franche du proxy, du risque de scaling en U, de l'imperfection du classifieur et du contrôle fin impossible.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Premier traitement systématique du filtrage token avec analyse de scaling. Pipeline SAE → sonde réutilisable. Résultat sur l'alignement surprenant et précieux.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

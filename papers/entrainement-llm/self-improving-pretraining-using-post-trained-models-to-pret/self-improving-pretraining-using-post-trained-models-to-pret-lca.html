@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Improving Pretraining: Using Post-Trained Models to Pretrain Better Models — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Self-Improving Pretraining: Using Post-Trained Models to Pretrain Better Models</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Objectif et contexte</h2>
+
+<p>Le pré-entraînement standard des LLM repose sur la prédiction du prochain token à partir de corpus humains. Ces corpus contiennent inévitablement du contenu de qualité variable, toxique ou factuellement incorrect. Les approches classiques tentent de corriger ces défauts en aval, lors du post-entraînement (alignement, RLHF), mais les comportements appris pendant le pré-entraînement restent profondément ancrés dans le modèle et résistent à ces corrections tardives (Itzhak et al., 2025).</p>
+
+<p>Self-Improving Pretraining propose de résoudre ce problème à la source. La méthode remplace la prédiction token par token par une tâche de génération de séquences : le flux de données est découpé en préfixes et suffixes de N=128 tokens, et le modèle apprend à générer des suffixes de haute qualité conditionnés sur les préfixes. Un modèle post-entraîné existant (issu d'un cycle précédent) intervient doublement : comme réécrivain des suffixes originaux et comme juge pour attribuer des récompenses via RL. Trois axes sont ciblés — qualité générale, sécurité et factualité — chacun piloté par un prompt de juge spécifique.</p>
+
+<h2>2. Méthodologie</h2>
+
+<p>L'architecture repose sur trois composants. Le modèle de politique (Llama2 1.4B) est le modèle en cours de pré-entraînement. Le réécrivain (Llama3.1-8B-Instruct fine-tuné ou GPT-OSS-120B) transforme les suffixes problématiques en versions sûres ou de meilleure qualité, tout en préservant les suffixes déjà corrects. Le juge (même choix de modèles) évalue les candidats sur la qualité, la sécurité et la factualité.</p>
+
+<p>À chaque étape d'entraînement, le juge compare plusieurs candidats : le suffixe original, une réécriture par le modèle post-entraîné, et K rollouts du modèle de politique. En début d'entraînement, les rollouts sont médiocres — le juge favorise le suffixe original ou la réécriture. Au fil de l'entraînement, les rollouts s'améliorent et commencent à recevoir des récompenses élevées (Figure 8).</p>
+
+<p>Deux algorithmes d'optimisation sont comparés : online DPO et RF-NLL (reward-filtered negative log-likelihood). Online DPO sélectionne le candidat le mieux noté comme « chosen » et le moins bien noté comme « rejected ». RF-NLL ne retient que le meilleur candidat pour une mise à jour NLL standard. Les expériences montrent un avantage net de online DPO.</p>
+
+<h3>Entraînement du juge et du réécrivain</h3>
+
+<p>Le juge Llama3.1-8B-Instruct est fine-tuné via GRPO sur des données synthétiques avec labels connus (suffixes sûrs vs. dangereux, originaux vs. corrompus). L'entraînement utilise 64 GPUs, 500 steps, 16 générations par prompt. La récompense est binaire : 1.0 pour un jugement correct, 0.0 sinon. La tâche de sécurité est maîtrisée en ~100 steps (reward 0.94), la tâche de qualité continue à progresser jusqu'à la fin (Figure 5).</p>
+
+<p>Le réécrivain est entraîné avec un objectif asymétrique. Sur un suffixe sûr, la récompense est 1.0 uniquement si la réécriture est une copie exacte. Sur un suffixe dangereux, la récompense combine jugements de qualité et de sécurité. Le token overlap converge à ~98% sur les suffixes sûrs et reste à ~63% sur les dangereux (Figure 7).</p>
+
+<h3>Données et configurations</h3>
+
+<p>Deux jeux de données servent au pré-entraînement : SlimPajama (filtré, de meilleure qualité) et RedPajama (plus brut, contenant du contenu dangereux). Les expériences de sécurité utilisent RedPajama avec un filtrage par tags puis par GPT-OSS-120B pour isoler le contenu dangereux. Le pré-entraînement continu porte sur 983 520 échantillons (SP) et 257 154 (RP). Le pré-entraînement from-scratch étend à 21 000 steps avec un learning rate de 5e-4.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>En pré-entraînement continu (Table 1), les trois axes montrent des gains substantiels. L'optimisation pour la qualité atteint un win rate de 86.3% contre la baseline sur les préfixes standards, et 87.9% en cohérence. L'optimisation pour la factualité produit un win rate de 84.0% et fait passer les évaluations de factualité de 42.3 à 57.6 — une amélioration relative de 36.2%. L'optimisation pour la sécurité donne un win rate de 77.7% sur les préfixes dangereux et améliore les scores de sécurité de 76.9 à 91.1 (+18.5% relatif).</p>
+
+<p>Les évaluations standards (BoolQ, PIQA, HellaSwag, ARC, MMLU) progressent dans les trois configurations : 47.6 en moyenne pour Llama Base, 50.8 (qualité), 50.5 (factualité), 49.1 (sécurité). Ces gains sur des benchmarks de raisonnement général, obtenus sans optimisation directe, suggèrent un effet de transfert positif.</p>
+
+<p>En pré-entraînement from-scratch (Table 2), Self-Improving Pretraining avec RF-NLL (rollout vs. rewrite) atteint un win rate qualité de 32.4 contre 1.3 pour la baseline NTP, et un score sécurité de 97.5 contre 85.2. L'entraînement SFT sur les réécritures améliore la sécurité (96.7) mais pas la qualité (1.6).</p>
+
+<p>Les ablations sur le nombre de rollouts (Figure 9) révèlent un gain monotone de 1 à 16 sur les trois axes. Avec 2 rollouts, le win rate qualité est de 69.9 ; avec 16, il atteint 86.3. Le choix du juge a aussi un impact : GPT-OSS-120B surpasse le juge Llama3 fine-tuné (84.3 vs. 72.1), mais l'écart reste raisonnable — un modèle 8B entraîné pour cette tâche capture l'essentiel du signal (Table 7).</p>
+
+<p>Table 21 met en évidence une limite structurelle : optimiser pour la sécurité n'améliore pas la factualité (38.0 vs. 42.3 pour la baseline), et réciproquement. Les trois axes requièrent des signaux de récompense distincts.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>La circularité évaluative pose un problème méthodologique sérieux. GPT-OSS-120B sert de juge pendant l'entraînement (pour la qualité et la factualité) et d'évaluateur principal des résultats. Les gains mesurés reflètent en partie l'alignement du modèle de politique sur les préférences du juge, pas nécessairement une amélioration objective. L'article ne discute pas cette circularité.</p>
+
+<p>Aucun test de significativité statistique n'accompagne les résultats. Pour les évaluations standards, les écarts entre baseline et Self-Improving Pretraining sont parfois de 1 à 3 points (MMLU : 26.4 → 28.3). Sans intervalles de confiance, ces différences restent ambiguës. Les win rates de génération, calculés via GPT-OSS-120B avec 8 seeds, bénéficient d'une certaine robustesse mais pas d'une validation statistique formelle.</p>
+
+<p>L'échelle expérimentale est limitée à un modèle de 1.4B paramètres. Llama-3.1 8B Base, sans Self-Improving Pretraining, obtient déjà 63.1 en évaluations standards contre 50.8 pour le modèle 1.4B amélioré (Table 21). La transposition à des modèles plus grands — où les comportements de pré-entraînement sont plus difficiles à modifier — reste une question ouverte.</p>
+
+<p>Le coût computationnel n'est jamais chiffré. L'entraînement utilise 64 GPUs et génère, à chaque step, 16 rollouts de 128 tokens plus les inférences du juge (5 évaluations par candidat pour qualité et sécurité). Le juge et le réécrivain nécessitent chacun un entraînement GRPO sur 64 GPUs avec 16 générations par prompt. Le ratio coût/bénéfice par rapport au pré-entraînement standard est inconnu.</p>
+
+<p>L'entraînement SFT sur un seul rollout sans juge (Table 6) provoque un effondrement : win rate de 2.0, évaluations standards à 29.5, mais safety à 99.5. Le modèle génère des séquences dénuées de sens mais « sûres ». Ce résultat illustre le risque de mode collapse inhérent à l'auto-entraînement, que le juge et les candidats multiples atténuent sans l'éliminer théoriquement.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Aucun dépôt de code n'est mentionné. La méthode dépend de GPT-OSS-120B, un modèle propriétaire d'OpenAI, pour les configurations principales de qualité et factualité. Les expériences de sécurité utilisent un juge Llama3.1-8B-Instruct fine-tuné, dont les données synthétiques d'entraînement sont générées via Llama3.3-70B-Instruct — modèle accessible mais lourd à déployer.</p>
+
+<p>Les hyperparamètres d'entraînement sont détaillés : tailles de batch, learning rates, températures d'échantillonnage, nombre de rollouts. Les prompts du juge (Figures 2, 3, 4) et du réécrivain (Figure 11) sont reproduits intégralement. Le processus de filtrage des données de RedPajama est documenté dans l'Appendice B.</p>
+
+<p>La reproduction effective exige 64 GPUs pour l'entraînement de la politique, l'accès à GPT-OSS-120B, et la capacité de fine-tuner des modèles 8B avec GRPO. Ces contraintes restreignent la vérification indépendante aux laboratoires disposant d'infrastructures comparables.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>Self-Improving Pretraining reformule le pré-entraînement : celui-ci n'est plus une absorption passive de corpus mais un processus actif d'amélioration via RL. La modularité de l'approche — changer le prompt du juge suffit à cibler un axe d'optimisation différent — la rend extensible à d'autres objectifs (raisonnement, style, spécialisation de domaine).</p>
+
+<p>Le concept de cycle auto-améliorant (un modèle post-entraîné améliore le pré-entraînement du suivant) rappelle la distillation itérative, avec une différence : le signal n'est pas une simple imitation mais un jugement qualitatif appliqué au niveau des séquences. La transition progressive des suffixes/réécritures vers les rollouts (Figure 8) montre que le modèle apprend à se surpasser plutôt qu'à copier son enseignant.</p>
+
+<p>L'applicabilité immédiate est freinée par les exigences computationnelles. Le passage à l'échelle de modèles de dizaines ou centaines de milliards de paramètres multiplierait les coûts de rollouts et d'inférence du juge. La section Discussion invoque l'argument de Chung (2023) : les méthodes d'entraînement doivent exploiter les gains futurs de compute. L'argument est recevable à long terme mais ne résout pas la question pratique actuelle.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>L'article se situe à la confluence de trois courants. Le premier concerne l'amélioration du pré-entraînement par réécriture de données : Hao et al. (2025), Nguyen et al. (2025) et Allen-Zhu &amp; Li (2023) réécrivent des documents entiers hors-ligne. Self-Improving Pretraining opère en streaming sur des suffixes, préservant les préfixes originaux comme contexte d'entrée — ce qui permet au modèle d'apprendre à dévier vers la sécurité depuis un contexte dangereux.</p>
+
+<p>Le second courant porte sur l'intégration du RL dans le pré-entraînement. Dong et al. (2025) et Hatamizadeh et al. (2025) optimisent des « thinking tokens » au niveau du prochain token. Li et al. (2025) et Yu et al. (2024) étendent à des séquences. Self-Improving Pretraining se distingue par l'usage d'un juge externe post-entraîné plutôt que de récompenses vérifiables (correctness-based).</p>
+
+<p>Le troisième courant est celui de la sécurité au pré-entraînement. Korbak et al. (2023) utilisent des control tokens pour incorporer les préférences humaines. Min et al. (2023) combinent réécriture et tokens spéciaux. L'approche ici ne requiert pas de tokens spéciaux — le réécrivain transforme directement les suffixes dangereux en versions sûres tout en gardant le préfixe dangereux intact, forçant le modèle à apprendre la déviation contextuelle.</p>
+
+<p>L'absence de comparaison directe avec RLVR (DeepSeek-R1) limite le positionnement quantitatif. L'article cite ce travail mais ne l'évalue pas comme baseline, probablement parce que RLVR cible le raisonnement et non la sécurité/factualité au pré-entraînement.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Commentaire</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td class="score-4">4</td>
+      <td>Problème bien motivé, reconceptualisation originale du pré-entraînement comme génération de séquences avec RL</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td class="score-4">4</td>
+      <td>Ablations extensives sur objectifs, rollouts et juges ; deux configurations (from-scratch et continual) ; mais échelle unique 1.4B</td>
+    </tr>
+    <tr>
+      <td>Taille d'échantillon</td>
+      <td class="score-3">3</td>
+      <td>Données d'entraînement de taille raisonnable et benchmarks standards ; aucun test de significativité malgré des écarts parfois faibles</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td class="score-3">3</td>
+      <td>Mélange de benchmarks établis et de jugements LLM ; validation des prompts de factualité (Tables 10-13) ; circularité entre juge d'entraînement et d'évaluation</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td class="score-3">3</td>
+      <td>Baselines multiples, spécificité démontrée (Table 21), mais pas d'évaluation humaine ni de protocole aveugle</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td class="score-2">2</td>
+      <td>Pas de code publié ; dépendance à GPT-OSS-120B (propriétaire) ; infrastructure de 64 GPUs requise</td>
+    </tr>
+    <tr>
+      <td>Transparence et limitations</td>
+      <td class="score-3">3</td>
+      <td>Discussion des compromis vitesse et sécurité ; circularité évaluative et limitation d'échelle non abordées</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td class="score-4">4</td>
+      <td>Cadre conceptuel puissant et modulaire ; résultats forts sur trois axes ; contraintes de coût limitant l'adoption à court terme</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Note globale de robustesse : 3,5 / 5.</strong> Le cadre conceptuel — utiliser un modèle post-entraîné pour fournir un signal de supervision supérieur au pré-entraînement standard — est convaincant et les résultats empiriques sont forts sur les trois axes ciblés. Les faiblesses résident dans la circularité évaluative (le juge d'entraînement et le juge d'évaluation sont le même type de modèle), l'absence de tests statistiques, la reproductibilité limitée par la dépendance à un modèle propriétaire, et le manque de validation au-delà de l'échelle 1.4B.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

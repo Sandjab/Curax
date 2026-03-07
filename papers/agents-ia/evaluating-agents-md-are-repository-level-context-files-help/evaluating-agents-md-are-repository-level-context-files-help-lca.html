@@ -127,122 +127,104 @@
     <p class="doc-type">Lecture Critique d'Article</p>
   </div>
   <div class="companion-content">
-    <h2>Objectif et contexte</h2>
+    <h2>1. Objectif et contexte</h2>
 
-<p>Les fichiers de contexte — AGENTS.md, CLAUDE.md et équivalents — se sont imposés comme pratique standard pour adapter les agents de codage aux spécificités d'un dépôt logiciel. Plus de 60 000 dépôts GitHub publics en contenaient au moment de la rédaction. Les principaux fournisseurs d'agents (Anthropic, OpenAI, Alibaba) recommandent leur utilisation et proposent des commandes dédiées pour les générer automatiquement. Aucune étude rigoureuse n'avait cependant mesuré si ces fichiers améliorent réellement la capacité des agents à résoudre des tâches d'ingénierie logicielle.</p>
+<p>Les fichiers contexte — AGENTS.md, CLAUDE.md — se sont imposés comme pratique standard pour adapter les agents de code aux dépôts logiciels. Plus de 60 000 dépôts GitHub en intègrent un au moment de la rédaction de l'article. OpenAI, Anthropic et Alibaba recommandent cette approche et fournissent des commandes dédiées (<code>/init</code>) pour générer automatiquement ces fichiers. Malgré cette adoption massive, aucune évaluation empirique n'avait mesuré leur effet réel sur la capacité des agents à résoudre des tâches d'ingénierie logicielle.</p>
 
-<p>Cette publication d'ETH Zurich et LogicStar.ai comble ce manque. Les auteurs évaluent l'effet des fichiers de contexte sur quatre agents de codage (Claude Code, Codex, Qwen Code) dans trois configurations : absence de fichier, fichier généré par LLM, fichier écrit par un développeur humain. L'évaluation couvre SWE-BENCH LITE (300 tâches, 11 dépôts populaires) et un nouveau benchmark, AGENTBENCH (138 instances, 12 dépôts de niche contenant des fichiers de contexte écrits par des développeurs).</p>
+<p>Gloaguen et al. posent une question frontale : ces fichiers aident-ils réellement ? Pour y répondre, ils construisent un nouveau benchmark (AGENTBENCH, 138 instances sur 12 dépôts Python) et évaluent quatre agents de code sous trois conditions — sans fichier contexte, avec fichier généré par LLM, avec fichier écrit par les développeurs du dépôt.</p>
 
-<h2>Méthodologie</h2>
+<h2>2. Méthodologie</h2>
 
 <h3>Construction d'AGENTBENCH</h3>
 
-<p>Le benchmark AGENTBENCH suit un pipeline en cinq étapes. La sélection cible des dépôts Python contenant un fichier de contexte à la racine, disposant d'une suite de tests et comptant au moins 400 pull requests. Les PR sont filtrées par un mélange de règles heuristiques et d'un agent LLM qui évalue leur caractère déterministe et testable. Un agent configure l'environnement d'exécution, un autre génère des descriptions de tâches standardisées à partir des PR et issues associées, et un dernier produit les tests unitaires de régression. Les tests générés sont vérifiés manuellement pour éliminer la sur-spécification.</p>
+<p>Le benchmark repose sur un pipeline en cinq étapes. La sélection cible des dépôts Python contenant un fichier contexte à la racine, disposant d'une suite de tests et comptant au moins 400 pull requests. Douze dépôts satisfont ces critères, parmi lesquels <code>smolagents</code>, <code>openai-agents-python</code>, <code>fastmcp</code>, <code>tinygrad</code> et <code>ragas</code>.</p>
 
-<p>Le choix d'utiliser GPT-5.2 avec Codex comme agent de construction introduit une dépendance à un modèle spécifique pour la qualité des instances. La couverture moyenne des tests atteint 75 % du code modifié — un chiffre correct mais qui laisse une marge d'erreur non négligeable sur le quart restant.</p>
+<p>Les PRs sont filtrées par combinaison de règles (référence à une issue, modification d'au moins un fichier Python) et d'un agent LLM qui évalue si la PR introduit un comportement déterministe et testable. Contrairement à SWE-BENCH LITE, les PRs ne sont pas tenues de contenir des tests unitaires — un choix pragmatique dicté par les pratiques moins strictes des dépôts de niche.</p>
+
+<p>Les descriptions de tâches et les tests unitaires sont générés par GPT-5.2 via Codex. Les descriptions suivent un template standardisé en six sections. Les tests doivent échouer sur l'état pré-patch et réussir après application du patch original. Une vérification manuelle de 10 % des instances n'a révélé aucune fuite de solution. La couverture moyenne des tests générés atteint 75 % du code modifié.</p>
 
 <h3>Protocole expérimental</h3>
 
-<p>Quatre agents sont testés, chacun couplé à son modèle natif : Claude Code avec Sonnet 4.5, Codex avec GPT-5.2 et GPT-5.1 Mini, Qwen Code avec Qwen3-30B-Coder. Les températures sont fixées à 0 pour trois agents sur quatre (0.7 pour Qwen, avec top-p 0.8). Chaque configuration est exécutée une seule fois par instance — une limitation significative en l'absence d'estimation de variance.</p>
+<p>Quatre agents sont évalués, chacun couplé à son modèle natif : Claude Code avec Sonnet-4.5, Codex avec GPT-5.2 et GPT-5.1 Mini, Qwen Code avec Qwen3-30B-Coder. La température est fixée à 0 pour tous sauf Qwen (0,7 avec top-p 0,8). Un seul échantillon est prélevé par instance.</p>
 
-<p>Les trois conditions expérimentales (NONE, LLM, HUMAN) sont clairement définies. Pour la condition LLM, chaque agent génère son propre fichier via sa commande d'initialisation recommandée. Les fichiers développeur proviennent de l'état pré-patch du dépôt. Les agents ont accès au web mais une vérification manuelle confirme l'absence de triche (consultation des PR correspondantes).</p>
+<p>Trois conditions expérimentales sont comparées. NONE : aucun fichier contexte (pour AGENTBENCH, le fichier développeur est supprimé). LLM : fichier généré par la commande d'initialisation recommandée de chaque agent. HUMAN : fichier contexte originel du dépôt (disponible uniquement pour AGENTBENCH).</p>
 
-<h2>Résultats principaux</h2>
+<p>Les agents opèrent dans des conteneurs Docker avec accès Internet. L'historique git et les remotes sont supprimés pour limiter le risque de triche. Une inspection manuelle confirme qu'aucun agent n'a consulté la PR correspondant à l'instance évaluée.</p>
 
-<p>Le résultat central contredit les recommandations des fournisseurs d'agents. Les fichiers de contexte générés par LLM diminuent le taux de résolution de 0,5 % sur SWE-BENCH LITE et de 2 % sur AGENTBENCH en moyenne. Les fichiers écrits par des développeurs améliorent la performance de 4 % en moyenne sur AGENTBENCH, mais cette amélioration reste marginale et ne se manifeste pas pour tous les agents — Claude Code fait exception avec une dégradation.</p>
+<h2>3. Résultats principaux</h2>
 
-<p>Les coûts augmentent systématiquement. Les fichiers LLM ajoutent en moyenne 2,45 étapes sur SWE-BENCH LITE et 3,92 sur AGENTBENCH, soit une hausse de coût de 20 à 23 %. Le nombre de tokens de raisonnement augmente de 10 à 22 % selon les modèles. Les agents consacrent plus de temps à explorer le dépôt, lancer des tests et utiliser des outils spécifiques mentionnés dans le fichier de contexte — sans que cet effort supplémentaire se traduise en résultats.</p>
+<p>Le résultat central est contre-intuitif. Les fichiers contexte générés par LLM <strong>réduisent</strong> le taux de succès dans 5 des 8 configurations testées — une baisse moyenne de 0,5 % sur SWE-BENCH LITE et 2 % sur AGENTBENCH. Les fichiers écrits par les développeurs améliorent marginalement la performance (4 % en moyenne sur AGENTBENCH), sauf pour Claude Code où elle diminue.</p>
 
-<p>Un résultat éclairant : lorsque toute la documentation existante est retirée du dépôt, les fichiers de contexte LLM surpassent les fichiers humains de 2,7 % en moyenne. Les fichiers générés sont donc redondants avec la documentation existante, mais utiles quand cette documentation manque — ce qui correspond aux témoignages anecdotiques de développeurs de projets peu documentés.</p>
+<p>Le coût augmente systématiquement. Les fichiers LLM ajoutent en moyenne 2,45 étapes par instance sur SWE-BENCH LITE et 3,92 sur AGENTBENCH, soit une hausse de coût d'inférence de 20 à 23 %. Les fichiers développeurs produisent un effet comparable : +3,34 étapes, jusqu'à +19 % de coût.</p>
 
-<p>Ni le modèle utilisé pour la génération, ni le prompt employé n'ont d'effet significatif et cohérent sur la qualité des fichiers produits. GPT-5.2 génère des fichiers qui améliorent les performances sur SWE-BENCH LITE (+2 %) mais les dégradent sur AGENTBENCH (-3 %).</p>
+<p>L'analyse des traces révèle que les agents suivent effectivement les instructions des fichiers contexte. L'outil <code>uv</code> est utilisé 1,6 fois par instance quand il est mentionné dans le fichier, contre moins de 0,01 fois sinon. Les outils spécifiques au dépôt passent de 0,05 à 2,5 utilisations. Le problème n'est donc pas un défaut de suivi d'instructions — les agents respectent les consignes, mais ces consignes ne les aident pas à résoudre la tâche.</p>
 
-<h2>Discussion et limites</h2>
+<p>Les fichiers contexte provoquent une exploration plus large : davantage de tests exécutés, de fichiers lus, de recherches par grep. GPT-5.2 consomme 22 % de tokens de raisonnement supplémentaires avec un fichier LLM sur SWE-BENCH LITE. Les agents traitent les instructions additionnelles comme des contraintes à satisfaire, ce qui complexifie l'exécution sans améliorer le résultat.</p>
 
-<p>La restriction à Python constitue la limitation la plus sérieuse. Ce langage, surreprésenté dans les données d'entraînement, implique que les modèles possèdent déjà une connaissance paramétrique de l'outillage et des dépendances des dépôts populaires. L'effet des fichiers de contexte pourrait différer pour des langages moins courants (Rust, Haskell, OCaml) où cette connaissance préalable est plus faible.</p>
+<p>Les overviews de codebase inclus dans les fichiers contexte ne réduisent pas le nombre d'étapes avant la première interaction avec un fichier pertinent. 100 % des fichiers générés par Sonnet-4.5 et 99 % de ceux de GPT-5.2 contiennent un overview, mais cette information ne se traduit pas en navigation plus efficace.</p>
 
-<p>L'exécution unique par configuration empêche toute analyse statistique de la variance. Avec des taux de résolution oscillant entre 30 et 60 %, une différence de 2 à 4 points de pourcentage pourrait relever du bruit, surtout sur 138 instances. L'absence de tests de significativité ou d'intervalles de confiance affaiblit les conclusions quantitatives.</p>
+<p>Un résultat complémentaire éclaire la nature des fichiers LLM-generated : quand toute la documentation existante est supprimée (fichiers .md, dossier docs/, exemples), les fichiers LLM deviennent bénéfiques (+2,7 % en moyenne) et surpassent les fichiers développeurs. Leur contenu est donc largement redondant avec la documentation déjà présente dans le dépôt.</p>
 
-<p>AGENTBENCH ne contient que 12 dépôts. La distribution, bien que plus homogène que SWE-BENCH LITE, reste trop restreinte pour garantir la généralisation. Certains dépôts ne contribuent que 3 instances (graphiti), rendant les estimations par dépôt instables.</p>
+<h3>Ablations</h3>
 
-<p>L'évaluation se limite au taux de résolution. Les fichiers de contexte pourraient améliorer d'autres dimensions — qualité du code produit, conformité aux conventions du projet, sécurité — que cette étude ne mesure pas. Les auteurs reconnaissent cette limitation et suggèrent des pistes pour de futurs travaux.</p>
+<p>Utiliser un modèle plus puissant (GPT-5.2) pour générer les fichiers contexte améliore la performance sur SWE-BENCH LITE (+2 %) mais la dégrade sur AGENTBENCH (−3 %). Le prompt utilisé pour la génération (Codex vs Claude Code) n'a pas d'effet consistant. Ces deux résultats suggèrent que le problème est structurel — pas une question de qualité de génération.</p>
 
-<p>Le protocole de génération des tests de régression par LLM, malgré la vérification manuelle, laisse subsister un risque de tests insuffisamment discriminants. La couverture moyenne de 75 % signifie qu'un quart du code modifié n'est pas vérifié.</p>
+<h2>4. Discussion et limites</h2>
 
-<h2>Reproductibilité</h2>
+<p>La restriction à Python représente le biais le plus lourd. Python est massivement représenté dans les données d'entraînement des LLM — les modèles disposent déjà d'une connaissance paramétrique étendue sur son outillage et ses conventions. L'effet des fichiers contexte pourrait être radicalement différent pour Rust, Haskell ou Zig, où les connaissances intégrées au modèle sont plus lacunaires. Les auteurs reconnaissent cette limitation mais n'offrent aucune donnée préliminaire sur d'autres langages.</p>
 
-<p>Le code de génération d'AGENTBENCH et d'évaluation est annoncé comme disponible publiquement. Tous les prompts utilisés pour le filtrage des PR, la configuration des environnements, la génération des descriptions de tâches et des tests sont reproduits intégralement en annexe. Les versions des modèles sont spécifiées (Sonnet 4.5, GPT-5.2, GPT-5.1 Mini, Qwen3-30B-Coder).</p>
+<p>L'évaluation repose sur un seul échantillon par configuration. Aucun intervalle de confiance n'est rapporté, aucun test statistique de significativité n'est conduit. Les différences observées — 0,5 à 4 % — sont faibles et pourraient relever de la variance d'échantillonnage, surtout avec un seul run par instance. Cette absence d'analyse statistique affaiblit les conclusions.</p>
 
-<p>Reproduire les expériences nécessite un budget d'inférence conséquent : Claude Code avec Sonnet 4.5 coûte en moyenne 1,30 USD par instance (40 instances par dépôt SWE-BENCH LITE), soit plusieurs milliers de dollars pour l'ensemble des configurations. Le déploiement local de Qwen3-30B via vLLM requiert du matériel GPU dédié. Ces contraintes pratiques limitent la reproductibilité à des équipes disposant de ressources significatives.</p>
+<p>AGENTBENCH ne comprend que 12 dépôts. Certains ne contribuent que 3 instances (graphiti) ou 6 (transformers). La granularité par dépôt (Figure 12) montre qu'aucun dépôt individuel ne présente d'effet clair des fichiers contexte — les tendances agrégées masquent une forte hétérogénéité sous-jacente.</p>
 
-<h2>Impact et applications</h2>
+<p>Les descriptions de tâches et les tests unitaires sont générés par GPT-5.2 via Codex. Ce recours introduit un biais circulaire : l'évaluation dépend d'artefacts produits par un modèle de la même famille que ceux évalués. La vérification manuelle de non-fuite de solution ne porte que sur 10 % des instances — un taux insuffisant pour exclure toute contamination.</p>
 
-<p>Cette étude remet en question une pratique largement adoptée par l'industrie. La recommandation pratique est claire : ne pas utiliser de fichiers de contexte générés automatiquement par LLM dans l'état actuel, et limiter les fichiers manuels à des instructions minimales (outillage spécifique, commandes de build). Les survols de codebase, que 95 à 100 % des fichiers générés incluent, n'aident pas les agents à localiser plus rapidement les fichiers pertinents.</p>
+<p>La couverture des tests générés varie de 2,5 % à 100 % (moyenne 75 %). Les instances à faible couverture pourraient accepter des patches incorrects ou rejeter des solutions valides, faussant le taux de succès dans les deux sens.</p>
 
-<p>Le benchmark AGENTBENCH enrichit l'écosystème d'évaluation avec des dépôts de niche, complémentaires aux grands projets de SWE-BENCH LITE. Cette diversification est bienvenue, les benchmarks existants étant dominés par quelques dépôts populaires (django représente la majorité des instances SWE-BENCH LITE).</p>
+<p>L'étude ne mesure que la résolution de tâches. Les fichiers contexte pourraient avoir un effet positif sur d'autres dimensions — qualité du code produit, sécurité, respect des conventions de style, maintenabilité — qui échappent à cette évaluation binaire pass/fail.</p>
 
-<p>L'analyse des traces révèle un phénomène contre-intuitif : les agents suivent les instructions des fichiers de contexte (utilisation d'outils mentionnés, exécution de tests recommandés), mais ce suivi accroît la complexité de la tâche sans améliorer le résultat. Suivre plus d'instructions rend la résolution plus difficile, pas plus facile.</p>
+<h2>5. Reproductibilité</h2>
 
-<h2>Positionnement dans la littérature</h2>
+<p>Le code source et le benchmark sont publiés. Les prompts utilisés pour chaque étape du pipeline (filtrage de PRs, configuration d'environnement, description de tâches, génération de tests, analyse de traces) sont reproduits intégralement en annexe — un effort de transparence rare dans ce domaine. Les versions de modèles et les paramètres d'inférence sont documentés avec précision. Les environnements Docker sont spécifiés.</p>
 
-<p>Cette publication se distingue des travaux descriptifs antérieurs (Chatlatanagulchai et al., 2025 ; Mohsenimofidi et al., 2025) qui cataloguaient le contenu des fichiers de contexte sans évaluer leur efficacité. Elle s'inscrit dans la lignée des benchmarks d'évaluation des agents de codage initiée par SWE-BENCH (Jimenez et al., 2024) et étendue vers la génération de fonctionnalités (FEA-Bench), la sécurité (SecureAgentBench) et la performance (SWE-Perf).</p>
+<p>La reproductibilité reste cependant partielle. Les modèles propriétaires (GPT-5.2, GPT-5.1 Mini, Sonnet-4.5) ne sont pas accessibles indépendamment : leurs poids ne sont pas publiés et leurs API peuvent évoluer entre deux expériences. Seul Qwen3-30B-Coder est déployable localement via vLLM. Les résultats exacts ne sont donc reproductibles que tant que les API des fournisseurs restent stables — une contrainte classique mais réelle de la recherche sur les LLM propriétaires.</p>
 
-<p>Le résultat principal — l'inefficacité des fichiers de contexte générés automatiquement — entre en tension directe avec les recommandations de GitHub (Nigh, 2025), Anthropic (2025b) et les témoignages de développeurs individuels (Sewell, 2025). L'explication proposée (redondance avec la documentation existante) est convaincante mais partielle : elle n'explique pas pourquoi les fichiers augmentent la difficulté perçue par les modèles, mesurée par le nombre de tokens de raisonnement.</p>
+<h2>6. Impact et applications</h2>
 
-<p>La direction future la plus prometteuse concerne la génération de fichiers de contexte ciblés et minimaux, s'appuyant sur les travaux en planification (Dynamic Cheatsheet, Suzgun et al., 2025) et en ingénierie de contexte agentique (Zhang et al., 2025b). L'écart documenté entre recommandations industrielles et résultats empiriques crée un espace de recherche concret pour améliorer l'auto-adaptation des agents à leurs environnements de travail.</p>
+<p>La recommandation pratique est directe : ne pas utiliser de fichiers contexte générés automatiquement par LLM. Pour les fichiers écrits manuellement, se limiter aux exigences minimales — outillage spécifique, commandes de build, contraintes non découvrables par l'agent seul. Toute instruction superflue risque de complexifier la tâche sans bénéfice mesurable.</p>
+
+<p>AGENTBENCH comble un manque dans l'écosystème de benchmarks. Aucun jeu de données existant ne ciblait des dépôts contenant des fichiers contexte écrits par les développeurs. Sa construction à partir de dépôts de niche récents le rend complémentaire de SWE-BENCH LITE, dominé par des projets populaires comme Django et scikit-learn.</p>
+
+<p>L'observation que les fichiers LLM-generated sont redondants avec la documentation existante soulève une question d'ingénierie : les agents bénéficieraient-ils davantage d'une documentation structurée classique (README, docstrings, exemples) que d'un fichier dédié généré par un LLM qui ne fait que reformuler ce qui existe déjà ?</p>
+
+<p>Le décalage entre les recommandations des fournisseurs d'agents et les résultats mesurés par cette étude a des implications commerciales directes. Les commandes <code>/init</code> intégrées dans Claude Code, Codex et Qwen Code génèrent des fichiers qui, selon ces données, dégradent la performance et augmentent les coûts.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>Deux travaux antérieurs (Chatlatanagulchai et al., 2025 ; Mohsenimofidi et al., 2025) avaient catalogué et catégorisé le contenu des fichiers contexte sans mesurer leur efficacité. Des témoignages individuels (Sewell, 2025 ; Sawers, 2025) rapportaient des améliorations anecdotiques. L'article de Gloaguen et al. est le premier à fournir une évaluation empirique contrôlée.</p>
+
+<p>L'article s'inscrit dans la lignée des benchmarks repository-level initiée par SWE-bench (Jimenez et al., 2024) et étendue à l'ajout de fonctionnalités (FEA-Bench, SWE-Dev), à la génération de tests (SWT-Bench), à la performance du code (SWE-Perf) et à la sécurité (SecureAgentBench). AGENTBENCH se distingue par son focus sur des dépôts de niche récents avec fichiers contexte actifs — un créneau qu'aucun benchmark existant ne couvrait.</p>
+
+<p>Les résultats entrent en tension frontale avec le discours industriel dominant. Anthropic, OpenAI et Qwen recommandent explicitement l'usage de fichiers contexte et intègrent des commandes de génération automatique dans leurs agents. Cette étude montre que ces recommandations ne sont pas soutenues par les données empiriques, du moins pour la résolution de tâches Python sur des dépôts disposant déjà d'une documentation. Le décalage entre recommandations industrielles et résultats mesurés constitue la contribution la plus percutante de l'article.</p>
+
+<p>La piste la plus fertile pour la suite concerne l'amélioration de la génération automatique de fichiers contexte — via l'apprentissage continu à partir de tâches résolues (Zhang et al., 2025b ; Cheng et al., 2025) plutôt que par une analyse statique du dépôt à un instant donné.</p>
 
 <h2>Tableau récapitulatif des critères de robustesse</h2>
 
 <table>
-  <thead>
-    <tr>
-      <th>Critère</th>
-      <th>Score (/5)</th>
-      <th>Commentaire</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Question de recherche</td>
-      <td>4</td>
-      <td>Question claire, originale et directement pertinente pour la pratique industrielle actuelle.</td>
-    </tr>
-    <tr>
-      <td>Design expérimental</td>
-      <td>4</td>
-      <td>Deux benchmarks complémentaires, trois conditions, quatre agents. Protocole bien structuré malgré l'absence de répétitions.</td>
-    </tr>
-    <tr>
-      <td>Taille de l'échantillon</td>
-      <td>3</td>
-      <td>138 instances AGENTBENCH sur 12 dépôts, 300 instances SWE-BENCH LITE. Exécution unique par configuration, sans estimation de variance.</td>
-    </tr>
-    <tr>
-      <td>Qualité des métriques</td>
-      <td>4</td>
-      <td>Métriques bien définies (taux de résolution, coût, nombre d'étapes). Analyse comportementale des traces enrichissante.</td>
-    </tr>
-    <tr>
-      <td>Contrôle des biais</td>
-      <td>3</td>
-      <td>Vérification de non-fuite et non-triche. Biais potentiel : les fichiers LLM sont générés par les agents évalués. Pas de tests de significativité statistique.</td>
-    </tr>
-    <tr>
-      <td>Reproductibilité</td>
-      <td>4</td>
-      <td>Code et prompts publiés. Versions de modèles spécifiées. Coût de reproduction élevé (plusieurs milliers de dollars d'inférence).</td>
-    </tr>
-    <tr>
-      <td>Transparence et limitations</td>
-      <td>4</td>
-      <td>Section dédiée aux limitations. Restriction à Python, absence d'évaluation de la sécurité et de la qualité du code reconnues.</td>
-    </tr>
-    <tr>
-      <td>Impact et nouveauté</td>
-      <td>4</td>
-      <td>Première évaluation rigoureuse contredisant les pratiques recommandées. Nouveau benchmark AGENTBENCH. Résultats directement actionnables.</td>
-    </tr>
-  </tbody>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Question claire et pertinente, gap bien identifié. Pas d'hypothèse mécanistique précise sur le pourquoi de l'échec.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Deux benchmarks complémentaires, trois conditions, quatre agents. Pipeline de construction d'AGENTBENCH rigoureux en cinq étapes.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>138 instances sur 12 repos (minimum 3 par repo). Un seul échantillon par configuration, sans intervalles de confiance.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Taux de succès binaire complété par coût et étapes. Tests LLM-generated avec couverture variable (2,5–100 %).</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Température 0, suppression git, vérification anti-triche. Artefacts LLM-generated et vérification de non-fuite limitée à 10 %.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code et benchmark publiés, prompts détaillés en annexe. Modèles propriétaires non reproductibles indépendamment.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Limitations Python-only et portée discutées. Absence de tests statistiques de significativité non mentionnée.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Première évaluation rigoureuse d'une pratique adoptée par 60 000+ dépôts. Résultats contre-intuitifs défiant le consensus industriel.</td></tr>
+</tbody>
 </table>
   </div>
   <script>

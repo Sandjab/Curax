@@ -127,127 +127,96 @@
     <p class="doc-type">Lecture Critique d'Article</p>
   </div>
   <div class="companion-content">
-    <h2>Lecture Critique d'Article</h2>
-<h3>ActionEngine : From Reactive to Programmatic GUI Agents via State Machine Memory</h3>
-<p><em>Zhong, H., Faisal, F., França, L., Leesatapornwongsa, T., Szekeres, A., Rong, K., Nath, S. — Georgia Tech &amp; Microsoft Research, 2026</em></p>
+    <h2>Objectif et contexte</h2>
 
-<h2>1. Objectif et contexte</h2>
+<p>Les agents GUI actuels fonctionnent selon un schéma réactif : à chaque étape, un modèle multimodal observe une capture d'écran, décide de l'action suivante, l'exécute, puis recommence. Ce cycle observe–raisonne–agit engendre un coût linéaire en appels LLM (O(N) pour N actions) et une accumulation d'erreurs visuelles le long de la trajectoire. ActionEngine propose de remplacer ce raisonnement itératif par une planification programmatique en une passe unique.</p>
 
-<p>Les agents GUI autonomes — systèmes capables de piloter des interfaces graphiques pour accomplir des tâches utilisateur — reposent aujourd'hui sur un cycle réactif : à chaque étape, un modèle de langage multimodal (MLLM) observe une capture d'écran, détermine l'action suivante et l'exécute. Ce cycle observer-raisonner-agir engendre un coût linéaire en O(N) appels au modèle pour N étapes, une latence proportionnelle, et une accumulation d'erreurs causée par les hallucinations visuelles. Sur le benchmark WebArena, les meilleurs agents réactifs plafonnent autour de 58-66 % de réussite.</p>
+<p>L'architecture repose sur deux agents spécialisés. Un Crawling Agent explore l'application cible hors-ligne et construit un graphe de machine à états (State Machine Graph, SMG) — un graphe dirigé où les nœuds représentent des états de page et les arêtes des opérations GUI concrètes. Un Execution Agent exploite ensuite ce graphe pour synthétiser un programme Python complet en un seul appel LLM, exécuté de façon déterministe sans inférence supplémentaire.</p>
 
-<p>ActionEngine propose un changement de paradigme : remplacer le raisonnement itératif par une planification programmatique en un seul appel LLM. L'idée repose sur une séparation nette entre l'apprentissage de la structure de l'application (hors ligne) et l'exécution des tâches (en ligne). Un agent de crawl construit un graphe de machine à états (State Machine Graph, SMG) modélisant la topologie de l'application cible. Un agent d'exécution exploite ce graphe pour synthétiser un programme Python complet résolvant la tâche demandée.</p>
+<p>Le problème adressé est réel et bien documenté : les benchmarks WebArena, Mind2Web et AgentBench montrent que les agents réactifs les plus avancés plafonnent autour de 58 % de réussite. La séparation entre apprentissage de la structure applicative et planification de tâche répond à une limitation architecturale reconnue.</p>
 
-<h2>2. Méthodologie</h2>
+<h2>Méthodologie</h2>
 
-<p>L'architecture se décompose en trois phases distinctes.</p>
+<h3>Construction du graphe de machine à états</h3>
 
-<p>Le <strong>Crawling Agent</strong> explore l'application cible hors ligne et construit un graphe dirigé. Les nœuds représentent des états symboliques (pages ou fenêtres), identifiés par leur signature structurelle — une combinaison d'atomes statiques (barre de navigation, filtres) et dynamiques (contenus variables). Les arêtes encodent des opérations exécutables : manipulations UI provoquant des transitions (cliquer sur un bouton) ou collectes de données sans changement d'état (lire les commentaires). Pour éviter l'explosion combinatoire, le graphe distingue les templates des instances : deux pages de forums différents partagent le même nœud si leur structure est identique. Le graphe Reddit résultant contient 20-30 états et 100-150 transitions.</p>
+<p>Le Crawling Agent parcourt l'application à partir d'un état initial et identifie, via un MLLM, les « atomes » — groupes d'éléments GUI qui apparaissent ou disparaissent ensemble. Chaque état est défini par sa signature d'atomes. Les atomes statiques (barre de navigation) se distinguent des atomes dynamiques (contenu variable), ce qui permet de regrouper des pages structurellement identiques mais peuplées de données différentes sous un même état template. Pour Reddit, le graphe résultant contient 20 à 30 états et 100 à 150 transitions.</p>
 
-<p>L'<strong>Execution Agent</strong> reçoit une tâche en langage naturel et un sous-graphe filtré du SMG. La génération s'effectue en trois étapes : (1) un sketch program — programme Python intermédiaire avec des placeholders UI_CALL pour les interactions GUI ; (2) un linking statique qui résout chaque placeholder en un chemin concret dans le graphe par recherche en largeur (BFS) ; (3) une compilation en plan d'actions mixte typé (UINodes, PythonNodes, ControlFlowNodes) exécutable via Playwright.</p>
+<p>Le processus est qualifié de « semi-automatisé » sans que l'article ne quantifie l'intervention humaine requise. Le coût en appels LLM de cette phase de crawling n'apparaît dans aucune mesure.</p>
 
-<p>Un <strong>mécanisme d'adaptation dynamique</strong> intervient en cas d'échec d'exécution. Un validateur distingue les erreurs Python (hot-patching de code) des erreurs UI (fallback vers un agent visuel qui recapture le DOM et met à jour le SMG). Les corrections réussies sont persistées dans le graphe pour les exécutions futures.</p>
+<h3>Planification et compilation</h3>
 
-<p>L'évaluation porte sur le sous-ensemble Reddit (Postmill) de WebArena : 106 tâches nécessitant navigation inter-pages, filtrage logique et arithmétique. Le seul baseline comparé est AgentOccam, un agent réactif état de l'art utilisant GPT-4-Turbo. ActionEngine utilise Claude 4.5 Sonnet.</p>
+<p>L'Execution Agent produit d'abord un programme-esquisse (sketch program) en Python contenant des placeholders UI_CALL. Un linker résout ces placeholders par recherche BFS dans le SMG. Un compilateur transforme le tout en un MixedActionPlan — arbre de nœuds typés (UI, Python, contrôle de flux) exécutables via Playwright. Un mécanisme de fallback basé sur la vision intervient en cas d'échec d'exécution et met à jour le graphe.</p>
 
-<h2>3. Résultats principaux</h2>
+<h3>Protocole d'évaluation</h3>
 
-<p>ActionEngine atteint 95 % de réussite sur les 106 tâches Reddit, contre 66 % pour AgentOccam. La latence moyenne passe de 237 s à 118 s, le coût par tâche de 0,71 $ à 0,06 $, et le nombre moyen d'appels LLM de 10,2 à 1,8.</p>
+<p>L'évaluation porte sur le sous-ensemble Reddit (Postmill) de WebArena : 106 tâches sur les ~812 du benchmark complet. Le seul baseline est AgentOccam, un agent réactif utilisant GPT-4-Turbo. ActionEngine utilise Claude 4.5 Sonnet. Les métriques rapportées sont le taux de réussite, la latence, le coût par tâche, le nombre de tokens et le nombre d'appels LLM.</p>
 
-<p>Les gains les plus marqués apparaissent sur les tâches de raisonnement multi-étapes. Le groupe 27-31 (comptage de commentaires filtrés par critères de votes) illustre la différence : AgentOccam consomme 140,9k tokens d'entrée en 17,8 appels LLM pour un taux de réussite de 60 %, tandis qu'ActionEngine résout ces tâches en un seul appel LLM avec 6,8k tokens et 100 % de réussite. Sur les tâches simples (profil utilisateur, groupe 399-403), ActionEngine réussit 100 % là où AgentOccam échoue totalement — un résultat surprenant qui suggère que même les tâches élémentaires posent problème au paradigme réactif lorsqu'elles requièrent une navigation précise.</p>
+<h2>Résultats principaux</h2>
 
-<p>Les 6 échecs d'ActionEngine (tâches 409, 599, 617, 625, 715, 722) relèvent tous d'ambiguïtés dans l'énoncé des tâches : correspondance floue de noms de forums ("machinelearning" vs "MachineLearning"), interprétation du mot "history" comme forum ou comme historique global, identification du "manager of the website" sans indice explicite dans les commentaires. Aucun échec n'est attribuable à une défaillance architecturale du système.</p>
+<p>ActionEngine atteint 95 % de réussite sur les 106 tâches Reddit contre 66 % pour AgentOccam. La latence moyenne passe de 237 s à 118 s (÷2), le coût moyen de 0,71 $ à 0,06 $ (÷11,8), et le nombre d'appels LLM de 10,2 à 1,8 par tâche. Sur les tâches de raisonnement multi-étapes (groupe 27-31), le système passe de 17,8 appels LLM et 140,9k tokens d'entrée à 1 appel et 6,8k tokens.</p>
 
-<h2>4. Discussion et limites</h2>
+<p>Six tâches échouent. L'analyse détaillée révèle que cinq relèvent d'ambiguïtés dans la spécification des tâches (interprétation de « manager of the website », matching exact de noms de forums) et une d'une limitation technique (absence d'outil d'analyse d'image). Les traces de raisonnement du LLM sont reproduites intégralement pour chaque échec — un effort de transparence rare.</p>
 
-<p>Le biais expérimental le plus sérieux concerne l'<strong>asymétrie des modèles</strong>. ActionEngine emploie Claude 4.5 Sonnet ; AgentOccam repose sur GPT-4-Turbo. Ces modèles diffèrent en capacités de génération de code, en compréhension visuelle et en tarification. Le gain de 11,8× en coût mélange l'effet de l'architecture avec l'effet du prix par token. Aucune ablation n'isole la contribution du SMG de celle du choix de modèle. Une expérience où les deux systèmes utilisent le même LLM aurait fourni une comparaison bien plus informative.</p>
+<h2>Discussion et limites</h2>
 
-<p>L'évaluation se cantonne à un seul domaine (Reddit/Postmill) d'un seul benchmark (WebArena). Les auteurs justifient ce choix par la complexité du raisonnement long horizon sur Reddit, mais cette restriction interdit toute conclusion sur la généralisabilité. Comment le SMG se comporte-t-il sur un site e-commerce avec des millions de pages produits ? Sur une application mobile avec des gestes tactiles ? Sur une SPA dont le DOM change sans rechargement de page ? Ces questions restent ouvertes.</p>
+<h3>Comparaison inéquitable entre modèles</h3>
 
-<p>Le <strong>coût du crawl hors ligne</strong> est absent des métriques comparatives. Le processus est qualifié de "semi-automated" : un MLLM identifie les atomes et opérations, mais une validation humaine intervient. Combien de temps prend la construction d'un SMG Reddit de 150 transitions ? Combien d'appels MLLM le crawl consomme-t-il ? L'amortissement sur N tâches est plausible, mais sans chiffres, le lecteur ne peut évaluer la rentabilité réelle.</p>
+<p>Le problème méthodologique central : ActionEngine utilise Claude 4.5 Sonnet tandis qu'AgentOccam utilise GPT-4-Turbo. Ces deux modèles diffèrent en capacités de raisonnement, en génération de code, et en tarification. Le gain de 11,8× en coût mélange trois effets non démêlés : l'architecture (moins d'appels), le choix du modèle (tarification différente), et la capacité du modèle (meilleur code en une passe). Sans exécuter AgentOccam avec Claude 4.5 Sonnet — ou ActionEngine avec GPT-4-Turbo — la part attribuable à l'architecture reste inconnue.</p>
 
-<p>Le mécanisme de fallback visuel, déclenché lors d'échecs d'exécution, réintroduit ponctuellement la dépendance aux MLLM que l'architecture cherche à éliminer. Les auteurs rapportent qu'avec Claude 4.5 Sonnet, le validateur intervient rarement, mais qu'avec GPT-4o, 20-30 % des exécutions nécessitent un hot-patching. La robustesse du système dépend donc encore de la qualité du LLM planificateur — un couplage que l'architecture n'abolit pas entièrement.</p>
+<p>L'article mentionne d'ailleurs que le Validator n'intervient presque jamais avec Claude 4.5 Sonnet mais corrige 20-30 % des exécutions avec GPT-4o. Cela confirme que la performance dépend lourdement du modèle sous-jacent, pas seulement de l'architecture.</p>
 
-<p>L'hypothèse de décomposabilité en templates stables est forte. Les applications web modernes — avec rendu côté client, chargement paresseux, A/B testing permanent — produisent des structures de page variables qui pourraient dégrader la stabilité du SMG.</p>
+<h3>Évaluation sur un seul domaine</h3>
 
-<h2>5. Reproductibilité</h2>
+<p>WebArena comprend cinq domaines : Reddit, Shopping (OneStopShop), CMS (GitLab), Maps et un forum. L'évaluation ne couvre que Reddit, soit environ 13 % du benchmark. Le sous-ensemble choisi est présenté comme le « pire cas pour le raisonnement à long horizon », mais cette affirmation n'est pas étayée par une comparaison avec les autres domaines. Les applications e-commerce ou cartographiques présentent des structures bien plus dynamiques et des espaces d'états considérablement plus grands — la généralisation de l'approche à ces contextes reste hypothétique.</p>
 
-<p>Aucun dépôt de code n'est mentionné. Aucun SMG pré-construit n'est distribué. Les prompts du Crawling Agent et de l'Execution Agent ne sont pas intégralement reproduits — seuls des extraits YAML et des listings simplifiés figurent dans l'article. Le processus de construction du graphe requiert une intervention humaine dont l'ampleur n'est pas quantifiée. Le format YAML du SMG est illustré (Listing 1), mais un lecteur souhaitant reproduire l'expérience devrait reconstruire l'ensemble du pipeline à partir de descriptions textuelles. La reproductibilité est faible en l'état.</p>
+<h3>Coût du crawling occulté</h3>
 
-<h2>6. Impact et applications</h2>
+<p>La phase de crawling mobilise un MLLM pour identifier les atomes, énumérer les opérations candidates et valider les transitions. Ce coût — potentiellement élevé pour une application complexe — n'est ni mesuré ni amorti dans les comparaisons. Le temps humain pour la partie « semi-automatisée » n'est pas non plus quantifié. L'argument d'efficacité porte uniquement sur la phase d'exécution, ce qui biaise la comparaison en faveur du système proposé.</p>
 
-<p>Le passage d'un paradigme réactif O(N) à un paradigme programmatique O(1) représente un changement architectural concret pour l'automatisation GUI. La réduction de coût de ×11,8 rend envisageable un déploiement en production pour des workflows répétitifs sur des applications à structure stable — support client, tests de régression, scraping structuré. Le découplage crawl/planification/exécution permet de maintenir chaque composant indépendamment : mettre à jour le SMG sans modifier le planificateur, changer de LLM sans recrawler.</p>
+<h3>Fragilité face aux évolutions majeures d'interface</h3>
 
-<p>Le mécanisme d'auto-correction du graphe par feedback d'exécution est un apport pratique : le système apprend des échecs ponctuels sans nécessiter de re-crawl complet. Ce design s'apparente à un cache adaptatif d'interactions GUI.</p>
+<p>Le mécanisme de mise à jour dynamique gère les changements localisés (un sélecteur CSS modifié). L'article reconnaît qu'une refonte majeure de l'interface nécessite un re-crawling complet, mais ne teste pas ce scénario. Pour des applications web mises à jour fréquemment, la maintenance du graphe pourrait annuler les gains d'efficacité.</p>
 
-<p>La limitation au domaine Reddit laisse ouverte la question de la scalabilité. Un déploiement industriel devrait couvrir des dizaines d'applications simultanément, chacune nécessitant son propre SMG — un investissement initial non négligeable.</p>
+<h3>Absence de tests statistiques</h3>
 
-<h2>7. Positionnement dans la littérature</h2>
+<p>Aucun intervalle de confiance, aucune mesure de variance, aucun test de significativité. Les résultats sont rapportés comme des moyennes brutes. Sur 106 tâches, l'écart de 29 points de pourcentage entre les deux systèmes est probablement significatif, mais l'article ne le démontre pas formellement.</p>
 
-<p>ActionEngine se distingue des agents GUI réactifs (SeeClick, ScreenAgent, AgentOccam) par l'introduction d'une mémoire structurée exploitée pour la planification globale plutôt que pour le contexte local. Synapse stocke des trajectoires passées comme exemples de prompts — une mémoire plate sans structure topologique. PageGraph modélise les transitions entre pages mais ignore les opérations d'extraction de données. AutoDroid utilise un graphe de transitions UI pour enrichir le contexte d'un agent qui reste réactif. ActionEngine franchit une étape supplémentaire : le graphe ne sert plus d'aide au raisonnement mais de substrat pour la synthèse de programmes déterministes.</p>
+<h2>Reproductibilité</h2>
 
-<p>L'approche de compilation (sketch → linking → plan exécutable) rappelle les techniques classiques de synthèse de programmes avec spécification partielle. L'analogie avec les vues matérialisées en bases de données, mentionnée par les auteurs pour les opérations composées fréquentes, est pertinente mais non implémentée dans le prototype actuel.</p>
+<p>Aucun dépôt de code, aucun artefact de données, aucun graphe SMG partagé. Le processus de crawling semi-automatisé implique des décisions humaines non documentées. Les prompts utilisés pour le Planner et le Crawling Agent ne sont pas reproduits (seuls des extraits de YAML et de code sont montrés). La reproduction indépendante de ces résultats serait difficile sans accès au code source et aux graphes construits.</p>
 
-<p>Par rapport aux travaux sur les modèles du monde pour agents web (WebDreamer), ActionEngine adopte une stratégie différente : plutôt que de simuler les conséquences d'actions possibles, le système encode la structure réelle de l'application dans un artefact réutilisable. Cette approche élimine l'incertitude de la simulation au prix d'un investissement initial de crawl.</p>
+<p>L'utilisation de WebArena comme benchmark est un point positif : l'environnement est public et standardisé. Mais le code spécifique à ActionEngine manque pour permettre une réplication.</p>
+
+<h2>Impact et applications</h2>
+
+<p>L'idée de transformer l'interaction GUI en traversée de graphe déterministe, avec synthèse de programme en une passe, a un potentiel applicatif réel pour l'automatisation d'entreprise (RPA). La réduction drastique des appels LLM rend le déploiement économiquement viable pour des tâches répétitives sur des applications stables.</p>
+
+<p>Les limites pratiques sont cependant significatives. Le crawling semi-automatisé freine le passage à l'échelle vers de nouvelles applications. L'hypothèse d'une structure GUI relativement stable n'est pas toujours vérifiée (applications SPA modernes, A/B testing permanent). Le système reste démontré sur un seul type d'application — un forum — dont la structure hiérarchique (accueil → forums → posts → commentaires) est particulièrement adaptée à une modélisation par machine à états.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>ActionEngine se distingue des agents réactifs (SeeClick, ScreenAgent, AgentOccam) par son passage à la planification programmatique. Par rapport aux systèmes à mémoire existants — Synapse stocke des trajectoires plates, PageGraph modélise les transitions de pages, AutoDroid annote les éléments UI — le SMG capture à la fois les opérations de navigation et les opérations de collecte de données. Cette distinction est pertinente : les self-loops pour les opérations de lecture permettent de modéliser l'extraction d'information sans changement d'état.</p>
+
+<p>L'approche rappelle les travaux en synthèse de programme et en planification symbolique, mais appliqués au domaine GUI avec un LLM comme générateur de code. Le rapprochement avec les « vues matérialisées » pour les séquences d'opérations fréquentes est judicieux, bien que non implémenté ni évalué.</p>
+
+<p>La comparaison avec un seul baseline affaiblit le positionnement. WebVoyager, WebDreamer, MindAct et d'autres agents récents auraient fourni des points de référence supplémentaires sur les mêmes tâches Reddit. L'absence de ces comparaisons laisse ouverte la question de la supériorité réelle de l'architecture par rapport aux progrès récents des agents réactifs multimodaux.</p>
 
 <h2>Tableau récapitulatif des critères de robustesse</h2>
 
-<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<table>
 <thead>
-<tr style="background-color: #f0f0f0;">
-<th style="text-align: left;">Critère</th>
-<th style="text-align: center;">Score (/5)</th>
-<th style="text-align: left;">Commentaire</th>
-</tr>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
 </thead>
 <tbody>
-<tr>
-<td>Question de recherche</td>
-<td style="text-align: center;">4</td>
-<td>Problème clairement formulé, motivation solide par les limitations quantifiées du paradigme réactif. L'originalité de l'approche programmatique est réelle.</td>
-</tr>
-<tr>
-<td>Design expérimental</td>
-<td style="text-align: center;">3</td>
-<td>Évaluation limitée à un seul domaine (Reddit) d'un seul benchmark, avec un seul baseline comparé. Pas d'ablation sur le choix du modèle LLM.</td>
-</tr>
-<tr>
-<td>Taille de l'échantillon</td>
-<td style="text-align: center;">2</td>
-<td>106 tâches sur un seul domaine. Aucune évaluation sur les autres domaines de WebArena (Shopping, GitLab, Wikipedia) ni sur d'autres benchmarks (Mind2Web, AgentBench).</td>
-</tr>
-<tr>
-<td>Qualité des métriques</td>
-<td style="text-align: center;">3</td>
-<td>Métriques pertinentes (réussite, latence, coût, appels LLM) mais le coût du crawl hors ligne est exclu de la comparaison, ce qui biaise les chiffres d'efficacité.</td>
-</tr>
-<tr>
-<td>Contrôle des biais</td>
-<td style="text-align: center;">2</td>
-<td>Comparaison entre modèles LLM différents (Claude 4.5 Sonnet vs GPT-4-Turbo) sans contrôle de ce confondant majeur. Le caractère semi-automatisé du crawl introduit un effort humain non quantifié.</td>
-</tr>
-<tr>
-<td>Reproductibilité</td>
-<td style="text-align: center;">2</td>
-<td>Aucun code, données ou artefact publié. Prompts partiellement reproduits. Le processus de construction du SMG nécessite une intervention humaine non détaillée.</td>
-</tr>
-<tr>
-<td>Transparence et limitations</td>
-<td style="text-align: center;">4</td>
-<td>Analyse détaillée des 6 échecs avec reproduction des traces LLM. Distinction honnête entre limites du benchmark et limites du système. Reconnaissance explicite des cas où le re-crawl complet est nécessaire.</td>
-</tr>
-<tr>
-<td>Impact et nouveauté</td>
-<td style="text-align: center;">4</td>
-<td>Le passage de O(N) à O(1) appels LLM par tâche est un apport architectural tangible. Le SMG comme mémoire réutilisable dépasse les approches de mémoire plate existantes. Les gains d'efficacité sont substantiels.</td>
-</tr>
+<tr><td>Question de recherche</td><td>4</td><td>Problème clair, approche originale (réactif → programmatique), motivation solide par les limitations documentées des agents existants.</td></tr>
+<tr><td>Design expérimental</td><td>2</td><td>Un seul domaine évalué (Reddit, 13 % de WebArena), un seul baseline, modèles différents entre système et baseline rendant la comparaison structurellement biaisée.</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>106 tâches d'un seul domaine sur un benchmark de ~812 tâches réparties sur 5 domaines. Aucune validation croisée inter-domaines.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Métriques standard et pertinentes (réussite, latence, coût, tokens, appels LLM). Cadre d'évaluation WebArena reconnu. Absence de tests statistiques et d'intervalles de confiance.</td></tr>
+<tr><td>Contrôle des biais</td><td>1</td><td>Confond majeur non contrôlé : modèles différents (Claude 4.5 Sonnet vs GPT-4-Turbo). Coût du crawling exclu des comparaisons. Aucune ablation isolant l'effet de l'architecture.</td></tr>
+<tr><td>Reproductibilité</td><td>1</td><td>Ni code, ni données, ni graphes SMG publiés. Processus semi-automatisé non spécifié. Prompts non reproduits intégralement.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Analyse détaillée des 6 échecs avec traces de raisonnement. Reconnaissance des limites face aux refontes majeures d'interface. Le biais de comparaison entre modèles n'est toutefois pas discuté.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Changement de paradigme réactif → programmatique convaincant. Architecture deux-agents avec SMG originale. Potentiel applicatif concret en automatisation GUI.</td></tr>
 </tbody>
-<tfoot>
-<tr style="background-color: #f0f0f0;">
-<td><strong>Note globale de robustesse</strong></td>
-<td style="text-align: center;"><strong>3.0 / 5</strong></td>
-<td><strong>Architecture convaincante avec résultats prometteurs, mais évaluation trop restreinte et comparaison expérimentale insuffisamment contrôlée pour étayer pleinement les revendications de généralité.</strong></td>
-</tr>
-</tfoot>
 </table>
   </div>
   <script>
