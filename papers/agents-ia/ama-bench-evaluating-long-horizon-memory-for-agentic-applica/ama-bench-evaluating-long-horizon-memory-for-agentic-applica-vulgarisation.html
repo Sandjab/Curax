@@ -127,81 +127,87 @@
     <p class="doc-type">Vulgarisation</p>
   </div>
   <div class="companion-content">
-    <h2>1. Introduction</h2>
+    <h2>Introduction</h2>
 
-<p>Les agents IA autonomes savent désormais naviguer sur le web, éditer du code, interroger des bases de données et jouer à des jeux vidéo. Leur talon d'Achille ? La mémoire. Quand une tâche s'étale sur des dizaines, voire des centaines d'étapes, ces agents oublient, confondent, ou perdent le fil des actions passées. Une équipe de l'Université de Californie à San Diego a voulu mesurer l'ampleur du problème — et proposer une solution. Leur travail s'appelle AMA-Bench, et ses résultats bousculent plusieurs idées reçues sur la façon dont on construit la mémoire des agents.</p>
+<p>Un agent IA reçoit une mission : acheter une bouteille d'eau en inox d'un litre à moins de 25 dollars sur un site e-commerce. Il ouvre le navigateur, tape sa requête, parcourt les résultats, applique des filtres, compare les prix, lit les avis. Trente actions plus tard, il a oublié la contrainte de prix. Il achète une bouteille à 40 dollars.</p>
 
-<h2>2. Le problème</h2>
+<p>Ce scénario n'est pas fictif. Les grands modèles de langage (LLM) sont déployés comme agents autonomes dans des applications de plus en plus ambitieuses : navigation web, édition de code, requêtes SQL, jeux vidéo, robotique. Chaque tâche génère une longue séquence d'interactions entre l'agent et son environnement — des dizaines, parfois des centaines d'étapes. Et la mémoire de ces agents, celle qui leur permet de garder le fil, reste un maillon fragile.</p>
 
-<p>Pour évaluer la mémoire d'un agent, on utilise des benchmarks — des batteries de tests standardisés. Le souci : les benchmarks existants testent la mémoire dans des conversations entre un humain et un chatbot. « Quel restaurant t'ai-je recommandé la semaine dernière ? », « Rappelle-toi que je préfère le train à l'avion. » Ce type d'échange, en langage naturel, ressemble peu à ce que vit un agent autonome dans la vraie vie.</p>
+<p>Une équipe de chercheurs de l'UC San Diego vient de publier AMA-Bench, le premier benchmark conçu pour évaluer cette mémoire dans des conditions réalistes. Leurs résultats bousculent plusieurs certitudes : les systèmes de mémoire existants, censés aider les agents, leur font souvent plus de mal que de bien.</p>
 
-<p>Un agent qui achète un produit sur un site web ne discute pas. Il reçoit du HTML brut, clique sur des boutons identifiés par des sélecteurs CSS, analyse des tableaux JSON, exécute des requêtes SQL. Son « dialogue » avec l'environnement est une suite d'actions et d'observations machines, dense en information factuelle et presque dépourvue de bavardage. Trois différences fondamentales séparent ces trajectoires d'agent des conversations humaines :</p>
+<h2>Le problème : des tests pensés pour les chatbots, pas pour les agents</h2>
 
-<ul>
-<li>La diversité des représentations : l'agent manipule du JSON, du HTML, des tables ASCII, du code Python — pas uniquement du texte libre.</li>
-<li>La causalité : chaque action modifie l'état de l'environnement et conditionne les observations suivantes. Cliquer sur « Filtrer par prix » change la page affichée ; cette dépendance causale n'existe pas dans un échange de politesses.</li>
-<li>La densité d'information : dans une conversation, on répète, on reformule, on fait du small talk. Dans une trajectoire d'agent, chaque ligne compte. Perdre un détail, c'est perdre le fil de la tâche.</li>
-</ul>
+<p>Quand on évalue la mémoire d'un LLM aujourd'hui, on lui fait passer des tests de conversation. « Tu te souviens de mon prénom ? » « Quel restaurant m'as-tu recommandé la semaine dernière ? » Les benchmarks actuels — LoCoMo, LongMemEval, MemoryBench — mesurent la rétention d'informations dans des échanges en langage naturel entre un humain et un assistant.</p>
 
-<p>Résultat : un système de mémoire qui fonctionne bien sur des dialogues peut s'effondrer face à des trajectoires d'agent. Personne n'avait encore construit un benchmark dédié pour mesurer cet écart.</p>
+<p>Le problème : un agent autonome ne discute pas avec un humain. Il interagit avec un environnement numérique. Ses « observations » sont des blocs de HTML, des tables ASCII, des réponses JSON, des sorties de terminal. Un agent qui navigue sur le web reçoit à chaque étape le DOM de la page — des centaines de lignes de markup structuré. Un agent qui écrit du code reçoit des logs de compilation, des stacktraces, des diffs.</p>
 
-<h2>3. La méthode</h2>
+<p>Trois propriétés distinguent la mémoire d'un agent de celle d'un chatbot.</p>
 
-<h3>Un benchmark en deux volets</h3>
+<p>Première différence : le type de données. Les benchmarks existants testent du texte libre en langue naturelle. Les agents traitent des représentations symboliques générées par des machines — du JSON, du Python, du SQL, de l'Unicode.</p>
 
-<p>AMA-Bench se compose de deux sous-ensembles complémentaires. Le premier rassemble des trajectoires réelles, collectées dans six familles de tâches : navigation web (WebArena), édition logicielle (SWE-bench), requêtes SQL (Spider 2.0), IA incarnée (ALFWorld), jeux vidéo (BALROG, 2048, Candy Crush) et questions ouvertes avec outils (GAIA). Pour chaque trajectoire, des annotateurs de niveau doctorant ont rédigé 12 paires question-réponse, vérifiées par un second relecteur. Au total, 2 496 QA couvrent l'ensemble du spectre.</p>
+<p>Deuxième différence : la causalité. Dans une conversation, les répliques se suivent librement. Dans une trajectoire d'agent, chaque action provoque une transition d'état dans l'environnement. L'action « cliquer sur le filtre prix » modifie la page affichée, et cette modification conditionne les actions suivantes. Chaque étape dépend causalement des précédentes.</p>
 
-<p>Le second volet est synthétique. Les chercheurs ont créé des environnements programmables — des jeux textuels (TextWorld) et des grilles de navigation (BabyAI) — où ils contrôlent la longueur des trajectoires, le niveau de bruit dans les actions et la verbosité des observations. L'avantage : on peut générer des tests à n'importe quelle échelle (8 000 à 128 000 tokens) et vérifier automatiquement les réponses grâce à l'accès complet à l'état interne de l'environnement. Pensez-y comme un simulateur de vol pour la mémoire des agents : conditions contrôlées, paramètres ajustables, résultats reproductibles.</p>
+<p>Troisième différence : la densité d'information. Un dialogue humain contient des politesses, des reformulations, du bavardage — de la redondance exploitable. Une trajectoire d'agent est dense en information factuelle. Chaque observation contient des données objectives, et peu de matière superflue.</p>
 
-<h3>Quatre capacités mémorielles testées</h3>
+<p>Résultat : les systèmes de mémoire optimisés pour des dialogues échouent face à des trajectoires d'agents. Les chercheurs manquaient d'un outil pour mesurer ce décalage.</p>
 
-<p>AMA-Bench évalue quatre aptitudes distinctes. Le rappel (Recall) : retrouver une information temporelle ou séquentielle précise dans l'historique. L'inférence causale : identifier les prérequis d'une action ou les dépendances entre états. La mise à jour d'état (State Updating) : suivre l'évolution d'un objet ou d'une variable au fil des étapes, y compris les états cachés. L'abstraction d'état (State Abstraction) : résumer une séquence longue en extrayant l'essentiel sans perte critique.</p>
+<h2>La méthode : un banc d'essai en deux volets</h2>
 
-<p>Ces quatre catégories couvrent les trois mécanismes fondamentaux de la mémoire d'un agent : récupérer la bonne information, la mettre à jour quand l'environnement change, et la condenser sans la corrompre.</p>
+<p>AMA-Bench (pour <em>Agent Memory with Any length</em>) se compose de deux sous-ensembles complémentaires.</p>
 
-<h3>AMA-Agent : graphe causal et recherche augmentée</h3>
+<p>Le premier volet rassemble des trajectoires réelles issues de six domaines représentatifs : navigation web (WebArena), ingénierie logicielle (SWE-bench), requêtes SQL (Spider 2.0), IA incarnée (ALFWorld), jeux vidéo (BALROG, LMGame-Bench) et outils ouverts (GAIA). Pour chaque domaine, les chercheurs ont collecté des traces d'interaction complètes — les actions de l'agent et les réponses de l'environnement. Des annotateurs de niveau doctoral ont ensuite créé 2 496 paires question-réponse, chacune ancrée dans des preuves explicites de la trajectoire. Un second annotateur a vérifié chaque paire pour garantir la fiabilité.</p>
 
-<p>Face aux limites identifiées, les chercheurs proposent AMA-Agent, un système de mémoire en deux étapes.</p>
+<p>Ces questions testent quatre capacités mémorielles distinctes. Le rappel temporel : « Quelle action a été effectuée à l'étape 15 ? » L'inférence causale : « Pourquoi la recherche par mots-clés a-t-elle échoué à reproduire le tri par popularité ? » Le suivi d'état : « Comment l'inventaire a-t-il évolué entre les étapes 5 et 20 ? » L'abstraction : « Identifie la boucle redondante à la fin de la trajectoire et explique pourquoi elle est improductive. »</p>
 
-<p>La première étape construit un graphe de causalité. Pour chaque paire action-observation consécutive, l'agent extrait les états de l'environnement et des objets, repère les transitions causales (« l'action X a provoqué le changement Y ») et les associations entre états et objets. Ces éléments forment un graphe orienté où les nœuds représentent des états et les arêtes portent les relations de cause à effet. L'analogie la plus proche serait un arbre généalogique des événements : chaque état « descend » d'une action précise, et on peut remonter la lignée pour comprendre pourquoi tel résultat est apparu.</p>
+<p>Le second volet est synthétique. Les chercheurs ont construit des environnements programmables — TextWorld (jeux textuels) et BabyAI (navigation en grille) — où chaque état est contrôlé et vérifiable. L'avantage : on peut étirer les trajectoires à volonté, de 8 000 à 128 000 tokens, et générer automatiquement des questions dont la réponse est prouvable par le système. On peut aussi injecter du bruit dans les actions de l'agent pour tester la robustesse, ou modifier la verbosité des observations pour varier la difficulté.</p>
 
-<p>La seconde étape intervient à la récupération. Quand l'agent reçoit une question, il commence par chercher les nœuds du graphe les plus proches sémantiquement (via des embeddings). S'il juge l'information insuffisante, il dispose de deux outils supplémentaires : une exploration de voisinage dans le graphe (pour remonter les chaînes causales sur plusieurs sauts) et une recherche par mots-clés qui peut exécuter des scripts Python pour analyser la trajectoire brute. Ce mécanisme hybride — similarité d'abord, puis outils ciblés — permet de dépasser les limites de la recherche par similarité seule.</p>
+<p>Pensez à la différence entre un examen sur dossier réel et un exercice calibré en laboratoire. Le volet réel capture la complexité brute du terrain. Le volet synthétique permet des mesures contrôlées et reproductibles. Les deux se complètent — et les chercheurs montrent que les classements obtenus sur le synthétique corrèlent fortement avec ceux du réel, ce qui valide l'utilité du volet synthétique comme proxy.</p>
 
-<h2>4. Résultats clés</h2>
+<h2>Résultats clés : les systèmes de mémoire aggravent souvent la situation</h2>
 
-<p>Le premier constat frappe : même GPT 5.2, le modèle commercial le plus puissant testé (avec une fenêtre de contexte de 400 000 tokens), n'atteint que 72,26 % de précision moyenne sur les trajectoires réelles. La mémoire agentique reste un problème ouvert, même pour les modèles de pointe.</p>
+<p>Premier constat : même les meilleurs modèles commerciaux peinent. GPT 5.2, avec sa fenêtre de 400 000 tokens, atteint 72,26 % de précision moyenne sur le volet réel. C'est honorable, mais loin de la maîtrise. Claude Haiku 3.5 tombe à 43,61 %.</p>
 
-<p>Le deuxième constat est plus surprenant. Sur les six familles de tâches, le baseline « long-contexte » — qui consiste simplement à injecter toute la trajectoire dans la fenêtre du modèle, sans système de mémoire — bat régulièrement les systèmes de mémoire spécialisés. Des outils comme MemGPT, Mem0, MemoryBank ou GraphRAG, pourtant conçus pour gérer la mémoire longue, sous-performent face à cette approche brute. La compression qu'ils appliquent, pensée pour du langage naturel redondant, détruit l'information dense et causale des trajectoires d'agent.</p>
+<p>Deuxième constat, et c'est le plus surprenant : les systèmes de mémoire existants font souvent <em>pire</em> que la baseline « contexte long ». Cette baseline consiste à injecter toute la trajectoire directement dans le contexte du modèle, sans aucun traitement. Qwen3-32B en baseline atteint 51,81 %. Or la plupart des systèmes de mémoire — MemAgent à 27,68 %, Mem0 à 21,04 %, Mem1 à 12,29 %, SimpleMem à 18,11 % — tombent largement en dessous. Seuls HippoRAG2 (44,80 %) et MemoRAG (46,06 %) s'en approchent, sans la dépasser.</p>
 
-<p>Troisième constat, peut-être le plus important pour les praticiens : l'architecture mémoire compte bien plus que la taille du modèle. En passant d'un modèle de 8 milliards à 32 milliards de paramètres, le gain moyen de précision est de 3,8 points. En changeant le système de mémoire, l'écart atteint 45 points. Autrement formulé : investir dans un meilleur design de mémoire rapporte dix fois plus qu'investir dans un modèle plus gros.</p>
+<p>Pourquoi ? L'analyse par ablation révèle deux goulots d'étranglement.</p>
 
-<p>AMA-Agent, avec le même backbone Qwen3-32B, atteint 57,22 % de précision moyenne — 11,16 points au-dessus du meilleur système existant (MemoRAG, à 46,06 %). Le gain est visible sur les quatre capacités : rappel (62,4 % contre 48,4 % pour le meilleur concurrent), inférence causale (61,5 % contre 55,0 %), mise à jour d'état (53,1 % contre 44,0 %) et abstraction (47,2 % contre 36,6 %).</p>
+<p>D'abord, la compression est destructrice. MemoryBank perd 41,3 % de précision rien qu'à l'étape de construction de la mémoire. Ces systèmes sont conçus pour compresser du langage naturel, où la redondance est forte. Face à des données denses et structurées, ils jettent de l'information critique — des transitions d'état, des dépendances causales. C'est comme résumer une recette de cuisine en ne gardant que les noms des ingrédients : on perd l'ordre des opérations et les techniques, et le plat devient irréalisable.</p>
 
-<p>L'étude d'ablation confirme que les deux composants sont indispensables. Sans le graphe de causalité, la précision chute de 24,6 %. Sans la recherche augmentée par outils, elle baisse de 22,8 %. Ni l'un ni l'autre ne suffit seul.</p>
+<p>Ensuite, la recherche par similarité échoue. HippoRAG2 garde une bonne précision quand on lui fournit directement les bons passages. Mais quand il doit les retrouver lui-même dans la trajectoire complète, sa précision chute de 43,2 %. La similarité sémantique entre une question en langage naturel et un bloc JSON ou HTML est faible, même quand ce bloc contient la réponse.</p>
 
-<p>Sur le volet synthétique, les scores corrèlent fortement avec les résultats réels, ce qui valide l'utilité du simulateur. Et quand la longueur des trajectoires augmente de 8 000 à 128 000 tokens, AMA-Agent maintient une précision stable là où le baseline long-contexte s'effondre au-delà de 32 000 tokens.</p>
+<p>Troisième constat : l'architecture mémoire compte bien plus que la taille du modèle. Passer de 8 à 32 milliards de paramètres ne rapporte en moyenne que 3,8 points de précision. Changer le système de mémoire fait varier la précision de 45 points. Le goulot d'étranglement n'est pas la puissance du modèle — c'est la conception de sa mémoire.</p>
 
-<h2>5. Implications pratiques</h2>
+<p>Face à ces résultats, les chercheurs proposent AMA-Agent. Ce système repose sur deux mécanismes.</p>
 
-<p>Pour les équipes qui construisent des agents autonomes, ces résultats redistribuent les priorités. La course à la fenêtre de contexte la plus large — 400 000 tokens chez OpenAI, un million chez Google — ne résout pas le problème de la mémoire agentique. Injecter plus de texte dans le prompt est une solution de force brute qui atteint ses limites dès que la trajectoire dépasse quelques dizaines de milliers de tokens.</p>
+<p>Le premier est un <strong>graphe de causalité</strong>. Au lieu de compresser la trajectoire en résumés textuels, AMA-Agent parse chaque paire action-observation pour extraire les états d'environnement et d'objets, puis les relie par des arêtes causales dirigées. C'est la différence entre un résumé narratif d'un match de football et une feuille de statistiques détaillée avec l'enchaînement des actions : le résumé est lisible, mais la feuille de stats permet de répondre à des questions précises sur n'importe quel moment du match.</p>
 
-<p>Les systèmes RAG classiques, qui découpent l'historique en morceaux et cherchent les fragments les plus similaires à la question posée, échouent eux aussi. La similarité sémantique ne capture pas la causalité. Chercher « quel bouton a été cliqué avant l'erreur » ne ressemble pas textuellement à l'observation qui contient la réponse — un bloc HTML avec un identifiant CSS. La recherche par similarité passe à côté.</p>
+<p>Le second mécanisme est une <strong>recherche augmentée par outils</strong>. Quand la recherche par similarité ne suffit pas, l'agent évalue lui-même si l'information récupérée est suffisante. Si ce n'est pas le cas, il peut traverser le graphe pour récupérer le contexte causal autour d'un nœud, lancer une recherche par mots-clés dans la trajectoire brute, ou générer et exécuter du code Python pour analyser les données programmatiquement.</p>
 
-<p>La compression de mémoire, autre technique populaire, souffre du même biais. Les méthodes comme Mem1 ou SimpleMem sont optimisées pour le langage naturel, où la redondance est partout et la compression sans perte est possible. Dans une trajectoire d'agent, chaque observation porte de l'information unique. Compresser, c'est perdre.</p>
+<p>AMA-Agent atteint 57,22 % de précision moyenne, soit 11,16 points de plus que le meilleur système existant. L'ablation confirme que les deux composants sont indispensables : retirer le graphe de causalité fait perdre 24,6 %, retirer la recherche par outils en fait perdre 22,8 %.</p>
 
-<p>Le graphe de causalité proposé par AMA-Agent trace une direction différente. Plutôt que de résumer ou de chercher par ressemblance, il modélise explicitement les dépendances entre événements. Cette approche préserve la structure logique de l'historique, même quand celui-ci s'allonge. La recherche par outils — pouvoir écrire un script pour compter les occurrences d'une action ou filtrer les étapes par mot-clé — complète le dispositif en donnant à l'agent des capacités d'analyse que la seule similarité vectorielle ne fournit pas.</p>
+<h2>Implications pratiques : repenser la mémoire des agents</h2>
 
-<p>Pour les développeurs, le message est clair : si votre agent exécute des tâches longues dans des environnements structurés (web, code, bases de données), la mémoire mérite autant d'attention que le choix du modèle de langage. Et les solutions conçues pour les chatbots ne se transposent pas directement.</p>
+<p>Ces résultats envoient un message direct aux équipes qui construisent des agents autonomes. Brancher un système RAG standard sur un agent et espérer que ça fonctionne ne suffit pas. La mémoire d'un agent n'est pas un problème de recherche documentaire — c'est un problème de suivi d'état et de raisonnement causal.</p>
 
-<h2>6. Pour aller plus loin</h2>
+<p>Pour les architectes de systèmes agents, deux leçons se dégagent.</p>
 
-<p>AMA-Bench et AMA-Agent ouvrent plusieurs pistes. La plus évidente : l'étude se limite à la mémoire intra-épisode — un agent qui exécute une tâche unique du début à la fin. Les agents déployés en production accumulent de l'expérience sur des semaines, des mois. Comment transférer les leçons apprises d'une tâche à l'autre ? La mémoire inter-épisodes et l'apprentissage continu restent des territoires largement inexplorés pour les agents LLM.</p>
+<p>La compression de mémoire doit préserver la structure causale. Résumer « l'agent a cliqué sur le filtre, la page a changé, les résultats se sont mis à jour » en « l'agent a filtré les résultats » fait perdre l'information sur la transition d'état. Cette perte s'accumule sur des centaines d'étapes et finit par rendre la mémoire inutilisable.</p>
 
-<p>Le volet synthétique d'AMA-Bench pourrait aussi s'étendre à des environnements plus complexes — des simulations multi-agents, des interfaces graphiques réelles, des systèmes distribués. La corrélation entre scores synthétiques et réels, démontrée ici sur TextWorld et BabyAI, demande à être vérifiée sur des domaines plus variés.</p>
+<p>La recherche d'information doit dépasser la similarité vectorielle. Un embedding sémantique ne capture pas la proximité entre une question comme « quel était l'inventaire à l'étape 24 ? » et un bloc JSON décrivant cet inventaire. Des mécanismes complémentaires — traversée de graphe, recherche par mots-clés, exécution de code — sont indispensables pour des données structurées.</p>
 
-<p>Le graphe de causalité, lui, pose la question de son coût de construction. Extraire les dépendances causales à chaque étape nécessite un appel LLM supplémentaire. À 128 000 tokens de trajectoire, la facture s'alourdit. Des méthodes d'extraction plus légères — par règles, par modèles spécialisés plus petits — pourraient rendre l'approche viable à grande échelle.</p>
+<p>Pour les fournisseurs de modèles, l'extension des fenêtres de contexte reste un levier puissant. La baseline « tout mettre dans le contexte » bat la majorité des systèmes de mémoire. Mais elle a ses limites : au-delà de 32 000 tokens, la performance se dégrade sur le volet synthétique, et le coût computationnel explose avec la longueur. La mémoire externe reste nécessaire — à condition d'être conçue pour des données d'agents, pas pour des conversations.</p>
 
-<p>Enfin, AMA-Bench révèle un écart de 28 points entre le meilleur score (72 % pour GPT 5.2) et la perfection. Même avec un graphe causal et des outils, AMA-Agent plafonne à 57 %. La mémoire à long horizon des agents reste un problème difficile, et les marges de progression sont larges. Les prochaines avancées viendront probablement de la combinaison entre meilleurs modèles de base, architectures mémorielles plus fines, et évaluations plus exigeantes — un cercle vertueux que ce benchmark contribue à amorcer.</p>
+<p>Le benchmark lui-même devient un outil de diagnostic précieux. Avant AMA-Bench, comparer des systèmes de mémoire revenait à les tester sur des conversations. C'est comme évaluer la mémoire d'un pilote de ligne avec un test de culture générale : ça mesure quelque chose, mais pas ce qui compte en situation réelle.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>AMA-Bench couvre la mémoire intra-épisode : un agent, une tâche, une trajectoire. Les chercheurs le reconnaissent comme une limite. Un agent déployé dans la durée doit aussi transférer son expérience d'une tâche à l'autre — apprendre que telle stratégie de navigation fonctionne sur un site et l'appliquer à un autre. Cette mémoire cross-task, proche de l'apprentissage continu, reste un terrain largement inexploré pour les agents LLM.</p>
+
+<p>La question de l'échelle se pose aussi. Les trajectoires du volet réel atteignent parfois un million de tokens (certaines tâches GAIA). À mesure que les agents s'attaquent à des missions plus longues — debugging sur plusieurs jours, projets de code multi-fichiers —, les exigences mémorielles vont croître d'un ordre de grandeur. Les solutions actuelles, y compris AMA-Agent, devront prouver qu'elles tiennent à cette échelle.</p>
+
+<p>Le graphe de causalité d'AMA-Agent repose sur un LLM qui parse chaque paire action-observation. Le coût de cette étape et sa fiabilité sur des environnements très divers — interfaces graphiques, API REST, systèmes physiques — restent à valider au-delà des six domaines du benchmark.</p>
+
+<p>Enfin, le benchmark pointe un paradoxe révélateur : les modèles les plus capables s'en sortent mieux <em>sans</em> système de mémoire externe. La communauté a transposé aux agents des solutions pensées pour les chatbots — compression textuelle, retrieval par similarité. AMA-Bench démontre qu'il faut repartir des propriétés spécifiques des trajectoires d'agents — causalité, densité, symbolisme — pour concevoir des mémoires qui aident réellement plutôt qu'elles ne gênent.</p>
   </div>
   <script>
   (function(){
