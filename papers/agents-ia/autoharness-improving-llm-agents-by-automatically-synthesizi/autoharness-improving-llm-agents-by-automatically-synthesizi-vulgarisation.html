@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoHarness: improving LLM agents by automatically synthesizing a code harness — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AutoHarness: improving LLM agents by automatically synthesizing a code harness</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Lors du concours Kaggle GameArena, un tournoi d'échecs entre modèles d'IA, Gemini-2.5-Flash a perdu 78 % de ses parties non pas à cause de mauvaises stratégies, mais parce qu'il tentait des coups illégaux. Déplacer un fou en ligne droite. Roquer alors que le roi est en échec. Des erreurs qu'un joueur débutant ne commettrait pas après dix minutes d'apprentissage des règles. Ce chiffre résume à lui seul un paradoxe des grands modèles de langage : ils peuvent rédiger des dissertations sur la théorie des ouvertures aux échecs, générer du code capable de battre des humains sur des problèmes olympiques de mathématiques, mais échouent à respecter les contraintes les plus élémentaires quand on les place dans un environnement interactif.</p>
+
+<p>Une équipe de Google DeepMind — Xinghua Lou, Miguel Lázaro-Gredilla, Antoine Dedieu, Carter Wendelken, Wolfgang Lehrach et Kevin Murphy — a publié en mars 2026 une approche qui retourne le problème : plutôt que d'améliorer le modèle lui-même, ils lui font écrire un programme de contrôle autour de lui. Ce programme, appelé <em>harness</em> (harnais en anglais), filtre les actions invalides avant qu'elles n'atteignent l'environnement. Le résultat : un petit modèle équipé de son propre harnais surpasse des modèles bien plus gros, pour une fraction du coût.</p>
+
+<h2>Le problème : des agents puissants mais indisciplinés</h2>
+
+<p>Un agent IA, dans le contexte de cette recherche, c'est un modèle de langage connecté à un environnement — ici des jeux de texte — avec lequel il interagit tour par tour. Le modèle reçoit l'état du jeu sous forme de texte, réfléchit, puis propose une action. Le problème surgit à cette dernière étape : le modèle ne distingue pas toujours ce qu'il <em>pourrait</em> faire de ce qu'il a le <em>droit</em> de faire.</p>
+
+<p>Ce décalage entre compréhension apparente et respect effectif des règles porte un nom dans la communauté de la planification automatique : le problème de l'applicabilité des actions. En clair, le modèle sait <em>parler</em> d'échecs, mais il ne maintient pas une représentation fiable de l'échiquier dans sa mémoire interne. Quand il génère un coup, il produit une séquence de tokens plausible — pas nécessairement un coup valide sur le plateau actuel.</p>
+
+<p>Les solutions existantes ont chacune leurs limites. Le fine-tuning (réentraînement ciblé du modèle sur des parties correctes) est lent, coûteux, et peut dégrader les performances du modèle sur d'autres tâches. Les harnais codés à la main fonctionnent, mais exigent un développeur par jeu, par environnement, par ensemble de règles — un travail artisanal qui ne passe pas à l'échelle. Quant aux techniques de raisonnement avancé comme le « tree of thoughts », elles reposent sur le modèle interne du LLM pour simuler les transitions d'état, ce qui revient à demander au système défaillant de se corriger lui-même.</p>
+
+<h2>La méthode : faire coder au LLM son propre garde-fou</h2>
+
+<p>L'idée centrale d'AutoHarness tient en une phrase : le modèle écrit un programme Python qui vérifie la légalité de ses propres actions. Ce programme contient deux fonctions. La première, <code>propose_action()</code>, génère un coup candidat à partir de l'état du jeu. La seconde, <code>is_legal_action()</code>, examine un coup proposé et renvoie vrai ou faux. Le harnais fonctionne comme un videur à l'entrée d'un club : le LLM propose, le code vérifie, et seuls les coups conformes passent.</p>
+
+<p>Mais comment le modèle parvient-il à écrire un vérificateur correct alors qu'il ne sait pas lui-même jouer correctement ? Par itération et retour d'expérience. Le processus ressemble à un élève qui passe un examen blanc, reçoit ses erreurs annotées, corrige sa copie, et recommence. Sauf qu'ici l'élève écrit du code, et l'examen blanc consiste à faire jouer ce code dans l'environnement réel.</p>
+
+<p>Concrètement, le système maintient un arbre de versions du code. Chaque nœud de l'arbre est une version du harnais. À chaque itération, un algorithme appelé Thompson sampling choisit quel nœud explorer ou affiner. C'est un mécanisme d'arbitrage classique en statistique : faut-il creuser une piste qui semble prometteuse (exploitation), ou tenter une approche radicalement différente (exploration) ? Le Thompson sampling fait ce choix de manière probabiliste, en favorisant les branches dont les résultats sont les meilleurs tout en laissant une chance aux alternatives moins testées.</p>
+
+<p>Une fois le nœud sélectionné, le code correspondant est exécuté dans dix environnements de jeu parallèles pendant un maximum de mille coups. Dès qu'un coup illégal survient ou que le code plante, l'exécution s'arrête. Les cinq erreurs les plus récentes sont alors transmises à un module « critique » qui consolide les problèmes, puis à un module « raffineur » — le LLM lui-même — qui produit une nouvelle version corrigée du code. Cette nouvelle version devient un nœud enfant dans l'arbre, et le cycle reprend.</p>
+
+<p>L'entraînement s'arrête quand le taux de coups légaux atteint 100 %, ou après un nombre maximum d'itérations. En moyenne, 14,5 itérations suffisent. Certains jeux simples convergent en un ou deux tours. Les plus complexes — les échecs, Othello, le Cryptarithm — nécessitent entre 45 et 64 itérations.</p>
+
+<p>Les chercheurs ont poussé l'approche un cran plus loin avec une variante baptisée « harness-as-policy » : au lieu de se contenter de filtrer les coups du LLM, le code généré <em>remplace</em> entièrement le LLM au moment du jeu. Le programme choisit lui-même le meilleur coup sans jamais appeler le modèle de langage. Le résultat est un agent entièrement codé, dont le coût d'inférence est quasi nul.</p>
+
+<h2>Résultats clés</h2>
+
+<p>Les expériences portent sur 145 jeux de la plateforme TextArena, un benchmark récent regroupant des jeux de texte variés — échecs, dames, sudoku, démineur, poker, et des dizaines de variantes. Les jeux dont l'espace d'actions repose sur du dialogue libre (comme Mafia ou Codenames) ont été exclus. Pour corser le défi, les chercheurs ont aussi supprimé des observations du jeu la liste des coups légaux, forçant le harnais à les déduire par lui-même.</p>
+
+<p>Premier résultat : le harnais atteint un taux de 100 % de coups légaux sur les 145 jeux. Zéro coup illégal, là où le modèle nu en produisait en masse. Ce seul chiffre valide l'approche : le code généré par le LLM comprend les règles mieux que le LLM lui-même quand il joue en direct.</p>
+
+<p>Deuxième résultat, sur les jeux à deux joueurs : Gemini-2.5-Flash équipé du harnais bat Gemini-2.5-Pro (un modèle sensiblement plus gros et coûteux) dans 9 parties sur 16, avec un taux de victoire global de 56,3 % contre 38,2 %. Contre la version nue de Flash (sans harnais), le taux de victoire monte à 64,8 %. Le petit modèle discipliné l'emporte sur le gros modèle livré à lui-même.</p>
+
+<p>Troisième résultat, sur les jeux à un joueur : la récompense moyenne du Flash+Harness atteint 0,745 contre 0,707 pour Gemini-2.5-Pro et 0,673 pour Flash seul. Le harnais ne se contente pas d'empêcher les erreurs — il améliore aussi la qualité stratégique, car éliminer les coups absurdes permet au LLM de concentrer son raisonnement sur des options viables.</p>
+
+<p>Le résultat le plus spectaculaire concerne le mode « policy-as-code ». Sur 16 jeux à un joueur, le code généré par Flash atteint une récompense moyenne de 0,870, surpassant GPT-5.2-High (0,844), Gemini-2.5-Pro (0,707) et GPT-5.2 standard (0,635). Le code Python pur, sans aucun appel LLM à l'exécution, bat les modèles les plus avancés du marché. Et les expériences avec GPT-5.2 ont coûté environ 640 dollars en appels API, contre un coût d'inférence proche de zéro pour la politique codée.</p>
+
+<p>L'exemple du démineur illustre la sophistication du code généré. Le harnais produit par Flash implémente trois niveaux de stratégie : un premier coup central, une déduction logique avec propagation de contraintes (y compris une règle de sous-ensembles entre indices voisins), et un calcul probabiliste de risque par case quand aucune déduction certaine n'est possible. Ce n'est pas un script naïf — c'est un solveur structuré que Flash a synthétisé seul en quelques dizaines d'itérations.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>La première leçon pour l'industrie est économique. Un modèle plus petit, associé à un harnais auto-généré, peut remplacer un modèle plus gros dans des tâches structurées. Les coûts d'inférence des LLM restent un frein majeur à leur déploiement en production, et chaque opportunité de substituer du calcul lourd par du code léger représente un levier direct sur la facture cloud.</p>
+
+<p>La deuxième leçon est architecturale. AutoHarness montre qu'un système efficace n'est pas forcément un modèle monolithique plus performant. C'est parfois un modèle moyen entouré de garde-fous intelligents. Cette vision modulaire — un LLM pour la créativité et le raisonnement, du code déterministe pour le respect des contraintes — reflète ce que les praticiens font déjà manuellement dans les déploiements d'agents. La contribution ici est d'automatiser cette couche d'ingénierie.</p>
+
+<p>Les applications dépassent les jeux. Tout environnement avec des règles formelles et un retour d'erreur exploitable peut bénéficier de cette approche : API avec des schémas stricts, interfaces de bases de données, robots industriels avec des contraintes de sécurité, assistants de code soumis à des linters. Chaque fois qu'un LLM doit produire une sortie conforme à des spécifications, un harnais auto-généré peut servir de filet de sécurité.</p>
+
+<p>Le mode « policy-as-code » soulève une question plus profonde. Si un LLM peut traduire sa compréhension d'un problème en un programme autonome qui le résout mieux que le LLM lui-même, alors le modèle de langage devient un compilateur de stratégies plutôt qu'un exécutant. Il transforme des descriptions textuelles de règles et d'objectifs en algorithmes optimisés. Ce renversement de perspective pourrait redéfinir la manière dont on utilise les LLM dans les systèmes de production : non pas comme des moteurs d'inférence permanents, mais comme des générateurs ponctuels de logique métier.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs limites subsistent. Le harnais est aujourd'hui spécifique à chaque environnement — un programme par jeu. Les auteurs envisagent de construire une bibliothèque de harnais réutilisables, où des modules de vérification pour les échecs pourraient être adaptés aux dames ou au Go sans repartir de zéro. Cette piste suppose que le LLM apprenne à reconnaître des similitudes structurelles entre environnements, ce qui reste un défi ouvert.</p>
+
+<p>Le mode « policy-as-code » ne fonctionne pas encore pour les jeux à deux joueurs. Les jeux compétitifs exigent de modéliser l'adversaire, ce qui nécessite des techniques comme Monte Carlo Tree Search — des algorithmes que le LLM pourrait en théorie générer, mais dont la synthèse automatique reste hors de portée pour l'instant.</p>
+
+<p>L'ambition la plus forte évoquée par l'équipe est l'auto-amélioration récursive : distiller les agents spécialisés générés par le harnais dans le modèle de base, qui deviendrait alors capable de produire des harnais encore meilleurs, et ainsi de suite. Ce scénario — un LLM qui s'améliore en écrivant du code qui améliore ses performances, ce code étant réintégré dans le modèle — dessine une boucle d'apprentissage sans fine-tuning traditionnel. Les chercheurs mentionnent aussi l'extension aux jeux multimodaux (Craftax, Terra Nova), où les observations ne sont plus du texte mais des images, ce qui ajouterait la vision par ordinateur à l'équation.</p>
+
+<p>La question sous-jacente que pose AutoHarness est celle de la division du travail entre raisonnement statistique et logique formelle. Les LLM excellent dans le flou — interprétation du langage, créativité, raisonnement par analogie. Ils échouent dans le rigide — respect de règles absolues, cohérence d'état, calcul exact. Plutôt que de forcer le même outil à tout faire, cette recherche propose de laisser chaque approche couvrir son domaine de compétence. Le LLM pense. Le code vérifie. Et quand le LLM est assez bon pour écrire le code qui le contraint, la boucle se referme d'elle-même.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

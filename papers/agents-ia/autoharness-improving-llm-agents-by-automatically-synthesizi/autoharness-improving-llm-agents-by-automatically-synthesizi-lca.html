@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoHarness: improving LLM agents by automatically synthesizing a code harness — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AutoHarness: improving LLM agents by automatically synthesizing a code harness</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Les grands modèles de langage utilisés comme agents dans des environnements structurés — jeux de plateau, puzzles logiques — commettent fréquemment des actions illégales. Dans la compétition Kaggle GameArena, 78 % des défaites de Gemini-2.5-Flash aux échecs provenaient de coups non réglementaires, pas d'erreurs stratégiques. Lou et al. proposent AutoHarness, un cadre où le LLM génère lui-même un harnais de code qui filtre ou remplace ses décisions, par raffinement itératif guidé par les retours de l'environnement.</p>
+
+<p>L'approche se distingue des solutions existantes — fine-tuning coûteux, harnais manuels fragiles — en exploitant la capacité de génération de code du modèle pour construire son propre système de contrôle. Le harnais peut prendre trois formes : filtre d'actions (propose des coups légaux que le LLM classe), vérificateur d'actions (rejette les coups illégaux du LLM), ou politique complète (code Python autonome sans appel LLM à l'inférence).</p>
+
+<h2>Méthodologie</h2>
+
+<p>La génération du harnais est formulée comme une recherche dans l'espace des programmes. L'algorithme maintient plusieurs hypothèses de code dans un arbre et utilise le Thompson sampling pour choisir quel nœud raffiner. À chaque itération, le LLM (Gemini-2.5-Flash) agit comme opérateur de mutation : il reçoit le code actuel et les retours d'exécution (coups illégaux, erreurs), puis propose une version corrigée. La valeur heuristique de chaque nœud correspond au taux de coups légaux.</p>
+
+<p>L'entraînement utilise 10 environnements parallèles avec des trajectoires de 1000 pas maximum. Une trajectoire s'interrompt dès qu'un coup illégal survient. Le critique consolide jusqu'à 5 erreurs par itération et les transmet au raffineur. Le processus s'arrête quand le taux de légalité atteint 100 % ou après un timeout.</p>
+
+<p>L'évaluation porte sur 145 jeux TextArena (1 et 2 joueurs), après exclusion de 9 jeux à espace d'actions textuelles libres. Les indices « Available Moves » ont été retirés manuellement des observations pour forcer le harnais à déduire les coups légaux par lui-même. L'évaluation de performance en jeu se limite à 32 jeux (16 à 1 joueur, 16 à 2 joueurs), avec 20 parties par jeu en 1P et 40 en 2P.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>Le harnais atteint un taux de légalité de 100 % sur les 145 jeux, après 14,5 itérations en moyenne. Les jeux les plus difficiles à apprendre (Chess, Othello, Cryptarithm, GermanWhist) ont nécessité entre 43 et 64 itérations.</p>
+
+<p>En jeux à 2 joueurs, Gemini-2.5-Flash équipé du harnais bat Gemini-2.5-Pro dans 9 des 16 jeux évalués, avec un taux de victoire global de 56,3 % contre 38,2 %. Contre la version Flash sans harnais, le taux de victoire monte à 64,8 %.</p>
+
+<p>En jeux à 1 joueur, la récompense moyenne du système harnaché (0,745) dépasse celle de Gemini-2.5-Pro (0,707) et de Flash seul (0,673). La variante « harness-as-policy », qui élimine le LLM au moment de l'inférence, atteint 0,870 de récompense moyenne — supérieure à GPT-5.2-High (0,844) — pour un coût d'inférence quasi nul, contre environ 640 $ pour les expériences GPT.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>Aucun test statistique n'accompagne les résultats. Les récompenses moyennes et taux de victoire sont rapportés sans écart-type, intervalle de confiance, ni test de significativité. Avec 20 parties par jeu en 1P, la variance d'estimation reste élevée, surtout pour les jeux à forte composante aléatoire (Blackjack, Bandit). Pour GPT-5.2-High, le nombre de répétitions tombe à 5 par jeu — insuffisant pour tirer des conclusions fiables sur la comparaison.</p>
+
+<p>Le protocole expérimental manque de baselines intermédiaires. Aucune comparaison n'est faite entre la recherche arborescente par Thompson sampling et des alternatives plus simples : raffinement linéaire (sans arbre), échantillonnage aléatoire de programmes, ou simple rejection sampling avec un vérificateur codé manuellement. L'apport spécifique de chaque composant du système reste indéterminé.</p>
+
+<p>La suppression manuelle des indices « Available Moves » introduit un choix expérimental non systématique. Les auteurs reconnaissent que les résultats sont meilleurs avec ces indices, mais ne quantifient pas la différence de façon exhaustive.</p>
+
+<p>La variante harness-as-policy ne fonctionne que sur les jeux à 1 joueur. Les auteurs invoquent la difficulté de coder une stratégie adversariale complète, mais cela restreint la portée de leur résultat le plus impressionnant (0,870 de récompense, coût quasi nul).</p>
+
+<p>Tous les jeux évalués proviennent de TextArena, un benchmark de jeux textuels à règles discrètes. La transférabilité à des environnements continus, multimodaux ou à espace d'actions ouvert reste entièrement hypothétique.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le code source du système AutoHarness n'est pas publié. Les auteurs fournissent les prompts complets (LLM-as-policy, raffinement de code) en annexe, ce qui facilite une réimplémentation partielle. TextArena est un framework open source, et la liste complète des 145 jeux avec leurs statistiques d'apprentissage figure dans l'article.</p>
+
+<p>La reproductibilité reste limitée par la dépendance à des modèles propriétaires (Gemini-2.5-Flash, Gemini-2.5-Pro, GPT-5.2). Les résultats dépendent des versions spécifiques de ces modèles, dont le comportement peut changer entre mises à jour. Les hyperparamètres (poids Thompson sampling = 1.0, 10 environnements parallèles, 1000 pas max) sont documentés.</p>
+
+<h2>Impact et applications</h2>
+
+<p>L'idée centrale — qu'un LLM peut coder son propre système de contrôle pour compenser ses faiblesses — a une portée qui dépasse les jeux de plateau. La robotique (code-as-policy), l'automatisation de processus métier avec des contraintes formelles, ou la génération d'actions dans des API à espace discret pourraient bénéficier d'un harnais auto-synthétisé. Le résultat qu'un modèle petit + harnais surpasse un modèle grand a des implications économiques directes pour le déploiement d'agents.</p>
+
+<p>La variante harness-as-policy, qui produit un programme Python autonome sans appel LLM à l'inférence, représente une forme originale de distillation : le savoir du LLM est cristallisé dans du code vérifiable et exécutable à coût marginal nul. Cette direction mérite exploration au-delà du cadre ludique.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>AutoHarness se situe au croisement de plusieurs lignes de recherche : code-as-policy (Liang et al., 2023), raffinement itératif par feedback verbal (Reflexion, Shinn et al., 2023), et recherche évolutionnaire de programmes (AlphaEvolve, Novikov et al., 2025). La contribution spécifique réside dans la combinaison recherche arborescente + Thompson sampling + feedback environnemental pour produire un harnais hybride code-LLM.</p>
+
+<p>Par rapport à Voyager (Wang et al., 2023), qui accumule des compétences Minecraft sous forme de code, AutoHarness se concentre sur la vérification de légalité plutôt que sur l'acquisition de compétences. Par rapport à AlphaEvolve, l'objectif est un harnais de contrôle en temps réel, pas l'optimisation de fonctions scientifiques. Le positionnement est clair, mais l'absence de comparaison expérimentale avec ces systèmes (même simplifiés) affaiblit les revendications de supériorité méthodologique.</p>
+
+<p>Le travail de Tang et al. (2024) sur l'exploration-exploitation en réparation de code constitue la base algorithmique directe. AutoHarness étend cette approche à un cadre multi-tour et en ligne, ce qui représente une extension non triviale.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<thead>
+<tr style="background-color: #f5f5f5;">
+<th style="text-align: left;">Critère</th>
+<th style="text-align: center;">Score (/5)</th>
+<th style="text-align: left;">Commentaire</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question de recherche</td>
+<td style="text-align: center;">4</td>
+<td>Problème concret et bien motivé (coups illégaux), approche originale (auto-synthèse de harnais)</td>
+</tr>
+<tr>
+<td>Design expérimental</td>
+<td style="text-align: center;">3</td>
+<td>Benchmark large (145 jeux) mais évaluation sur 32 seulement, pas d'ablation ni de baselines intermédiaires</td>
+</tr>
+<tr>
+<td>Taille d'échantillon</td>
+<td style="text-align: center;">3</td>
+<td>20-40 parties par jeu, réduit à 5 pour GPT-5.2-High — variance d'estimation non contrôlée</td>
+</tr>
+<tr>
+<td>Qualité des métriques</td>
+<td style="text-align: center;">3</td>
+<td>Métriques pertinentes (légalité, récompense, win rate) mais aucun écart-type ni test statistique</td>
+</tr>
+<tr>
+<td>Contrôle des biais</td>
+<td style="text-align: center;">2</td>
+<td>Suppression manuelle des indices, pas de comparaison avec des approches plus simples, GPT sous-évalué par manque de répétitions</td>
+</tr>
+<tr>
+<td>Reproductibilité</td>
+<td style="text-align: center;">2</td>
+<td>Pas de code publié, dépendance à des modèles propriétaires, prompts fournis en annexe</td>
+</tr>
+<tr>
+<td>Transparence et limitations</td>
+<td style="text-align: center;">3</td>
+<td>Limites de harness-as-policy pour les 2P reconnues, mais pas d'analyse des cas d'échec ni de discussion sur la généralisation</td>
+</tr>
+<tr>
+<td>Impact et nouveauté</td>
+<td style="text-align: center;">4</td>
+<td>Concept « petit modèle + harnais auto-généré &gt; grand modèle » avec implications pratiques fortes, direction harness-as-policy originale</td>
+</tr>
+</tbody>
+<tfoot>
+<tr style="background-color: #f5f5f5; font-weight: bold;">
+<td>Note globale de robustesse</td>
+<td style="text-align: center;">3.2 / 5</td>
+<td>Idée convaincante, exécution expérimentale correcte mais incomplète sur le plan statistique</td>
+</tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
