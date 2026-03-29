@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>One Ruler to Measure Them All: Benchmarking Multilingual Long-Context Language Models — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>One Ruler to Measure Them All: Benchmarking Multilingual Long-Context Language Models</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    
+<h2>Objectif et contexte</h2>
+
+<p>Les benchmarks de compréhension en contexte long — RULER en tête — se limitent quasi exclusivement à l'anglais. ONERULER étend ce cadre à 26 langues couvrant des familles linguistiques, des systèmes d'écriture et des niveaux de ressources variés. Le benchmark comporte sept tâches synthétiques : cinq variantes de « needle-in-a-haystack » (NIAH) et deux tâches d'agrégation (Common Word Extraction), évaluées sur quatre longueurs de contexte (8K, 32K, 64K, 128K tokens).</p>
+
+<p>L'innovation principale réside dans l'introduction d'une option « aucune réponse » (None-NIAH) dans les tâches de retrieval. Cette modification, simple en apparence, provoque une dégradation massive des performances, même sur la tâche NIAH classique où la réponse existe toujours. Le benchmark cible les modèles post-entraînés (instruction-following), contrairement à RULER qui visait les modèles de base.</p>
+
+<h2>Méthodologie</h2>
+
+<h3>Construction du benchmark</h3>
+
+<p>Les instructions ont d'abord été rédigées en anglais, puis traduites par des locuteurs natifs (17 annotateurs Upwork + 6 volontaires) dans 25 langues supplémentaires. Chaque traducteur a également traduit un ensemble de 100 noms communs pour garantir la cohérence sémantique entre langues dans les tâches de retrieval. Le coût total de traduction s'élève à 492 USD — modeste, mais avec un seul traducteur par langue et une vérification limitée.</p>
+
+<p>Pour le contexte environnant les « needles », un livre libre de droits par langue a été sélectionné (Table 4). Ce choix pose un problème : les livres varient en longueur (12 279 tokens pour le coréen contre 1 112 514 pour le russe), en époque (de 1605 à 1982) et en style. Les livres courts sont répliqués pour atteindre 128K tokens, ce qui introduit de la répétition artificielle.</p>
+
+<h3>Gestion de la tokenisation</h3>
+
+<p>Les tokenizers diffèrent entre modèles : un document tamoul peut représenter 42 124 tokens avec le tokenizer Gemini et 103 990 avec celui de Qwen. Les auteurs rapportent deux configurations : (1) même texte donné à chaque modèle (longueurs en tokens différentes) et (2) même nombre de tokens (textes de longueurs réelles différentes). Les résultats principaux utilisent la configuration (2) ; la configuration (1) apparaît en annexe. Le coefficient τ de Kendall entre les deux configurations sur les tâches NIAH atteint 0,82 (p < 0,001), ce qui confirme une cohérence raisonnable des classements.</p>
+
+<h3>Modèles évalués</h3>
+
+<p>Six modèles principaux : Gemini 1.5 Flash, o3-mini-high, Qwen 2.5 (7B et 72B), Llama 3.1 8B et Llama 3.3 70B. DeepSeek-R1 est ajouté uniquement pour l'anglais en raison de contraintes budgétaires. Les modèles ouverts utilisent un décodage greedy (température 0.0), tandis qu'o3-mini impose une température de 1.0 — une asymétrie qui pourrait expliquer une partie de sa variance accrue.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>L'écart de performance entre langues à hautes et basses ressources s'amplifie avec la longueur du contexte : 11 points à 8K, 34 points à 128K. Les quatre langues à basses ressources (hindi, sesotho, swahili, tamoul) se classent systématiquement dans les six dernières positions.</p>
+
+<p>Le polonais arrive premier toutes langues confondues (88 % de précision moyenne NIAH à 64K-128K), devant le russe et l'ukrainien. L'anglais se classe sixième (83,9 %). Le chinois, malgré sa présence massive dans les données d'entraînement de Qwen, chute à la 4ᵉ pire position (62,1 %). Les familles slave, romane et germanique dominent le top 10 — toutes utilisant des scripts latins ou cyrilliques.</p>
+
+<p>L'option « none » dans les instructions S-NIAH fait chuter la précision de 32 points à 128K en anglais pour o3-mini-high. Ce modèle de raisonnement répond « none » alors que la réponse existe, et produit significativement plus de tokens de raisonnement pour ses réponses incorrectes que correctes. Les tâches d'agrégation (CWE) restent hors de portée : 31,5 % de précision moyenne en CWE-easy, et quasiment 0 % en CWE-hard.</p>
+
+<p>En configuration cross-lingue (instructions et contexte dans des langues différentes), la performance fluctue jusqu'à 20 points selon la langue d'instruction. Passer d'instructions anglaises à coréennes sur un contexte anglais fait chuter la précision de 91 % à 71 % à 64K.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>Le benchmark reste entièrement synthétique. Les tâches NIAH mesurent une capacité de retrieval ciblée qui ne reflète pas la compréhension profonde d'un document long. Un modèle peut exceller sur ONERULER et échouer sur de la synthèse ou du QA réaliste — les auteurs le reconnaissent implicitement en se positionnant comme « proxy diagnostics ».</p>
+
+<p>Un seul livre par langue constitue un confondant sérieux. La performance sur le polonais pourrait être partiellement liée aux propriétés du texte de Maria Dąbrowska (452 847 tokens, style narratif linéaire) plutôt qu'à une capacité linguistique intrinsèque des modèles. Tester avec plusieurs livres par langue renforcerait la validité.</p>
+
+<p>La définition « haute vs. basse ressource » repose uniquement sur le nombre d'articles Wikipédia (seuil de 250K). Cette métrique ignore la diversité des sources d'entraînement réelles des modèles. Le chinois, classé « haute ressource » par Wikipédia, pourrait avoir des distributions très différentes dans les corpus d'entraînement à contexte long.</p>
+
+<p>La traduction par un seul annotateur natif par langue, sans double vérification systématique, introduit un risque de variabilité qualitative dans les instructions. Les différences de performance entre langues proches (ex. danois vs. norvégien) pourraient partiellement refléter des différences de qualité de traduction plutôt que des capacités différentes des modèles.</p>
+
+<p>L'asymétrie des paramètres d'inférence (température 0.0 pour les modèles ouverts, 1.0 imposée pour o3-mini) rend les comparaisons directes entre modèles ouverts et fermés moins fiables. Les résultats désastreux d'o3-mini pourraient être partiellement un artefact de cette configuration.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le code est publié sur GitHub (<code>github.com/mungg/OneRuler</code>). Les prompts sont intégralement reproduits en annexe pour chaque tâche, et les sources de livres et listes de mots sont documentées avec liens. Les configurations des modèles ouverts sont précisées (vLLM, 1-4 A100).</p>
+
+<p>Deux facteurs limitent la reproductibilité complète. D'abord, les modèles fermés (Gemini, o3-mini) sont accessibles uniquement via API, avec des coûts substantiels (1 932 USD pour o3-mini). Ensuite, les versions exactes des API peuvent évoluer — les résultats d'o3-mini-2025-01-31 ne seront pas nécessairement reproductibles avec une version ultérieure.</p>
+
+<p>Les traductions humaines sont partagées, ce qui permet de reproduire exactement les prompts dans les 26 langues. Le coût de reproduction pour les modèles ouverts reste accessible (quelques A100 pendant quelques heures).</p>
+
+<h2>Impact et applications</h2>
+
+<p>ONERULER comble un vide dans l'évaluation multilingue à contexte long. Les résultats ont des implications directes pour le développement de pipelines de pré-entraînement et de post-entraînement multilingues : l'écart croissant avec la longueur du contexte suggère que les données d'extension de contexte sont trop anglocentrées.</p>
+
+<p>La découverte sur l'option « none » remet en question les évaluations NIAH existantes qui affichent des résultats quasi parfaits. Un simple ajout d'une possibilité de non-réponse — réaliste dans tout scénario applicatif — suffit à faire chuter des modèles phares de 32 points. Ce résultat devrait modifier la façon dont les évaluations NIAH sont rapportées dans les fiches techniques des modèles.</p>
+
+<p>Les tâches CWE exposent une faiblesse fondamentale : l'agrégation d'information sur de longs contextes reste hors de portée, même en configuration facile. Ce constat est plus actionnable que les résultats NIAH pour orienter la R&D sur les architectures et les méthodes d'entraînement.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>ONERULER s'inscrit dans la lignée directe de RULER (Hsieh et al., 2024), dont il reprend et étend les tâches. Par rapport à LongBench (Bai et al., 2024), limité à l'anglais et au chinois, la couverture passe à 26 langues. Face aux variantes multilingues NIAH existantes (Hengle et al., 2024 ; Agrawal et al., 2024), ONERULER se distingue par le nombre de langues, l'option « none » et l'évaluation de modèles de raisonnement.</p>
+
+<p>Le résultat sur le polonais rappelle les observations de Joshi et al. (2020) sur la corrélation imparfaite entre ressources et performance. L'analogie avec SQuAD 2.0 (Rajpurkar et al., 2018) — où l'ajout de questions sans réponse a révélé des faiblesses cachées — est pertinente et bien identifiée par les auteurs.</p>
+
+<p>Le travail ne couvre pas les benchmarks réalistes (HELMET, NoCha, FABLES) qui mesurent des capacités différentes. La complémentarité avec ces évaluations reste à explorer : un modèle performant sur ONERULER l'est-il aussi sur du QA ou de la synthèse multilingue en contexte long ?</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Commentaire</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td>4</td>
+      <td>Lacune clairement identifiée ; angle multilingue original et bien motivé</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td>4</td>
+      <td>Protocole structuré (7 tâches × 26 langues × 4 longueurs), mais nature synthétique limitant la validité écologique</td>
+    </tr>
+    <tr>
+      <td>Taille d'échantillon</td>
+      <td>3</td>
+      <td>50 exemples par configuration sont raisonnables ; un seul livre par langue et un seul traducteur fragilisent la généralisation</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td>3</td>
+      <td>Micro-accuracy simple mais grossière ; scoring CWE tout-ou-rien ; problème de comparabilité inter-tokenizers partiellement résolu</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td>3</td>
+      <td>Double configuration tokenisation appréciable ; confondants non contrôlés : choix du livre, âge du texte, qualité variable des traductions</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td>4</td>
+      <td>Code et données publiés, prompts détaillés ; modèles fermés et coûts API limitent la reproductibilité complète</td>
+    </tr>
+    <tr>
+      <td>Transparence et limitations</td>
+      <td>4</td>
+      <td>Discussion franche des problèmes de tokenisation, limites du CWE, choix du seuil de ressources ; effet du livre unique peu discuté</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td>4</td>
+      <td>Premier benchmark multilingue à cette échelle pour le contexte long ; résultat « none » directement exploitable par la communauté</td>
+    </tr>
+  </tbody>
+</table>
+
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

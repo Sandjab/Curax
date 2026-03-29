@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>One Ruler to Measure Them All: Benchmarking Multilingual Long-Context Language Models — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>One Ruler to Measure Them All: Benchmarking Multilingual Long-Context Language Models</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand le polonais surpasse l'anglais : un benchmark multilingue secoue les certitudes sur les grands modèles de langage</h2>
+
+<h3>Introduction</h3>
+
+<p>Sur un test de compréhension de textes longs, le polonais arrive premier. L'anglais ? Sixième. Le chinois, langue maternelle de plus d'un milliard de personnes et pilier des données d'entraînement des LLM, se retrouve parmi les quatre derniers. Ce classement contre-intuitif provient de ONERULER, un benchmark publié à la conférence COLM 2025 par des chercheurs de l'Université du Maryland, de Microsoft et de UMass Amherst. Leur objectif : mesurer comment les grands modèles de langage se comportent face à des textes longs dans 26 langues différentes, et non plus seulement en anglais.</p>
+
+<p>Les résultats bousculent plusieurs idées reçues. La langue qui domine les corpus d'entraînement n'est pas celle qui donne les meilleurs résultats. Les modèles dits « de raisonnement » échouent sur des tâches triviales. Et un simple ajout d'une phrase dans le prompt suffit à faire chuter les performances de 32 %.</p>
+
+<h3>Le problème : un angle mort multilingue</h3>
+
+<p>Les LLM modernes affichent des fenêtres de contexte impressionnantes — 128 000 tokens pour Llama et Qwen, un million pour Gemini 1.5 Flash. Ces chiffres alimentent la promesse de traiter des documents entiers, des conversations longues, des bases de code complètes. Mais la quasi-totalité des tests de performance sur ces contextes longs sont conduits en anglais, parfois en chinois. Le benchmark RULER de Hsieh et al. (2024), l'un des plus utilisés, ne couvre que l'anglais.</p>
+
+<p>Ce biais de couverture pose un problème concret. Une entreprise qui déploie un LLM pour analyser des contrats en finnois, des rapports médicaux en hindi ou des transcriptions en swahili n'a aucune donnée fiable sur les performances réelles du modèle dans ces langues à grande échelle de contexte. Les quelques travaux multilingues existants se limitent à une poignée de langues ou à une seule tâche.</p>
+
+<p>ONERULER comble ce vide. Le benchmark couvre 26 langues issues de familles linguistiques variées — indo-européennes, sino-tibétaines, ouraliennes, nigéro-congolaises, dravidienne, coréanique — avec des systèmes d'écriture différents (latin, cyrillique, hangul, devanagari, caractères chinois, tamoul) et des niveaux de ressources très inégaux.</p>
+
+<h3>La méthode : sept épreuves, 26 langues, des aiguilles cachées dans des meules de foin</h3>
+
+<p>Le principe de base reprend une idée simple, devenue un classique de l'évaluation des LLM : le test « needle-in-a-haystack » (l'aiguille dans la botte de foin). On insère une phrase cible — l'aiguille — dans un long texte, puis on demande au modèle de la retrouver. C'est l'équivalent numérique de glisser un Post-it au milieu d'un roman de 400 pages, puis de demander : « qu'est-ce qui était écrit sur le Post-it ? »</p>
+
+<p>ONERULER décline cette idée en cinq variantes de difficulté croissante. La version la plus simple (S-NIAH) cache une seule aiguille. La version multi-clés en cache quatre, dont trois distracteurs — le modèle doit identifier la bonne. La version multi-valeurs associe quatre valeurs différentes à un même mot-clé : le modèle doit toutes les retrouver. La version multi-requêtes demande de répondre à deux questions à la fois. Et la version « aucune réponse » (NONE-NIAH) est un piège délibéré : les quatre aiguilles présentes dans le texte ne correspondent pas à la question posée. La bonne réponse est « aucun ».</p>
+
+<p>À ces cinq tâches de recherche s'ajoutent deux tâches d'agrégation. Le modèle reçoit une longue liste de mots et doit identifier les dix plus fréquents. La version facile place les mots cibles 30 fois contre 3 pour les distracteurs. La version difficile réduit l'écart à 20 contre 10.</p>
+
+<p>Pour chaque tâche, les chercheurs testent quatre longueurs de contexte (8 000, 32 000, 64 000 et 128 000 tokens) et les 26 langues, avec 50 exemples par configuration. Le texte de remplissage provient de livres du domaine public dans chaque langue — <em>Les Misérables</em> pour le français, <em>Guerre et Paix</em> pour le russe, <em>Don Quichotte</em> pour l'espagnol.</p>
+
+<p>Un détail de conception change tout : chaque prompt inclut la phrase « S'il n'existe aucun nombre de ce type, répondez "aucun" ». Cette mention, absente du benchmark RULER original, autorise le modèle à dire qu'il n'a pas trouvé de réponse. Les auteurs ont recruté des locuteurs natifs pour traduire les instructions dans les 25 langues supplémentaires, en veillant à ce que les formulations restent naturelles et grammaticalement correctes après substitution des variables.</p>
+
+<h3>Résultats clés</h3>
+
+<p><strong>Le fossé entre langues à hautes et basses ressources se creuse avec la longueur du contexte.</strong> À 8 000 tokens, l'écart de performance entre les cinq langues les mieux dotées (en volume Wikipédia) et les cinq moins dotées est de 11 %. À 128 000 tokens, cet écart triple pour atteindre 34 %. Les capacités de traitement de contexte long ne se transfèrent pas automatiquement d'une langue à l'autre. Le swahili et le sesotho, malgré des dizaines de millions de locuteurs, restent en difficulté même sur des contextes courts.</p>
+
+<p><strong>Le polonais domine le classement.</strong> Avec une précision moyenne de 88 % sur les tâches NIAH à 64K et 128K tokens, le polonais dépasse toutes les autres langues. L'anglais atteint 83,9 % (6e rang), le chinois seulement 62,1 % (23e sur 26). Les dix premières places reviennent à des langues slaves, romanes et germaniques utilisant l'alphabet latin. Le russe et l'ukrainien, en cyrillique, s'en sortent bien aussi. Les langues à écriture non latine et non cyrillique — chinois, coréen, tamoul — sont pénalisées.</p>
+
+<p><strong>Dire « vous pouvez répondre aucun » casse le test le plus simple.</strong> Sur la tâche S-NIAH en anglais, ajouter cette possibilité dans le prompt fait chuter la précision d'o3-mini de 96 % à 64 % à 128K tokens — une perte de 32 points. L'aiguille est toujours là, mais le modèle, trop prudent, répond « aucun ». Ce phénomène touche tous les modèles testés, pas seulement o3-mini. Les auteurs soupçonnent que l'inclusion de données NIAH classiques (sans option « aucun ») pendant le post-entraînement rend les modèles fragiles face à cette variante.</p>
+
+<p><strong>o3-mini, le modèle de raisonnement d'OpenAI, est le plus affecté.</strong> 88 % de ses erreurs sur S-NIAH à 128K tokens consistent à répondre « aucun » alors que la réponse existe. Et ses traces de raisonnement révèlent un comportement paradoxal : il produit bien plus de tokens de réflexion pour ses réponses incorrectes que pour ses réponses correctes, comme un élève qui réfléchit longuement avant de donner la mauvaise réponse à une question facile.</p>
+
+<p><strong>Les tâches d'agrégation résistent à tous les modèles.</strong> La version facile du test de mots fréquents ne dépasse pas 31,5 % de précision moyenne en anglais. La version difficile ? Proche de 0 % pour tous les modèles, toutes langues confondues. Identifier les dix mots les plus courants dans une longue liste — une opération qu'un humain réaliserait en quelques minutes avec un tableur — reste hors de portée des LLM actuels lorsque le contexte dépasse quelques milliers de tokens.</p>
+
+<p><strong>La langue des instructions modifie la performance de 20 points.</strong> Dans un scénario cross-lingue où le texte est en anglais mais les instructions en coréen, la précision chute de 91 % à 71 % au contexte de 64K. À l'inverse, passer d'instructions en coréen à des instructions en anglais sur un texte coréen améliore la performance de 61 % à 77 % à 128K tokens. Le choix de la langue dans laquelle on pose la question compte autant que le contenu lui-même.</p>
+
+<p><strong>Gemini 1.5 Flash arrive en tête du classement global</strong>, suivi par Qwen 2.5 72B. Les modèles Llama, entraînés principalement sur des données anglophones, montrent les chutes de performance les plus marquées sur les langues à basses ressources. Un résultat attendu, mais désormais quantifié.</p>
+
+<h3>Implications pratiques</h3>
+
+<p>Ces résultats ont des conséquences directes pour quiconque déploie des LLM en production sur des contenus non anglophones.</p>
+
+<p>D'abord, les scores NIAH « vert parfait » affichés dans les rapports techniques des éditeurs de modèles sont trompeurs. Ces tests sont conduits en anglais, sans l'option « aucune réponse ». Dès qu'on ajoute cette possibilité — pourtant banale dans un cas d'usage réel comme la recherche documentaire — les performances se dégradent. Un système RAG qui propose « je n'ai pas trouvé l'information » quand elle existe dans le contexte est un système défaillant, et ONERULER montre que ce scénario est fréquent.</p>
+
+<p>Ensuite, la disparité linguistique interpelle les organisations internationales. Un assistant juridique déployé en finnois, en hindi ou en vietnamien sera moins fiable qu'en polonais ou en français, non pas à cause d'une limite théorique, mais parce que les pipelines d'entraînement sur contextes longs sont déséquilibrés. Les fournisseurs de modèles qui revendiquent un support multilingue devraient publier des scores par langue et par longueur de contexte.</p>
+
+<p>Le cas du chinois mérite une attention particulière. Qwen, entraîné avec un accent mis sur le chinois et l'anglais, affiche malgré tout un taux élevé de fausses réponses « aucun » en chinois sur S-NIAH. Disposer de données massives dans une langue ne garantit pas la robustesse sur les tâches de contexte long. La qualité et la diversité des données de post-entraînement comptent au moins autant que le volume brut.</p>
+
+<p>L'échec spectaculaire sur les tâches d'agrégation (CWE-hard à ~0 %) signale une limite structurelle. Compter des occurrences dans une liste est une opération algorithmique triviale, mais les LLM ne « comptent » pas — ils prédisent des tokens. Cette distinction, souvent oubliée dans l'enthousiasme autour des capacités des modèles, a des implications concrètes pour les applications d'analyse de données textuelles.</p>
+
+<p>Enfin, le phénomène d'« overthinking » des modèles de raisonnement (o3-mini, DeepSeek-R1) sur des tâches simples mais longues pose la question du rapport coût-performance. o3-mini coûte 1 932 dollars pour les expériences ONERULER, contre 138 dollars pour Gemini 1.5 Flash — quatorze fois plus cher pour des résultats inférieurs. Le raisonnement en chaîne, efficace sur des problèmes complexes à contexte court, devient contre-productif quand le contexte s'allonge.</p>
+
+<h3>Pour aller plus loin</h3>
+
+<p>Plusieurs questions restent ouvertes après ONERULER. Pourquoi le polonais surpasse-t-il l'anglais ? Les auteurs n'ont pas d'explication définitive. Une hypothèse : les langues slaves à écriture latine bénéficient d'un double avantage — une morphologie riche qui concentre l'information par token, et un tokenizer efficace grâce à l'alphabet latin. Mais cette hypothèse reste à valider.</p>
+
+<p>La question de la tokenisation elle-même est épineuse. Un même document en tamoul produit 42 000 tokens avec le tokenizer de Gemini et 104 000 avec celui de Qwen — un ratio de 2,5. Comparer des modèles entre eux sur des langues différentes revient à comparer des coureurs sur des pistes de longueurs inégales. Les auteurs ont testé les deux configurations (même nombre de tokens vs. même quantité de texte) et obtiennent des classements globalement cohérents, mais le problème de fond demeure sans solution élégante.</p>
+
+<p>ONERULER reste un benchmark synthétique. Les tâches — retrouver un nombre magique caché dans un roman, compter des mots dans une liste — ne reflètent pas directement les usages réels. Les auteurs le reconnaissent : ces tests fonctionnent comme des diagnostics, pas comme des évaluations de bout en bout. Un modèle qui excelle sur NIAH peut échouer sur un résumé fidèle d'un long document, et inversement.</p>
+
+<p>La couverture de quatre langues à basses ressources sur les milliers qui existent dans le monde reste modeste. Le sesotho, avec ses 1 383 articles Wikipédia, illustre l'ampleur du défi : les données d'entraînement sont si rares que les performances à 8 000 tokens sont déjà médiocres, avant même de considérer le contexte long.</p>
+
+<p>Les pistes d'amélioration sont identifiées. Enrichir les pipelines d'extension de contexte long avec des données multilingues. Repenser le post-entraînement pour rendre les modèles robustes face aux questions sans réponse. Adapter les stratégies de raisonnement pour éviter le gaspillage computationnel sur des tâches de récupération simple. ONERULER fournit la règle de mesure. Aux développeurs de modèles d'en tirer les leçons.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>La quantification vectorielle en espace euclidien — convertir des vecteurs à virgule flottante en représentations à faible nombre de bits — conditionne l'efficacité du déploiement des grands modèles de langage et des bases de données vectorielles. Les méthodes existantes imposent un compromis : soit elles nécessitent un pré-traitement lourd (quantification hors-ligne dépendante des données), soit elles produisent des taux de distorsion sous-optimaux par rapport à la largeur de bits utilisée. TurboQuant vise à résoudre ce dilemme en proposant un quantificateur en ligne, sans calibration sur les données, qui atteint des bornes de distorsion quasi-optimales pour deux métriques : l'erreur quadratique moyenne (MSE) et l'erreur de produit scalaire.</p>
+
+<p>Le problème s'inscrit dans la théorie du codage source de Shannon. L'objectif formel est de concevoir une application Q : ℝ<sup>d</sup> → {0,1}<sup>B</sup> minimisant la distorsion attendue, sans hypothèse sur la distribution des vecteurs d'entrée (analyse worst-case). Deux cas d'usage motivent ce travail : la compression du KV cache des transformers décodeurs, où la mémoire croît linéairement avec la longueur du contexte, et la recherche de plus proches voisins dans les bases vectorielles à haute dimension.</p>
+
+<h2>Méthodologie</h2>
+
+<h3>TurboQuant<sub>mse</sub> : quantification optimale en MSE</h3>
+
+<p>Le principe repose sur une rotation aléatoire des vecteurs d'entrée. Après multiplication par une matrice de rotation Π (obtenue par décomposition QR d'une matrice gaussienne), chaque coordonnée du vecteur résultant suit une distribution Beta concentrée, qui converge vers une gaussienne N(0, 1/d) en haute dimension. Les coordonnées distinctes deviennent quasi-indépendantes — une propriété plus forte que la simple décorrélation — ce qui permet d'appliquer un quantificateur scalaire optimal par coordonnée sans perte significative.</p>
+
+<p>Les quantificateurs scalaires sont obtenus en résolvant un problème de k-means continu unidimensionnel via l'algorithme de Lloyd-Max. Les codebooks optimaux sont pré-calculés une seule fois pour chaque largeur de bits pratique, puis réutilisés. Le théorème 1 établit que la distorsion MSE est bornée par (√3π/2) · 4<sup>−b</sup> pour toute largeur b, avec des valeurs affinées pour b = 1, 2, 3, 4 (respectivement ≈ 0.36, 0.117, 0.03, 0.009).</p>
+
+<h3>TurboQuant<sub>prod</sub> : quantification non biaisée du produit scalaire</h3>
+
+<p>Les quantificateurs optimisés pour la MSE introduisent un biais multiplicatif sur l'estimation du produit scalaire — un facteur 2/π à 1 bit, qui décroît avec la largeur de bits. Pour corriger ce biais, l'algorithme adopte une stratégie en deux étapes : appliquer d'abord TurboQuant<sub>mse</sub> avec b−1 bits, puis quantifier le résidu à 1 bit via la transformation QJL (Quantized Johnson-Lindenstrauss). Le résidu ayant une norme L2 faible grâce à la première étape, la quantification QJL produit un estimateur non biaisé du produit scalaire avec une variance bornée par (√3π²·‖y‖²)/(2d) · 4<sup>−b</sup>.</p>
+
+<p>La preuve du théorème 2 s'appuie sur un conditionnement par la sortie de l'étape MSE, puis utilise la propriété d'absence de biais de QJL (lemme 4) et la loi des espérances totales. L'architecture en deux étapes est élégante : elle découple la minimisation de la norme du résidu (MSE) de la correction du biais (QJL).</p>
+
+<h3>Bornes inférieures information-théoriques</h3>
+
+<p>Le théorème 3 combine le principe minimax de Yao avec la borne inférieure de Shannon (SLB) pour prouver que tout algorithme de quantification randomisé à b bits par coordonnée subit une distorsion MSE ≥ 4<sup>−b</sup> et une distorsion de produit scalaire ≥ ‖y‖²/(d · 4<sup>b</sup>) sur au moins une instance. TurboQuant se situe donc à un facteur constant ≈ 2.7 de l'optimum théorique, ce facteur diminuant à ≈ 1.45 pour b = 1.</p>
+
+<h3>Protocole expérimental</h3>
+
+<p>Quatre séries d'expériences sont conduites sur un GPU NVIDIA A100 : (1) validation empirique des bornes théoriques sur DBpedia (100K vecteurs, d = 1536, embeddings OpenAI), (2) test Needle-In-A-Haystack avec Llama-3.1-8B-Instruct de 4K à 104K tokens, (3) évaluation end-to-end sur LongBench-E avec Llama-3.1-8B-Instruct et Ministral-7B-Instruct, (4) recherche de plus proches voisins sur DBpedia (d = 1536, 3072) et GloVe (d = 200). Les baselines incluent PolarQuant, SnapKV, PyramidKV, KIVI pour le KV cache, et Product Quantization + RabitQ pour la recherche vectorielle.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>Les distributions d'erreur du produit scalaire (figure 1) confirment que TurboQuant<sub>prod</sub> reste non biaisé à toutes les largeurs de bits, tandis que TurboQuant<sub>mse</sub> présente un biais décroissant avec b. Les courbes de distorsion (figure 3) s'alignent sur les prédictions théoriques et s'inscrivent entre les bornes supérieures et inférieures prouvées.</p>
+
+<p>Sur le test Needle-In-A-Haystack, TurboQuant atteint un score de rappel de 0.997, identique au modèle en pleine précision, avec une compression 4× du KV cache. Les méthodes de compression par élagage de tokens (SnapKV : 0.858, PyramidKV : 0.895) et la quantification scalaire sans garanties (KIVI : 0.981) restent en deçà.</p>
+
+<p>Sur LongBench-E (tableau 1), TurboQuant à 3.5 bits atteint un score moyen de 50.06 — strictement égal au modèle non compressé (50.06) et supérieur à KIVI à 3 bits (48.50) et PolarQuant à 3.9 bits (49.78). À 2.5 bits, le score reste à 49.44, une dégradation marginale malgré une compression ≥ 5×. Les largeurs de bits non entières (2.5, 3.5) résultent d'un traitement différencié des canaux outliers, stratégie cohérente avec la littérature existante.</p>
+
+<p>En recherche de plus proches voisins, TurboQuant surpasse PQ et RabitQ en rappel (recall@1@k) sur les trois jeux de données testés (figure 5), à 2 et 4 bits. L'avantage est marqué en basse dimension (GloVe, d = 200) où PQ et RabitQ chutent nettement. Le temps d'indexation de TurboQuant est négligeable (< 0.003 seconde vs 494 secondes pour PQ à d = 3072), puisqu'aucun apprentissage de codebook n'est requis.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>Le facteur constant de ≈ 2.7 séparant TurboQuant de la borne inférieure de Shannon laisse une marge d'amélioration théorique, bien que ce facteur diminue pour les faibles largeurs de bits. La preuve de la borne inférieure repose sur le principe minimax de Yao, qui garantit l'existence d'instances difficiles sans les caractériser explicitement — on ignore donc si les données réelles se situent près de ce worst-case.</p>
+
+<p>L'évaluation KV cache se limite à deux modèles (Llama-3.1-8B et Ministral-7B), tous deux de taille modeste (7-8B paramètres). L'absence de tests sur des modèles plus grands (70B+) ou des architectures différentes (Mixture-of-Experts, modèles multimodaux) restreint la portée des conclusions. Le tableau 1 ne rapporte qu'un seul résultat pour Ministral-7B, sans baselines comparatives.</p>
+
+<p>La stratégie de traitement des outliers — allouer plus de bits aux 32 canaux extrêmes — emprunte aux travaux existants (RotateKV, QJL) mais son impact isolé n'est pas mesuré par ablation. Les largeurs de bits effectives (2.5, 3.5) compliquent la comparaison directe avec KIVI (3 et 5 bits) et PolarQuant (3.9 bits), car les budgets mémoire ne sont pas exactement alignés.</p>
+
+<p>Pour la recherche de plus proches voisins, les auteurs reconnaissent que PQ bénéficie d'un avantage structurel (mêmes données pour l'entraînement et l'évaluation) et que RabitQ utilise en pratique plus de bits que son budget déclaré. Ces asymétries, bien que signalées, favorisent TurboQuant dans la comparaison. L'absence de comparaison avec des méthodes hybrides récentes (quantification + graphes de voisinage) limite l'évaluation dans le contexte des systèmes de recherche vectorielle modernes.</p>
+
+<p>Le coût computationnel de la rotation aléatoire (multiplication par Π ∈ ℝ<sup>d×d</sup>) n'est pas analysé en détail. Pour d = 3072, cette opération représente O(d²) calculs, un surcoût non négligeable en inférence temps réel, que l'article passe sous silence.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Les algorithmes 1 et 2 sont décrits avec un pseudo-code complet et des formules explicites pour les codebooks optimaux aux faibles largeurs de bits. Les preuves des trois théorèmes sont détaillées dans le corps de l'article. La résolution numérique de l'équation (4) pour les codebooks à b > 4 repose sur des méthodes itératives standard (Lloyd-Max), mais les valeurs précises des codebooks ne sont pas fournies en annexe.</p>
+
+<p>Aucun dépôt de code n'est référencé. La matrice de rotation aléatoire Π nécessite une décomposition QR dont l'implémentation spécifique (graine aléatoire, bibliothèque) peut influencer les résultats. Les hyperparamètres du traitement des outliers (seuil de sélection des 32 canaux, critère de détection) ne sont pas documentés. La reproduction des expériences KV cache requiert l'accès aux poids de Llama-3.1-8B-Instruct et Ministral-7B-Instruct, disponibles publiquement, mais la configuration exacte d'inférence (température, top-k, longueur de génération) n'est pas spécifiée pour LongBench.</p>
+
+<h2>Impact et applications</h2>
+
+<p>TurboQuant apporte une réponse concrète au goulot d'étranglement mémoire des modèles à long contexte. La compression 4-5× du KV cache sans dégradation mesurable sur Needle-In-A-Haystack et LongBench-E ouvre la voie à des contextes plus longs sur du matériel contraint. L'absence de calibration sur les données rend la méthode déployable en inférence streaming, un avantage décisif par rapport à GPTQ ou AWQ qui nécessitent un jeu de calibration.</p>
+
+<p>L'indexation quasi-instantanée pour la recherche de plus proches voisins (< 0.003 s vs des centaines de secondes pour PQ) élimine le coût d'indexation des bases vectorielles dynamiques — un cas d'usage fréquent en RAG où les documents sont ajoutés en continu.</p>
+
+<p>La contribution théorique — première preuve que des quantificateurs en ligne peuvent approcher la borne de Shannon à un facteur constant près — ancre la méthode dans un cadre formel robuste. Ce résultat dépasse le cas d'usage LLM et s'applique à tout problème de compression vectorielle en haute dimension.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>TurboQuant se situe à l'intersection de la théorie de l'information (Shannon, Zador, Gersho) et de l'ingénierie des systèmes LLM. Par rapport à QJL, dont deux des auteurs sont co-inventeurs, TurboQuant généralise la quantification 1-bit à des largeurs arbitraires en utilisant QJL comme composant de correction de biais sur le résidu. Par rapport à PolarQuant (même premier auteur), TurboQuant remplace la transformation polaire par une rotation aléatoire suivie de quantificateurs scalaires optimaux, simplifiant l'implémentation.</p>
+
+<p>Face aux méthodes offline (GPTQ, AWQ, SmoothQuant), l'avantage est le caractère data-oblivious : pas de Hessien à calculer, pas de calibration. Le prix est un facteur constant de sous-optimalité par rapport à des méthodes pouvant exploiter la structure statistique des données. Face à KIVI, seule autre méthode en ligne testée dans les comparaisons, TurboQuant domine grâce à ses garanties théoriques qui se traduisent en gains mesurables sur les benchmarks.</p>
+
+<p>La filiation intellectuelle avec les travaux de Shannon (1948, 1959) et Lloyd-Max (1960, 1982) est revendiquée et justifiée. L'article unifie des résultats classiques de théorie de l'information avec les contraintes modernes de déploiement LLM, dans un cadre mathématique cohérent.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4/5</td><td>Problème bien délimité, ancré dans la théorie de Shannon ; le gap entre méthodes existantes et bornes optimales est clairement identifié.</td></tr>
+<tr><td>Design expérimental</td><td>4/5</td><td>Cadre théorique rigoureux avec trois théorèmes prouvés ; quatre séries d'expériences couvrant validation, KV cache et recherche vectorielle.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3/5</td><td>100K vecteurs DBpedia et 1K requêtes pour la validation empirique ; seulement deux modèles LLM testés pour le KV cache.</td></tr>
+<tr><td>Qualité des métriques</td><td>5/5</td><td>MSE et distorsion du produit scalaire sont des métriques mathématiquement fondées ; recall@1@k est standard pour la recherche vectorielle.</td></tr>
+<tr><td>Contrôle des biais</td><td>3/5</td><td>Asymétries reconnues dans les comparaisons (PQ évalué sur ses propres données d'entraînement) ; budgets de bits non parfaitement alignés entre méthodes.</td></tr>
+<tr><td>Reproductibilité</td><td>2/5</td><td>Pseudo-code complet mais aucun code publié ; hyperparamètres du traitement des outliers non documentés ; configuration d'inférence incomplète.</td></tr>
+<tr><td>Transparence et limitations</td><td>3/5</td><td>Facteur constant ≈ 2.7 discuté ; coût computationnel de la rotation et limites de la validation sur deux modèles insuffisamment abordés.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4/5</td><td>Première quantification en ligne avec garanties quasi-optimales ; temps d'indexation quasi-nul pour la recherche vectorielle ; unification théorie de l'information et déploiement LLM.</td></tr>
+</tbody>
+<tfoot>
+<tr><td><strong>Note globale</strong></td><td><strong>3.8/5</strong></td><td>Contribution théorique de premier plan avec validation expérimentale convaincante mais incomplète sur le plan de la diversité des modèles et de la reproductibilité.</td></tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

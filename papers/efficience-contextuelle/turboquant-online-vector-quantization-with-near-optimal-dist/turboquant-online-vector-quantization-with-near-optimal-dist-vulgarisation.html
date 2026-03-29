@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>TurboQuant : compresser les vecteurs sans sacrifier la précision</h2>
+
+<h3>1. Quand chaque bit compte</h3>
+
+<p>Un modèle de langage comme Llama-3.1 manipule des millions de vecteurs en virgule flottante à chaque requête. Chaque vecteur occupe 16 bits par coordonnée, et un contexte long de 100 000 tokens peut exiger plusieurs gigaoctets de mémoire rien que pour stocker les clés et valeurs d'attention. La bande passante entre la mémoire haute capacité (HBM) et les unités de calcul des GPU devient alors le goulot d'étranglement principal : le modèle passe plus de temps à déplacer des données qu'à calculer.</p>
+
+<p>Réduire la taille de ces vecteurs sans dégrader les résultats est un problème ancien. Shannon l'avait formalisé dès 1948 sous le nom de « codage source » : quelle est la distorsion minimale qu'on peut atteindre pour un budget de bits donné ? Soixante-quinze ans plus tard, les algorithmes déployés en production restent loin de cette limite théorique, ou bien nécessitent un pré-traitement lourd qui les rend inutilisables en temps réel. Une équipe de chercheurs de Google Research, Google DeepMind et NYU propose TurboQuant, un algorithme de quantification vectorielle qui approche la limite de Shannon à un facteur 2,7 près, tout en fonctionnant en ligne — c'est-à-dire sans avoir besoin de voir les données à l'avance.</p>
+
+<h3>2. Le défi : compresser sans déformer la géométrie</h3>
+
+<p>Quantifier un vecteur revient à remplacer chaque coordonnée flottante (32 ou 16 bits de précision) par un entier codé sur quelques bits seulement — 2, 3 ou 4 en pratique. Le problème semble simple, mais il cache deux exigences contradictoires.</p>
+
+<p>La première exigence est de minimiser l'erreur quadratique moyenne (MSE) : la distance entre le vecteur original et sa version reconstruite après quantification doit rester faible. Un bon score MSE garantit que la forme géométrique globale du vecteur est préservée.</p>
+
+<p>La seconde exigence concerne le produit scalaire. Dans un Transformer, l'attention se calcule par des produits scalaires entre vecteurs de requête et vecteurs de clé. Si la quantification déforme ces produits scalaires, le modèle « regarde au mauvais endroit » et la qualité de génération chute. Pire, un quantificateur optimisé pour la MSE introduit un biais systématique sur les produits scalaires : il les sous-estime d'un facteur qui peut atteindre 2/π (environ 0,64) à 1 bit. Le modèle ne fait pas juste des erreurs aléatoires — il se trompe toujours dans la même direction.</p>
+
+<p>Les méthodes existantes se divisent en deux camps. D'un côté, les approches « hors ligne » (GPTQ, AWQ, SqueezeLLM) ajustent la quantification aux données grâce à des matrices hessiennes ou des calibrations, ce qui donne de bons résultats mais exige un pré-traitement coûteux, incompatible avec le flux continu de tokens dans un cache KV. De l'autre, les approches « en ligne » comme KIVI quantifient à la volée mais avec des garanties théoriques faibles et des performances qui se dégradent vite sous 4 bits.</p>
+
+<p>TurboQuant vise le meilleur des deux mondes : une quantification applicable instantanément, sans calibration, avec des garanties de distorsion prouvées et quasi-optimales.</p>
+
+<h3>3. L'astuce : une rotation aléatoire qui simplifie tout</h3>
+
+<p>Le raisonnement derrière TurboQuant repose sur une idée géométrique élégante. Prenez un vecteur quelconque dans un espace de grande dimension. Ses coordonnées peuvent être distribuées n'importe comment : certaines très grandes, d'autres proches de zéro, avec des corrélations arbitraires entre elles. Quantifier directement ces coordonnées hétérogènes oblige à concevoir un schéma adaptatif, spécifique aux données.</p>
+
+<p>Mais si vous appliquez une rotation aléatoire à ce vecteur — une multiplication par une matrice orthogonale tirée au hasard — quelque chose de remarquable se produit. Le vecteur résultant est uniformément distribué sur la sphère unité, quelle que soit l'orientation du vecteur de départ. C'est comme secouer un kaléidoscope : la structure interne disparaît, remplacée par une distribution connue et régulière.</p>
+
+<p>En haute dimension, chaque coordonnée du vecteur tourné suit une distribution Bêta qui ressemble de plus en plus à une gaussienne centrée à mesure que la dimension augmente. Et deux coordonnées distinctes deviennent quasi-indépendantes. Cette quasi-indépendance est la clé : elle permet de traiter chaque coordonnée séparément, avec un quantificateur scalaire optimal, sans se soucier des interactions entre dimensions.</p>
+
+<p>Pour trouver ce quantificateur scalaire optimal, les chercheurs résolvent un problème de k-means continu en une dimension, via l'algorithme de Lloyd-Max. Pour chaque largeur de bits (1, 2, 3, 4…), ils calculent les positions optimales des « centres de cluster » — les valeurs de reconstruction — une seule fois, puis stockent ces tables pour un usage ultérieur. La quantification elle-même se réduit à chercher le centre le plus proche de chaque coordonnée, une opération massivement parallélisable sur GPU.</p>
+
+<p>Pour reconstruire le vecteur, on remplace chaque index par son centre, puis on applique la rotation inverse. L'ensemble — rotation, recherche de centre, rotation inverse — est rapide, vectorisable, et ne dépend d'aucune propriété des données.</p>
+
+<h3>Le problème du biais et la correction en deux étages</h3>
+
+<p>Ce premier algorithme, baptisé TurboQuant<sub>mse</sub>, minimise l'erreur quadratique. Mais il ne résout pas le problème du biais sur les produits scalaires. À 1 bit par coordonnée, l'estimateur du produit scalaire est biaisé d'un facteur 2/π. Ce biais diminue quand on augmente la largeur de bits, mais il ne disparaît pas.</p>
+
+<p>Pour le corriger, les chercheurs ajoutent un second étage. L'idée : après avoir quantifié le vecteur avec TurboQuant<sub>mse</sub> à (b−1) bits, on calcule le résidu — la différence entre le vecteur original et sa reconstruction. Ce résidu a une norme faible, puisque la première étape a déjà capturé l'essentiel du signal. On applique alors au résidu une quantification à 1 bit par coordonnée, basée sur la transformée de Johnson-Lindenstrauss quantifiée (QJL), développée par une partie de la même équipe. QJL projette le résidu via une matrice gaussienne aléatoire et ne garde que le signe de chaque composante. Cette projection donne un estimateur non biaisé du produit scalaire.</p>
+
+<p>Le budget total reste de b bits par coordonnée : (b−1) pour la partie MSE, 1 pour la correction QJL. Pensez-y comme un peintre qui pose d'abord les grandes masses de couleur, puis revient avec un pinceau fin pour corriger les détails. La première couche capture la géométrie, la seconde corrige le biais directionnel.</p>
+
+<h3>4. Des chiffres qui tiennent leurs promesses</h3>
+
+<p>Les garanties théoriques de TurboQuant se résument en une formule de distorsion qui décroît exponentiellement avec la largeur de bits. Pour la MSE, la distorsion est bornée par un facteur √(3π)/2 ≈ 2,7 au-dessus de la limite inférieure de Shannon. Pour les petites largeurs de bits, le facteur est encore meilleur : à 1 bit, TurboQuant n'est qu'à un facteur 1,45 de l'optimum théorique.</p>
+
+<p>En pratique, les expériences confirment la théorie. Sur le test « Needle-in-a-Haystack » — retrouver une phrase cachée dans un document de 104 000 tokens — TurboQuant obtient un score de rappel de 0,997 avec le modèle Llama-3.1-8B, identique au score du modèle non compressé. En comparaison, SnapKV tombe à 0,858 et KIVI à 0,981. Le cache KV est pourtant compressé d'un facteur supérieur à 4.</p>
+
+<p>Sur le benchmark LongBench, qui couvre des tâches variées (questions-réponses, résumé, complétion de code), TurboQuant à 3,5 bits par canal atteint un score moyen de 50,06 avec Llama-3.1-8B — exactement le même score que le cache non compressé à 16 bits. Même à 2,5 bits, la dégradation reste marginale : 49,44 contre 50,06. KIVI a besoin de 5 bits pour atteindre des performances comparables.</p>
+
+<p>Pour la recherche de plus proches voisins, TurboQuant surpasse systématiquement la Product Quantization (PQ) classique et RabitQ en taux de rappel, sur des embeddings de dimensions 200, 1 536 et 3 072. Le gain le plus spectaculaire concerne le temps d'indexation : PQ nécessite 240 secondes pour indexer 100 000 vecteurs en dimension 1 536, RabitQ en prend 2 268. TurboQuant le fait en 0,0013 seconde — soit un facteur 180 000 par rapport à PQ. Ce chiffre n'est pas une coquille : comme l'algorithme ne dépend pas des données, il n'y a tout simplement pas d'étape d'indexation à proprement parler.</p>
+
+<h3>5. Ce que ça change concrètement</h3>
+
+<p>La compression du cache KV est le cas d'usage le plus immédiat. Les modèles à contexte long — 128k tokens et au-delà — sont aujourd'hui limités par la taille de leur cache KV autant que par la taille de leurs poids. Un facteur de compression de 4,5× sur le cache signifie qu'un GPU qui servait un contexte de 32k tokens peut maintenant en gérer 140k sans matériel supplémentaire. Pour les fournisseurs d'inférence, c'est une réduction directe du coût par requête.</p>
+
+<p>Le fait que TurboQuant fonctionne en ligne change la donne pour le déploiement. Les méthodes hors ligne comme GPTQ ou AWQ nécessitent une phase de calibration par modèle, parfois par tâche. Chaque mise à jour du modèle impose de recalibrer. TurboQuant s'applique identiquement à n'importe quel modèle, sans aucune adaptation. On génère la matrice de rotation et les tables de centres une fois, puis on quantifie chaque vecteur à la volée.</p>
+
+<p>Pour les bases de données vectorielles, l'absence de temps d'indexation transforme l'architecture des systèmes de recherche. Les pipelines actuels séparent une phase d'indexation lourde (construction des codebooks PQ) d'une phase de requête rapide. Avec TurboQuant, cette séparation disparaît : l'insertion d'un nouveau vecteur et sa quantification sont une seule opération instantanée. Les bases vectorielles peuvent ainsi absorber un flux continu de mises à jour sans reconstruire leur index.</p>
+
+<p>L'algorithme est aussi compatible avec les accélérateurs matériels modernes. Contrairement à RabitQ, dont les opérations de recherche binaire sont difficiles à paralléliser, TurboQuant se réduit à des multiplications matricielles et des recherches de plus proche voisin dans de petites tables — des opérations pour lesquelles les GPU sont optimisés. La rotation aléatoire est une multiplication matrice-vecteur ; la quantification scalaire est une recherche dans un tableau de 4, 8 ou 16 entrées par coordonnée.</p>
+
+<p>Un détail technique mérite attention : les auteurs gèrent les « outliers » — les canaux dont les valeurs sont anormalement élevées — en séparant les coordonnées en deux groupes et en appliquant deux instances de TurboQuant avec des largeurs de bits différentes. Les 32 canaux outliers reçoivent un bit supplémentaire. Cette stratégie, cohérente avec les travaux antérieurs sur la quantification des LLM, explique les largeurs de bits non entières (2,5 et 3,5) dans les expériences.</p>
+
+<h3>6. Questions ouvertes et pistes futures</h3>
+
+<p>TurboQuant résout élégamment le problème de la quantification vectorielle en ligne, mais plusieurs questions restent en suspens.</p>
+
+<p>La matrice de rotation aléatoire, de taille d×d, doit être stockée et appliquée à chaque vecteur. Pour d = 3 072, cela représente environ 36 Mo en flottant 32 bits. Les auteurs ne discutent pas en détail de l'impact de cette rotation sur la latence dans un pipeline de génération token par token, où chaque microseconde compte. Des rotations structurées (Hadamard, par exemple) pourraient réduire ce coût de O(d²) à O(d log d), comme l'a exploré PolarQuant, un travail antérieur du même groupe.</p>
+
+<p>Le facteur constant de 2,7 par rapport à la borne de Shannon laisse une marge d'amélioration. Cette marge provient de l'hypothèse d'indépendance entre coordonnées après rotation : en haute dimension, les coordonnées sont « presque » indépendantes, mais pas exactement. Exploiter les corrélations résiduelles pourrait resserrer ce facteur, au prix d'une complexité accrue.</p>
+
+<p>Les expériences de l'article se concentrent sur des modèles de 7 à 8 milliards de paramètres. Le comportement de TurboQuant sur des modèles plus grands (70B, 400B) et avec des architectures différentes (Mixture of Experts, par exemple) reste à vérifier. La sensibilité de certaines couches d'attention à la quantification pourrait varier avec l'échelle du modèle.</p>
+
+<p>Enfin, la combinaison de TurboQuant avec d'autres techniques de compression — élagage de tokens, attention parcimonieuse, quantification des poids — n'est pas explorée dans cet article. Un pipeline qui cumulerait compression des poids (AWQ ou GPTQ), quantification du cache KV (TurboQuant) et élagage dynamique des tokens (SnapKV) pourrait atteindre des taux de compression globaux bien supérieurs à ce que chaque méthode offre isolément.</p>
+
+<p>TurboQuant apporte une réponse mathématiquement fondée à un problème d'ingénierie pressant. En ramenant la quantification vectorielle en ligne à quelques opérations matricielles standard, il supprime le compromis habituel entre vitesse de quantification et qualité de reconstruction. Pour les équipes qui déploient des LLM à grande échelle, c'est un outil qui réduit les coûts d'inférence sans exiger de compromis sur la qualité — un cas suffisamment rare pour mériter attention.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
