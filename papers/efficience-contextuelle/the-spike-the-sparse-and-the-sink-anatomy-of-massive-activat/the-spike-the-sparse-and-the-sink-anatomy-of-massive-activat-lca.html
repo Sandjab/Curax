@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Spike, the Sparse and the Sink: Anatomy of Massive Activations and Attention Sinks — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Spike, the Sparse and the Sink: Anatomy of Massive Activations and Attention Sinks</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Deux phénomènes récurrents perturbent l'inférence des grands modèles de langage à base de Transformers : les <em>activations massives</em>, où quelques tokens présentent des valeurs aberrantes dans un petit nombre de canaux cachés, et les <em>attention sinks</em>, où certains tokens captent une masse d'attention disproportionnée indépendamment du contenu sémantique. Ces artefacts compliquent la quantification, l'élagage et la gestion du cache KV. Leur cooccurrence fréquente sur les mêmes tokens a été documentée, mais aucune explication causale satisfaisante n'existait.</p>
+
+<p>Sun et al. proposent un compte rendu mécanistique : la cooccurrence résulte d'interactions architecturales spécifiques au design pré-norm, pas d'un couplage fonctionnel profond. Les deux phénomènes peuvent être supprimés indépendamment sans dégrader la perplexité.</p>
+
+<h2>Méthodologie</h2>
+
+<h3>Analyse mécanistique des activations massives</h3>
+
+<p>L'étude trace le cycle de vie des activations massives à travers la profondeur du réseau. Des blocs <em>step-up</em> (situés en début de réseau) injectent des valeurs extrêmes dans le flux résiduel ; des blocs <em>step-down</em> (en fin de réseau) les neutralisent par des contributions de signe opposé. Le flux résiduel additif conserve ces valeurs entre les deux.</p>
+
+<p>Le mécanisme d'amplification est formalisé : sous l'approximation d'identité du gate SiLU pour les tokens spike, le bloc feed-forward SwiGLU se réduit à une forme quadratique par coordonnée de sortie. Les canaux spike correspondent à des matrices U<sub>k</sub> dont la norme de Frobenius dépasse celle des canaux ordinaires de plusieurs ordres de grandeur. Ces matrices partagent un vecteur propre dominant commun s<sub>⋆</sub> — tout token dont la représentation normalisée s'aligne avec cette direction déclenche simultanément tous les canaux spike.</p>
+
+<h3>Du spike au sink : le rôle de la normalisation</h3>
+
+<p>RMSNorm transforme les tokens spike en vecteurs bornés, creux et quasi-constants. La borne est prouvée (Théorème B.3 : |h̃<sub>i</sub>| ≤ √d<sub>model</sub>). La sparsification résulte de la domination de la norme L2 par les canaux aberrants. La quasi-constance découle des ratios inter-canaux fixes. Les clés d'attention des tokens spike se retrouvent confinées dans un sous-espace de dimension 1 ou 2, géométriquement séparé des clés non-spike. Quand le sous-espace des requêtes non-spike s'aligne davantage avec les clés spike qu'avec les clés ordinaires, un attention sink émerge.</p>
+
+<h3>Ablations systématiques</h3>
+
+<p>Le protocole expérimental repose sur un modèle 7B de style Llama entraîné depuis zéro sur 100 milliards de tokens du dataset DCLM. Les ablations couvrent cinq axes indépendants :</p>
+
+<ul>
+<li>Hyperparamètres d'optimisation (taux d'apprentissage, weight decay, β<sub>2</sub>, budget de tokens)</li>
+<li>Architecture du bloc feed-forward (SwiGLU, GeLU, linéaire, attention-only)</li>
+<li>Configuration de normalisation (pré-norm, sandwich, QKNorm, DynamicTanh)</li>
+<li>Paramètres des têtes d'attention (dimension, nombre, ratio)</li>
+<li>Distribution de longueur de contexte à l'entraînement</li>
+</ul>
+
+<p>L'évaluation utilise la perplexité sur C4, le ratio de sink (fraction de têtes où un token capte plus de 30 % de l'attention moyenne, sur des séquences de 64 tokens) et la magnitude maximale des activations.</p>
+
+<p>Deux ablations supplémentaires testent le gated attention conditionnel et inconditionnel, avec des gates par canal, par tête et scalaire.</p>
+
+<h2>Résultats principaux</h2>
+
+<h3>Découplage spikes/sinks par la normalisation</h3>
+
+<p>La sandwich normalization (RMSNorm ajouté en sortie de bloc) réduit les spikes de 3818 à 520 tout en préservant un ratio de sink de 44,7 % (baseline : 46,0 %). QKNorm les abaisse à 92. DynamicTanh, transformation élément par élément sans capacité de sparsification, ramène les spikes à 153 — et produit le ratio de sink le plus élevé (61,0 %) par des stratégies alternatives. Ces résultats démontrent que les sinks survivent à la suppression des spikes.</p>
+
+<h3>Les sinks comme mécanisme de gating implicite</h3>
+
+<p>Le gated attention conditionnel (gate fonction de la représentation courante) élimine les sinks : le ratio tombe à 4,5 % par canal, 6,4 % par tête. Le gated attention inconditionnel (gate statique) ne les affecte pas (42,2 %). L'interprétation est directe : les sinks compensent l'absence de gate dynamique dans l'architecture standard. Dès qu'un mécanisme explicite de routage dépendant de l'entrée est disponible, le modèle abandonne la stratégie sink.</p>
+
+<h3>Dépendance à la longueur de contexte</h3>
+
+<p>Entraîner exclusivement sur des séquences longues (contexte minimum 1024 ou 2048 tokens) effondre le ratio de sink à 13 %, 8 % ou 1,2 % selon la configuration, malgré une perplexité stable. Les sinks servent à modéliser les dépendances courte portée au sein d'un mécanisme d'attention globale — une béquille qui devient inutile quand le modèle n'a jamais besoin de prédire à courte distance.</p>
+
+<h3>Dimension des têtes comme facteur dominant</h3>
+
+<p>Le ratio de sink croît de façon monotone avec d<sub>head</sub> : 4,1 % à d<sub>head</sub>=8, 46,0 % à d<sub>head</sub>=128. La dimension par tête détermine si le sous-espace attentionnel offre assez de place pour séparer géométriquement clés sink et non-sink. Le nombre de têtes à dimension fixe n'a qu'un effet marginal.</p>
+
+<h3>Universalité sur modèles pré-entraînés</h3>
+
+<p>Le cycle step-up/step-down et la correspondance entre canaux spike et normes de Frobenius aberrantes sont confirmés sur sept modèles : Llama 2 7B/13B, Llama 3 8B, Qwen 2.5 7B/14B, Qwen 3 8B/14B. Plus de 98 % du vocabulaire produit des activations massives lorsque placé en position initiale.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>La principale limite concerne l'échelle d'entraînement des ablations. Les modèles sont entraînés sur 100 milliards de tokens en 5000 pas — loin des budgets réels (plusieurs milliers de milliards de tokens). Les auteurs reproduisent les phénomènes à cette échelle réduite, mais rien ne garantit que les rapports quantitatifs entre sink ratio, spike magnitude et perplexité se maintiennent à pleine échelle. L'ablation sur 200B tokens (Table 3) montre déjà des variations significatives (sink ratio passe de 46 % à 63,3 %).</p>
+
+<p>L'analyse mécanistique repose sur l'approximation SiLU ≈ identité pour les tokens spike. Cette approximation est validée empiriquement (Figure 2), mais uniquement sur Llama 2 7B. Les auteurs mentionnent que d'autres modèles « partagent le même mécanisme de haut niveau mais diffèrent dans les détails » sans toujours fournir les preuves correspondantes dans le texte principal.</p>
+
+<p>La métrique de sink ratio utilise un seuil fixe ε = 0,3 et des séquences de T = 64 tokens. Ce choix favorise la détection de sinks à courte portée et pourrait sous-estimer les comportements sink sur des contextes longs. Les auteurs n'évaluent pas la sensibilité de leurs conclusions à ces paramètres.</p>
+
+<p>L'article ne traite que des architectures decoder-only de type Llama. Les architectures encoder-decoder, les modèles avec post-norm (comme le Transformer original), et les modèles multimodaux ne sont pas couverts par les ablations — même si les modèles multimodaux sont mentionnés dans la revue de littérature.</p>
+
+<p>Aucune évaluation downstream (tâches de question-réponse, résumé, génération de code) n'accompagne les ablations. La perplexité sur C4 est le seul proxy de performance, ce qui laisse ouverte la question de l'impact des modifications architecturales sur des tâches applicatives.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Les hyperparamètres d'entraînement sont documentés (Table 9) et le dataset d'entraînement (DCLM) est public. L'évaluation utilise C4, également public. Les modèles pré-entraînés évalués sont tous disponibles sur HuggingFace (Table 10).</p>
+
+<p>En revanche, aucun dépôt de code n'est mentionné. Reproduire les ablations nécessite d'entraîner des modèles 7B depuis zéro — un coût computationnel considérable que la plupart des laboratoires ne peuvent absorber. Les poids des modèles ablatés ne sont pas publiés. La vérification indépendante de l'analyse mécanistique (calcul des matrices U<sub>k</sub>, extraction des vecteurs propres) est faisable sur les modèles publics, mais le protocole exact n'est pas fourni sous forme de code.</p>
+
+<h2>Impact et applications</h2>
+
+<p>Les résultats ont des implications directes pour quatre domaines d'ingénierie :</p>
+
+<ul>
+<li>La quantification post-entraînement peut bénéficier de la sandwich normalization ou de QKNorm pour réduire les outliers sans altérer les sinks utiles au routage attentionnel.</li>
+<li>La gestion du cache KV peut s'appuyer sur la compréhension que les tokens sink servent de mécanisme de gating : leur éviction dégrade spécifiquement les prédictions à courte portée.</li>
+<li>L'architecture DynamicTanh offre une voie vers des Transformers sans activations massives, avec un ratio de sink préservé voire amélioré.</li>
+<li>Le gated attention conditionnel élimine le besoin de sinks, ce qui simplifie la distribution d'attention et pourrait améliorer l'inférence sur longs contextes.</li>
+</ul>
+
+<p>La démonstration que les deux phénomènes sont découplables remet en question les stratégies d'ingénierie qui les traitent comme un bloc monolithique (par exemple, les techniques de « streaming » qui préservent conjointement le premier token et ses activations massives).</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Sun et al. (2024) avaient caractérisé les activations massives de manière descriptive. Xiao et al. (2024b) avaient identifié les attention sinks et proposé StreamingLLM. Kaul et al. (2024) et Queipo-de Llano et al. (2025) avaient observé la cooccurrence sans en fournir d'explication causale. Le présent article franchit le pas descriptif→mécanistique en fournissant une chaîne causale complète : amplification quadratique → accumulation résiduelle → sparsification par normalisation → séparation géométrique des sous-espaces clés → logit gap.</p>
+
+<p>Les travaux sur les alternatives au softmax (sigmoid attention de Gu et al. 2025, ReLU attention de Guo et al. 2024) et les architectures sans normalisation (Zhu et al. 2025, Chen et al. 2025) apparaissent comme des cas particuliers du cadre proposé ici : chacun supprime un maillon de la chaîne causale. Le gated attention de Qiu et al. (2025) est directement intégré aux ablations, confirmant et étendant leurs résultats.</p>
+
+<p>La contribution la plus significative reste la preuve expérimentale que spikes et sinks remplissent des fonctions distinctes — paramètres implicites globaux pour les premiers, routage local dépendant de l'entrée pour les seconds — et qu'aucun des deux n'est nécessaire à la performance du modèle.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problématique précise et bien motivée : pourquoi et comment spikes et sinks co-émergent. Le passage du descriptif au mécanistique est clairement articulé.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Ablations systématiques sur cinq axes indépendants avec baseline contrôlée. Chaque facteur est isolé de manière rigoureuse.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Budget d'entraînement de 100B tokens (50× inférieur aux modèles de référence). Validation sur 7 modèles pré-entraînés publics, mais évaluation limitée à 1024 séquences de C4.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Perplexité, sink ratio (formalisé avec seuil ε = 0,3) et magnitude des spikes. Métriques adaptées aux phénomènes étudiés, bien que le sink ratio dépende de paramètres arbitraires.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Séparation claire entre ablations d'optimisation et d'architecture. Toutefois, l'échelle réduite d'entraînement constitue un confondant potentiel non résolu.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Données publiques, hyperparamètres détaillés, modèles de référence accessibles. Pas de code publié ; reproduire les ablations exige un budget GPU conséquent.</td></tr>
+<tr><td>Transparence et limitations</td><td>3</td><td>Les limites d'échelle et de généralisation architecturale sont implicites plutôt qu'explicitement discutées. Pas de section « Limitations » dédiée.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Première explication mécanistique complète du lien spikes-sinks. Résultats directement actionnables pour la conception de Transformers et l'optimisation d'inférence.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

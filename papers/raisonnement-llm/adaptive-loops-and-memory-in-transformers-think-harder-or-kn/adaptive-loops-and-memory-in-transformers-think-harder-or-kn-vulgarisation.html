@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adaptive Loops and Memory in Transformers: Think Harder or Know More? — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Adaptive Loops and Memory in Transformers: Think Harder or Know More?</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Boucles et mémoire dans les Transformers : quand le modèle choisit entre réfléchir et se souvenir</h2>
+
+<p><em>Frey, M., Shomali, B., Bashir, A. H., Berghaus, D., Koehler, J. &amp; Ali, M. — Lamarr Institute / Fraunhofer IAIS / Université de Bonn. Présenté au workshop « Latent &amp; Implicit Thinking » à ICLR 2026.</em></p>
+
+<h2>Introduction</h2>
+
+<p>Un modèle de langage comme GPT ou Claude, quand on lui pose un problème de maths, écrit ses étapes de raisonnement une par une avant de donner la réponse. Cette technique — le <em>chain-of-thought</em> — fonctionne bien, mais chaque étape intermédiaire consomme des tokens, donc du temps et de l'énergie. Et si le modèle pouvait « réfléchir dans sa tête » sans rien écrire ?</p>
+
+<p>Une équipe du Lamarr Institute et du Fraunhofer IAIS propose exactement cela. Leur architecture permet à un Transformer de boucler sur ses propres couches — répéter un calcul interne autant de fois que nécessaire — tout en disposant de « banques de mémoire » où stocker des connaissances apprises. La question qu'ils posent est limpide : face à un problème difficile, le modèle doit-il réfléchir plus longtemps, ou aller chercher de l'information supplémentaire ? Leur réponse courte : les deux, mais pas au même endroit.</p>
+
+<h2>Le problème</h2>
+
+<p>Les Transformers classiques empilent des couches, chacune équipée de ses propres paramètres. Un modèle de 36 couches contient trois fois plus de « poids » qu'un modèle de 12 couches — et trois fois plus d'espace pour encoder des faits sur le monde. Plus on empile, plus le modèle sait de choses et raisonne sur des problèmes complexes. Mais la facture grimpe en mémoire GPU et en temps de calcul.</p>
+
+<p>Une piste alternative existe depuis plusieurs années : réutiliser les mêmes couches en boucle. Au lieu de 36 couches distinctes, un modèle de 12 couches qui boucle trois fois atteint la même « profondeur effective » avec trois fois moins de paramètres uniques. L'analogie : relire un paragraphe difficile plutôt que de lire trois paragraphes différents.</p>
+
+<p>Le hic, c'est que ces paramètres partagés stockent moins de connaissances factuelles. Des travaux de Zhu et al. publiés en 2025 le confirment : les boucles améliorent la capacité du modèle à <em>manipuler</em> l'information, mais pas à la <em>mémoriser</em>. Un modèle bouclé raisonne mieux à budget paramétrique égal, mais il « sait » moins de choses. C'est un compromis structurel, pas un défaut d'implémentation.</p>
+
+<p>D'où la question des auteurs : peut-on greffer sur un modèle bouclé un supplément de mémoire apprise, pour compenser ce déficit de stockage sans sacrifier les gains en raisonnement ?</p>
+
+<h2>La méthode</h2>
+
+<p>Les chercheurs partent d'un Transformer classique à 12 couches, environ 200 millions de paramètres, et y ajoutent deux mécanismes indépendants.</p>
+
+<h3>Le bouclage adaptatif</h3>
+
+<p>Chaque couche du Transformer peut se répéter jusqu'à N fois — 3, 5 ou 7 dans les expériences. Mais ce n'est pas un nombre fixe. Un petit réseau « routeur », entraîné en même temps que le reste du modèle, décide à chaque itération s'il faut continuer ou s'arrêter. Pensez à un étudiant qui relit un paragraphe : parfois une lecture suffit, parfois il en faut cinq. Le routeur apprend quand la relecture apporte encore quelque chose et quand elle devient inutile.</p>
+
+<p>Le résultat final de chaque couche n'est pas la dernière itération brute, mais une combinaison pondérée de toutes les itérations, proportionnelle à la probabilité d'arrêt à chaque pas. Ce mécanisme, inspiré de PonderNet (Banino et al., 2021), produit une sortie lisse plutôt qu'un choix binaire entre « une itération de plus » ou « stop ».</p>
+
+<p>Pour que l'entraînement reste stable, les auteurs initialisent des paramètres d'échelle à une valeur proche de zéro. Concrètement, le modèle démarre comme un Transformer ordinaire — les boucles ne font presque rien au début. C'est seulement au fil de l'entraînement que le modèle apprend progressivement quand et combien boucler.</p>
+
+<h3>Les banques de mémoire</h3>
+
+<p>Deux types de mémoire coexistent. La mémoire locale donne à chaque couche sa propre réserve de 1 024 « cases » — un carnet personnel consultable à chaque itération. La mémoire globale offre 512 cases partagées entre toutes les couches — plutôt une encyclopédie commune accessible à tous les étages du modèle.</p>
+
+<p>Ces mémoires ne sont pas des caches d'exécution, contrairement au KV-cache utilisé pendant la génération de texte. Ce sont des paramètres appris lors de l'entraînement et figés lors de l'inférence. Le modèle apprend quoi y écrire pendant l'entraînement, puis les consulte en lecture seule quand il traite du texte.</p>
+
+<p>Un détail d'ingénierie fait la différence : l'accès à la mémoire passe par des « portes » (<em>gates</em>) dont l'ouverture dépend de l'entrée. Si la tâche en cours n'a pas besoin de mémoire — par exemple un simple enchaînement syntaxique — les portes restent fermées. Les auteurs testent trois initialisations de ces portes : presque fermées, à mi-chemin, et presque ouvertes. La configuration « portes ouvertes » donne les meilleurs résultats, ce qui suggère que le modèle bénéficie d'un accès large à la mémoire dès le début de l'entraînement.</p>
+
+<p>L'ensemble des banques de mémoire et des mécanismes de routage n'ajoute qu'environ 10 millions de paramètres — 5 % du total. Un surcoût modeste.</p>
+
+<h2>Résultats clés</h2>
+
+<p>Les benchmarks comparent les modèles augmentés à deux références : un modèle « iso-paramètres » (même nombre de paramètres, couches plus larges mais sans boucles) et un modèle « iso-FLOP » (même coût de calcul, 36 couches distinctes). Les évaluations couvrent huit tâches de sens commun (ARC, HellaSwag, PIQA, etc.) et sept sous-domaines mathématiques (algèbre, géométrie, théorie des nombres…).</p>
+
+<h3>Les boucles dominent en mathématiques</h3>
+
+<p>Le bouclage seul fait chuter le score BPB (bits par octet — plus c'est bas, mieux c'est) en maths de 2,163 à 1,687 : une amélioration de 22 %. Les gains couvrent toutes les sous-catégories, avec des pointes à −31 % en pré-calcul et −26 % en algèbre intermédiaire. Résultat frappant : le modèle bouclé à 12 couches bat le modèle à 36 couches (1,687 contre 1,801) en maths, avec trois fois moins de couches uniques et un tiers du budget paramétrique. Le bouclage est un moyen plus rentable d'améliorer le raisonnement que l'empilement de couches.</p>
+
+<p>Augmenter le nombre maximal de boucles au-delà de 3 n'apporte que des gains marginaux — Loop-7 n'améliore que de 1,7 % par rapport à Loop-3. Le retour sur investissement des boucles supplémentaires décroît vite.</p>
+
+<h3>La mémoire comble le fossé du sens commun</h3>
+
+<p>Sur les tâches de sens commun, le bouclage seul apporte un gain modeste : la précision passe de 0,477 à 0,501, mais le modèle à 36 couches reste devant à 0,523. Les boucles aident le modèle à manipuler l'information existante, pas à en stocker davantage — exactement le compromis prédit par la théorie.</p>
+
+<p>L'ajout de mémoire change la donne. Le meilleur modèle combiné (boucles + mémoire, portes ouvertes) atteint 0,511 en sens commun et 1,616 en maths. Il surpasse le modèle à 36 couches sur les mathématiques tout en réduisant l'écart sur le sens commun. Les banques de mémoire font précisément ce qu'on attendait : elles restaurent une partie de la capacité de stockage que les boucles seules ne fournissent pas.</p>
+
+<h3>Les couches se spécialisent spontanément</h3>
+
+<p>L'analyse des dynamiques internes révèle un phénomène que les auteurs n'avaient pas imposé. Les premières couches du modèle bouclent peu — proches d'une seule itération — et consultent rarement la mémoire. Les dernières couches bouclent davantage et ouvrent plus largement leurs portes de mémoire. Cette spécialisation émerge sans aucune contrainte explicite : le modèle n'est soumis à aucune pénalité sur le nombre de boucles (le coefficient λ est fixé à zéro). Le signal de supervision — la simple prédiction du prochain token — suffit à faire émerger cette organisation.</p>
+
+<p>Ce résultat est cohérent avec ce qu'on sait de la structure des Transformers : les premières couches encodent des patterns syntaxiques locaux (ordre des mots, accords grammaticaux), tandis que les couches profondes gèrent des opérations sémantiques et de raisonnement. Les opérations simples n'ont pas besoin de répétition ; les opérations complexes en bénéficient.</p>
+
+<p>Un dernier résultat défie l'intuition : les couches qui bouclent le plus sont aussi celles qui consultent le plus la mémoire. Boucles et mémoire ne se substituent pas — elles se renforcent. Les couches qui « réfléchissent le plus » sont aussi celles qui ont le plus besoin d'information externe.</p>
+
+<h3>Une transition de phase dans l'apprentissage</h3>
+
+<p>Pendant l'entraînement, le nombre moyen de boucles par couche reste stable au début, puis augmente brusquement. Ce basculement survient quand la perte d'entropie croisée descend sous un seuil d'environ 3,27 — indépendamment du nombre maximal de boucles autorisé (3, 5 ou 7). Le modèle n'apprend à utiliser ses boucles qu'une fois qu'il maîtrise suffisamment le langage pour que la répétition interne apporte un bénéfice. Avant ce seuil, boucler revient à remuer des représentations trop bruitées ; après, le raffinage itératif devient productif.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Pour les concepteurs de modèles, ce travail éclaire un choix architectural concret. Empiler des couches reste l'approche directe pour augmenter les performances globales, mais le bouclage adaptatif offre un meilleur rapport performance/calcul sur les tâches de raisonnement mathématique. Un modèle de 200M de paramètres avec boucles rivalise en maths avec un modèle de 332M disposant de trois fois plus de couches uniques.</p>
+
+<p>La séparation fonctionnelle entre « capacité de raisonnement » et « capacité de stockage » suggère des architectures plus modulaires. Un système pourrait adapter dynamiquement son effort de calcul selon la tâche : peu de boucles pour une complétion de texte routinière, davantage pour résoudre une équation. Les banques de mémoire, de leur côté, pourraient être spécialisées par domaine — mémoire médicale, mémoire juridique — sans retraîner le modèle entier. Cette piste reste spéculative à ce stade, mais l'architecture la rend structurellement possible.</p>
+
+<p>La spécialisation spontanée des couches est aussi un signal positif pour l'interprétabilité. Sans supervision explicite, le modèle développe une organisation lisible : traitement léger en surface, calcul intensif en profondeur, mémoire corrélée à l'effort de raisonnement. Cette régularité pourrait faciliter le diagnostic de modèles plus grands et aider à comprendre où un modèle « réfléchit » et où il « se souvient ».</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Les expériences restent à petite échelle : 200 millions de paramètres, 14 milliards de tokens d'entraînement. Les modèles déployés en production atteignent des dizaines, voire des centaines de milliards de paramètres. À cette taille, le modèle de base possède déjà une capacité de stockage massive — les boucles adaptatives lui apporteraient-elles le même gain relatif ? Le compromis pourrait se déplacer.</p>
+
+<p>L'évaluation mathématique repose sur le BPB, une mesure de perplexité, et non sur la résolution effective de problèmes (comme le benchmark GSM8k). Les auteurs le reconnaissent : le BPB montre que le modèle <em>modélise</em> mieux le domaine mathématique, pas nécessairement qu'il <em>résout</em> plus de problèmes. Valider ces résultats sur des benchmarks de résolution sera une étape nécessaire.</p>
+
+<p>La relation entre bouclage interne et chain-of-thought mérite d'être explorée. Les deux mécanismes visent le même objectif — donner au modèle plus de « temps de réflexion » — mais l'un opère dans l'espace visible des tokens, l'autre dans les représentations internes. Peut-on les combiner ? Un modèle qui boucle en interne produirait-il un chain-of-thought plus court mais tout aussi efficace ? La question reste ouverte.</p>
+
+<p>Les banques de mémoire, enfin, prolongent une lignée de travaux qui remonte aux Neural Turing Machines de Graves et al. en 2014. L'idée d'externaliser partiellement les connaissances d'un réseau de neurones dans une mémoire adressable n'est pas neuve, mais son intégration dans des Transformers pré-entraînés à grande échelle reste un territoire peu balisé. Si ces mémoires pouvaient être mises à jour après l'entraînement — ajout de connaissances récentes, correction de faits obsolètes — elles offriraient une alternative à la coûteuse procédure de réentraînement complet.</p>
+
+<p>La question que pose ce papier est au fond simple, et pas uniquement technique. Face à un problème difficile, faut-il réfléchir plus longtemps ou aller chercher l'information qui nous manque ? Pour les Transformers comme pour les humains, la réponse semble être : les deux — et savoir quand faire quoi.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

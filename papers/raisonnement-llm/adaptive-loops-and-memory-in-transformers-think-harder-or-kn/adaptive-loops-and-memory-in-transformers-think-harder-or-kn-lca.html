@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adaptive Loops and Memory in Transformers: Think Harder or Know More? — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Adaptive Loops and Memory in Transformers: Think Harder or Know More?</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+
+<h3>1. Objectif et contexte</h3>
+
+<p>Les transformers à boucles partagent leurs poids entre itérations, ce qui leur confère une profondeur effective accrue sans multiplication proportionnelle des paramètres. Ce gain en efficience paramétrique se paie par une capacité de stockage réduite : moins de poids uniques signifie moins d'espace pour encoder des connaissances factuelles. Frey et al. proposent de dissocier ces deux fonctions — raisonnement itératif et stockage de connaissances — en augmentant un transformer à boucles adaptatives de banques de mémoire apprenables, locales (par couche) et globales (partagées).</p>
+
+<p>La question posée est précise : les banques de mémoire peuvent-elles restaurer la capacité factuelle perdue par le partage de poids, sans sacrifier les gains en raisonnement apportés par les boucles ? Cette formulation, résumée par le sous-titre « Think Harder or Know More? », structure l'ensemble du travail expérimental.</p>
+
+<h3>2. Méthodologie</h3>
+
+<p>L'architecture repose sur un transformer décodeur de 12 couches (~200M paramètres) augmenté de deux mécanismes. Le premier, inspiré de PonderNet, autorise chaque couche à itérer jusqu'à N<sub>max</sub> fois via un routeur de halte appris qui produit une combinaison pondérée des états intermédiaires. Des paramètres d'échelle par étape, initialisés à −7.0, garantissent que les boucles démarrent comme des applications quasi-identité. Le second mécanisme ajoute des banques mémoire clé-valeur : 1024 slots locaux par couche et 512 slots globaux partagés, interrogés par attention à produit scalaire avec normalisation QK. L'intégration passe par des portes sigmoïdes dépendantes de l'entrée, avec trois initialisations testées (biais −3, 0, +3).</p>
+
+<p>Les comparaisons s'appuient sur deux types de baselines. Le baseline iso-paramètres élargit le FFN pour égaler le nombre total de paramètres. Le baseline iso-FLOP utilise 36 couches (3×) pour égaler le coût de calcul d'un modèle à 3 boucles. Tous les modèles sont pré-entraînés sur FineWeb-Edu dédupliqué pendant 14 milliards de tokens. L'évaluation utilise le framework OLMES sur 8 benchmarks de sens commun (accuracy et BPB) et 7 benchmarks mathématiques (BPB uniquement).</p>
+
+<p>Un choix méthodologique structurant : λ = 0 pour la pénalité de boucle. Le modèle ne reçoit aucune incitation explicite à minimiser ses itérations. Toute spécialisation observée émerge de l'objectif de modélisation du langage seul.</p>
+
+<h3>3. Résultats principaux</h3>
+
+<p>Les boucles adaptatives réduisent le BPB mathématique de 22 % par rapport au modèle de base (1.687 vs 2.163 pour N<sub>max</sub>=3), avec des gains maximaux en pré-calcul (−31 %) et algèbre intermédiaire (−26 %). Ce résultat persiste face au baseline iso-FLOP à 36 couches : le modèle à boucles le surpasse de 6.4 % sur les mathématiques malgré trois fois moins de couches uniques.</p>
+
+<p>L'ajout de mémoire au modèle Loop-3 améliore encore le BPB mathématique de 4.2 % et l'accuracy en sens commun de 2 points. La configuration avec portes ouvertes (g<sub>0</sub>=+3) obtient les meilleurs résultats globaux parmi les variantes mémoire. Le baseline iso-FLOP à 36 couches élargies reste supérieur en sens commun (0.535 vs 0.511), mais inférieur en mathématiques (1.761 vs 1.616).</p>
+
+<p>L'analyse des dynamiques d'entraînement révèle deux phénomènes. D'abord, une spécialisation par couche : les couches précoces bouclent peu et consultent peu la mémoire, les couches tardives font les deux intensivement. Ensuite, une transition de phase dans l'utilisation des boucles, déclenchée lorsque l'entropie croisée de validation passe sous ~3.27, indépendamment de N<sub>max</sub>. Le modèle n'exploite le mécanisme de boucle qu'après avoir acquis une compétence linguistique suffisante.</p>
+
+<h3>4. Discussion et limites</h3>
+
+<p>La dissociation fonctionnelle proposée — boucles pour la manipulation, mémoire pour le stockage — est séduisante mais repose sur une échelle unique de 200M paramètres. À cette taille, les couches FFN ont une capacité de mémorisation limitée ; l'ajout de mémoire externe apporte un bénéfice mécanique. Rien ne garantit que ce bénéfice persiste à 7B ou 70B paramètres, où les FFN disposent déjà d'une capacité de stockage considérable.</p>
+
+<p>L'évaluation mathématique repose exclusivement sur le BPB, pas sur l'exactitude des réponses. Le BPB mesure la qualité de modélisation probabiliste du texte de réponse, ce qui corrèle avec la compétence mathématique mais n'en constitue pas une preuve directe. Les auteurs reconnaissent cette limite mais ne proposent aucune évaluation complémentaire (GSM8K, MATH), même qualitative.</p>
+
+<p>Aucune estimation de variance n'accompagne les résultats. Les tableaux rapportent des valeurs uniques sans intervalles de confiance ni écarts-types sur plusieurs graines aléatoires. Certaines différences entre configurations sont inférieures à 2 points de pourcentage en accuracy — potentiellement dans la marge de bruit expérimental.</p>
+
+<p>L'ablation sur l'initialisation des portes (trois valeurs de biais) est informative mais limitée. La valeur optimale (g<sub>0</sub>=+3, portes ouvertes) n'est pas expliquée mécaniquement : pourquoi un modèle qui démarre avec un accès maximal à la mémoire converge-t-il vers de meilleures performances qu'un modèle qui apprend à ouvrir progressivement ses portes ?</p>
+
+<h3>5. Reproductibilité</h3>
+
+<p>Les détails architecturaux sont documentés avec précision : dimensions, hyperparamètres d'optimisation, schedule d'apprentissage, initialisations. Le jeu de données (FineWeb-Edu) et le framework d'évaluation (OLMES) sont publics. Les équations définissent sans ambiguïté les mécanismes de halte et d'intégration mémoire.</p>
+
+<p>En revanche, aucun dépôt de code n'est mentionné. Le framework de formation « Modalities » est référencé mais son accessibilité publique reste incertaine. Sans code, reproduire les dynamiques d'entraînement subtiles (transition de phase à CE ~3.27, spécialisation des couches) demanderait un effort de réimplémentation non négligeable. L'absence d'information sur le matériel utilisé (nombre et type de GPUs, temps d'entraînement) ajoute à l'opacité.</p>
+
+<h3>6. Impact et applications</h3>
+
+<p>La contribution principale est conceptuelle : formaliser la tension entre capacité de calcul itératif et capacité de stockage dans les transformers, puis montrer qu'un mécanisme de mémoire externe peut adresser la seconde sans compromettre la première. L'observation que boucles et mémoire agissent comme compléments (et non substituts) au niveau des couches individuelles est un résultat analytique utile pour la conception d'architectures futures.</p>
+
+<p>L'applicabilité pratique reste conditionnelle. Les banques de mémoire ajoutent ~10M paramètres et un coût attentionnel supplémentaire à chaque itération de boucle. Le rapport coût-bénéfice n'est pas caractérisé : à budget de calcul fixe, quand vaut-il mieux ajouter de la mémoire plutôt qu'élargir le FFN ou ajouter des couches ? Les auteurs identifient cette question dans leurs travaux futurs mais ne fournissent pas de réponse préliminaire.</p>
+
+<h3>7. Positionnement dans la littérature</h3>
+
+<p>Ce travail se situe au croisement de deux lignées. D'un côté, les transformers à profondeur adaptative (Graves 2016, Universal Transformers, PonderNet, Mixture-of-Depths), dont il reprend le mécanisme de halte appris. De l'autre, les architectures augmentées de mémoire (Product-Key Memory, Persistent Memory, Memorizing Transformers, Neural Turing Machines), dont il emprunte les banques clé-valeur statiques.</p>
+
+<p>L'originalité réside dans la combinaison systématique de ces deux mécanismes et dans l'étude de leurs interactions, là où les travaux précédents les abordent séparément. Le résultat de Zhu et al. (2025) — les modèles à boucles améliorent la manipulation mais pas la mémorisation — est directement confirmé et étendu : la mémoire externe comble partiellement le déficit identifié.</p>
+
+<p>Comme article d'atelier, le travail remplit son rôle : poser une hypothèse claire, la tester à petite échelle, identifier les directions de recherche. La version étendue devra répondre aux questions d'échelle et de métriques que le format actuel laisse ouvertes.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4/5</td><td>Formulation claire et bien motivée par les résultats de Zhu et al. ; décomposition élégante calcul vs. stockage</td></tr>
+<tr><td>Design expérimental</td><td>3/5</td><td>Baselines iso-paramètres et iso-FLOP appropriés, mais une seule échelle de modèle et un seul jeu de données de pré-entraînement</td></tr>
+<tr><td>Taille d'échantillon</td><td>2/5</td><td>Un seul run par configuration, aucune estimation de variance ; les différences rapportées peuvent relever du bruit</td></tr>
+<tr><td>Qualité des métriques</td><td>3/5</td><td>BPB offre un signal continu utile en pré-entraînement, mais l'absence d'accuracy sur les tâches mathématiques affaiblit les conclusions sur le raisonnement</td></tr>
+<tr><td>Contrôle des biais</td><td>3/5</td><td>Les baselines contrôlent paramètres et FLOP ; l'asymétrie de ~10M paramètres pour la mémoire est compensée mais imparfaitement</td></tr>
+<tr><td>Reproductibilité</td><td>3/5</td><td>Hyperparamètres détaillés, données et évaluation publiques, mais pas de code ni d'information sur le matériel</td></tr>
+<tr><td>Transparence des limitations</td><td>4/5</td><td>Les auteurs identifient explicitement les trois limitations majeures (échelle, métriques, caractérisation d'efficience)</td></tr>
+<tr><td>Impact et nouveauté</td><td>3/5</td><td>Combinaison originale de mécanismes existants avec des résultats analytiques intéressants, mais à confirmer à plus grande échelle</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

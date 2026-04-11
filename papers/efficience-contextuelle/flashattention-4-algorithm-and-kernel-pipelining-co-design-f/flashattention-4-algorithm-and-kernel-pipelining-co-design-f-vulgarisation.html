@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlashAttention-4: Algorithm and Kernel Pipelining Co-Design for Asymmetric Hardware Scaling — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>FlashAttention-4: Algorithm and Kernel Pipelining Co-Design for Asymmetric Hardware Scaling</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>FlashAttention-4 : quand les GPU vont trop vite pour leur propre bien</h2>
+
+<h3>1. Introduction</h3>
+
+<p>Les GPU NVIDIA Blackwell B200 multiplient par deux la puissance de calcul matriciel par rapport à la génération précédente. Sur le papier, c'est une excellente nouvelle pour l'entraînement des grands modèles de langage. En pratique, cette accélération crée un problème inattendu : les unités de calcul matriciel tournent désormais si vite qu'elles passent l'essentiel de leur temps à attendre que le reste de la puce suive.</p>
+
+<p>Une équipe de chercheurs de Princeton, Meta, Colfax Research, NVIDIA et Georgia Tech publie FlashAttention-4, une refonte du mécanisme d'attention — la brique la plus gourmande de l'architecture Transformer — spécifiquement conçue pour ces GPU déséquilibrés. Leur approche atteint 1 613 TFLOPS sur un B200, soit 71 % de la capacité théorique maximale, avec des gains allant jusqu'à 1,3× par rapport à la bibliothèque propriétaire cuDNN de NVIDIA et 2,7× par rapport à Triton.</p>
+
+<h3>2. Le problème : une autoroute à dix voies qui se termine en chemin de terre</h3>
+
+<p>Le mécanisme d'attention est ce qui permet à un modèle Transformer de mettre en relation chaque mot d'un texte avec tous les autres. Le coût de cette opération croît avec le carré de la longueur de la séquence : doubler le contexte quadruple le travail. Pour un document de 32 000 tokens, ce sont des milliards d'opérations. FlashAttention, puis ses versions 2 et 3, ont déjà optimisé ce calcul pour les générations de GPU Ampere et Hopper. Mais l'arrivée des puces Blackwell change la donne.</p>
+
+<p>Le B200 double le débit des cœurs tensoriels (les unités spécialisées dans la multiplication de matrices) par rapport au H100. En revanche, trois autres composants critiques n'ont pas bougé ou presque : la bande passante de la mémoire partagée on-chip, le débit de l'unité exponentielle (utilisée pour le calcul du softmax), et les unités arithmétiques classiques. C'est comme si un constructeur automobile doublait la puissance du moteur sans toucher aux freins ni à la direction.</p>
+
+<p>L'analyse chiffrée des auteurs montre l'ampleur du déséquilibre. Sur une tâche d'attention standard avec des tuiles de 256 × 128, les cœurs tensoriels terminent leur travail en 2 048 cycles d'horloge. La mémoire partagée, elle, a besoin de 1 536 cycles juste pour alimenter ces mêmes cœurs en données. L'unité exponentielle requiert 2 048 cycles. Les multiplications matricielles, censées être le goulot d'étranglement, ne le sont plus. Le softmax et les transferts mémoire on-chip ont pris le relais.</p>
+
+<p>Recompiler FlashAttention-3 pour Blackwell n'est d'ailleurs même pas possible : les instructions MMA (multiply-accumulate) de Hopper n'ont pas de compatibilité ascendante. Un nouveau design s'imposait.</p>
+
+<h3>3. La méthode : quatre leviers pour rééquilibrer la machine</h3>
+
+<p>L'idée centrale de FlashAttention-4 est de traiter le GPU non pas comme une ressource de calcul uniforme, mais comme un orchestre dont les instruments jouent à des tempos différents. Chaque optimisation cible un goulot d'étranglement précis.</p>
+
+<h3>3.1 Faire jouer les instruments en même temps</h3>
+
+<p>Le premier levier est un nouveau pipeline d'exécution qui maximise le recouvrement entre opérations. Pendant que les cœurs tensoriels calculent une multiplication matricielle, les unités arithmétiques classiques traitent le softmax d'un autre bloc de données. Ce principe existait déjà dans FlashAttention-3, mais Blackwell change les contraintes matérielles.</p>
+
+<p>La puce introduit la « tensor memory » (TMEM), 256 Ko de mémoire on-chip par SM dédiée aux résultats intermédiaires des cœurs tensoriels. Contrairement aux registres classiques, cette mémoire reçoit directement les sorties des multiplications matricielles sans bloquer le pipeline. Les auteurs exploitent cette nouvelle mémoire pour stocker simultanément plusieurs tuiles de résultats et orchestrer un va-et-vient entre deux groupes de warps : l'un calcule le softmax pendant que l'autre lance la multiplication suivante. Le résultat est un chevauchement quasi total entre calcul matriciel et calcul non matriciel.</p>
+
+<p>Pensez à un restaurant où un chef prépare le plat suivant pendant que le serveur apporte le plat en cours. Si le chef et le serveur travaillent en séquence, le service est lent. S'ils travaillent en parallèle avec un passe-plat bien dimensionné (la tensor memory), le débit double.</p>
+
+<h3>3.2 Fabriquer sa propre fonction exponentielle</h3>
+
+<p>Le softmax a besoin de calculer des exponentielles — beaucoup d'exponentielles. Sur un GPU, cette opération passe par une unité matérielle spécialisée appelée MUFU, capable de traiter 16 opérations par cycle. Les cœurs tensoriels, eux, avalent 8 192 opérations par cycle. Le rapport est de 1 à 512.</p>
+
+<p>La solution des auteurs : émuler partiellement la fonction exponentielle par logiciel, en utilisant une approximation polynomiale de degré 3 évaluée sur les unités FMA (fused multiply-add), qui sont plus nombreuses que les MUFU et peuvent tourner en parallèle avec elles. L'astuce repose sur une décomposition classique en partie entière et partie fractionnaire. La partie entière se calcule par manipulation de bits (rapide et gratuit). La partie fractionnaire est approchée par un polynôme.</p>
+
+<p>La précision ? Après conversion en BF16 (le format numérique utilisé pour l'entraînement), l'erreur de l'approximation polynomiale est indistinguable de celle du matériel. L'erreur de quantification BF16 domine largement l'erreur d'approximation. Les auteurs n'émulent d'ailleurs qu'une fraction des exponentielles par logiciel (10 à 25 %), juste assez pour soulager l'unité matérielle sans surcharger les registres.</p>
+
+<h3>3.3 Éviter le travail inutile dans le softmax</h3>
+
+<p>L'algorithme FlashAttention traite l'attention par blocs et maintient des statistiques courantes (maximum et somme des exponentielles) pour la stabilité numérique. À chaque nouveau bloc, l'algorithme standard recalcule et « rescale » tous les résultats précédents pour tenir compte du nouveau maximum.</p>
+
+<p>FlashAttention-4 introduit un rescaling conditionnel : si le nouveau maximum ne dépasse l'ancien que d'un écart négligeable (moins d'un facteur 256, soit 8 en base 2), le rescaling est sauté. Les statistiques sont mises à jour, mais la correction réelle est reportée à la toute fin du calcul, quand une normalisation globale corrige tout d'un coup. En pratique, la plupart des blocs ne provoquent pas de changement radical du maximum, et le rescaling est sauté la majorité du temps. Ce sont autant de multiplications vectorielles économisées.</p>
+
+<h3>3.4 Réduire le trafic mémoire dans la passe arrière</h3>
+
+<p>La passe arrière (backpropagation) de l'attention comporte cinq multiplications matricielles au lieu de deux pour la passe avant. L'analyse montre que le trafic en mémoire partagée y dépasse le temps de calcul matriciel de 30 %. C'est le goulot d'étranglement dominant.</p>
+
+<p>Les auteurs exploitent un mode « 2-CTA » propre à Blackwell, où deux blocs de threads coopèrent sur une seule multiplication matricielle. Chaque bloc ne charge que la moitié de l'un des opérandes en mémoire partagée, et le matériel fusionne les deux moitiés. Le trafic mémoire partagé diminue d'environ 20 %. Un bénéfice collatéral : le nombre de réductions atomiques globales (des écritures coûteuses et source de non-déterminisme) est divisé par deux pour le gradient des requêtes (dQ).</p>
+
+<p>Pour les applications qui exigent la reproductibilité — l'apprentissage par renforcement, par exemple — FlashAttention-4 propose aussi un mode déterministe. Des sémaphores sérialisent les réductions globales selon un ordre prédéfini, avec un ordonnancement astucieux (« shortest-processing-time first ») qui limite les temps d'attente. Ce mode déterministe atteint 75 % de la vitesse du mode non déterministe, un surcoût acceptable pour garantir des résultats bit-à-bit identiques d'une exécution à l'autre.</p>
+
+<h3>3.5 Un ordonnancement plus malin</h3>
+
+<p>Quand l'attention utilise un masque causal (chaque token ne regarde que les tokens précédents), la charge de travail est triangulaire : certains blocs traitent une ligne complète, d'autres quelques éléments. Si les blocs sont distribués naïvement aux processeurs, les plus lourds arrivent en dernier et retardent tout le monde.</p>
+
+<p>FlashAttention-4 applique la stratégie LPT (longest-processing-time first), un résultat classique de théorie de l'ordonnancement datant de 1969 : les tâches les plus longues sont assignées en premier. Les auteurs combinent cette stratégie avec un ordonnancement des « têtes » d'attention qui préserve la localité du cache L2. Le gain est de 4 à 14 % selon la configuration, et la technique fonctionne aussi sur les GPU Hopper.</p>
+
+<h3>4. Résultats clés</h3>
+
+<p>Les benchmarks sont réalisés sur GPU B200 en BF16, avec des séquences de 1 024 à 32 768 tokens et des dimensions de tête de 64, 128 et 192.</p>
+
+<p>En passe avant, FlashAttention-4 dépasse cuDNN 9.13 (la bibliothèque optimisée par NVIDIA elle-même) de 10 à 30 % selon la longueur de séquence. Face à Triton, le gain atteint 2,1× à 2,7×. Le débit maximal mesuré est de 1 613 TFLOPS, soit 71 % du maximum théorique du B200. Pour un algorithme aussi complexe que l'attention, ce niveau d'utilisation est remarquable — la plupart des implémentations plafonnent bien en dessous.</p>
+
+<p>En passe arrière, les gains sont cohérents sur les longues séquences. Le mode 2-CTA se montre plus efficace que le mode 1-CTA grâce à la réduction du trafic mémoire. Le mode déterministe, avec l'ordonnancement SPT, conserve les trois quarts de la performance du mode standard.</p>
+
+<p>Un chiffre parle autant que les TFLOPS : le temps de compilation. FlashAttention-3, écrit en C++ avec des templates CUDA, demandait 55 secondes pour compiler le noyau de la passe avant. FlashAttention-4, écrit en CuTe-DSL (un DSL Python), compile en 2,5 secondes. La passe arrière passe de 45 secondes à 1,4. Ce facteur 20 à 30× change le quotidien des développeurs de noyaux GPU. Un cycle d'itération de quelques secondes permet d'expérimenter des dizaines de variantes par heure au lieu de quelques-unes par jour.</p>
+
+<h3>5. Implications pratiques</h3>
+
+<p>Les centres de données migrent massivement vers les GPU Blackwell. Toute application qui repose sur des Transformers — modèles de langage, génération d'images, systèmes multimodaux — bénéficie directement d'une attention plus rapide. Un gain de 30 % sur le mécanisme d'attention se traduit par une réduction du temps d'entraînement et donc du coût en énergie et en location de GPU.</p>
+
+<p>L'impact sur les contextes longs est encore plus marqué. Les applications qui traitent des documents entiers, des bases de code complètes ou des vidéos haute résolution sont limitées par le coût quadratique de l'attention. FlashAttention-4 repousse la frontière pratique de ce qui est calculable en temps raisonnable.</p>
+
+<p>Le choix de CuTe-DSL comme langage d'implémentation a des conséquences au-delà de la performance. Historiquement, optimiser un noyau d'attention GPU exigeait une expertise pointue en métaprogrammation C++ avec CUTLASS. Avec CuTe-DSL, un développeur ayant quelques mois d'expérience en programmation GPU peut contribuer. Des variantes comme FlexAttention et l'attention block-sparse ont déjà été construites par des développeurs tiers sur cette base. L'architecture modulaire — masquage, gestion des séquences de longueur variable, ordonnancement — permet de combiner ces briques sans repartir de zéro.</p>
+
+<p>Le mode déterministe mérite une mention séparée. L'apprentissage par renforcement à partir de feedback humain (RLHF) et les systèmes de raisonnement en chaîne de pensée ont besoin de reproductibilité pour le débogage et la validation. Jusqu'ici, obtenir cette reproductibilité sur GPU imposait un surcoût prohibitif. Le surcoût de 25 % de FlashAttention-4 en mode déterministe rend cette option réaliste en production.</p>
+
+<p>NVIDIA a d'ailleurs intégré plusieurs techniques de FlashAttention-4 dans les versions récentes de cuDNN (à partir de la 9.13), preuve que ce travail académique influence directement l'écosystème industriel. Le code est publié en open source sous licence permissive.</p>
+
+<h3>6. Pour aller plus loin</h3>
+
+<p>Le problème sous-jacent — l'asymétrie croissante entre unités de calcul sur une même puce — ne va pas disparaître. La prochaine génération de GPU NVIDIA (B300/GB300) double le débit de l'unité exponentielle, ce qui atténuera l'un des goulots identifiés dans ce travail. Mais les cœurs tensoriels continueront probablement à accélérer plus vite que les autres composants. Le co-design algorithme-matériel décrit ici n'est pas un correctif ponctuel : c'est un modèle de conception qui devra être reconduit à chaque génération.</p>
+
+<p>Le papier se concentre sur le BF16. Les formats de précision inférieure — FP8, FP4 — promettent des gains supplémentaires mais déplacent les goulots d'étranglement différemment. SageAttention3 explore déjà le FP4 sur GPU Blackwell grand public. Combiner ces approches avec le pipeline de FlashAttention-4 sur GPU datacenter reste un terrain ouvert.</p>
+
+<p>Une question de fond traverse ce travail sans y être résolue : jusqu'où peut-on pousser l'attention quadratique avant que des architectures alternatives (attention linéaire, modèles d'état structurés comme Mamba, ou hybrides) ne deviennent plus rentables ? FlashAttention-4 repousse cette frontière, mais chaque gain incrémental sur l'attention standard est aussi un argument pour continuer à l'utiliser plutôt que migrer vers des alternatives sous-quadratiques. La compétition entre ces deux approches — optimiser l'existant ou changer d'architecture — continuera de structurer la recherche en IA pour les années à venir.</p>
+
+<p>Dernier point : l'accessibilité du framework. Si CuTe-DSL tient ses promesses en termes de productivité, on peut s'attendre à voir émerger des variantes d'attention spécialisées par domaine — attention avec masques structurés pour la biologie computationnelle, attention locale pour la vision, attention hybride pour les modèles multimodaux — développées par des équipes qui n'auraient jamais eu les ressources pour écrire des noyaux CUDA C++ optimisés. L'outil, ici, pourrait compter autant que l'algorithme.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

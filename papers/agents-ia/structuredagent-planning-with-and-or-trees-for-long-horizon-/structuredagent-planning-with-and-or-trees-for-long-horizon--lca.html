@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STRUCTUREDAGENT: Planning with AND/OR Trees for Long-Horizon Web Tasks — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>STRUCTUREDAGENT: Planning with AND/OR Trees for Long-Horizon Web Tasks</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+<h3>STRUCTUREDAGENT : Planning with AND/OR Trees for Long-Horizon Web Tasks</h3>
+<p><em>Lobo E. A., Chen X., Meng J., Xi N., Jiao Y., Agarwal C., Zick Y., Gao Y. — NeurIPS 2025 Workshop: Efficient Reasoning</em></p>
+
+<hr/>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>Les agents web pilotés par LLM échouent sur les tâches à horizon long : mémoire contextuelle limitée, planification faible, comportement glouton menant à des terminaisons prématurées. STRUCTUREDAGENT propose un cadre de planification hiérarchique fondé sur des arbres AND/OR construits dynamiquement pendant l'exécution, couplé à un module de mémoire structurée pour le suivi de contraintes dans les tâches de recherche d'information.</p>
+
+<p>Le problème est formalisé comme un POMDP (Partially Observable Markov Decision Process) où l'agent n'observe que la page HTML courante, son historique d'actions et des métadonnées extraites. Cette formalisation est adéquate : la navigation web est intrinsèquement partiellement observable et stochastique, puisque le contenu des pages change en réponse aux actions de l'agent.</p>
+
+<p>La motivation cognitive est explicite — les auteurs s'appuient sur le cadre de Newell et Simon (1972) où la résolution de problèmes humaine procède par recherche heuristique et analyse moyens-fins. Cette ancrage théorique distingue ce travail des approches purement empiriques qui empilent des modules sans justification formelle.</p>
+
+<h2>2. Méthodologie</h2>
+
+<p>L'architecture repose sur deux composants. Le premier est un planificateur AND/OR en ligne qui décompose les tâches en nœuds AND (sous-objectifs conjonctifs — tous doivent réussir), nœuds OR (stratégies alternatives — un seul succès suffit) et nœuds ACTION (opérations atomiques du navigateur). Le second est un module de mémoire structurée qui maintient un tableau dynamique de candidats et de contraintes satisfaites pour les tâches de recherche d'information.</p>
+
+<p>La construction de l'arbre procède par un DFS glouton modifié avec trois états d'exécution (ENTERING, EXITING, FAILED) au lieu du simple binaire visité/non-visité du DFS classique. Ce choix est bien motivé : la construction incrémentale de l'arbre et les opérations d'élagage/réparation exigent qu'un nœud puisse être traité plusieurs fois. Six statuts de nœuds (UNVISITED, VISITED, SUCCESS, FAIL, PRUNED, DELETED) capturent les conditions structurelles, d'exécution et d'échec.</p>
+
+<p>Séparation claire des responsabilités : le framework gère la construction et la traversée de l'arbre, le LLM n'est sollicité que pour des opérations locales (expansion, réparation, vérification de complétion, élagage). Cette séparation limite l'exposition aux hallucinations du LLM — chaque requête porte sur un sous-problème bien défini plutôt que sur la gestion d'un plan complexe entier.</p>
+
+<p>Cinq opérateurs spécialisés composent le système : NODE EXPANSION détermine le type de nœud et génère ses enfants ; NODE REPAIR révise les nœuds échoués ; GLOBAL TREE UPDATE élague les branches non pertinentes ; NODE COMPLETION CHECK vérifie si l'objectif d'un nœud AND est atteint ; OBSERVATION SUMMARIZER maintient les représentations internes. Les algorithmes sont fournis en détail (Algorithmes 1 à 10), ce qui est appréciable pour la reproductibilité.</p>
+
+<p>Un point faible méthodologique : la vérification de complétion stricte (NODE COMPLETION CHECK) n'est appliquée qu'au nœud racine dans l'implémentation réelle, les auteurs l'ayant jugée « trop stricte en pratique » pour les nœuds intermédiaires. Ce compromis entre rigueur formelle et faisabilité pratique n'est pas analysé — on ignore son impact sur la qualité des plans produits.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>L'évaluation couvre trois benchmarks :</p>
+<ul>
+<li><strong>Custom Complex Shopping</strong> (60 tâches Amazon) : STRUCTUREDAGENT atteint 83,3 % sur les tâches faciles (+14 % sur AgentOccam) et 35,6 % sur les tâches difficiles (+7 % en évaluation humaine). L'ajout de la mémoire structurée améliore de 5 % sur les tâches difficiles mais dégrade légèrement les tâches faciles.</li>
+<li><strong>WebArena</strong> (630 tâches sur 812) : score global de 52,6 % contre 46,4 % pour AgentOccam, avec des gains marqués sur Shopping (+14,8 points) et Reddit (+12,5 points).</li>
+<li><strong>WebVoyager</strong> (129 tâches) : performance comparable aux baselines (78,3 % vs 79,8 % pour AgentOccam), ce que les auteurs attribuent à la simplicité relative de ces tâches.</li>
+</ul>
+
+<p>Le protocole d'évaluation utilise trois juges LLM (Kimi-k2, Gemini-2.5-Flash, GPT-4.1) complétés par une évaluation humaine sur le sous-ensemble Amazon Hard. Les taux de désaccord entre juges LLM et humains atteignent 25-30 % sur Amazon Hard (Figure 8), ce qui remet en question la fiabilité de l'évaluation automatique pour les tâches complexes. Les scores humains sont systématiquement supérieurs aux scores LLM — les juges automatiques pénalisent la satisfaction partielle de contraintes plus sévèrement que les annotateurs humains.</p>
+
+<p>La généralisation inter-modèles est testée avec Claude 3.7 (Tableau 3) et Kimi-K2 (Tableau 4). Avec Claude 3.7, le gain persiste (+7,8 % sur AgentOccam), mais la mémoire structurée n'apporte plus de bénéfice — le modèle plus puissant exploite l'arbre AND/OR pour suivre les contraintes sans support mémoire explicite. Avec Kimi-K2, les gains sont plus modestes (0,2 % d'écart global), que les auteurs attribuent aux limites de ce modèle sur les contextes longs.</p>
+
+<p>Le coût computationnel est non négligeable. Sur WebArena, STRUCTUREDAGENT prend en moyenne 18 minutes par tâche GitLab contre 5,2 pour AgentOccam (Figure 9). Le nombre d'actions par tâche augmente substantiellement sur les tâches difficiles (17,6 actions moyennes sur Amazon Hard contre 5,2 pour AgentOccam).</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>Plusieurs faiblesses méritent d'être relevées :</p>
+
+<p>Le benchmark Custom Complex Shopping (60 tâches) est conçu par les auteurs eux-mêmes. Aucune validation externe de la difficulté ou de la représentativité de ces tâches n'est fournie. Le fait que STRUCTUREDAGENT soit évalué sur un benchmark maison soulève un risque de suroptimisation involontaire du framework pour ce type de tâches. Les 60 tâches Amazon sont listées en annexe — elles partagent un format très homogène (« Recommend N items under $X with constraints Y, Z ») qui pourrait favoriser le mécanisme AND/OR.</p>
+
+<p>L'exclusion de 182 tâches WebArena (22 %) est justifiée par des « erreurs de sites web ou d'évaluateurs » et l'absence du site ShoppingAdmin. Cette proportion est conséquente. Sans analyse de la distribution des tâches exclues, on ne peut exclure un biais de sélection.</p>
+
+<p>Aucune étude d'ablation formelle ne sépare les contributions respectives de l'arbre AND/OR, du DFS modifié, des opérateurs de réparation et de la mémoire structurée. La seule comparaison disponible est STRUCTUREDAGENT avec et sans mémoire structurée. On ignore si le gain provient principalement de la décomposition hiérarchique, de la capacité de backtracking, ou de la réparation de nœuds.</p>
+
+<p>Les heuristiques de recherche reposent entièrement sur le LLM (scores de vraisemblance pour les nœuds OR, décisions d'élagage). Les auteurs reconnaissent que concevoir des heuristiques admissibles reste un défi ouvert, mais ne fournissent aucune analyse de la qualité de ces heuristiques LLM-dépendantes — taux de faux positifs/négatifs, corrélation entre scores prédits et succès effectif.</p>
+
+<p>Le surcoût en temps et en actions n'est pas analysé en termes de coût API. Pour un déploiement réel, le nombre d'appels LLM par tâche (expansion, réparation, vérification, résumé d'observation, mise à jour globale — potentiellement plusieurs par nœud) représente un facteur multiplicatif substantiel par rapport à un agent séquentiel.</p>
+
+<p>L'intervention humaine (human-in-the-loop) est présentée comme un avantage de l'interprétabilité, illustrée par un unique exemple (Figure 13). Aucune évaluation systématique de ce mode n'est conduite — fréquence d'intervention nécessaire, gain de performance, temps opérateur requis.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Les algorithmes sont décrits avec un niveau de détail inhabituel pour un article de workshop — dix algorithmes complets avec pseudo-code, tableaux d'attributs de nœuds, définitions de statuts. La structure de données de l'arbre est entièrement spécifiée (Tableau 9).</p>
+
+<p>Les prompts sont mentionnés en Section E.1 mais ne figurent pas intégralement dans le texte fourni. Sans les prompts exacts, la reproduction des opérateurs (expansion, réparation, complétion) est impossible puisque le comportement dépend du format et du contenu des instructions données au LLM.</p>
+
+<p>Le recours à des modèles propriétaires (Claude 3.5 Sonnet, Claude 3.7, GPT-4.1 comme juge) rend la reproduction exacte dépendante de l'accès à ces API et de leur stabilité dans le temps — les versions de modèles évoluent. Aucun dépôt de code n'est mentionné.</p>
+
+<p>Les sites web utilisés dans WebVoyager sont des sites vivants (Amazon, BBC News, arXiv, GitHub, HuggingFace) dont le contenu change. Les résultats ne sont donc pas strictement reproductibles dans le temps. WebArena, en revanche, utilise un environnement auto-hébergé, ce qui améliore la reproductibilité pour cette partie de l'évaluation.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>La contribution principale est d'ordre architectural : séparer la gestion du plan (framework) de la génération locale (LLM) est une idée féconde qui contraint le LLM à opérer sur des sous-problèmes bien définis. Cette approche réduit la charge cognitive imposée au modèle et produit des trajectoires interprétables — un avantage concret pour le débogage en production.</p>
+
+<p>Le module de mémoire structurée répond à un problème réel : les agents à mémoire non structurée perdent les candidats découverts lors de l'exploration. Le tableau dynamique avec colonnes de contraintes est une solution pragmatique, même si elle ne bénéficie qu'aux tâches de recherche d'information.</p>
+
+<p>Le mécanisme de backpropagation d'erreurs à travers l'arbre — un nœud ACTION échoué entraîne l'élagage de ses frères non exécutés dans un nœud AND ordonné, puis la propagation vers le parent — est une amélioration significative par rapport aux agents qui ne savent que réessayer ou abandonner.</p>
+
+<p>Les applications directes sont l'automatisation de workflows entreprise, l'assistance au shopping en ligne et la recherche d'information sur le web. Le surcoût computationnel (×3 en temps sur certaines catégories) pourrait freiner l'adoption pour des cas d'usage sensibles à la latence.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>STRUCTUREDAGENT se positionne entre les approches à planification plate (BasicClaudeAction, WebarenaReplication) et les approches à planification arborescente existantes. Par rapport à AgentOccam (Yang et al., 2025) qui construit un arbre incrémental avec élagage, STRUCTUREDAGENT ajoute la distinction AND/OR, la réparation de nœuds et la propagation d'erreurs structurée. Par rapport à Koh et al. (2025) qui utilisent A* sur des actions individuelles, le framework opère à un niveau d'abstraction supérieur (sous-objectifs composés).</p>
+
+<p>L'utilisation d'arbres AND/OR remonte aux travaux classiques en IA (planification, jeux). L'apport ici est leur adaptation au contexte spécifique des agents web, où l'arbre est construit en ligne (pas pré-calculé), les nœuds correspondent à des interactions navigateur, et les échecs nécessitent une gestion dynamique. Cette adaptation n'est pas triviale — les six statuts de nœuds et les trois états d'exécution en témoignent.</p>
+
+<p>Par rapport aux approches par apprentissage par renforcement (WebRL, Agent Q), STRUCTUREDAGENT fonctionne uniquement en inférence, sans fine-tuning. Cette caractéristique le rend applicable immédiatement à tout LLM suffisamment capable, mais limite aussi son potentiel d'amélioration : le framework ne s'adapte pas aux patterns récurrents d'un domaine donné.</p>
+
+<p>Le travail reste au stade de workshop paper — la profondeur d'évaluation (pas d'ablation, benchmark maison modeste, coûts non chiffrés) est cohérente avec ce format mais insuffisante pour une publication en conférence principale.</p>
+
+<hr/>
+
+<h2>Tableau récapitulatif — Scores de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème clair, bien motivé par les limites documentées des agents existants ; ancrage en sciences cognitives pertinent.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Trois benchmarks couvrant des contextes variés, mais pas d'ablation séparant les composants ; benchmark maison de 60 tâches au format homogène.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>630 tâches WebArena (correct), 129 WebVoyager (modéré), 60 Amazon (faible) ; pas d'intervalles de confiance rapportés.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Taux de complétion de tâche standard mais grossier ; évaluation LLM-juge avec 25-30 % de désaccord sur les tâches difficiles.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Trois juges LLM + évaluation humaine réduisent le biais d'un juge unique ; benchmark conçu par les auteurs ; exclusion de 22 % des tâches WebArena.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Algorithmes détaillés (10 pseudo-codes), mais prompts non intégralement publiés, modèles propriétaires, pas de dépôt de code.</td></tr>
+<tr><td>Transparence / Limitations</td><td>3</td><td>Reconnaît le surcoût et la dégradation sur tâches faciles ; ne quantifie pas les coûts API ; pas d'analyse des modes d'échec.</td></tr>
+<tr><td>Impact / Nouveauté</td><td>4</td><td>Adaptation réussie des arbres AND/OR au contexte web avec propagation d'erreurs et réparation dynamique ; séparation framework/LLM féconde.</td></tr>
+</tbody>
+<tfoot>
+<tr><td><strong>Note globale</strong></td><td><strong>3,4 / 5</strong></td><td>Article de workshop solide avec une architecture bien conçue et des résultats cohérents, mais évaluation incomplète (ablations absentes, coûts non chiffrés, reproductibilité partielle).</td></tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

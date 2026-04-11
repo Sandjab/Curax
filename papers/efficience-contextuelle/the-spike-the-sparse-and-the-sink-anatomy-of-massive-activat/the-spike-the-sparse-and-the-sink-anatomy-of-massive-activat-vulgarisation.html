@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Spike, the Sparse and the Sink: Anatomy of Massive Activations and Attention Sinks — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Spike, the Sparse and the Sink: Anatomy of Massive Activations and Attention Sinks</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les Transformers trichent : anatomie de deux bugs devenus features</h2>
+
+<h3>Introduction</h3>
+
+<p>GPT, Llama, Qwen — les grands modèles de langage partagent une architecture commune, le Transformer. Ils partagent aussi deux comportements étranges que personne ne comprenait tout à fait. Le premier : certains tokens développent des activations géantes, des valeurs numériques mille fois supérieures à la normale dans leurs représentations internes. Le second : ces mêmes tokens aspirent une part disproportionnée de l'attention du modèle, quelle que soit leur pertinence sémantique. Ces deux phénomènes — baptisés <em>massive activations</em> et <em>attention sinks</em> — posent des problèmes concrets pour la quantification, l'élagage et l'inférence longue. Mais leur lien de cause à effet restait flou. Une équipe de NYU, avec Yann LeCun parmi les auteurs, vient d'en proposer une explication mécaniste complète dans un preprint de mars 2026.</p>
+
+<h3>Le problème</h3>
+
+<p>Quand on ouvre le capot d'un LLM pour examiner ses calculs internes, on tombe sur deux anomalies récurrentes.</p>
+
+<p>Première anomalie : dans les couches intermédiaires, quelques tokens — souvent le tout premier de la séquence ou des séparateurs comme les points et retours à la ligne — présentent des valeurs d'activation extrêmes sur un petit nombre de canaux. On parle d'activations massives : des pics qui dépassent de trois ordres de grandeur les valeurs habituelles. Chez Llama 2 7B, ces pics atteignent 3 000 en magnitude quand les tokens ordinaires oscillent autour de 1 à 10.</p>
+
+<p>Deuxième anomalie : ces mêmes tokens captent l'essentiel de l'attention dans de nombreuses têtes d'attention, toutes couches confondues. Le modèle « regarde » ces tokens en permanence, même quand le contexte sémantique ne le justifie pas. Le token agit comme un drain pour l'attention — d'où le nom <em>attention sink</em>, « puits d'attention ».</p>
+
+<p>Les deux phénomènes se manifestent chez les mêmes tokens. Ce chevauchement a conduit de nombreux chercheurs à supposer qu'ils étaient intrinsèquement liés. Mais personne n'avait démontré le mécanisme causal. Est-ce que les activations massives causent les attention sinks ? L'inverse ? Ou s'agit-il d'une coïncidence architecturale ?</p>
+
+<p>La question n'est pas académique. Les activations massives compliquent la quantification des modèles — réduire la précision numérique pour accélérer l'inférence — parce qu'elles créent des valeurs aberrantes qui ne tiennent pas dans des formats à faible nombre de bits. Les attention sinks perturbent la gestion du cache KV dans l'inférence longue : le modèle gaspille de la capacité mémoire à stocker les clés et valeurs de tokens qui ne portent aucune information utile.</p>
+
+<h3>La méthode</h3>
+
+<p>L'équipe a procédé en deux temps. D'abord, un travail d'observation minutieux sur des modèles pré-entraînés (Llama 2, Llama 3, Qwen 2.5, Qwen 3) pour tracer le parcours des activations massives couche par couche. Ensuite, une série d'ablations systématiques — des expériences où l'on modifie un seul composant architectural à la fois — sur des modèles de 7 milliards de paramètres entraînés de zéro.</p>
+
+<p>Pour comprendre l'approche, il faut visualiser le Transformer comme une chaîne de montage. Chaque couche prend la représentation d'un token, la transforme, puis ajoute sa contribution à un courant résiduel — une sorte de tapis roulant qui accumule les modifications successives. Ce qui est posé sur le tapis reste dessus, sauf si une couche ultérieure le retire explicitement.</p>
+
+<p>Les chercheurs ont découvert que les activations massives suivent un cycle de vie en trois phases. Une ou deux couches précoces (les « step-up blocks ») injectent des valeurs extrêmes sur quelques canaux spécifiques. Ces valeurs persistent ensuite sur le tapis roulant résiduel à travers des dizaines de couches intermédiaires — aucune couche n'est assez forte pour les écraser. Puis, une ou deux couches tardives (les « step-down blocks ») injectent des valeurs de signe opposé pour neutraliser les pics juste avant la sortie du réseau.</p>
+
+<p>Comment ces pics naissent-ils ? L'analyse montre que le réseau feed-forward (basé sur l'activation SwiGLU) agit comme un amplificateur directionnel. Imaginez un microphone qui ne capte qu'une fréquence très précise, mais l'amplifie de façon quadratique. Si la représentation d'un token pointe dans la « bonne direction » dans l'espace de haute dimension, le réseau feed-forward produit une sortie massive. Sinon, rien ne se passe. Et cette direction privilégiée est partagée par tous les canaux à pics — ce qui explique pourquoi ils s'activent toujours ensemble, dans des proportions fixes.</p>
+
+<p>Le premier token d'une séquence tombe presque systématiquement dans cette direction. Chez Llama 2 7B, 99,65 % des tokens du vocabulaire — soit 31 887 sur 32 000 — produisent des activations massives quand ils occupent la position zéro. La raison est mécanique : le premier token n'a qu'un seul token à regarder (lui-même), donc son bloc d'attention se réduit à une multiplication matricielle statique, identique pour toutes les phrases. Cette transformation le pousse mécaniquement vers la direction d'amplification.</p>
+
+<p>Arrive ensuite l'étape décisive : la normalisation. Avant chaque bloc d'attention, une opération RMSNorm remet les vecteurs à l'échelle. Pour un token normal, cette opération est anodine. Mais pour un token dont quelques canaux dominent à des valeurs mille fois supérieures aux autres, la normalisation écrase tout sauf les quelques géants. Le résultat : un vecteur clairsemé, quasi constant d'un token spike à l'autre, quel que soit le contexte de la phrase. Tous les tokens spikes se ressemblent après normalisation — leur similarité cosinus approche 1,0.</p>
+
+<p>Ce vecteur quasi constant produit des clés d'attention confinées dans un minuscule sous-espace — une ou deux dimensions au lieu des 128 habituelles. Si ce sous-espace est géométriquement plus proche des requêtes des tokens normaux que ne le sont les clés normales, la tête d'attention envoie massivement son poids vers le token spike. L'attention sink est née.</p>
+
+<h3>Résultats clés</h3>
+
+<p>Les ablations révèlent quatre résultats marquants.</p>
+
+<p>La normalisation est le pont entre les deux phénomènes — mais un pont qu'on peut démolir sans conséquence. En ajoutant une normalisation supplémentaire après chaque bloc (sandwich normalization), les activations massives tombent de 3 818 à 520 — une réduction de 86 % — sans toucher au taux de sinks (44,7 % contre 46 % en baseline) ni à la perplexité. Avec DynamicTanh, une transformation élément par élément incapable de créer des vecteurs clairsemés, les pics tombent à 153 et le taux de sinks <em>monte</em> à 61 %. Le modèle trouve d'autres stratégies pour créer des sinks quand les activations massives ne sont pas disponibles.</p>
+
+<p>La dimension des têtes d'attention contrôle directement la formation des sinks. Avec des têtes de dimension 8, le taux de sinks tombe à 4,1 %. À dimension 128, il atteint 46 %. L'explication géométrique est limpide : dans un espace plus grand, le modèle sépare plus facilement les clés sinks des clés normales en sous-espaces distincts. Résultat contre-intuitif : concentrer la capacité dans moins de têtes mais plus larges (256 dimensions, 16 têtes au lieu de 128 dimensions, 32 têtes) renforce les sinks et améliore simultanément la perplexité.</p>
+
+<p>Les attention sinks sont un mécanisme de gating implicite. Quand on ajoute au modèle un gate conditionnel explicite — une porte qui module dynamiquement la sortie de chaque tête selon le contexte courant —, le taux de sinks s'effondre de 46 % à 4,5 %, sans dégradation de performance. Le modèle n'a plus besoin de son premier token comme décharge attentionnelle : il dispose d'un vrai interrupteur. Un gate statique, en revanche, ne change rien — c'est le caractère dynamique et dépendant de l'entrée qui compte.</p>
+
+<p>Les sinks existent pour gérer les dépendances courtes dans un mécanisme d'attention globale. Quand on entraîne le modèle uniquement sur des séquences longues (positions 2 048 à 4 096), le taux de sinks tombe à 1,2 %. Dès qu'on réintroduit des séquences courtes dans la distribution d'entraînement, les sinks reviennent à 46 %. Le premier token sert de point de référence universel pour les prédictions locales — un raccourci que le modèle exploite pour prédire le mot suivant dans une phrase courte au sein d'un contexte global large.</p>
+
+<p>Un fait traverse tous ces résultats : chaque phénomène peut être supprimé indépendamment sans dégrader la qualité du modèle de langage. Leur coexistence dans les LLM actuels reflète les choix architecturaux par défaut (pré-normalisation RMSNorm, SwiGLU, entraînement sur un mélange de séquences courtes et longues), pas une nécessité computationnelle profonde.</p>
+
+<h3>Implications pratiques</h3>
+
+<p>Pour la quantification, ces résultats sont directement actionnables. Les techniques actuelles (SmoothQuant, rotations de Hadamard) contournent les outliers au prix de transformations complexes appliquées après l'entraînement. L'étude montre qu'on peut éliminer ces outliers dès la conception — par sandwich normalization ou DynamicTanh — sans sacrifier la qualité linguistique. Des modèles sans activations massives se quantifient naturellement en précision réduite, ce qui simplifie le pipeline de déploiement et réduit le coût d'inférence.</p>
+
+<p>La gestion du cache KV bénéficierait aussi d'architectures sans sinks. Aujourd'hui, des méthodes comme StreamingLLM conservent les tokens sinks dans le cache par précaution, gaspillant de la mémoire précieuse pour des tokens sans contenu sémantique. Les résultats sur le gating conditionnel suggèrent une alternative : des architectures où le modèle dispose d'un mécanisme explicite pour éteindre certaines têtes, rendant les puits d'attention superflus.</p>
+
+<p>Le lien entre sinks et distribution des longueurs de contexte à l'entraînement offre un levier supplémentaire. Des stratégies de curriculum qui augmentent progressivement la proportion de séquences longues pourraient réduire la dépendance aux sinks et améliorer l'utilisation effective du contexte long — un enjeu central pour les applications de type RAG ou analyse de documents.</p>
+
+<p>Au-delà de l'optimisation, l'étude change la grille de lecture pour interpréter les calculs internes des LLM. Les activations massives ne sont pas des bugs — ce sont des paramètres implicites que le modèle apprend à exploiter via la normalisation. Les attention sinks ne sont pas du gaspillage — ce sont des portes apprises en l'absence de portes explicites. Cette compréhension fonctionnelle guide les choix architecturaux de façon plus fiable que des observations purement descriptives.</p>
+
+<h3>Pour aller plus loin</h3>
+
+<p>L'étude porte sur des modèles de 7 à 14 milliards de paramètres. Les phénomènes sont documentés à plus grande échelle, mais les ablations n'ont pas été reproduites à 70 ou 400 milliards. Les mêmes leviers architecturaux fonctionnent-ils quand le nombre de canaux disponibles pour les pics et la géométrie des sous-espaces d'attention changent avec l'échelle ?</p>
+
+<p>Le lien entre sinks et contextes courts soulève une question sur les modèles à fenêtre de contexte très longue — Gemini à un million de tokens, Claude à 200 000. Si les sinks disparaissent quand on supprime les séquences courtes de l'entraînement, ces modèles ont peut-être développé d'autres stratégies de routage local, qui restent à identifier.</p>
+
+<p>Le gating conditionnel élimine les sinks sans coût en perplexité, mais ajoute des paramètres et de la complexité. Le compromis entre surcoût architectural et régularité numérique (absence d'outliers, distributions d'attention plus lisses) mérite une évaluation à l'échelle industrielle, sur des tâches en aval et pas seulement sur la perplexité.</p>
+
+<p>Les auteurs n'abordent pas les architectures hybrides attention-SSM (Mamba, Jamba) ni les Linear Transformers. Ces architectures n'utilisent pas softmax — les sinks tels que décrits ici ne peuvent pas s'y former de la même manière. Comparer les stratégies de routage implicite entre familles d'architectures serait un prolongement naturel de ce travail.</p>
+
+<p>La contribution principale de cette étude tient en une phrase : les deux comportements les plus mystérieux des Transformers modernes sont des artefacts architecturaux prévisibles, pas des propriétés émergentes inexplicables. Avec les bons choix de conception, on peut s'en débarrasser — ou choisir de les garder en connaissance de cause.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building Effective AI Coding Agents for the Terminal: Scaffolding, Harness, Context Engineering, and Lessons Learned — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Building Effective AI Coding Agents for the Terminal: Scaffolding, Harness, Context Engineering, and Lessons Learned</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>OPENDEV est un agent de codage en ligne de commande, open-source, écrit en Rust, conçu pour fonctionner directement dans le terminal. L'article qui le documente se présente comme le premier rapport technique complet pour un agent de codage terminal-natif open-source — une niche que l'auteur identifie entre les systèmes fermés (Claude Code), les frameworks orientés benchmarks (SWE-Agent) et les outils CLI sans documentation architecturale publiée (Aider, Goose, Gemini CLI).</p>
+
+<p>Trois questions structurent le propos : comment répartir le travail entre plusieurs modèles selon le type de tâche cognitive, comment empêcher les opérations destructrices sans paralyser le développeur, et comment maintenir des conversations longues dans une fenêtre de contexte finie. Le positionnement est explicitement non-algorithmique : l'auteur annonce qu'aucune percée algorithmique n'est revendiquée. L'ambition est de partager des décisions d'ingénierie et leurs compromis.</p>
+
+<h2>Méthodologie</h2>
+
+<p>Le papier adopte le format d'un rapport technique descriptif, pas celui d'une étude expérimentale. L'architecture est décomposée en quatre couches (Entry & UI, Agent, Tool & Context, Persistence) documentées par des diagrammes de flux et des descriptions algorithmiques.</p>
+
+<h3>Architecture multi-agents</h3>
+<p>Une seule classe concrète (<code>MainAgent</code>) instancie tous les agents du système — agent principal, planificateur, explorateur de code, etc. La différenciation comportementale passe par trois paramètres de construction : la liste d'outils autorisés, le prompt système, et un drapeau sous-agent. Ce choix élimine un problème de diamant observé lors d'une phase antérieure avec hiérarchie de classes.</p>
+
+<h3>Routage multi-modèles</h3>
+<p>Cinq rôles spécialisés (action, thinking, critique, vision, compaction) sont associés chacun à un LLM distinct via configuration utilisateur, avec chaînes de fallback. L'initialisation des clients API est paresseuse : seuls les modèles effectivement utilisés dans une session sont instanciés.</p>
+
+<h3>Boucle ReAct étendue</h3>
+<p>La boucle d'exécution ajoute deux phases au ReAct standard : une phase de réflexion sans outils (quatre niveaux de profondeur configurables) et une phase d'auto-critique optionnelle au niveau HIGH. La détection de boucles utilise un fingerprinting MD5 des appels d'outils sur une fenêtre glissante de 20 appels, avec escalade en deux paliers (avertissement puis pause approbation).</p>
+
+<h3>Compaction adaptative de contexte (ACC)</h3>
+<p>Cinq seuils progressifs (70%, 80%, 85%, 90%, 99%) déclenchent des stratégies de réduction de plus en plus agressives : avertissement, masquage des observations anciennes, élagage rapide, masquage agressif, puis résumé complet par LLM. Un index d'artefacts maintient la trace des fichiers manipulés même après compaction.</p>
+
+<h3>Sécurité en cinq couches</h3>
+<p>La défense en profondeur empile : guardrails dans le prompt, restrictions de schéma par mode (plan vs normal), système d'approbation à l'exécution avec permissions persistantes, validation par outil (patterns dangereux, détection de lecture périmée), et hooks de cycle de vie définis par l'utilisateur.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>L'article rapporte une seule mesure quantitative : la compaction ACC réduit la consommation de contexte des observations d'environ 54%, éliminant souvent la nécessité d'une compaction d'urgence sur des sessions de 30 tours. Aucune méthodologie de mesure n'accompagne ce chiffre — pas de protocole d'évaluation, pas de conditions de test, pas de variabilité rapportée.</p>
+
+<p>Le reste des « résultats » est qualitatif :</p>
+<ul>
+<li>L'optimisation des résultats d'outils étend la durée typique de session de 15-20 tours à 30-40 tours sans compaction</li>
+<li>Les rappels système injectés en <code>role: user</code> produisent de meilleurs taux de conformité que <code>role: system</code> — sans quantification</li>
+<li>La régénération périodique de la mémoire épisodique (toutes les 5 interactions) corrige une dérive de résumé observée avec le résumé incrémental — sans mesure de cette dérive</li>
+</ul>
+
+<p>Aucun benchmark standardisé (SWE-bench, Terminal-Bench, HumanEval) n'est utilisé pour évaluer le système, bien que ces benchmarks soient cités dans l'introduction.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>La principale faiblesse de ce travail est l'absence totale d'évaluation empirique. Un système d'ingénierie logicielle aussi détaillé devrait être confronté aux benchmarks qu'il cite lui-même. SWE-bench, Terminal-Bench et LongCLI-Bench sont mentionnés pour motiver le travail, puis jamais utilisés pour le valider. L'affirmation que l'ACC réduit la consommation de 54% flotte sans ancrage méthodologique.</p>
+
+<p>Le papier est écrit par un seul auteur qui est aussi le développeur du système. Chaque décision architecturale est présentée avec son « design evolution » — les alternatives rejetées et les raisons du choix final — ce qui fournit un contexte utile mais unilatéral. Aucun utilisateur externe, aucune étude d'utilisabilité, aucun retour tiers ne vient valider les choix rapportés.</p>
+
+<p>Les comparaisons avec les systèmes existants restent au niveau qualitatif et structurel. Claude Code, Aider, Goose sont cités pour leur absence de rapport technique, mais jamais comparés sur des métriques communes. Le lecteur ne peut pas déterminer si OPENDEV résout mieux les problèmes qu'il identifie que les systèmes concurrents.</p>
+
+<p>La section « Lessons Learned » (Section 3, mentionnée mais non reproduite dans le texte fourni) promet cinq tensions de conception transversales. Sans cette section, le rapport reste une description architecturale sans la dimension réflexive annoncée.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le code source est disponible sur GitHub (<code>github.com/opendev-to/opendev</code>), écrit en Rust. L'article fournit des pseudocodes (Algorithm 1 pour la boucle ReAct), des diagrammes d'architecture détaillés, et des annexes avec les catalogues complets d'outils, prompts et schémas de configuration. Cette documentation technique est d'une granularité inhabituelle pour un prépublication — chaque composant est décrit avec ses paramètres concrets (seuils numériques, tailles de fenêtres, noms de fichiers de templates).</p>
+
+<p>La reproductibilité du système lui-même est bonne. La reproductibilité des résultats rapportés (54% de réduction, extension à 30-40 tours) est impossible à vérifier faute de protocole expérimental.</p>
+
+<h2>Impact et applications</h2>
+
+<p>L'article remplit un vide documentaire réel. Les agents de codage terminal-natifs se multiplient, mais leurs architectures internes restent opaques. Documenter les choix d'OPENDEV — pourquoi une seule classe d'agent paramétrée plutôt qu'une hiérarchie, pourquoi la planification par sous-agent plutôt que par machine à états, pourquoi les rappels en <code>role: user</code> — fournit des points de référence concrets pour les développeurs d'agents similaires.</p>
+
+<p>Les contributions les plus transférables : la compaction de contexte par seuils progressifs (une idée simple qui évite le résumé d'urgence coûteux), la détection de boucles par fingerprinting MD5, et la composition conditionnelle du prompt système avec sections prioritaires et prédicats d'inclusion. Ces patterns d'ingénierie ont une valeur pratique indépendante du système OPENDEV.</p>
+
+<p>La portée reste limitée par l'absence de validation. Un praticien qui veut adopter ces patterns doit les évaluer lui-même — le papier ne fournit pas de preuve que ces choix produisent de meilleurs résultats que les alternatives.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>L'article se situe à l'intersection de trois courants : les systèmes d'IA composés (Zaharia et al., référence [103]), l'ingénierie de contexte pour LLM (références [39, 56, 101]), et les agents de codage autonomes (SWE-Agent [95], OpenHands [84], HyperAgent [69]). La bibliographie est abondante (106 références) et à jour (mars 2026).</p>
+
+<p>Par rapport à SWE-Agent et OpenHands, OPENDEV se distingue par son orientation interactive (vs. benchmark-driven) et terminal-native (vs. navigateur). Par rapport à Claude Code, il se distingue par son caractère open-source et documenté. Le papier cite mais ne compare pas : aucune évaluation croisée ne vient étayer le positionnement revendiqué.</p>
+
+<p>La contribution relève davantage du rapport d'ingénierie que de la recherche scientifique au sens strict. L'auteur le reconnaît explicitement : « The purpose of this paper is not to present a novel algorithmic breakthrough, but rather to share the design decisions, trade-offs, and lessons learned. » Cette honnêteté positionne correctement le travail, mais implique que son évaluation doit se faire sur la qualité de la documentation et l'utilité pratique des patterns partagés plutôt que sur la rigueur expérimentale.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4/5</td><td>Lacune documentaire clairement identifiée, trois questions de recherche formulées, positionnement explicite par rapport aux systèmes existants</td></tr>
+<tr><td>Design expérimental</td><td>2/5</td><td>Rapport descriptif sans protocole expérimental ; les choix architecturaux sont justifiés par des arguments qualitatifs et des anecdotes de développement, pas par des expériences contrôlées</td></tr>
+<tr><td>Taille d'échantillon</td><td>1/5</td><td>Aucune évaluation quantitative systématique ; un seul chiffre rapporté (54% de réduction ACC) sans conditions de mesure</td></tr>
+<tr><td>Qualité des métriques</td><td>1/5</td><td>Pas de métriques définies, pas de benchmarks utilisés malgré leur citation en introduction</td></tr>
+<tr><td>Contrôle des biais</td><td>1/5</td><td>Auteur unique évaluant son propre système, aucun évaluateur externe, aucune comparaison quantitative avec des alternatives</td></tr>
+<tr><td>Reproductibilité</td><td>4/5</td><td>Code open-source disponible, pseudocode, diagrammes détaillés, paramètres concrets documentés ; seule l'absence de protocole expérimental empêche le score maximal</td></tr>
+<tr><td>Transparence et limitations</td><td>3/5</td><td>Les évolutions de conception et les alternatives rejetées sont documentées honnêtement ; les limites globales du travail (absence d'évaluation) ne sont pas discutées frontalement</td></tr>
+<tr><td>Impact et nouveauté</td><td>3/5</td><td>Premier rapport technique complet pour un agent CLI open-source ; patterns d'ingénierie transférables ; pas de contribution algorithmique revendiquée</td></tr>
+</tbody>
+</table>
+
+<p><strong>Note globale de robustesse : 2.5/5.</strong> Un rapport d'ingénierie logicielle de haute qualité documentaire, qui comble un manque réel dans la littérature sur les agents de codage. L'architecture est décrite avec une granularité rare. L'absence d'évaluation empirique — aucun benchmark, aucune mesure systématique, aucune comparaison quantitative — empêche de qualifier ce travail de contribution scientifique au sens expérimental. Sa valeur réside dans le partage de patterns d'ingénierie concrets et reproductibles.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

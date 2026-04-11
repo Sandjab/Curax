@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlashAttention-4: Algorithm and Kernel Pipelining Co-Design for Asymmetric Hardware Scaling — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>FlashAttention-4: Algorithm and Kernel Pipelining Co-Design for Asymmetric Hardware Scaling</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+<h3>FlashAttention-4 : Co-conception algorithmique et noyaux GPU pour le scaling matériel asymétrique</h3>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>L'architecture Blackwell de NVIDIA (B200, GB200) double le débit des tensor cores par rapport à Hopper (2,25 PFLOPS contre 1 PFLOPS en BF16), mais la bande passante mémoire partagée et le débit de l'unité exponentielle (MUFU) stagnent à 128 octets/cycle/SM et 16 ops/cycle/SM respectivement. Ce découplage — qualifié de « scaling asymétrique » — déplace le goulot d'étranglement de l'attention loin du calcul matriciel vers les opérations non-MMA. FlashAttention-4 reformule le pipeline d'attention pour exploiter cette nouvelle répartition des ressources matérielles.</p>
+
+<p>Le problème est concret et immédiat : les systèmes Blackwell sont déjà déployés dans les centres de données, et FlashAttention-3, conçu pour Hopper, ne tourne pas sur B200. L'analyse roofline (sections 3.1 et 3.2) quantifie précisément le décalage : pour une tuile 256×128×128, la mémoire partagée et l'exponentielle consomment 25-60 % de cycles de plus que le calcul MMA.</p>
+
+<h2>2. Méthodologie</h2>
+
+<p>L'approche se décompose en quatre axes techniques, chacun ciblant un goulot identifié par l'analyse roofline :</p>
+
+<ul>
+<li><strong>Pipeline ping-pong redessiné</strong> — Deux tuiles de sortie par bloc de threads, avec recouvrement softmax/MMA. La mémoire tensorielle (TMEM, 256 Ko/SM) stocke les accumulateurs, éliminant les shuffles inter-warps de FA-3. Le partitionnement TMEM retenu (deux tuiles S se chevauchant avec P) permet de lancer immédiatement deux calculs S en pipeline.</li>
+<li><strong>Émulation logicielle de l'exponentielle</strong> — Décomposition de 2^x par réduction de range (Cody-Waite) et approximation polynomiale de degré 3 à 5, évaluée via FMA en parallèle du MUFU matériel. Seuls 10-25 % des éléments par ligne softmax passent par l'émulation, le reste utilise le MUFU. L'erreur après arrondi BF16 est indiscernable du matériel (Table 2).</li>
+<li><strong>Backward en mode 2-CTA</strong> — Deux CTA coopèrent sur un MMA de tuile M=256, chacun ne chargeant que la moitié de l'opérande B depuis la mémoire partagée. Pour dQ, un échange via DSMEM repack le gradient dS pour doubler la dimension de réduction. Résultat : réduction de moitié des atomics globaux et diminution du trafic SMEM de 3328 à 2688 cycles.</li>
+<li><strong>Ordonnancement LPT</strong> — Scheduling « longest-processing-time first » avec swizzle par têtes et batches pour ne pas déborder le cache L2. Pour le masquage causal, les blocs KV sont lancés en ordre décroissant avec un ordonnancement SPT des réductions dQ.</li>
+</ul>
+
+<p>L'implémentation complète utilise CuTe-DSL, un DSL Python de CUTLASS, sans aucun composant C++. La compilation JIT réduit les temps de build de 55s à 2,5s pour le forward (22×) et de 45s à 1,4s pour le backward (32×).</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>Les benchmarks sont effectués sur un B100 180 Go SXM6 (1000W) avec 5 runs de warmup et 10 répétitions moyennées. Les versions logicielles sont fixées (CUDA 13.1, PyTorch 2.10.0, Triton 3.6, cuDNN 9.13).</p>
+
+<ul>
+<li>Forward BF16, head dim 128 : 1,1-1,3× plus rapide que cuDNN 9.13 et 2,1-2,7× que Triton, sur des séquences de 1k à 32k tokens.</li>
+<li>Pic de performance : 1613 TFLOPs/s, soit 71 % du maximum théorique du B200.</li>
+<li>Les gains sont plus marqués en mode causal, grâce à l'ordonnancement LPT (4-8 % en MHA, 7-14 % en MQA sur H200).</li>
+<li>Le backward déterministe atteint 75 % de la vitesse du backward non-déterministe (1-CTA), un résultat appréciable pour l'entraînement par renforcement.</li>
+<li>La configuration (192, 128) de DeepSeek V3 est également benchmarkée (Figure 5).</li>
+</ul>
+
+<p>L'analyse de précision numérique (Table 2) sur 4 millions d'entrées aléatoires montre que l'approximation polynomiale de degré 3 atteint une erreur relative max de 8,8×10⁻⁵ en FP32, mais après arrondi BF16, l'erreur de quantification (3,9×10⁻³) domine — rendant tous les degrés ≥ 3 équivalents au matériel.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>Plusieurs réserves méritent attention :</p>
+
+<ul>
+<li>Les benchmarks utilisent un B100 SXM6, alors que le texte présente FA-4 comme ciblant le B200/GB200. Les auteurs ne discutent pas les différences de performance entre B100 et B200, ni pourquoi le benchmark n'a pas été conduit sur la cible principale.</li>
+<li>La comparaison avec cuDNN 9.13 est partiellement auto-référentielle : les auteurs indiquent avoir collaboré avec l'équipe cuDNN pour intégrer des techniques de FA-4 dans cuDNN 9.13+. Les versions ultérieures (9.19) atteignent des performances similaires à FA-4.</li>
+<li>Le rescaling conditionnel (seuil τ = log₂(256) = 8.0) est présenté sans analyse de sensibilité. L'impact de ce seuil sur la convergence de l'entraînement n'est pas évalué — seule la correction mathématique est argumentée.</li>
+<li>L'émulation partielle (10-25 % des entrées) repose sur un réglage empirique dont les critères ne sont pas détaillés. La fraction optimale pourrait varier selon les distributions de données réelles.</li>
+<li>Aucun benchmark de bout en bout sur un entraînement LLM complet. Les mesures portent exclusivement sur le kernel d'attention isolé.</li>
+<li>Le B300, mentionné comme doublant le débit MUFU, invaliderait une partie des optimisations d'émulation exponentielle. La pérennité des techniques est incertaine au-delà d'une génération matérielle.</li>
+</ul>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Le code source est disponible sous licence permissive sur GitHub (Dao-AILab/flash-attention). Les versions exactes de toutes les bibliothèques sont listées (Appendice A.1). Le protocole de benchmark — 5 warmup, 10 répétitions, moyenne — est standard et reproductible. L'implémentation en CuTe-DSL Python est intrinsèquement plus accessible que le C++ template de FA-3, ce qui abaisse la barrière à la réplication et à l'extension.</p>
+
+<p>La principale limitation de reproductibilité concerne l'accès matériel : les GPU B200/B100 restent peu disponibles en dehors des grands laboratoires et entreprises partenaires de NVIDIA. Le kernel ne tourne pas sur Hopper ni sur des GPU grand public.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>La série FlashAttention a redéfini l'implémentation de l'attention depuis 2022. FA-4 poursuit cette trajectoire en ciblant la transition industrielle vers Blackwell, un timing qui lui confère un impact immédiat. Trois contributions se distinguent :</p>
+
+<ul>
+<li>L'émulation logicielle de l'exponentielle via FMA est une technique transférable à tout kernel limité par le MUFU, au-delà de l'attention.</li>
+<li>Le passage intégral à CuTe-DSL constitue un changement d'approche pour le développement de kernels haute performance. Les temps de compilation de 1-2 secondes transforment le cycle de développement.</li>
+<li>Le backward déterministe avec un overhead limité répond à un besoin réel pour le RLHF et le debugging d'entraînement.</li>
+</ul>
+
+<p>L'intégration dans cuDNN par NVIDIA elle-même (versions 9.13+) confirme la pertinence pratique des techniques proposées.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>FA-4 s'inscrit dans la lignée directe de FA (Dao et al., 2022), FA-2 (Dao, 2023) et FA-3 (Shah et al., 2024), chaque itération adaptant l'algorithme à une nouvelle architecture GPU. La progression est claire : IO-awareness (FA), parallélisme séquentiel (FA-2), asynchronisme Hopper (FA-3), co-design Blackwell (FA-4).</p>
+
+<p>Les travaux SageAttention (Lin et al., 2024-2025) explorent une direction complémentaire via la quantification (INT8, INT4, FP4) mais ciblent les GPU grand public. FA-4 se concentre sur les GPU datacenter où se déroule l'entraînement à grande échelle. Les deux approches ne sont pas mutuellement exclusives — une combinaison FA-4 + quantification FP4/FP8 sur Blackwell reste à explorer.</p>
+
+<p>L'utilisation de CuTe-DSL positionne FA-4 à l'intersection de la recherche algorithmique et du tooling GPU. Triton et Gluon occupent un espace similaire mais avec des niveaux d'abstraction différents — FA-4 démontre que le contrôle bas niveau (accès PTX direct) reste nécessaire pour atteindre les performances de pointe.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<thead>
+<tr style="background-color: #f0f0f0;">
+<th style="text-align: left;">Critère</th>
+<th style="text-align: center;">Score (/5)</th>
+<th style="text-align: left;">Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question de recherche</td>
+<td style="text-align: center;">4</td>
+<td>Problème clairement défini et quantifié par analyse roofline. Motivation ancrée dans une transition matérielle réelle et documentée.</td>
+</tr>
+<tr>
+<td>Design expérimental</td>
+<td style="text-align: center;">4</td>
+<td>Benchmarks contre cinq baselines (PyTorch, FA-2, Triton, Gluon, cuDNN), protocole standard avec warmup et répétitions. L'absence de benchmark end-to-end sur un entraînement LLM complet empêche le score maximal.</td>
+</tr>
+<tr>
+<td>Taille d'échantillon</td>
+<td style="text-align: center;">3</td>
+<td>Couverture correcte des longueurs de séquence (1k-32k) et dimensions de tête (64, 128, 192). Un seul modèle de GPU testé. Pas de variation sur les architectures de modèles.</td>
+</tr>
+<tr>
+<td>Qualité des métriques</td>
+<td style="text-align: center;">4</td>
+<td>TFLOPs/s, taux d'utilisation, speedup, analyse de précision numérique sur 4M échantillons. L'analyse roofline fournit des bornes théoriques solides.</td>
+</tr>
+<tr>
+<td>Contrôle des biais</td>
+<td style="text-align: center;">3</td>
+<td>Comparaison avec la bibliothèque du fabricant (cuDNN) est pertinente, mais la collaboration avec l'équipe cuDNN pour intégrer les mêmes techniques brouille l'indépendance de la comparaison.</td>
+</tr>
+<tr>
+<td>Reproductibilité</td>
+<td style="text-align: center;">5</td>
+<td>Code ouvert sous licence permissive, versions logicielles listées, protocole de benchmark détaillé. Seul l'accès au matériel Blackwell limite la réplication.</td>
+</tr>
+<tr>
+<td>Transparence et limitations</td>
+<td style="text-align: center;">3</td>
+<td>Peu de discussion des cas où FA-4 n'apporte pas de gain. Pas d'analyse de sensibilité sur le seuil de rescaling conditionnel. L'écart B100/B200 pour les benchmarks n'est pas expliqué.</td>
+</tr>
+<tr>
+<td>Impact et nouveauté</td>
+<td style="text-align: center;">5</td>
+<td>Suite d'une lignée qui a transformé l'implémentation de l'attention. Adoption immédiate par NVIDIA dans cuDNN. Le passage à CuTe-DSL abaisse la barrière d'entrée pour la communauté.</td>
+</tr>
+</tbody>
+<tfoot>
+<tr style="background-color: #f0f0f0; font-weight: bold;">
+<td>Note globale</td>
+<td style="text-align: center;">4.0 / 5</td>
+<td>Contribution système de premier plan avec des innovations algorithmiques concrètes et validées, mais la portée des benchmarks reste limitée à un seul GPU et au kernel isolé.</td>
+</tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

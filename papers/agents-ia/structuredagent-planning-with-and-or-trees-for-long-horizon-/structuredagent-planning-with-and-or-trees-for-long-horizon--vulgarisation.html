@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STRUCTUREDAGENT: Planning with AND/OR Trees for Long-Horizon Web Tasks — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>STRUCTUREDAGENT: Planning with AND/OR Trees for Long-Horizon Web Tasks</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>STRUCTUREDAGENT : quand les agents web apprennent à planifier comme des humains</h2>
+
+<h3>1. Un assistant web qui perd le fil</h3>
+
+<p>Demandez à un agent IA de vous trouver trois projecteurs portables à moins de 300 dollars, avec résolution 1080p native, Bluetooth 5.0 et haut-parleurs intégrés, puis de comparer leurs prix sur Amazon. Un humain s'en sort en une dizaine de minutes. Les meilleurs agents web actuels, eux, échouent dans plus de la moitié des cas. Ils oublient une contrainte en route, se bloquent sur une page sans savoir revenir en arrière, ou déclarent la tâche terminée alors qu'ils n'ont trouvé qu'un seul produit sur trois.</p>
+
+<p>Une équipe de chercheurs de l'université du Massachusetts Amherst, de l'université de Virginie et d'Amazon a publié en mars 2026 un article présenté au workshop <em>Efficient Reasoning</em> de NeurIPS 2025. Leur proposition, baptisée STRUCTUREDAGENT, s'attaque frontalement à cette faiblesse : donner aux agents web une capacité de planification hiérarchique qui ressemble, dans son principe, à la façon dont nous résolvons nous-mêmes des problèmes complexes.</p>
+
+<h3>2. Pourquoi les agents web déraillent sur les tâches longues</h3>
+
+<p>Les agents web alimentés par des grands modèles de langage (LLM) fonctionnent selon un schéma simple : ils reçoivent une observation (la page HTML courante), choisissent une action (cliquer, taper du texte, défiler), observent le résultat, et recommencent. Ce cycle marche bien pour des tâches courtes — chercher un article sur Wikipédia, remplir un formulaire. Mais dès que la tâche exige dix, vingt ou trente étapes enchaînées, quatre problèmes surgissent.</p>
+
+<p>Le premier est la mémoire. Une page web dense peut représenter plus de 20 000 tokens. La plupart des agents ne conservent que la page courante et un historique d'actions. Ils perdent donc rapidement la trace des informations collectées sur des pages précédentes — un prix repéré il y a cinq étapes, une contrainte vérifiée il y a dix clics.</p>
+
+<p>Le deuxième est l'incapacité à construire un plan structuré sur un horizon long. Le LLM génère ses décisions pas à pas, sans vision d'ensemble. C'est comme traverser une ville inconnue en ne regardant que le trottoir sous ses pieds, sans carte.</p>
+
+<p>Le troisième est l'absence de mécanisme de récupération. Quand un agent prend un mauvais chemin — une recherche qui ne donne rien, un filtre mal appliqué — il n'a pas de procédure pour revenir en arrière, identifier ce qui a échoué, et essayer une stratégie alternative.</p>
+
+<p>Le quatrième est un comportement gourmand (<em>greedy</em>) : l'agent se satisfait du premier résultat trouvé et termine prématurément, sans vérifier que toutes les contraintes de l'utilisateur sont remplies. Si vous lui demandez trois produits, il en trouve un et s'arrête.</p>
+
+<p>Des travaux récents ont tenté d'ajouter de la planification aux agents web. Certains utilisent une recherche arborescente de type A*, mais au niveau des actions individuelles, sans exploiter la structure compositionnelle des tâches. D'autres construisent des plans séquentiels avant l'exécution, sans possibilité de révision en cours de route. Aucun ne combine planification hiérarchique dynamique, gestion d'erreurs robuste et mémoire structurée.</p>
+
+<h3>3. Un arbre de décision qui se construit en marchant</h3>
+
+<p>L'idée centrale de STRUCTUREDAGENT s'inspire d'un concept ancien en intelligence artificielle : les arbres ET/OU (<em>AND/OR trees</em>). Prenons une analogie. Vous organisez un dîner. Votre plan de haut niveau ressemble à ceci : acheter les ingrédients ET préparer le repas ET dresser la table. Chaque étape est obligatoire — c'est un nœud ET. Mais pour acheter les ingrédients, vous avez le choix : aller au supermarché OU commander en ligne OU passer au marché. C'est un nœud OU. Si le supermarché est fermé, vous basculez sur une alternative sans remettre en cause le reste du plan.</p>
+
+<p>STRUCTUREDAGENT applique cette logique à la navigation web. Face à une tâche comme « trouver une recette de brownie vegan avec une note de 4 étoiles ou plus sur allrecipes.com », l'agent décompose le travail en un arbre :</p>
+
+<ul>
+<li>Nœud ET (racine) : taper la recherche, sélectionner une recette, noter la recette — les trois doivent réussir.</li>
+<li>Nœud OU (sélection) : choisir la recette A (note 4.5, score de confiance 1.0) ou la recette B (note 4.2, score 0.95) — une seule doit réussir.</li>
+<li>Nœuds ACTION (feuilles) : les opérations concrètes dans le navigateur — cliquer sur un lien, taper du texte, faire défiler la page.</li>
+</ul>
+
+<p>La différence majeure avec un plan statique : cet arbre n'existe pas au départ. Il se construit progressivement pendant l'exécution, au fur et à mesure que l'agent découvre de nouvelles informations. L'agent explore l'arbre par un parcours en profondeur modifié. Quand il atteint un nœud action, il l'exécute dans le navigateur. Quand il rencontre un nœud ET, il traite ses enfants dans l'ordre. Quand il rencontre un nœud OU, il sélectionne l'enfant le plus prometteur — estimé par le LLM — et garde les autres en réserve.</p>
+
+<p>Si une action échoue, le mécanisme de récupération s'enclenche. L'agent tente d'abord de réparer le nœud en modifiant ses sous-objectifs. Si la réparation échoue après un nombre limité de tentatives, il élague le nœud et propage l'échec vers le haut de l'arbre. Un nœud OU passera alors à son alternative suivante. Un nœud ET déclenchera la suppression de ses enfants restants, puisque la condition conjonctive ne peut plus être satisfaite.</p>
+
+<p>Un point de conception subtil : le cadriciel (<em>framework</em>) gère lui-même la construction et la traversée de l'arbre. Le LLM n'est sollicité que pour des opérations locales bien définies — développer un nœud, réparer un nœud en échec, vérifier si un objectif est atteint, décider quel élagage appliquer. Cette séparation des responsabilités réduit la charge cognitive imposée au modèle et rend ses décisions plus fiables, car chaque appel au LLM porte sur une question précise plutôt que sur la gestion globale d'un plan complexe.</p>
+
+<h3>Un carnet de notes structuré pour ne rien oublier</h3>
+
+<p>Le second composant de STRUCTUREDAGENT cible les tâches de recherche d'information, où l'agent doit identifier des produits ou des entités satisfaisant un ensemble de contraintes. Imaginez que vous cherchiez un projecteur à moins de 500 dollars, avec résolution 1080p, Bluetooth 5.0 ou plus, au moins 300 ANSI lumens, et livré avec un écran de 70 à 100 pouces. L'agent rencontre plusieurs candidats au fil de sa navigation. Sans mémoire structurée, il oublie le premier candidat quand il examine le troisième.</p>
+
+<p>Le module de mémoire structurée (<em>Structured Memory</em>) organise les candidats dans un tableau dynamique. Chaque ligne représente un produit. Chaque colonne correspond à une contrainte ou un attribut — prix, résolution, version Bluetooth, luminosité, écran inclus. Au fil de la navigation, le LLM met à jour ce tableau : ajout d'un nouveau candidat, mise à jour d'un attribut, suppression d'un candidat qui ne remplit pas les critères. Quand l'agent doit prendre une décision — quel produit explorer ensuite, quel sous-objectif prioriser — il consulte les K meilleurs candidats du tableau, ceux qui satisfont le plus de contraintes. Ce mécanisme évite les explorations redondantes et réduit le risque de terminer prématurément avec une solution partielle.</p>
+
+<h3>4. Des gains mesurables, surtout sur les tâches difficiles</h3>
+
+<p>Les chercheurs ont évalué STRUCTUREDAGENT sur trois bancs d'essai. Le premier est un ensemble de 60 tâches d'achat complexes sur Amazon, créé pour l'étude, où chaque tâche demande entre 10 et 30 interactions et impose plusieurs contraintes simultanées. Le second est WebVoyager, 129 tâches réelles sur des sites web variés (BBC News, arXiv, GitHub, Amazon). Le troisième est WebArena, 630 tâches sur des applications web auto-hébergées (GitLab, Reddit, OpenStreetMap, boutique en ligne).</p>
+
+<p>Sur les tâches Amazon faciles, STRUCTUREDAGENT atteint 83,3 % de réussite, contre 69,2 % pour AgentOccam, le meilleur concurrent. L'écart se creuse sur les tâches Amazon difficiles : 35,6 % contre 28,4 % — et 63,3 % contre 56,3 % en évaluation humaine, plus indulgente que les juges automatiques. Sur WebArena, STRUCTUREDAGENT obtient un score global de 52,6 %, dépassant AgentOccam de 6 points et les agents basiques de 20 points. Les gains sont concentrés sur les catégories Shopping et Reddit, les plus exigeantes en planification.</p>
+
+<p>Sur les tâches simples de WebVoyager, l'écart disparaît : STRUCTUREDAGENT fait jeu égal avec les concurrents, à 78,3 % contre 79,8 %. Ce résultat est cohérent — une infrastructure de planification complexe n'apporte rien quand la tâche se résout en deux ou trois clics.</p>
+
+<p>L'ajout du module de mémoire structurée améliore les performances sur les tâches Amazon difficiles (+5 points en évaluation humaine), mais dégrade légèrement les résultats sur les tâches simples. Le tableau de suivi des contraintes génère du bruit quand il n'y a qu'un seul produit à trouver. La mémoire structurée est donc un outil spécialisé, pas un ajout systématique.</p>
+
+<p>Un résultat frappant : les bénéfices de la planification hiérarchique persistent même avec un modèle plus puissant. En remplaçant Claude 3.5 par Claude 3.7 (entraîné spécifiquement pour les tâches agentiques), STRUCTUREDAGENT conserve 7,8 points d'avance sur AgentOccam. La structure de planification apporte quelque chose que le modèle seul ne capture pas, quelle que soit sa puissance.</p>
+
+<p>Côté coût, STRUCTUREDAGENT prend plus de temps et d'actions que les agents plus simples sur les tâches difficiles — en moyenne 17,6 actions contre 5,2 pour AgentOccam sur les tâches Amazon difficiles. Cette exploration supplémentaire est le prix de la robustesse : l'agent essaie systématiquement plusieurs stratégies avant d'abandonner, là où les agents classiques s'arrêtent au premier obstacle.</p>
+
+<h3>5. Ce que ça change pour les agents autonomes</h3>
+
+<p>L'apport le plus immédiat de STRUCTUREDAGENT est pratique : un agent web qui termine réellement les tâches complexes qu'on lui confie. Pour les entreprises qui déploient des assistants d'achat, des outils de veille concurrentielle ou des agents de support client naviguant entre plusieurs systèmes, passer de 28 % à 36 % de réussite sur des tâches multi-contraintes représente un changement d'usage. En dessous d'un certain seuil de fiabilité, un agent reste un gadget. Au-dessus, il devient un outil.</p>
+
+<p>La transparence du plan hiérarchique apporte un second avantage. L'arbre ET/OU produit par l'agent est lisible : on voit quels sous-objectifs ont été décomposés, quelles alternatives ont été explorées, où l'échec s'est produit. Les chercheurs montrent un exemple concret d'intervention humaine : sur une tâche demandant l'itinéraire entre les villes des champions du Super Bowl 1980 et 1991, l'agent sans supervision se trompe de ville de destination (Washington au lieu d'East Rutherford). Un opérateur humain peut inspecter l'arbre, repérer que l'agent n'a pas vérifié quelle équipe a gagné en 1991, et injecter un sous-objectif correctif à n'importe quel niveau du plan. Cette capacité d'intervention ciblée est absente des agents « boîte noire » classiques.</p>
+
+<p>La séparation entre le cadriciel (qui gère l'arbre) et le LLM (qui répond à des questions locales) a aussi des implications architecturales. Elle permet de changer de modèle sous-jacent sans modifier la logique de planification. Les expériences avec Kimi-k2 en backbone confirment cette portabilité : les gains se maintiennent, même si l'amplitude varie selon les forces et faiblesses du modèle choisi.</p>
+
+<h3>6. Questions ouvertes et pistes futures</h3>
+
+<p>STRUCTUREDAGENT laisse plusieurs problèmes sans réponse. Le plus évident est le coût computationnel. Sur les tâches WebArena de type GitLab, l'agent met en moyenne 18 minutes contre 5 minutes pour AgentOccam. Chaque opération sur l'arbre — expansion, réparation, vérification de complétion — déclenche un appel au LLM. Pour des déploiements à grande échelle, cette latence et ce coût en tokens posent question.</p>
+
+<p>Le parcours en profondeur modifié repose sur des heuristiques (scores de confiance du LLM pour ordonner les nœuds OU, budgets de révision fixes). Les auteurs reconnaissent que concevoir des heuristiques admissibles pour les environnements web reste un défi ouvert. Un agent qui choisit mal son premier nœud OU peut explorer longuement une branche stérile avant de basculer sur une alternative.</p>
+
+<p>Le module de mémoire structurée est conçu pour les tâches de recherche d'information avec des contraintes explicites. Son extension à d'autres types de tâches web — remplissage de formulaires multi-étapes, configuration de logiciels, débogage d'applications — reste à explorer. Le format tabulaire fonctionne bien quand les entités et contraintes sont clairement identifiables. Dans des scénarios plus ambigus, où les critères de succès sont flous ou subjectifs, cette structure rigide pourrait devenir un frein.</p>
+
+<p>Une direction prometteuse serait de coupler cette planification hiérarchique avec l'apprentissage par renforcement. Les auteurs notent que les agents RL actuels souffrent d'un problème d'attribution de crédit : quand une tâche longue échoue, l'algorithme ne sait pas quelle action intermédiaire est fautive. L'arbre ET/OU offre une structure naturelle pour localiser l'échec à un niveau précis de la hiérarchie, ce qui pourrait débloquer l'entraînement d'agents web plus robustes.</p>
+
+<p>Enfin, l'intervention humaine dans l'arbre de planification ouvre un espace de recherche sur les systèmes hybrides humain-agent. Plutôt que de superviser chaque action, un opérateur pourrait valider les décompositions de haut niveau et laisser l'agent exécuter les sous-tâches de manière autonome. Ce modèle de collaboration reste largement inexploré dans la littérature sur les agents web.</p>
+
+<p>STRUCTUREDAGENT ne résout pas le problème des agents web autonomes. Mais il démontre qu'en empruntant à la résolution de problèmes humaine — décomposer, prévoir des alternatives, revenir en arrière quand ça ne marche pas — on obtient des agents sensiblement plus fiables sur les tâches qui comptent : celles qui sont longues, contraintes et réalistes.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

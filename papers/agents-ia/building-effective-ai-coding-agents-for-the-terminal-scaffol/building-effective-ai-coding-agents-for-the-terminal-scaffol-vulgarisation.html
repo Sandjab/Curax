@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building Effective AI Coding Agents for the Terminal: Scaffolding, Harness, Context Engineering, and Lessons Learned — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Building Effective AI Coding Agents for the Terminal: Scaffolding, Harness, Context Engineering, and Lessons Learned</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Un agent logiciel, lâché dans le terminal</h2>
+
+<p>GitHub Copilot compte plus de 15 millions d'utilisateurs. Les éditeurs de code dopés à l'IA génèrent des revenus en forte croissance. Et pourtant, une migration discrète est en cours : les assistants de programmation quittent les interfaces graphiques des IDE pour s'installer dans le terminal — cette fenêtre noire où les développeurs tapent leurs commandes depuis des décennies.</p>
+
+<p>Claude Code, lancé par Anthropic, a montré qu'un agent qui vit dans le terminal peut égaler, voire dépasser, les performances des extensions IDE classiques. D'autres ont suivi : Gemini CLI chez Google, Codex CLI chez OpenAI, et une constellation d'outils open source comme Aider, Goose ou OpenCode. Le terminal, c'est l'endroit où l'on gère le code source, où l'on lance les compilations, où l'on se connecte aux serveurs distants. Installer l'agent là où le travail se fait réellement, plutôt que dans une surcouche graphique, change la donne.</p>
+
+<p>Nghi D. Q. Bui, chercheur derrière le projet OpenDev, publie ce qui est — selon lui — le premier rapport technique détaillé sur la conception d'un agent de programmation terminal open source. Son objectif n'est pas de présenter un algorithme révolutionnaire, mais de documenter les choix d'ingénierie, les compromis et les erreurs qui ont jalonné la construction d'un tel système. Un retour d'expérience rare dans un domaine où la plupart des acteurs gardent leur architecture sous clé.</p>
+
+<h2>2. Trois murs que tout agent terminal finit par percuter</h2>
+
+<p>Un agent de programmation autonome ne se contente pas de compléter une ligne de code. Il lit des fichiers, lance des tests, modifie du code source, exécute des commandes shell, et enchaîne ces actions sur des dizaines de tours de conversation. Trois problèmes surgissent dès qu'on tente de faire fonctionner ce type de système sur la durée.</p>
+
+<p>Le premier est la mémoire de travail limitée. Les modèles de langage disposent d'une « fenêtre de contexte » — la quantité de texte qu'ils peuvent garder en tête à un instant donné. Un seul fichier source peut occuper 3 000 tokens. Le résultat d'une suite de tests, des milliers de lignes. Après une quinzaine d'interactions, la fenêtre déborde, et le modèle commence à oublier ses propres instructions. Pensez à un développeur humain qui travaillerait sur un projet complexe, mais dont le bureau ne pourrait contenir que vingt feuilles de papier à la fois : passé un certain point, il doit jeter des notes pour en poser de nouvelles, en espérant ne pas perdre l'essentiel.</p>
+
+<p>Le deuxième mur est la sécurité. L'agent peut exécuter n'importe quelle commande shell. Un <code>rm -rf</code> mal placé, un <code>git push --force</code> involontaire, et des heures de travail disparaissent. Aucun mécanisme de sécurité unique ne suffit : le modèle peut mal interpréter une consigne, un outil peut recevoir des arguments dangereux, un script externe peut avoir des effets de bord imprévus.</p>
+
+<p>Le troisième est l'extensibilité sans surcharge. Chaque outil mis à disposition de l'agent — lecture de fichier, recherche de symbole, navigation web — consomme de la place dans la fenêtre de contexte sous forme de schéma JSON. Ajouter quarante outils, c'est grignoter le budget de tokens avant même que l'utilisateur n'ait posé sa question.</p>
+
+<p>Des benchmarks spécialisés comme Terminal-Bench confirment la difficulté : même les modèles les plus performants peinent à opérer de façon continue dans un terminal. Le problème n'est pas la capacité brute du modèle, mais l'ingénierie qui l'entoure.</p>
+
+<h2>3. Une architecture en couches, pas un modèle unique</h2>
+
+<p>OpenDev repose sur une idée structurante : un seul modèle de langage ne peut pas tout faire efficacement. Réfléchir en profondeur à une stratégie, exécuter une action concrète, résumer une longue conversation et analyser une capture d'écran sont des tâches cognitives différentes. Leur confier le même modèle revient à utiliser un marteau pour toutes les étapes d'un chantier.</p>
+
+<p>Le système attribue donc cinq rôles distincts à potentiellement cinq modèles différents : un modèle d'action (qui décide quels outils utiliser), un modèle de réflexion (qui raisonne sans accès aux outils, pour éviter d'agir trop vite), un modèle de critique (qui évalue la qualité du raisonnement), un modèle de vision (pour traiter les images et captures d'écran) et un modèle de compaction (rapide et peu coûteux, dédié au résumé). Chaque rôle se rabat sur le précédent si aucun modèle spécifique n'est configuré. En pratique, un utilisateur peut utiliser un modèle puissant et cher pour la réflexion, et un modèle léger pour la compaction — changer de configuration ne demande pas de modifier le code.</p>
+
+<h3>Séparer la planification de l'exécution</h3>
+
+<p>Une première version d'OpenDev utilisait une machine à états pour basculer entre un mode « planification » (lecture seule) et un mode « exécution » (accès complet). Le problème : l'agent restait parfois coincé en mode planification, incapable d'en sortir sans intervention humaine.</p>
+
+<p>La solution adoptée est plus radicale. La planification est déléguée à un sous-agent spécialisé dont le schéma d'outils ne contient tout simplement aucun outil d'écriture. Le sous-agent planificateur ne peut pas modifier de fichiers — non pas parce qu'une vérification bloque la tentative, mais parce qu'il ignore l'existence même de ces outils. La contrainte est structurelle, pas comportementale. Cette approche élimine la machine à états et ses bugs, tout en permettant de lancer le planificateur en parallèle avec d'autres sous-agents.</p>
+
+<h3>Cinq étages de sécurité empilés</h3>
+
+<p>Contre les opérations destructrices, OpenDev déploie cinq couches de défense indépendantes. La première est intégrée dans le prompt système : des instructions explicites sur ce que l'agent ne doit pas faire. La deuxième filtre les outils disponibles selon le contexte — un sous-agent d'exploration ne voit pas les outils de modification. La troisième est un système d'approbation à l'exécution, avec des règles de détection de commandes dangereuses. La quatrième valide les arguments de chaque outil (blocage de patterns dangereux, détection de lectures périmées). La cinquième permet à l'utilisateur d'injecter ses propres scripts de contrôle via des hooks, des points d'interception dans le cycle de vie de l'agent.</p>
+
+<p>Chaque couche fonctionne de façon autonome. Si le prompt ne suffit pas à dissuader le modèle, le filtre de schéma bloque. Si le filtre échoue, le système d'approbation intervient. L'idée est celle d'un immeuble avec plusieurs systèmes anti-incendie indépendants : détecteurs de fumée, sprinklers, portes coupe-feu, extincteurs manuels.</p>
+
+<h3>Gérer la mémoire comme une ressource finie</h3>
+
+<p>La gestion du contexte est le cœur technique de ce travail. Plutôt qu'une compaction d'urgence déclenchée quand la fenêtre est pleine à 99 %, OpenDev surveille en continu la pression sur le contexte et applique cinq niveaux de réduction progressifs.</p>
+
+<p>À 70 % de remplissage, le système émet un avertissement. À 80 %, les résultats d'outils anciens sont remplacés par des pointeurs compacts — une référence de 15 tokens au lieu de 3 000 tokens de code source. À 85 %, un élagage rapide supprime les résultats au-delà d'une fenêtre de récence. À 90 %, la fenêtre de préservation se resserre encore. Et seulement à 99 %, un modèle de langage est appelé pour résumer l'ensemble de la conversation, avec sauvegarde intégrale de l'historique dans un fichier consultable à la demande.</p>
+
+<p>Le système maintient aussi un index des fichiers touchés pendant la session. Même après compaction, l'agent sait quels fichiers il a lus, créés ou modifiés — il ne repart pas de zéro.</p>
+
+<p>Un autre mécanisme cible un problème subtil : l'effacement des instructions. Après vingt ou trente échanges, le modèle « oublie » progressivement les consignes de son prompt initial. Il arrête de lancer les tests après modification du code, ou déclare la tâche terminée alors que la moitié des objectifs ne sont pas atteints. Pour contrer cette dérive, OpenDev injecte des rappels ciblés au moment précis où l'agent risque de dévier — juste avant l'appel au modèle, sous forme de message utilisateur plutôt que de message système. Les expériences ont montré que le modèle réagit mieux à un rappel qui ressemble à une intervention humaine récente qu'à une instruction système lointaine. Chaque type de rappel a un compteur : après deux ou trois tentatives sans effet, le système accepte le comportement de l'agent plutôt que de boucler.</p>
+
+<h2>4. Ce que les chiffres montrent</h2>
+
+<p>La compaction adaptative réduit la consommation maximale de contexte des résultats d'outils d'environ 54 %. En termes concrets, une session typique passe de 15-20 tours (avant débordement de contexte) à 30-40 tours sans compaction d'urgence. Le système double la durée de vie utile d'une conversation.</p>
+
+<p>L'optimisation des résultats d'outils y contribue directement : un fichier de 142 lignes lu par l'agent est stocké dans l'historique sous la forme « ✓ Fichier lu (142 lignes, 4 831 caractères) » — soit une compression de l'ordre de 95 %. Les sorties volumineuses dépassant 8 000 caractères sont exportées dans des fichiers temporaires, et l'agent reçoit un aperçu de 500 caractères avec un chemin d'accès pour consultation détaillée.</p>
+
+<p>La détection de boucles mortelles — ces situations où l'agent appelle le même outil avec les mêmes arguments en boucle — intervient dès la troisième répétition, là où les garde-fous existants (compteurs d'itérations, limites de lectures consécutives) réagissent bien plus tard. Le système utilise une empreinte MD5 de chaque appel d'outil et surveille une fenêtre glissante de 20 appels récents.</p>
+
+<p>Le cache des prompts côté fournisseur — pour Anthropic, la portion stable du prompt système (identité, politiques de sécurité, descriptions d'outils) représente 80 à 90 % du total — génère une réduction d'environ 88 % du coût en tokens d'entrée pour la partie mise en cache. Sur une session de plusieurs dizaines de tours, l'économie est substantielle.</p>
+
+<h2>5. Ce que ça change pour les développeurs</h2>
+
+<p>Le rapport technique d'OpenDev documente des solutions à des problèmes que rencontrent tous les concepteurs d'agents de programmation. La compaction progressive, les rappels contextuels, la séparation structurelle planification/exécution et le routage multi-modèle ne sont pas spécifiques à un outil — ce sont des patterns d'ingénierie transférables.</p>
+
+<p>Pour les équipes qui construisent ou évaluent des agents de code, plusieurs enseignements se dégagent. L'architecture à modèle unique atteint vite ses limites. Confier la réflexion stratégique et l'exécution rapide au même modèle crée un compromis permanent entre coût et qualité. Séparer les rôles permet d'optimiser chaque phase indépendamment — un modèle bon marché pour résumer, un modèle puissant pour planifier.</p>
+
+<p>La sécurité par couches est une nécessité, pas un luxe. Les instructions dans le prompt sont une première ligne de défense utile, mais insuffisante seule. Un agent qui peut exécuter des commandes shell arbitraires exige des contrôles à chaque niveau d'abstraction, du prompt jusqu'au hook utilisateur.</p>
+
+<p>Le contexte est la ressource la plus critique. Plus que la taille du modèle ou la sophistication du prompt, c'est la qualité de ce que le modèle voit à chaque instant qui détermine la qualité de ses actions. Les agents qui traitent le contexte comme un tuyau passif — on remplit jusqu'au débordement, puis on résume tout d'un coup — perdent des informations critiques et dégradent leur raisonnement.</p>
+
+<p>Pour les développeurs qui utilisent ces outils au quotidien, la migration vers le terminal a une conséquence pratique immédiate : l'agent opère là où le travail se fait déjà, sans couche d'abstraction supplémentaire. Il accède nativement à Git, aux systèmes de build, aux environnements distants via SSH. Il n'a pas besoin d'un plugin pour chaque éditeur ni d'une API propriétaire pour interagir avec l'environnement.</p>
+
+<h2>6. Les chantiers qui restent ouverts</h2>
+
+<p>Le rapport identifie plusieurs tensions non résolues. La première oppose autonomie et contrôle : plus l'agent est capable d'agir seul, plus le risque d'actions non désirées augmente. Les cinq couches de sécurité d'OpenDev sont une réponse pragmatique, mais pas définitive. Comment calibrer le niveau d'autonomie en fonction du risque de chaque action, sans noyer l'utilisateur sous les demandes d'approbation ?</p>
+
+<p>La mémoire inter-sessions — le « playbook » qui accumule les leçons d'une session à l'autre — pose la question de la dérive. Un agent qui apprend de ses erreurs peut aussi consolider des biais. Le mécanisme de tags d'efficacité (utile / nuisible / neutre) et de curation automatique est un début, mais sa robustesse sur des centaines de sessions reste à démontrer.</p>
+
+<p>L'évaluation elle-même est un problème ouvert. Les benchmarks existants comme Terminal-Bench et SWE-bench mesurent la capacité à résoudre des tâches isolées. Ils ne capturent pas la qualité d'une interaction prolongée sur un vrai projet, avec ses allers-retours, ses changements de direction et ses ambiguïtés. Construire des métriques pour évaluer l'expérience développeur sur la durée — et pas seulement le taux de résolution de bugs standardisés — sera nécessaire pour comparer rigoureusement les architectures.</p>
+
+<p>Le routage entre modèles, aujourd'hui basé sur la configuration utilisateur, pourrait devenir adaptatif. Des travaux sur le routage appris suggèrent qu'un système pourrait choisir automatiquement le modèle optimal pour chaque sous-tâche, en fonction de sa complexité estimée et du budget restant. OpenDev est conçu pour accueillir ce type d'évolution sans modification structurelle — c'est d'ailleurs l'un des bénéfices revendiqués de son architecture découplée.</p>
+
+<p>Enfin, la question de la reproductibilité se pose. Les modèles de langage sont non déterministes. Deux exécutions du même agent sur la même tâche peuvent produire des résultats différents. Pour un outil de développement professionnel, cette variabilité est un frein à l'adoption dans les contextes où la prédictibilité compte — déploiements automatisés, pipelines de CI/CD, environnements réglementés. Les auteurs n'abordent pas frontalement ce sujet, mais il conditionne l'avenir de l'ensemble de la catégorie.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
