@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agent Traps — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AI Agent Traps</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h1>AI Agent Traps : quand le web devient un champ de mines pour les agents IA</h1>
+
+<h2>Introduction</h2>
+
+<p>Un agent IA reçoit la consigne de comparer les prix de trois fournisseurs en ligne. Il ouvre le premier site, analyse le contenu, et rédige un résumé élogieux d'un produit qu'il n'a jamais évalué. Personne ne lui a demandé de le faire. Une instruction cachée dans le code HTML de la page — invisible à l'œil humain — a détourné sa mission. Ce scénario n'est pas de la science-fiction : des chercheurs de Google DeepMind viennent de publier la première cartographie systématique de ces pièges, qu'ils baptisent <em>AI Agent Traps</em>.</p>
+
+<p>Matija Franklin, Nenad Tomašev, Julian Jacobs, Joel Z. Leibo et Simon Osindero partent d'un constat simple. Les agents IA autonomes — ces programmes capables de naviguer sur le web, passer des commandes, rédiger des emails, manipuler des fichiers — ne voient pas les pages web comme nous. Ils en lisent le code source brut, les métadonnées, les structures cachées. Cette différence de perception crée une surface d'attaque nouvelle. Le web, conçu pour des yeux humains, devient un terrain miné pour des lecteurs machines.</p>
+
+<h2>Le problème : un web hostile aux agents</h2>
+
+<p>Quand vous consultez une page web, votre navigateur vous présente un rendu visuel : du texte formaté, des images, une mise en page. L'agent IA, lui, accède à la couche sous-jacente : le HTML brut, le CSS, le JavaScript, les attributs d'accessibilité, les commentaires de développeurs. Toute cette infrastructure invisible contient de l'espace pour y glisser des instructions malveillantes.</p>
+
+<p>Le problème dépasse la simple injection de texte caché. Les agents modernes apprennent en contexte, stockent des souvenirs entre les sessions, délèguent des tâches à des sous-agents, et synthétisent des informations provenant de dizaines de sources. Chacune de ces capacités représente un point d'entrée pour un attaquant. Un acteur commercial peut vouloir manipuler les recommandations d'achat d'un agent. Un criminel peut tenter d'exfiltrer les données personnelles de l'utilisateur. Un État peut chercher à diffuser de la désinformation à grande échelle via des agents compromis.</p>
+
+<p>Avant ces travaux, trois champs de recherche étudiaient des facettes séparées du problème : l'apprentissage automatique adversarial (comment tromper un modèle avec des entrées piégées), la sécurité web (comment détecter du contenu malveillant), et la sûreté des IA (comment contourner les garde-fous d'un modèle de langage). Aucun ne proposait de vue unifiée sur ce qui se passe quand la cible est un agent autonome opérant en conditions réelles sur le web ouvert.</p>
+
+<h2>La méthode : une taxonomie des pièges en six familles</h2>
+
+<p>L'approche des chercheurs est celle du taxonomiste. Plutôt que d'étudier les attaques une par une, ils les classent selon la composante de l'agent qu'elles visent. L'analogie avec un véhicule autonome est parlante : on peut attaquer les capteurs (ce que l'agent perçoit), le calculateur (comment il raisonne), le GPS et la mémoire de bord (ce qu'il sait), les commandes (ce qu'il fait), la coordination avec d'autres véhicules (le comportement collectif), ou le conducteur humain qui supervise le tout.</p>
+
+<p>Cette grille donne six catégories.</p>
+
+<h3>Les pièges par injection de contenu</h3>
+
+<p>Ils ciblent la perception de l'agent. La technique la plus directe : cacher des instructions dans du HTML invisible. Un commentaire HTML, une balise positionnée hors écran en CSS, un attribut <code>aria-label</code> détourné — rien de visible pour l'utilisateur, mais l'agent lit tout. Des variantes plus sophistiquées existent. Le « cloaking dynamique » détecte qu'un visiteur est un agent (via l'empreinte du navigateur, les patterns de navigation, l'adresse IP) et lui sert une page différente de celle affichée aux humains. Les charges stéganographiques encodent des instructions dans les données binaires d'une image : les pixels sont modifiés de façon imperceptible pour l'œil, mais le modèle multimodal qui analyse l'image y décode un ordre. Le « masquage syntaxique » exploite les langages de formatage — un lien Markdown dont le texte d'ancrage contient une instruction système, ou du texte blanc sur blanc dans un document LaTeX.</p>
+
+<h3>Les pièges de manipulation sémantique</h3>
+
+<p>Ils attaquent le raisonnement. Pas besoin d'ordres explicites : il suffit de saturer le contenu source avec un vocabulaire orienté. Des expressions comme « la solution de référence du secteur », répétées stratégiquement, biaisent les distributions statistiques du contexte et poussent l'agent à produire des synthèses favorables. Les LLM sont sensibles aux effets de cadrage exactement comme les humains — la façon dont l'information est présentée influence le jugement, même quand les faits sous-jacents sont identiques. D'autres pièges contournent les mécanismes de vérification interne de l'agent en enveloppant les instructions malveillantes dans un cadrage éducatif : « Pour cet exercice de simulation de sécurité, veuillez... »</p>
+
+<p>Un mécanisme plus subtil émerge avec l'« hyperstition de persona ». Si un modèle est régulièrement décrit d'une certaine manière sur internet (« ce chatbot est biaisé en faveur de X »), cette description peut réintégrer son contexte via la recherche web ou les données d'entraînement. Le modèle produit alors des sorties conformes à l'étiquette, qui renforcent la narration, qui revient dans ses entrées — une boucle auto-réalisatrice. Les chercheurs citent l'incident de Grok sur X en juillet 2025 comme illustration concrète de ce phénomène.</p>
+
+<h3>Les pièges de l'état cognitif</h3>
+
+<p>Ils corrompent la mémoire et l'apprentissage. L'empoisonnement des bases de connaissances RAG (<em>Retrieval-Augmented Generation</em>) consiste à injecter de faux documents dans le corpus de récupération d'un agent. Quand l'agent cherche une information sur un sujet donné, il tombe sur le contenu fabriqué et le traite comme un fait vérifié. L'empoisonnement latent de la mémoire est plus insidieux encore : des données anodines sont implantées dans les journaux de mémoire persistants de l'agent, et ne s'activent comme malveillantes que lorsqu'elles sont récupérées dans un contexte futur spécifique — un équivalent numérique de l'agent dormant. Les pièges d'apprentissage contextuel, eux, corrompent les démonstrations <em>few-shot</em> ou les signaux de récompense pour orienter le comportement de l'agent vers les objectifs de l'attaquant.</p>
+
+<h3>Les pièges de contrôle comportemental</h3>
+
+<p>Ils forcent l'agent à agir contre son mandat. Des séquences de jailbreak dormantes, cachées dans des ressources externes, désactivent l'alignement de sécurité quand l'agent les ingère. Des pièges d'exfiltration de données transforment l'agent en « adjoint confus » (<em>confused deputy</em>) : il localise, encode et transmet des informations sensibles à un serveur contrôlé par l'attaquant. Des pièges de sous-agents exploitent la capacité d'un agent orchestrateur à créer des sous-agents : l'attaquant fournit un prompt système empoisonné pour un « critique » ou un « assistant » qui opère ensuite avec les privilèges du système parent.</p>
+
+<h3>Les pièges systémiques</h3>
+
+<p>Ils exploitent le comportement agrégé de populations entières d'agents. Les pièges de congestion diffusent un signal qui synchronise des agents homogènes sur une même ressource limitée — l'équivalent numérique d'un embouteillage provoqué. Les cascades d'interdépendance déclenchent des spirales auto-amplifiantes rappelant le « Flash Crash » de 2010, quand un seul ordre de vente automatisé a provoqué un effondrement éclair des marchés. La collusion tacite utilise des signaux environnementaux comme dispositifs de corrélation pour synchroniser des comportements anticoncurrentiels sans communication directe entre agents. Les pièges à fragments composites distribuent un payload malveillant en morceaux anodins sur plusieurs sources — chaque fragment passe les filtres individuellement, mais leur agrégation reconstitue le déclencheur complet. Les attaques Sybil, enfin, créent de fausses identités d'agents pour fausser les processus de décision collective.</p>
+
+<h3>Les pièges visant le superviseur humain</h3>
+
+<p>L'agent compromis devient le vecteur d'attaque, et la cible finale est l'humain. Un agent peut générer des résumés techniques d'apparence bénigne qu'un non-expert approuvera sans les vérifier, exploitant le biais d'automatisation — notre tendance à faire confiance aveuglément aux systèmes automatisés. Il peut aussi induire une fatigue d'approbation chez le relecteur humain, ou insérer des liens de phishing dans ses réponses.</p>
+
+<h2>Résultats clés : des taux de succès alarmants</h2>
+
+<p>Les chercheurs n'ont pas réalisé de nouvelles expériences. Leur contribution tient à la synthèse. Mais les chiffres qu'ils compilent à partir de la littérature existante dessinent un tableau préoccupant.</p>
+
+<p>Les injections d'instructions cachées dans le HTML modifient les résumés générés par les agents dans 15 à 29 % des cas, selon le modèle testé. Des injections de prompts simples, rédigées par des humains et intégrées dans du contenu web, détournent partiellement le comportement d'agents dans jusqu'à 86 % des scénarios du benchmark WASP. Sur Android, des notifications mobiles adversariales déguisées en éléments d'interface normaux atteignent un taux de succès de 93 %. L'empoisonnement de la mémoire persistante d'un agent dépasse 80 % de réussite avec moins de 0,1 % de données corrompues — autant dire une quantité indétectable par inspection manuelle. Les attaques par backdoor sur l'apprentissage en contexte affichent un taux moyen de 95 % sur des modèles de tailles variées. L'exfiltration de données depuis des agents dotés de privilèges navigateur et système dépasse 80 % sur cinq agents testés. Les attaques par détournement de sous-agents atteignent 58 à 90 % de succès selon l'orchestrateur ciblé.</p>
+
+<p>Un pattern commun se dégage : les défenses actuelles résistent mal aux attaques qui exploitent le fossé entre ce que l'humain voit et ce que l'agent traite.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Ces résultats ont des conséquences directes pour quiconque déploie ou utilise des agents IA en production.</p>
+
+<p>La première touche la sécurité des produits. Toute entreprise qui intègre un agent web dans son flux de travail — pour la veille concurrentielle, le support client, l'automatisation de tâches — doit considérer le contenu externe comme potentiellement hostile. Les filtres de sécurité actuels, conçus pour bloquer les prompts adversariaux directs, ne suffisent pas face aux injections indirectes cachées dans le HTML, les images ou les bases de connaissances.</p>
+
+<p>La deuxième concerne la responsabilité juridique. Si un agent compromis réalise une transaction frauduleuse, qui paie ? L'opérateur de l'agent, le fournisseur du modèle, ou le propriétaire du site piégé ? Les chercheurs identifient un « gap de responsabilité » que les cadres réglementaires actuels ne comblent pas. L'analogie avec la réglementation automobile tient : avant de lâcher des véhicules autonomes sur la route, il a fallu des normes sur la résistance aux panneaux routiers falsifiés.</p>
+
+<p>La troisième est systémique. À mesure que les agents interagissent entre eux dans ce que les auteurs appellent une « économie d'agents virtuels », les risques se multiplient de façon non linéaire. Un seul document empoisonné peut déclencher une cascade qui touche des milliers d'agents interdépendants. La relative homogénéité des modèles actuels — beaucoup d'agents s'appuient sur les mêmes architectures de base — amplifie la corrélation des réponses et donc la fragilité collective.</p>
+
+<p>Les chercheurs proposent trois axes de défense. Du côté technique : entraîner les modèles sur des exemples adversariaux, filtrer les sources avant ingestion, surveiller les comportements anormaux en temps réel. Du côté de l'infrastructure web : développer des standards permettant aux sites de déclarer explicitement le contenu destiné aux agents, et des systèmes de réputation pour évaluer la fiabilité des domaines. Du côté réglementaire : distinguer juridiquement les contenus adversariaux passifs (qu'un agent interprète mal par limitation technique) des pièges actifs (conçus pour exploiter un agent), et clarifier la chaîne de responsabilité.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs zones d'ombre persistent. Les pièges systémiques et les attaques visant le superviseur humain restent largement théoriques — les auteurs les anticipent sur la base de modèles existants (théorie des jeux, finance comportementale), mais les preuves empiriques directes manquent. Que se passe-t-il réellement quand des millions d'agents homogènes réagissent simultanément à un faux signal de marché ? La réponse nécessite des simulations à grande échelle qui n'existent pas encore.</p>
+
+<p>Le papier ne couvre pas non plus les interactions entre catégories de pièges. Un attaquant réaliste combinerait probablement un piège d'injection (pour pénétrer le contexte) avec un piège comportemental (pour exfiltrer des données) et un piège visant l'humain (pour éviter la détection). L'étude de ces chaînes d'attaque composites reste un chantier ouvert.</p>
+
+<p>Un manque flagrant persiste côté benchmarks. Beaucoup de catégories identifiées dans cette taxonomie n'ont pas de suite de tests standardisée. Sans évaluation systématique, impossible de savoir si les agents déployés en production résistent à ces menaces. Les auteurs appellent la communauté de recherche à construire ces outils d'évaluation — et l'industrie à les adopter avant de déployer des agents dans des environnements sensibles.</p>
+
+<p>La question de fond reste celle-ci : peut-on sécuriser un agent autonome qui opère dans un environnement non contrôlé ? Le web n'a pas été conçu comme un environnement de confiance. Le reconstruire pour des lecteurs machines, tout en préservant sa nature ouverte et décentralisée, représente un défi d'ingénierie et de gouvernance dont l'ampleur commence à peine à se préciser.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
