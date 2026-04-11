@@ -167,6 +167,14 @@
       });
 
       updateSubtitle(tabId);
+
+      // Update filter UI for this tab (if filters initialized)
+      if (window._manifest) {
+        populateFilterUI(tabId);
+        if (hasActiveFilters(window._filters[tabId])) {
+          applyFilters();
+        }
+      }
     }
 
     function updateSubtitle(tabId) {
@@ -183,6 +191,230 @@
         switchTab(this.getAttribute('data-tab'));
       });
     });
+
+    // ── Search & filter state ──
+    window._filters = {
+      articles:     { query: '', scoreMin: 0, domain: '', tags: [] },
+      publications: { query: '', scoreMin: 0, domain: '', tags: [] }
+    };
+
+    function debounce(fn, delay) {
+      var timer;
+      return function() {
+        clearTimeout(timer);
+        timer = setTimeout(fn, delay);
+      };
+    }
+
+    function collectAllTags(tabId) {
+      var tags = {};
+      var items = [];
+      if (tabId === 'articles') {
+        var domains = (window._manifest && window._manifest.domains) || [];
+        for (var i = 0; i < domains.length; i++) {
+          items = items.concat(domains[i].articles || []);
+        }
+        items = items.concat((window._manifest && window._manifest.uncategorized) || []);
+      } else {
+        var pDomains = (window._manifest && window._manifest.papers && window._manifest.papers.domains) || [];
+        for (var i = 0; i < pDomains.length; i++) {
+          items = items.concat(pDomains[i].papers || []);
+        }
+      }
+      for (var i = 0; i < items.length; i++) {
+        var t = items[i].tags || [];
+        for (var j = 0; j < t.length; j++) {
+          tags[t[j]] = (tags[t[j]] || 0) + 1;
+        }
+      }
+      return Object.keys(tags).sort(function(a, b) { return tags[b] - tags[a]; }).slice(0, 20);
+    }
+
+    function collectDomains(tabId) {
+      if (tabId === 'articles') {
+        return (window._manifest && window._manifest.domains) || [];
+      }
+      return (window._manifest && window._manifest.papers && window._manifest.papers.domains) || [];
+    }
+
+    function buildFilterPredicate(f) {
+      return function(item) {
+        if (f.scoreMin > 0 && (!item.quality_score || item.quality_score < f.scoreMin)) return false;
+        if (f.domain && item._domainSlug !== f.domain) return false;
+        if (f.tags.length > 0) {
+          var itemTags = item.tags || [];
+          var match = false;
+          for (var i = 0; i < f.tags.length; i++) {
+            if (itemTags.indexOf(f.tags[i]) !== -1) { match = true; break; }
+          }
+          if (!match) return false;
+        }
+        if (f.query) {
+          var q = f.query.toLowerCase();
+          var haystack = (item.title || '') + ' ' + (item.description || '') + ' ' + (item.tags || []).join(' ') + ' ' + ((item.authors || []).join(' '));
+          if (haystack.toLowerCase().indexOf(q) === -1) return false;
+        }
+        return true;
+      };
+    }
+
+    function hasActiveFilters(f) {
+      return f.query !== '' || f.scoreMin > 0 || f.domain !== '' || f.tags.length > 0;
+    }
+
+    function populateFilterUI(tabId) {
+      var domainSelect = document.getElementById('filter-domain');
+      var domains = collectDomains(tabId);
+      domainSelect.innerHTML = '<option value="">Tous</option>';
+      for (var i = 0; i < domains.length; i++) {
+        var opt = document.createElement('option');
+        opt.value = domains[i].slug;
+        opt.textContent = (domains[i].icon || '') + ' ' + (domains[i].name || domains[i].slug);
+        domainSelect.appendChild(opt);
+      }
+
+      var tagsContainer = document.getElementById('filter-tags');
+      var allTags = collectAllTags(tabId);
+      tagsContainer.innerHTML = '';
+      for (var i = 0; i < allTags.length; i++) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'filter-tag';
+        chip.textContent = allTags[i];
+        chip.setAttribute('data-tag', allTags[i]);
+        chip.addEventListener('click', (function(tag) {
+          return function() { toggleTag(tag); };
+        })(allTags[i]));
+        tagsContainer.appendChild(chip);
+      }
+
+      var searchInput = document.getElementById('search-input');
+      searchInput.placeholder = tabId === 'articles' ? 'Rechercher dans les articles...' : 'Rechercher dans les publications...';
+
+      var f = window._filters[tabId];
+      searchInput.value = f.query;
+      document.getElementById('filter-score').value = f.scoreMin;
+      document.getElementById('filter-score-value').textContent = f.scoreMin;
+      domainSelect.value = f.domain;
+      var tagChips = tagsContainer.querySelectorAll('.filter-tag');
+      tagChips.forEach(function(c) {
+        c.classList.toggle('active', f.tags.indexOf(c.getAttribute('data-tag')) !== -1);
+      });
+
+      updateFilterBadges(tabId);
+    }
+
+    function updateFilterBadges(tabId) {
+      var f = window._filters[tabId];
+      var active = hasActiveFilters(f);
+      var countBadge = document.getElementById('filter-count');
+      var resetBtn = document.getElementById('filter-reset');
+      if (active) {
+        var n = (f.query ? 1 : 0) + (f.scoreMin > 0 ? 1 : 0) + (f.domain ? 1 : 0) + f.tags.length;
+        countBadge.textContent = n;
+        countBadge.style.display = '';
+        resetBtn.style.display = '';
+      } else {
+        countBadge.style.display = 'none';
+        resetBtn.style.display = 'none';
+      }
+    }
+
+    function applyFilters() {
+      var tabId = currentTab;
+      var f = window._filters[tabId];
+      var filterFn = hasActiveFilters(f) ? buildFilterPredicate(f) : null;
+
+      if (window._manifest) {
+        var domains = tabId === 'articles' ? (window._manifest.domains || []) : ((window._manifest.papers && window._manifest.papers.domains) || []);
+        for (var i = 0; i < domains.length; i++) {
+          var items = domains[i].articles || domains[i].papers || [];
+          for (var j = 0; j < items.length; j++) {
+            items[j]._domainSlug = domains[i].slug;
+          }
+        }
+      }
+
+      var container = document.getElementById('tab-' + tabId);
+      if (tabId === 'articles') {
+        renderArticlesTab(window._manifest, container, filterFn);
+      } else {
+        renderPublicationsTab(window._manifest, container, filterFn);
+      }
+
+      var resultsEl = document.getElementById('results-count');
+      if (filterFn) {
+        var sub = tabId === 'articles' ? window._articlesSubtitle : window._publicationsSubtitle;
+        resultsEl.textContent = sub;
+        resultsEl.style.display = '';
+      } else {
+        resultsEl.style.display = 'none';
+      }
+
+      updateSubtitle(tabId);
+      updateFilterBadges(tabId);
+    }
+
+    function toggleTag(tag) {
+      var f = window._filters[currentTab];
+      var idx = f.tags.indexOf(tag);
+      if (idx === -1) f.tags.push(tag);
+      else f.tags.splice(idx, 1);
+      var chips = document.getElementById('filter-tags').querySelectorAll('.filter-tag');
+      chips.forEach(function(c) {
+        c.classList.toggle('active', f.tags.indexOf(c.getAttribute('data-tag')) !== -1);
+      });
+      applyFilters();
+    }
+
+    function resetFilters() {
+      var f = window._filters[currentTab];
+      f.query = '';
+      f.scoreMin = 0;
+      f.domain = '';
+      f.tags = [];
+      populateFilterUI(currentTab);
+      applyFilters();
+    }
+
+    function initFilters() {
+      var searchInput = document.getElementById('search-input');
+      var filterToggle = document.getElementById('filter-toggle');
+      var filterPanel = document.getElementById('filter-panel');
+      var scoreSlider = document.getElementById('filter-score');
+      var scoreValue = document.getElementById('filter-score-value');
+      var domainSelect = document.getElementById('filter-domain');
+      var resetBtn = document.getElementById('filter-reset');
+
+      var debouncedApply = debounce(applyFilters, 200);
+      searchInput.addEventListener('input', function() {
+        window._filters[currentTab].query = this.value;
+        debouncedApply();
+      });
+
+      filterToggle.addEventListener('click', function() {
+        var isOpen = filterPanel.classList.toggle('open');
+        filterToggle.setAttribute('aria-expanded', isOpen);
+        filterPanel.setAttribute('aria-hidden', !isOpen);
+      });
+
+      scoreSlider.addEventListener('input', function() {
+        scoreValue.textContent = this.value;
+        window._filters[currentTab].scoreMin = parseInt(this.value, 10);
+        applyFilters();
+      });
+
+      domainSelect.addEventListener('change', function() {
+        window._filters[currentTab].domain = this.value;
+        applyFilters();
+      });
+
+      resetBtn.addEventListener('click', function() {
+        resetFilters();
+      });
+
+      populateFilterUI(currentTab);
+    }
 
     // ── Shared helpers ──
     function scoreClass(s) {
