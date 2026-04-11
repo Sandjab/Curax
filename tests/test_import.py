@@ -401,3 +401,155 @@ class TestInjectMetadata:
         result = mod.inject_metadata(html, "T", 'Desc with "quotes" & <tags>')
         assert "&quot;" in result
         assert "&amp;" in result
+
+
+# =====================================================================
+# Groupe 8 : Catalog I/O
+# =====================================================================
+
+class TestCatalogIO:
+    def test_load_catalog_missing_file(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(mod, 'CATALOG_PATH', str(tmp_path / 'nonexistent.json'))
+        catalog = mod.load_catalog()
+        assert catalog == {"domains": {}, "articles": {}, "observations": ""}
+
+    def test_load_catalog_existing_file(self, tmp_path, monkeypatch):
+        import json
+        catalog_path = tmp_path / 'catalog.json'
+        data = {"domains": {"test": {"name": "Test", "description": "d", "icon": "t"}},
+                "articles": {}, "observations": "obs"}
+        catalog_path.write_text(json.dumps(data), encoding='utf-8')
+        monkeypatch.setattr(mod, 'CATALOG_PATH', str(catalog_path))
+        loaded = mod.load_catalog()
+        assert loaded == data
+
+    def test_save_load_roundtrip(self, tmp_path, monkeypatch):
+        catalog_path = tmp_path / 'catalog.json'
+        monkeypatch.setattr(mod, 'CATALOG_PATH', str(catalog_path))
+        data = {
+            "domains": {"ai": {"name": "AI", "description": "Artificial Intelligence", "icon": "🤖"}},
+            "articles": {"articles/ai/test.html": {"domain": "ai", "tags": ["test"],
+                         "quality_score": 7, "quality_note": "Good"}},
+            "observations": "Test observations with accents: cafe, resume"
+        }
+        mod.save_catalog(data)
+        loaded = mod.load_catalog()
+        assert loaded == data
+
+    def test_save_catalog_creates_dirs(self, tmp_path, monkeypatch):
+        catalog_path = tmp_path / 'subdir' / 'catalog.json'
+        monkeypatch.setattr(mod, 'CATALOG_PATH', str(catalog_path))
+        mod.save_catalog({"domains": {}, "articles": {}, "observations": ""})
+        assert catalog_path.exists()
+
+    def test_save_catalog_ensure_ascii_false(self, tmp_path, monkeypatch):
+        catalog_path = tmp_path / 'catalog.json'
+        monkeypatch.setattr(mod, 'CATALOG_PATH', str(catalog_path))
+        mod.save_catalog({"domains": {}, "articles": {}, "observations": "cafe"})
+        content = catalog_path.read_text(encoding='utf-8')
+        # ensure_ascii=False → les accents ne sont pas echappes
+        assert "cafe" in content
+        assert "\\u" not in content
+
+
+class TestPapersCatalogIO:
+    def test_load_missing_file(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(mod, 'PAPERS_CATALOG_PATH', str(tmp_path / 'nonexistent.json'))
+        catalog = mod.load_papers_catalog()
+        assert catalog == {"domains": {}, "papers": {}, "observations": ""}
+
+    def test_save_load_roundtrip(self, tmp_path, monkeypatch):
+        catalog_path = tmp_path / 'papers_catalog.json'
+        monkeypatch.setattr(mod, 'PAPERS_CATALOG_PATH', str(catalog_path))
+        data = {
+            "domains": {"ml": {"name": "ML", "description": "Machine Learning", "icon": "🧠"}},
+            "papers": {"papers/ml/test/test.pdf": {
+                "domain": "ml", "title": "Test Paper", "description": "A test",
+                "tags": ["test"], "quality_score": 8, "quality_note": "Solid",
+                "authors": ["Doe, J."], "year": 2025, "journal": "NeurIPS",
+                "doi": "10.1234/test", "robustness_score": 4.0,
+                "vulgarisation_file": "papers/ml/test/test-vulgarisation.html",
+                "lca_file": "papers/ml/test/test-lca.html"
+            }},
+            "observations": "Test"
+        }
+        mod.save_papers_catalog(data)
+        loaded = mod.load_papers_catalog()
+        assert loaded == data
+
+
+# =====================================================================
+# Groupe 9 : Analyze article
+# =====================================================================
+
+class TestAnalyzeArticle:
+    def test_returns_expected_keys(self):
+        result = mod.analyze_article("/path/to/file.html", TWITTER_HTML)
+        assert "filepath" in result
+        assert "filename" in result
+        assert "author" in result
+        assert "slug" in result
+        assert "text" in result
+
+    def test_filepath_preserved(self):
+        result = mod.analyze_article("/path/to/file.html", TWITTER_HTML)
+        assert result["filepath"] == "/path/to/file.html"
+        assert result["filename"] == "file.html"
+
+    def test_author_extracted(self):
+        result = mod.analyze_article("/path/to/file.html", TWITTER_HTML)
+        assert result["author"] == "elonmusk"
+
+    def test_text_extracted(self):
+        result = mod.analyze_article("/path/to/file.html", TWITTER_HTML)
+        assert "Premier tweet" in result["text"]
+
+    def test_slug_not_untitled_when_text_present(self):
+        result = mod.analyze_article("/path/to/file.html", TWITTER_HTML)
+        assert result["slug"] != "untitled"
+
+
+# =====================================================================
+# Groupe 10 : Companion HTML
+# =====================================================================
+
+class TestBuildCompanionHtml:
+    def test_lca_type(self):
+        html = mod.build_companion_html("Test Title", "<p>Body</p>", "lca")
+        assert "Lecture Critique" in html
+
+    def test_vulgarisation_type(self):
+        html = mod.build_companion_html("Test Title", "<p>Body</p>", "vulgarisation")
+        assert "Vulgarisation" in html
+
+    def test_title_in_html(self):
+        html = mod.build_companion_html("Mon Titre", "<p>Body</p>", "lca")
+        assert "Mon Titre" in html
+
+    def test_title_escaped(self):
+        html = mod.build_companion_html('Title "with" <special>', "<p>Body</p>", "lca")
+        assert "&quot;" in html
+        assert "&lt;" in html
+
+    def test_body_injected(self):
+        html = mod.build_companion_html("T", "<p>Custom content here</p>", "lca")
+        assert "<p>Custom content here</p>" in html
+
+    def test_themes_js_link(self):
+        html = mod.build_companion_html("T", "<p>B</p>", "lca")
+        assert "../../../themes.js" in html
+
+    def test_anti_fouc_script(self):
+        html = mod.build_companion_html("T", "<p>B</p>", "lca")
+        assert "localStorage" in html
+        assert "curax-mode" in html
+        assert "curax-theme" in html
+
+    def test_back_link(self):
+        html = mod.build_companion_html("T", "<p>B</p>", "lca")
+        assert "../../../index.html" in html
+
+    def test_is_valid_html(self):
+        html = mod.build_companion_html("T", "<p>B</p>", "lca")
+        assert html.startswith("<!DOCTYPE html>")
+        assert "</html>" in html
