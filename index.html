@@ -205,6 +205,21 @@
       return obs;
     }
 
+    function buildNoResults() {
+      var div = document.createElement("div");
+      div.className = "no-results";
+      var p = document.createElement("p");
+      var query = window._filters ? window._filters[currentTab].query : '';
+      p.textContent = query ? 'Aucun résultat pour « ' + query + ' »' : 'Aucun résultat avec ces filtres';
+      div.appendChild(p);
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "Réinitialiser les filtres";
+      btn.addEventListener("click", function() { resetFilters(); });
+      div.appendChild(btn);
+      return div;
+    }
+
     function buildDomainSection(domain, cardBuilder) {
       var section = document.createElement("section");
       section.className = "domain-section";
@@ -425,43 +440,65 @@
     }
 
     // ── Render articles tab ──
-    function renderArticlesTab(manifest, container) {
+    function renderArticlesTab(manifest, container, filterFn) {
       var domains = manifest.domains || [];
       var uncategorized = manifest.uncategorized || [];
 
-      // Extract trash
+      // Separate main vs trash via predicate (no mutation)
+      var mainDomains = [];
       var trashArticles = [];
       for (var i = 0; i < domains.length; i++) {
         var kept = [];
         var articles = domains[i].articles || [];
         for (var j = 0; j < articles.length; j++) {
-          if (articles[j].quality_score && articles[j].quality_score <= 4) {
-            trashArticles.push(articles[j]);
+          var art = articles[j];
+          if (art.quality_score && art.quality_score <= 4) {
+            trashArticles.push(art);
           } else {
-            kept.push(articles[j]);
+            kept.push(art);
           }
         }
-        domains[i].articles = kept;
+        if (kept.length > 0) {
+          mainDomains.push({ slug: domains[i].slug, name: domains[i].name, description: domains[i].description, icon: domains[i].icon, articles: kept });
+        }
       }
 
-      var totalArticles = domains.reduce(function(sum, d) { return sum + (d.articles || []).length; }, 0) + uncategorized.length + trashArticles.length;
-      var totalDomains = domains.filter(function(d) { return (d.articles || []).length > 0; }).length;
+      // Apply filter if provided
+      if (filterFn) {
+        var filteredDomains = [];
+        for (var i = 0; i < mainDomains.length; i++) {
+          var filtered = mainDomains[i].articles.filter(filterFn);
+          if (filtered.length > 0) {
+            filteredDomains.push({ slug: mainDomains[i].slug, name: mainDomains[i].name, description: mainDomains[i].description, icon: mainDomains[i].icon, articles: filtered });
+          }
+        }
+        mainDomains = filteredDomains;
+        uncategorized = uncategorized.filter(filterFn);
+        trashArticles = trashArticles.filter(filterFn);
+      }
+
+      var totalArticles = mainDomains.reduce(function(sum, d) { return sum + d.articles.length; }, 0) + uncategorized.length + trashArticles.length;
+      var totalDomains = mainDomains.length;
       window._articlesSubtitle = totalArticles + ' articles / ' + totalDomains + ' catégories';
 
       container.innerHTML = "";
+
+      if (totalArticles === 0 && filterFn) {
+        container.appendChild(buildNoResults());
+        return;
+      }
 
       if (totalArticles === 0) {
         container.innerHTML = '<div class="welcome-message"><p>Aucun article pour le moment.</p></div>';
         return;
       }
 
-      if (manifest.observations) {
+      if (manifest.observations && !filterFn) {
         container.appendChild(buildObservationsBox(manifest.observations));
       }
 
-      for (var i = 0; i < domains.length; i++) {
-        if ((domains[i].articles || []).length === 0) continue;
-        container.appendChild(buildDomainSection(domains[i], buildArticleCard));
+      for (var i = 0; i < mainDomains.length; i++) {
+        container.appendChild(buildDomainSection(mainDomains[i], buildArticleCard));
       }
 
       if (uncategorized.length > 0) {
@@ -478,7 +515,7 @@
     }
 
     // ── Render publications tab ──
-    function renderPublicationsTab(manifest, container) {
+    function renderPublicationsTab(manifest, container, filterFn) {
       container.innerHTML = "";
 
       if (!manifest.papers || !manifest.papers.domains || manifest.papers.domains.length === 0) {
@@ -489,7 +526,8 @@
 
       var paperDomains = manifest.papers.domains;
 
-      // Extract trash
+      // Separate main vs trash (no mutation)
+      var mainDomains = [];
       var trashPapers = [];
       for (var i = 0; i < paperDomains.length; i++) {
         var kept = [];
@@ -501,20 +539,39 @@
             kept.push(papers[j]);
           }
         }
-        paperDomains[i].papers = kept;
+        if (kept.length > 0) {
+          mainDomains.push({ slug: paperDomains[i].slug, name: paperDomains[i].name, description: paperDomains[i].description, icon: paperDomains[i].icon, papers: kept });
+        }
       }
 
-      var totalPapers = paperDomains.reduce(function(sum, d) { return sum + (d.papers || []).length; }, 0) + trashPapers.length;
-      var totalDomains = paperDomains.filter(function(d) { return (d.papers || []).length > 0; }).length;
+      // Apply filter if provided
+      if (filterFn) {
+        var filteredDomains = [];
+        for (var i = 0; i < mainDomains.length; i++) {
+          var filtered = mainDomains[i].papers.filter(filterFn);
+          if (filtered.length > 0) {
+            filteredDomains.push({ slug: mainDomains[i].slug, name: mainDomains[i].name, description: mainDomains[i].description, icon: mainDomains[i].icon, papers: filtered });
+          }
+        }
+        mainDomains = filteredDomains;
+        trashPapers = trashPapers.filter(filterFn);
+      }
+
+      var totalPapers = mainDomains.reduce(function(sum, d) { return sum + d.papers.length; }, 0) + trashPapers.length;
+      var totalDomains = mainDomains.length;
       window._publicationsSubtitle = totalPapers + ' publications / ' + totalDomains + ' axes';
 
-      if (manifest.papers.observations) {
+      if (totalPapers === 0 && filterFn) {
+        container.appendChild(buildNoResults());
+        return;
+      }
+
+      if (manifest.papers.observations && !filterFn) {
         container.appendChild(buildObservationsBox(manifest.papers.observations));
       }
 
-      for (var i = 0; i < paperDomains.length; i++) {
-        if ((paperDomains[i].papers || []).length === 0) continue;
-        container.appendChild(buildDomainSection(paperDomains[i], buildPaperCard));
+      for (var i = 0; i < mainDomains.length; i++) {
+        container.appendChild(buildDomainSection(mainDomains[i], buildPaperCard));
       }
 
       if (trashPapers.length > 0) {
@@ -530,12 +587,15 @@
         var response = await fetch("manifest.json");
         if (!response.ok) throw new Error("Manifeste introuvable");
 
-        var manifest = await response.json();
+        window._manifest = await response.json();
         var articlesContainer = document.getElementById("tab-articles");
         var publicationsContainer = document.getElementById("tab-publications");
 
-        renderArticlesTab(manifest, articlesContainer);
-        renderPublicationsTab(manifest, publicationsContainer);
+        renderArticlesTab(window._manifest, articlesContainer, null);
+        renderPublicationsTab(window._manifest, publicationsContainer, null);
+
+        // Init filters UI
+        if (typeof initFilters === 'function') initFilters();
 
         // Apply initial tab
         switchTab(currentTab);
