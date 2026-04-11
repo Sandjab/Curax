@@ -1597,62 +1597,8 @@ def cmd_regenerate_companions(args):
     print(f"\nTerminé ! {done_count} publications régénérées.")
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Pipeline d'import autonome pour Curax. Analyse, classifie via Claude CLI, score et importe les articles HTML et publications PDF.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent("""\
-            exemples:
-              python3 scripts/import.py infiles/                Import HTML + PDF avec preview
-              python3 scripts/import.py --yes infiles/          Import sans confirmation
-              python3 scripts/import.py --reclassify            Reclassifier les articles
-              python3 scripts/import.py --reclassify-papers     Reclassifier les publications
-              python3 scripts/import.py --regenerate-companions Régénérer LCA + vulgarisation
-              python3 scripts/import.py --workers 5             5 workers parallèles
-        """)
-    )
-    parser.add_argument('source', nargs='?', default='infiles',
-                        help="dossier source contenant les fichiers HTML et/ou PDF (défaut: infiles)")
-    parser.add_argument('--yes', action='store_true',
-                        help="importer sans demander de confirmation")
-    parser.add_argument('--reclassify', action='store_true',
-                        help="reclassifier tous les articles existants (nouveau scoring, tags, domaines)")
-    parser.add_argument('--reclassify-papers', action='store_true',
-                        help="reclassifier les publications (domain, tags, quality_note ; score figé, compagnons non régénérés)")
-    parser.add_argument('--regenerate-companions', action='store_true',
-                        help="régénérer les LCA et vulgarisations de toutes les publications existantes")
-    parser.add_argument('--workers', type=int, default=3,
-                        help="nombre de workers parallèles pour le scoring (défaut: 3)")
-    args = parser.parse_args()
-
-    # ------------------------------------------------------------------
-    # --reclassify : reclassifier tous les articles existants
-    # ------------------------------------------------------------------
-    if args.reclassify:
-        cmd_reclassify(args)
-        return
-
-    # ------------------------------------------------------------------
-    # --reclassify-papers : reclassifier les publications existantes
-    # ------------------------------------------------------------------
-    if args.reclassify_papers:
-        cmd_reclassify_papers(args)
-        return
-
-    # ------------------------------------------------------------------
-    # --regenerate-companions : régénérer LCA + vulgarisation
-    # ------------------------------------------------------------------
-    if args.regenerate_companions:
-        cmd_regenerate_companions(args)
-        return
-
-    # ------------------------------------------------------------------
-    # Import standard de nouveaux fichiers (HTML articles + PDF papers)
-    # ------------------------------------------------------------------
+def cmd_import(args):
+    """Import standard de nouveaux fichiers (HTML articles + PDF papers)."""
     source_dir = args.source
 
     if not os.path.isdir(source_dir):
@@ -1923,6 +1869,48 @@ def main():
     print("\nRegeneration du manifeste...")
     _regenerate_manifest()
     print("\nTermine !")
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Pipeline d'import autonome pour Curax. Analyse, classifie via Claude CLI, score et importe les articles HTML et publications PDF.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent("""\
+            exemples:
+              python3 scripts/import.py infiles/                Import HTML + PDF avec preview
+              python3 scripts/import.py --yes infiles/          Import sans confirmation
+              python3 scripts/import.py --reclassify            Reclassifier les articles
+              python3 scripts/import.py --reclassify-papers     Reclassifier les publications
+              python3 scripts/import.py --regenerate-companions Regenerer LCA + vulgarisation
+              python3 scripts/import.py --workers 5             5 workers paralleles
+        """)
+    )
+    parser.add_argument('source', nargs='?', default='infiles',
+                        help="dossier source contenant les fichiers HTML et/ou PDF (defaut: infiles)")
+    parser.add_argument('--yes', action='store_true',
+                        help="importer sans demander de confirmation")
+    parser.add_argument('--reclassify', action='store_true',
+                        help="reclassifier tous les articles existants (nouveau scoring, tags, domaines)")
+    parser.add_argument('--reclassify-papers', action='store_true',
+                        help="reclassifier les publications (domain, tags, quality_note ; score fige, compagnons non regeneres)")
+    parser.add_argument('--regenerate-companions', action='store_true',
+                        help="regenerer les LCA et vulgarisations de toutes les publications existantes")
+    parser.add_argument('--workers', type=int, default=3,
+                        help="nombre de workers paralleles pour le scoring (defaut: 3)")
+    args = parser.parse_args()
+
+    if args.reclassify:
+        cmd_reclassify(args)
+    elif args.reclassify_papers:
+        cmd_reclassify_papers(args)
+    elif args.regenerate_companions:
+        cmd_regenerate_companions(args)
+    else:
+        cmd_import(args)
 
 
 def _regenerate_manifest():
