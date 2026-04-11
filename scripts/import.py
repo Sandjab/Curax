@@ -1267,6 +1267,131 @@ def prompt_confirm(message):
 
 
 # ---------------------------------------------------------------------------
+# Subcommands
+# ---------------------------------------------------------------------------
+
+def cmd_reclassify(args):
+    """Reclassifier tous les articles existants."""
+    print("Reclassification de tous les articles existants...\n")
+    catalog = load_catalog()
+    if not catalog["articles"]:
+        print("Aucun article dans catalog.json. Importez des articles d'abord.")
+        sys.exit(1)
+
+    total = len(catalog["articles"])
+    print(f"1. Appel Claude pour la taxonomie ({total} articles)...")
+    taxonomy_prompt = build_reclassify_taxonomy_prompt(catalog)
+    taxonomy = call_claude_with_retry(taxonomy_prompt, TAXONOMY_SCHEMA, timeout=300)
+    catalog["domains"] = taxonomy["domains"]
+    catalog["observations"] = taxonomy["observations"]
+    print(f"   {len(taxonomy['domains'])} domaines, observations mises a jour\n")
+
+    # Scorer chaque article (en parallele)
+    print(f"2. Scoring des {total} articles ({args.workers} workers)...")
+    changes = []
+
+    def _score_one(article_key, meta):
+        """Score un article via Claude. Retourne (article_key, meta, result) ou None."""
+        html_path = os.path.join(PROJECT_ROOT, article_key)
+        if not os.path.isfile(html_path):
+            return None
+        with open(html_path, encoding='utf-8', errors='replace') as f:
+            content = f.read()
+        text = extract_text_spans(content)
+        result = call_claude_with_retry(
+            build_article_prompt(text, taxonomy["domains"]),
+            ARTICLE_SCHEMA
+        )
+        return (article_key, meta, result)
+
+    articles_list = list(catalog["articles"].items())
+    done_count = 0
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = {
+            executor.submit(_score_one, key, meta): key
+            for key, meta in articles_list
+        }
+        for future in as_completed(futures):
+            done_count += 1
+            res = future.result()
+            if res is None:
+                article_key = futures[future]
+                print(f"  [{done_count}/{total}] SKIP {article_key} (fichier introuvable)")
+                continue
+
+            article_key, meta, result = res
+            new_domain = result["domain"]
+            old_domain = meta["domain"]
+
+            # Verifier que le domaine existe dans la taxonomie
+            if new_domain not in taxonomy["domains"]:
+                print(f"  [{done_count}/{total}] {article_key} -> ATTENTION domaine '{new_domain}' inconnu, garde '{old_domain}'")
+                new_domain = old_domain
+            else:
+                print(f"  [{done_count}/{total}] {article_key} -> {new_domain} ({result['quality_score']}/10) [{', '.join(result['tags'])}]")
+
+            catalog["articles"][article_key] = {
+                "domain": new_domain,
+                "tags": result["tags"],
+                "quality_score": result["quality_score"],
+                "quality_note": result["quality_note"],
+            }
+
+            # Detecter changements de domaine et/ou de slug
+            old_filename = os.path.basename(article_key)
+            old_slug = os.path.splitext(old_filename)[0]
+            new_slug = slugify(result.get("title", ""))
+            domain_changed = old_domain != new_domain
+            slug_changed = new_slug != old_slug and new_slug != "untitled"
+
+            if domain_changed or slug_changed:
+                changes.append((article_key, old_domain, new_domain,
+                                old_slug, new_slug if slug_changed else None))
+
+    # Sauvegarder les scores/tags AVANT la confirmation des deplacements
+    save_catalog(catalog)
+    print(f"   Scores et tags sauvegardes dans catalog.json")
+
+    # Preview des deplacements/renommages
+    if changes:
+        print(f"\n3. Deplacements/renommages prevus ({len(changes)}) :")
+        for key, old_dom, new_dom, old_slug, new_slug_val in changes:
+            old_filename = os.path.basename(key)
+            new_filename = f"{new_slug_val}.html" if new_slug_val else old_filename
+            new_key = f"articles/{new_dom}/{new_filename}"
+            if old_dom != new_dom and new_slug_val:
+                label = "deplace + renomme"
+            elif old_dom != new_dom:
+                label = "deplace"
+            else:
+                label = "renomme"
+            print(f"  {key} -> {new_key} ({label})")
+
+        if not args.yes:
+            if not prompt_confirm("\nConfirmer les deplacements/renommages ? [y/N]"):
+                print("Deplacements annules (scores et tags deja sauvegardes).")
+                _regenerate_manifest()
+                print("\nTermine !")
+                return
+
+        # Executer les deplacements/renommages
+        for key, old_dom, new_dom, old_slug, new_slug_val in changes:
+            new_key = move_or_rename_article(
+                catalog, key,
+                new_domain=new_dom if old_dom != new_dom else None,
+                new_slug=new_slug_val,
+            )
+            if new_key:
+                print(f"  {key} -> {new_key}")
+    else:
+        print("\n3. Aucun deplacement/renommage necessaire.")
+
+    save_catalog(catalog)
+    _regenerate_manifest()
+    print("\nTermine !")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1302,123 +1427,7 @@ def main():
     # --reclassify : reclassifier tous les articles existants
     # ------------------------------------------------------------------
     if args.reclassify:
-        print("Reclassification de tous les articles existants...\n")
-        catalog = load_catalog()
-        if not catalog["articles"]:
-            print("Aucun article dans catalog.json. Importez des articles d'abord.")
-            sys.exit(1)
-
-        total = len(catalog["articles"])
-        print(f"1. Appel Claude pour la taxonomie ({total} articles)...")
-        taxonomy_prompt = build_reclassify_taxonomy_prompt(catalog)
-        taxonomy = call_claude_with_retry(taxonomy_prompt, TAXONOMY_SCHEMA, timeout=300)
-        catalog["domains"] = taxonomy["domains"]
-        catalog["observations"] = taxonomy["observations"]
-        print(f"   {len(taxonomy['domains'])} domaines, observations mises a jour\n")
-
-        # Scorer chaque article (en parallele)
-        print(f"2. Scoring des {total} articles ({args.workers} workers)...")
-        changes = []
-
-        def _score_one(article_key, meta):
-            """Score un article via Claude. Retourne (article_key, meta, result) ou None."""
-            html_path = os.path.join(PROJECT_ROOT, article_key)
-            if not os.path.isfile(html_path):
-                return None
-            with open(html_path, encoding='utf-8', errors='replace') as f:
-                content = f.read()
-            text = extract_text_spans(content)
-            result = call_claude_with_retry(
-                build_article_prompt(text, taxonomy["domains"]),
-                ARTICLE_SCHEMA
-            )
-            return (article_key, meta, result)
-
-        articles_list = list(catalog["articles"].items())
-        done_count = 0
-        with ThreadPoolExecutor(max_workers=args.workers) as executor:
-            futures = {
-                executor.submit(_score_one, key, meta): key
-                for key, meta in articles_list
-            }
-            for future in as_completed(futures):
-                done_count += 1
-                res = future.result()
-                if res is None:
-                    article_key = futures[future]
-                    print(f"  [{done_count}/{total}] SKIP {article_key} (fichier introuvable)")
-                    continue
-
-                article_key, meta, result = res
-                new_domain = result["domain"]
-                old_domain = meta["domain"]
-
-                # Verifier que le domaine existe dans la taxonomie
-                if new_domain not in taxonomy["domains"]:
-                    print(f"  [{done_count}/{total}] {article_key} -> ATTENTION domaine '{new_domain}' inconnu, garde '{old_domain}'")
-                    new_domain = old_domain
-                else:
-                    print(f"  [{done_count}/{total}] {article_key} -> {new_domain} ({result['quality_score']}/10) [{', '.join(result['tags'])}]")
-
-                catalog["articles"][article_key] = {
-                    "domain": new_domain,
-                    "tags": result["tags"],
-                    "quality_score": result["quality_score"],
-                    "quality_note": result["quality_note"],
-                }
-
-                # Detecter changements de domaine et/ou de slug
-                old_filename = os.path.basename(article_key)
-                old_slug = os.path.splitext(old_filename)[0]
-                new_slug = slugify(result.get("title", ""))
-                domain_changed = old_domain != new_domain
-                slug_changed = new_slug != old_slug and new_slug != "untitled"
-
-                if domain_changed or slug_changed:
-                    changes.append((article_key, old_domain, new_domain,
-                                    old_slug, new_slug if slug_changed else None))
-
-        # Sauvegarder les scores/tags AVANT la confirmation des deplacements
-        save_catalog(catalog)
-        print(f"   Scores et tags sauvegardes dans catalog.json")
-
-        # Preview des deplacements/renommages
-        if changes:
-            print(f"\n3. Deplacements/renommages prevus ({len(changes)}) :")
-            for key, old_dom, new_dom, old_slug, new_slug_val in changes:
-                old_filename = os.path.basename(key)
-                new_filename = f"{new_slug_val}.html" if new_slug_val else old_filename
-                new_key = f"articles/{new_dom}/{new_filename}"
-                if old_dom != new_dom and new_slug_val:
-                    label = "deplace + renomme"
-                elif old_dom != new_dom:
-                    label = "deplace"
-                else:
-                    label = "renomme"
-                print(f"  {key} -> {new_key} ({label})")
-
-            if not args.yes:
-                if not prompt_confirm("\nConfirmer les deplacements/renommages ? [y/N]"):
-                    print("Deplacements annules (scores et tags deja sauvegardes).")
-                    _regenerate_manifest()
-                    print("\nTermine !")
-                    return
-
-            # Executer les deplacements/renommages
-            for key, old_dom, new_dom, old_slug, new_slug_val in changes:
-                new_key = move_or_rename_article(
-                    catalog, key,
-                    new_domain=new_dom if old_dom != new_dom else None,
-                    new_slug=new_slug_val,
-                )
-                if new_key:
-                    print(f"  {key} -> {new_key}")
-        else:
-            print("\n3. Aucun deplacement/renommage necessaire.")
-
-        save_catalog(catalog)
-        _regenerate_manifest()
-        print("\nTermine !")
+        cmd_reclassify(args)
         return
 
     # ------------------------------------------------------------------
