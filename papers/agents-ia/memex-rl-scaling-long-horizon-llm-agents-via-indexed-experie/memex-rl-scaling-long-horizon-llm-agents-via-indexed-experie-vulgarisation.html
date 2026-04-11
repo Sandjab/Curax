@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memex(RL): Scaling Long-Horizon LLM Agents via Indexed Experience Memory — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Memex(RL): Scaling Long-Horizon LLM Agents via Indexed Experience Memory</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Memex(RL) : une mémoire indexée pour que les agents IA ne perdent plus le fil</h2>
+
+<p>Un agent IA reçoit une mission complexe : croiser des dizaines d'articles scientifiques, appeler plusieurs API, compiler les résultats dans un rapport structuré. Au bout de cinquante étapes, il a oublié un détail crucial apparu au début de sa recherche. Il relance la même requête, obtient la même réponse, gaspille du temps et du contexte. C'est le quotidien des agents basés sur des grands modèles de langage (LLM) dès que les tâches s'allongent.</p>
+
+<p>Une équipe du centre d'IA avancée d'Accenture — Zhenting Wang, Huancheng Chen, Jiayun Wang et Wei Wei — propose une solution baptisée Memex. L'idée : au lieu de résumer grossièrement l'historique ou de le tronquer, l'agent conserve un index compact dans sa fenêtre de contexte et stocke les données complètes dans une base externe. Il peut ensuite retrouver exactement ce dont il a besoin, quand il en a besoin.</p>
+
+<h2>Le problème : une mémoire de travail trop petite pour des missions trop longues</h2>
+
+<p>Les LLM fonctionnent avec une fenêtre de contexte limitée. Même les modèles récents, qui acceptent des dizaines de milliers de tokens, finissent par saturer quand un agent enchaîne des centaines d'appels d'outils, de raisonnements intermédiaires et de résultats à traiter. Deux symptômes apparaissent alors. D'abord, le contexte déborde : les messages les plus anciens sont éjectés ou tronqués. Ensuite, même quand l'information reste techniquement présente dans la fenêtre, le modèle peine à l'exploiter si elle est enfouie loin en amont.</p>
+
+<p>Les solutions actuelles attaquent ce problème de deux façons. La première consiste à résumer régulièrement l'historique pour le compacter. Le problème : un résumé est par nature une perte d'information. Un détail anodin au moment de la compression — un identifiant d'objet, un message d'erreur précis, un extrait de code — peut devenir décisif vingt étapes plus tard. La seconde approche utilise une mémoire externe avec recherche par similarité sémantique. En théorie, l'agent retrouve ses souvenirs par proximité de sens. En pratique, quand la mémoire accumule des centaines de fragments bruités et quasi-identiques, la recherche devient ambiguë. Le modèle ne sait pas comment organiser son propre vécu : quels résultats méritent une référence stable, quels chemins sont des impasses, comment nommer les artefacts pour les retrouver avec précision.</p>
+
+<p>Le constat des auteurs tient en une phrase : les agents ont besoin d'un mécanisme qui compresse le contexte sans jeter les preuves.</p>
+
+<h2>La méthode : un bureau rangé avec un classeur bien étiqueté</h2>
+
+<p>L'analogie la plus directe pour comprendre Memex est celle du bureau physique. Votre espace de travail (le contexte actif) est limité : vous ne pouvez pas étaler mille feuilles devant vous. Mais vous disposez d'un classeur (la base externe) où chaque dossier porte une étiquette précise. Sur votre bureau, vous gardez uniquement une fiche récapitulative qui liste vos dossiers avec un résumé d'une ligne pour chacun. Quand vous avez besoin du contenu exact d'un dossier, vous ouvrez le classeur à la bonne étiquette.</p>
+
+<p>Memex fonctionne sur ce principe avec deux opérations centrales. La première, <em>CompressExperience</em>, intervient quand le contexte de travail grossit trop. L'agent rédige alors un résumé structuré — un état d'avancement actionnable accompagné d'une table d'index — et archive le contenu détaillé dans une base clé-valeur externe. Le contexte est réécrit : seuls le prompt système, la consigne de tâche et ce résumé indexé subsistent. La seconde opération, <em>ReadExperience</em>, permet à l'agent de « déréférencer » un index — terme emprunté à la programmation — pour réinjecter dans son contexte le contenu exact archivé sous cette étiquette.</p>
+
+<p>Cette séparation entre état de contrôle compact et archive fidèle change la donne. Un résumé classique dirait « j'ai trouvé un bug dans la fonction X ». L'index Memex dit « ctx_bug_analysis_001 : analyse complète du bug dans la fonction X, lignes 140-206 ». Le résumé suffit pour planifier la suite ; l'index permet de retrouver le code exact quand vient le moment de corriger.</p>
+
+<p>Reste une difficulté : comment l'agent apprend-il à bien utiliser ces outils ? Quand comprimer ? Que stocker sous quelle étiquette ? Quand récupérer une archive plutôt que relancer un appel d'outil ? Ces décisions sont difficiles à coder sous forme de règles fixes. Un index bien conçu à l'étape 10 ne prouve sa valeur qu'à l'étape 45, quand l'agent retrouve en un appel ce qu'il aurait autrement dû recalculer.</p>
+
+<h3>Apprendre à gérer sa mémoire par renforcement</h3>
+
+<p>Les auteurs traitent les opérations mémoire comme des actions à part entière dans l'espace décisionnel de l'agent, au même titre que les appels d'outils ou la soumission d'une réponse. Ils entraînent ensuite l'agent avec MemexRL, un cadre d'apprentissage par renforcement inspiré de GRPO (une variante de PPO adaptée aux LLM).</p>
+
+<p>La récompense combine le succès de la tâche avec trois pénalités. La première sanctionne le dépassement du seuil de contexte : si le contexte de travail dépasse un budget fixé (8 000 tokens dans les expériences), l'agent perd des points. La deuxième pénalise les appels d'outils redondants — relancer exactement la même requête sans changement d'état entre-temps. La troisième punit les erreurs de format dans les appels d'outils. Chaque pénalité est normalisée entre 0 et 1 pour éviter qu'un type d'erreur écrase les autres.</p>
+
+<p>Un détail d'ingénierie mérite attention. Quand l'agent compresse son contexte en cours d'épisode, la trajectoire est coupée en segments à chaque point de compression. Chaque segment est traité comme un échantillon d'entraînement indépendant, mais tous partagent la même récompense finale. Le modèle peut ainsi apprendre si une compression donnée a aidé ou nui au résultat, même si l'effet ne se manifeste que bien plus tard.</p>
+
+<p>Autre choix de conception : la compression n'est pas déclenchée automatiquement par un seuil dur. L'agent reçoit à chaque étape un indicateur d'état du contexte (« working tokens = 6 932, threshold = 8 000 »). C'est à lui de décider quand comprimer. Parfois, reporter la compression de quelques étapes est judicieux — si la tâche est presque terminée, par exemple. D'autres fois, comprimer plus tôt, à une frontière sémantique naturelle, produit un meilleur index. L'apprentissage par renforcement transforme ce choix en compétence acquise.</p>
+
+<h2>Résultats : 3,5 fois plus de succès avec 43 % de contexte en moins</h2>
+
+<p>Les chercheurs ont testé Memex sur une version durcie d'ALFWorld, un environnement simulé où un agent doit accomplir des tâches ménagères (trouver un objet, le nettoyer, le ranger) en naviguant dans des pièces et en manipulant des objets. Cette version est plus difficile que l'originale : les commandes admissibles sont cachées, la description initiale de la pièce est retirée, la commande « regarder autour de soi » n'est utilisable qu'une seule fois par épisode, et le résumé de compression est tronqué à 300 tokens. L'agent doit donc explorer, mémoriser les identifiants des lieux et des objets, et les retrouver via sa mémoire indexée.</p>
+
+<p>Le modèle utilisé est Qwen3-30B-A3B, un modèle à mélange d'experts avec environ 3 milliards de paramètres actifs par token. Avant entraînement MemexRL, cet agent réussit 24,2 % des tâches. Après entraînement : 85,6 %. Le pic de contexte de travail passe de 16 934 tokens à 9 634 — proche du seuil de pénalité fixé à 8 000.</p>
+
+<p>L'évolution du comportement mémoire est révélatrice. Avant entraînement, l'agent compresse en moyenne 6,5 fois par épisode et ne récupère qu'une seule archive. Après entraînement, il compresse 3 fois et récupère 6 à 7 archives. L'agent a appris à comprimer moins souvent mais mieux, et à consulter ses archives plutôt que relancer des commandes identiques. C'est le mode opératoire que les concepteurs visaient : construire une mémoire réutilisable plutôt que réécrire sans cesse le contexte.</p>
+
+<p>Les courbes d'entraînement confirment la progression. Le taux de succès sur les rollouts grimpe de 20 % à plus de 90 % au fil des itérations. La pénalité totale passe de −0,4 à environ −0,1. L'agent apprend simultanément à résoudre les tâches et à gérer son budget de contexte — les deux objectifs se renforcent mutuellement.</p>
+
+<h3>Ce que dit la théorie</h3>
+
+<p>Les auteurs fournissent aussi une analyse formelle. Sous l'hypothèse que le résumé indexé est « B-borné suffisant pour la décision » — c'est-à-dire que l'action optimale peut être reconstituée à partir du résumé plus au maximum B blocs archivés — ils montrent deux propriétés. Première propriété : un agent Memex peut égaler un agent qui aurait accès à l'intégralité de l'historique. Seconde propriété : le contexte de travail reste borné même quand l'historique total croît indéfiniment. Le ratio de compression augmente sans limite.</p>
+
+<p>Ces résultats sont des garanties théoriques, pas des certitudes pratiques. Ils délimitent le régime dans lequel l'approche fonctionne. Les expériences montrent que l'apprentissage par renforcement pousse l'agent vers ce régime favorable.</p>
+
+<h2>Implications : vers des agents qui tiennent la distance</h2>
+
+<p>Les agents LLM actuels brillent sur les tâches courtes — répondre à une question, générer un bloc de code, résumer un document. Dès que la mission s'étire sur des dizaines d'étapes avec des allers-retours entre outils, leur performance chute. Cette limitation freine des cas d'usage concrets : audit automatisé de code sur de gros dépôts, recherche documentaire croisée sur des corpus scientifiques, orchestration de workflows métier multi-API, débogage interactif prolongé.</p>
+
+<p>Memex attaque ce plafond par un angle original. Plutôt que d'augmenter la taille de la fenêtre de contexte (coûteux en calcul, avec des rendements décroissants) ou d'empiler des résumés (avec perte d'information progressive), il donne à l'agent un système de fichiers personnel. L'agent garde une vue d'ensemble sur son bureau et des dossiers détaillés dans son classeur. La charge cognitive reste stable même si le volume de travail augmente.</p>
+
+<p>Pour les équipes qui construisent des agents en production, plusieurs enseignements se dégagent. Le premier : les résumés seuls ne suffisent pas pour les tâches longues. Un résumé qui omet un identifiant, un chemin de fichier ou un message d'erreur peut faire dérailler toute la suite d'un workflow. Le deuxième : la gestion de la mémoire n'est pas qu'un problème d'infrastructure — c'est un comportement que l'agent peut apprendre. Les pénalités de contexte et de redondance de MemexRL montrent qu'on peut guider un LLM vers une utilisation parcimonieuse et stratégique de son espace de travail. Le troisième : séparer l'état de contrôle (que fait-on, où en est-on) des données brutes (les résultats exacts des outils) est un patron d'architecture transférable bien au-delà d'ALFWorld.</p>
+
+<p>Les fournisseurs de modèles investissent massivement dans l'extension des fenêtres de contexte. Memex suggère qu'une approche complémentaire — apprendre à utiliser un petit contexte intelligemment — peut être plus rentable. Un modèle avec 32 000 tokens et une bonne gestion mémoire surpasse ici un usage naïf de la même fenêtre.</p>
+
+<h2>Pour aller plus loin : les questions ouvertes</h2>
+
+<p>L'évaluation se limite à ALFWorld, un environnement simulé avec des actions discrètes et des observations textuelles relativement courtes. Les tâches réelles des agents — navigation web, écriture de code sur de gros projets, recherche scientifique — produisent des artefacts beaucoup plus volumineux et hétérogènes. Le passage à l'échelle sur ces domaines reste à démontrer.</p>
+
+<p>La qualité de l'index dépend entièrement du modèle sous-jacent. Si l'agent choisit mal ses étiquettes ou archive du contenu non pertinent, la mémoire externe devient un cimetière de données inutiles. Les auteurs montrent que l'apprentissage par renforcement améliore ces choix, mais sur un seul type de tâche et avec un seul modèle de base. La généralisation à d'autres architectures et d'autres environnements est une piste ouverte.</p>
+
+<p>La question du coût d'entraînement n'est pas abordée en détail. MemexRL nécessite des rollouts complets d'épisodes longs avec exécution réelle des outils — un processus gourmand en calcul. Pour les praticiens, le rapport entre le coût d'entraînement et le gain en performance sera déterminant.</p>
+
+<p>On peut aussi se demander comment Memex interagirait avec les architectures à cache KV étendu ou les systèmes RAG (Retrieval-Augmented Generation) déjà déployés. Les deux approches stockent de l'information hors contexte, mais avec des mécanismes de récupération différents. RAG cherche par similarité sémantique dans un corpus ; Memex déréférence par index stable dans un historique structuré par l'agent lui-même. Une combinaison des deux — recherche floue pour la découverte, index stable pour la réutilisation — serait un prolongement naturel.</p>
+
+<p>Enfin, le nom du projet est un clin d'œil assumé au Memex de Vannevar Bush, ce bureau augmenté imaginé en 1945 où un chercheur stockerait et relierait mécaniquement tous ses documents par des « trails » — des pistes de liens entre contenus. Quatre-vingts ans plus tard, l'idée prend une forme inattendue : ce n'est plus un humain qui gère ses fiches et ses renvois, mais un modèle de langage qui apprend, par essais et récompenses, à organiser son propre vécu computationnel.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

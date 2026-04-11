@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KARL: Knowledge Agents via Reinforcement Learning — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>KARL: Knowledge Agents via Reinforcement Learning</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Le raisonnement ancré — la capacité d'un modèle à raisonner à partir d'informations récupérées dans des corpus externes plutôt que stockées dans ses paramètres — reste un défi majeur pour les agents à base de LLM. Les benchmarks existants (HotpotQA, BrowseComp-Plus, FinanceBench) n'évaluent chacun qu'une facette restreinte de cette compétence. Databricks AI Research propose KARL, un agent de recherche entraîné par reinforcement learning multi-tâche, accompagné de KARLBench, une suite d'évaluation couvrant six régimes de recherche distincts : recherche d'entités par contraintes, synthèse de rapports multi-documents, raisonnement numérique tabulaire, recherche exhaustive d'entités, raisonnement procédural sur documentation technique, et agrégation de faits sur des notes internes d'entreprise.</p>
+
+<p>L'ambition est double : montrer qu'un entraînement RL multi-tâche sur seulement deux benchmarks produit une généralisation hors distribution vers quatre autres tâches, et que l'agent résultant domine la frontière de Pareto coût/qualité et latence/qualité face aux modèles fermés de référence (Claude 4.6, GPT 5.2).</p>
+
+<h2>Méthodologie</h2>
+
+<h3>Architecture de l'agent</h3>
+
+<p>KARL repose sur un agent équipé d'un unique outil : la recherche vectorielle. Ce choix isole les capacités de recherche et de raisonnement des effets d'orchestration multi-outils. Un mécanisme de compression de contexte, déclenché quand l'historique dépasse un seuil de tokens, demande à l'agent lui-même de résumer son historique. Cette compression est incluse dans la boucle d'optimisation RL, ce qui permet au modèle d'apprendre quoi retenir et quoi éliminer en fonction de la récompense finale.</p>
+
+<h3>Synthèse agentique de données</h3>
+
+<p>La génération de données d'entraînement s'effectue en deux étapes. D'abord, un agent synthétiseur explore le corpus via recherche vectorielle et produit des paires question-réponse ancrées dans les documents récupérés — une approche plus expressive que la synthèse conditionnée sur des documents statiques (SPICE, NaturalReasoning). Ensuite, un agent solveur génère 8 tentatives par question. Les questions trop faciles (100% de réussite) ou trop difficiles (0%) sont filtrées, ne retenant que celles où le signal d'apprentissage est maximal. Un agent de contrôle qualité élimine les questions ambiguës ou dont la réponse de référence est incorrecte. Un pipeline de déduplication en deux étapes (correspondance exacte puis détection de paraphrases via embedding + juge LLM) prévient la contamination par les données d'évaluation.</p>
+
+<h3>Entraînement RL off-policy (OAPL)</h3>
+
+<p>L'optimisation utilise OAPL (Optimal Advantage-based Policy Optimization with Lagged Inference), une méthode de RL off-policy par lots itératifs. La perte est une régression aux moindres carrés sur l'avantage optimal, estimé à partir des rollouts groupés. Par rapport au GRPO en ligne, cette approche élimine le besoin d'heuristiques de stabilisation (pondération d'importance clippée, suppression de données hors politique, replay de routeur) habituellement nécessaires pour les modèles MoE à grande échelle. Les rollouts longs sont segmentés aux points de compression pour limiter la consommation mémoire GPU.</p>
+
+<p>L'entraînement multi-tâche combine les pertes de BrowseComp-Plus (recherche profonde) et TREC-Biogen (recherche large) en équilibrant les tokens d'entraînement entre les deux tâches. Le modèle de base est GLM 4.5 Air, avec au maximum 3 itérations de raffinement.</p>
+
+<h3>Test-time compute</h3>
+
+<p>Deux stratégies sont évaluées. Le « Parallel Thinking » génère N rollouts indépendants en parallèle, puis un agrégateur synthétise une réponse finale — avec la possibilité de produire une réponse meilleure que chaque rollout individuel (observé dans 23.7% des cas sur PMBench avec N=5). Le Value-Guided Search (VGS) entraîne un petit modèle de valeur (Qwen3-4B) pour guider une recherche arborescente à chaque étape de génération.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>Sans test-time compute supplémentaire, KARL atteint un score total KARLBench de 58.9, au niveau de Claude Sonnet 4.5. Avec 3 rollouts parallèles, il dépasse Sonnet 4.6 (64.1 vs 62.3). Avec 10 rollouts, il égale Opus 4.6 (67.5). Ces résultats tiennent à la fois en distribution (BrowseComp-Plus, TREC-Biogen) et hors distribution (FreshStack, FinanceBench, QAMPARI, PMBench).</p>
+
+<p>En coût, KARL sans parallélisme atteint des scores compétitifs à moins de 0.10 USD par requête. Avec 10 rollouts parallèles, il égale Opus 4.6 à environ 33% de coût en moins. Résultat contre-intuitif : KARL est moins cher par requête que son modèle de base GLM 4.5 Air (+6 points KARLBench pour un coût inférieur), car le RL enseigne des stratégies de recherche plus efficaces qui réduisent le nombre d'étapes.</p>
+
+<p>L'entraînement multi-tâche RL surpasse la distillation multi-experts sur la généralisation hors distribution. La distillation par SFT montre des gains en distribution avec le test-time compute (69.1→75.3) mais stagne hors distribution (59.4→59.6), alors que KARL progresse sur les deux axes.</p>
+
+<p>L'analyse max@k confirme que le RL ne se contente pas d'affiner la distribution existante du modèle de base : les courbes max@k s'élèvent à toutes les valeurs de k après entraînement. Après trois itérations, le max@1 de KARL-TREC égale le max@8 de GLM 4.5 Air — le modèle entraîné résout en une tentative ce que le modèle de base ne résout pas en seize.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>Plusieurs faiblesses méthodologiques méritent une analyse franche.</p>
+
+<p>Le biais d'auto-évaluation est la limite la plus sérieuse. Databricks conçoit KARLBench, entraîne KARL sur deux de ses six tâches, et évalue sur les quatre restantes. Même si les tâches hors distribution n'ont pas servi à l'entraînement, les choix de conception du benchmark (format des questions, protocole d'évaluation nugget-based, types de raisonnement testés) reflètent inévitablement les priors des auteurs. PMBench, la seule tâche entièrement nouvelle, est un benchmark interne non accessible publiquement — impossible de vérifier sa qualité ou sa représentativité de façon indépendante.</p>
+
+<p>Le choix de GLM 4.5 Air comme modèle de base n'est pas justifié de manière approfondie. Pourquoi pas Qwen, Llama ou un autre modèle ouvert ? L'article ne présente aucune ablation sur le choix du modèle de base, ce qui laisse ouverte la question de la transférabilité de la méthode.</p>
+
+<p>L'évaluation par juge LLM (nugget-based completion) introduit un bruit non quantifié. Les auteurs ne rapportent pas l'accord inter-annotateurs ni la corrélation avec un jugement humain sur un sous-ensemble.</p>
+
+<p>L'analyse comportementale (Section 8) est une contribution précieuse et honnête. L'augmentation de la catégorie « Giving Up Early » après RL signale un risque de corrélation spurieuse apprise entre trajectoires courtes et réponses correctes. L'échec sur le raisonnement arithmétique post-récupération (Table 15) montre que le RL améliore la stratégie de recherche sans renforcer le raisonnement sur les données déjà récupérées — une distinction rarement explicitée dans la littérature.</p>
+
+<p>L'unique outil (recherche vectorielle) simplifie l'évaluation mais réduit la portée pratique. En entreprise, les agents doivent interroger des bases SQL, exécuter du code, appeler des API structurées. Les auteurs reconnaissent cette limitation et la posent en perspective future.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>La reproductibilité de ce travail est faible. Aucun code source n'est publié — ni le framework aroll, ni les prompts de synthèse complets, ni les scripts d'évaluation. PMBench est propriétaire. OAPL est décrit conceptuellement mais renvoie à un article séparé (Ritter et al. 2026) pour les détails d'implémentation. L'infrastructure d'entraînement (génération de rollouts à grande échelle, base vectorielle embarquée à 500 QPS par hôte) nécessite des ressources significatives que peu de laboratoires académiques peuvent mobiliser.</p>
+
+<p>Les cinq autres benchmarks de KARLBench sont publics (BrowseComp-Plus, TREC-Biogen, FinanceBench, QAMPARI, FreshStack), ce qui permet une reproduction partielle de l'évaluation. Les hyperparamètres de filtrage (seuils de binarisation, taille des groupes de rollouts) sont documentés avec précision. Les prompts de déduplication et d'évaluation sont fournis en annexe — un effort de transparence appréciable malgré l'absence du code.</p>
+
+<h2>Impact et applications</h2>
+
+<p>KARL démontre qu'un modèle ouvert de taille modeste (GLM 4.5 Air, un MoE), enrichi par RL multi-tâche et données synthétiques ciblées, peut rivaliser avec les meilleurs modèles fermés sur des tâches de recherche agentique, à un coût nettement inférieur. C'est un résultat concret pour le déploiement d'agents de recherche en entreprise, où le coût par requête est un facteur décisif.</p>
+
+<p>La démonstration que le RL multi-tâche surpasse la distillation multi-experts pour la généralisation hors distribution a des implications au-delà de la recherche agentique. Ce résultat remet en question l'approche dominante (utilisée par DeepSeek-V3.2, GLM-5) consistant à distiller des experts spécialisés dans un modèle généraliste.</p>
+
+<p>L'inclusion de la compression de contexte dans la boucle RL est une idée technique avec un potentiel d'application large. Plutôt que d'entraîner un modèle de résumé séparé, le modèle apprend directement quelles informations retenir pour maximiser la récompense de la tâche finale.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>KARL s'inscrit dans la lignée des travaux sur les agents de recherche par RL, après les succès du RL pour le raisonnement mathématique et le code (DeepSeek-R1, OpenAI o1). Sa contribution spécifique est l'extension au « raisonnement ancré » — des tâches où la réponse dépend de documents externes et non des seuls paramètres du modèle.</p>
+
+<p>Par rapport à la deep research d'OpenAI (2025a), KARL opère sur des corpus fermés plutôt que sur le web ouvert, éliminant la variabilité des moteurs de recherche. Cette contrainte est à la fois une force (évaluation contrôlée) et une limite (écart avec les conditions réelles d'utilisation).</p>
+
+<p>La méthode OAPL se distingue de GRPO (Shao et al., 2024) par son caractère off-policy assumé. Là où GRPO nécessite des heuristiques de stabilisation pour les MoE, OAPL embrasse le décalage entre politique de collecte et politique optimisée via une perte de régression aux moindres carrés. La comparaison directe avec GRPO manque toutefois dans les expériences — l'article affirme la supériorité infrastructurelle d'OAPL sans la démontrer empiriquement sur les mêmes tâches.</p>
+
+<p>L'analyse max@k (Section 7.3.5) contribue au débat « sharpening vs capability gain » du RL post-entraînement. Les résultats montrent un gain de couverture (pas seulement de consistance) dans le cadre agentique, un régime peu étudié par les travaux existants (Zhao et al. 2025b, Yue et al. 2025) qui se concentrent sur la génération en un tour.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4/5</td><td>Problématique claire et bien motivée par les besoins entreprise. L'articulation entre multi-tâche RL et généralisation hors distribution est originale dans le cadre agentique.</td></tr>
+<tr><td>Design expérimental</td><td>4/5</td><td>Six benchmarks, ablations systématiques, comparaison multi-tâche vs distillation, analyse comportementale. La séparation in-distribution / hors distribution est rigoureuse, mais l'auto-évaluation sur un benchmark maison introduit un biais structurel.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4/5</td><td>QAMPARI (1000 questions) et BrowseComp-Plus (830) offrent une puissance statistique correcte. TREC-Biogen (65 questions) et PMBench (57) sont plus fragiles — un écart de quelques questions correctes change significativement le score.</td></tr>
+<tr><td>Qualité des métriques</td><td>4/5</td><td>Évaluation nugget-based unifiée sur les six tâches, métriques de coût et latence, analyse max@k. Le recours au jugement LLM pour l'évaluation nugget n'est pas calibré contre un jugement humain.</td></tr>
+<tr><td>Contrôle des biais</td><td>3/5</td><td>Pipeline de déduplication en deux étapes pour la contamination. Mais auto-évaluation sur benchmark propriétaire, pas de comparaison directe avec GRPO, et choix du modèle de base non ablé.</td></tr>
+<tr><td>Reproductibilité</td><td>2/5</td><td>Aucun code publié, PMBench propriétaire, OAPL renvoyé à un article séparé, infrastructure lourde nécessaire. Les benchmarks publics et les prompts en annexe permettent une reproduction partielle.</td></tr>
+<tr><td>Transparence et limitations</td><td>4/5</td><td>Analyse honnête des modes d'échec (arrêt prématuré, incapacité arithmétique post-récupération, corrélation spurieuse trajectoire courte/réponse correcte). Le biais d'auto-évaluation benchmark aurait pu être discuté plus frontalement.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4/5</td><td>Première démonstration à cette échelle que le RL multi-tâche sur deux benchmarks de recherche généralise à quatre tâches hors distribution. Le résultat Pareto-optimal face à Claude 4.6 et GPT 5.2 est concret. L'impact communautaire est limité par la fermeture du code et des données.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KARL: Knowledge Agents via Reinforcement Learning — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>KARL: Knowledge Agents via Reinforcement Learning</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>KARL : quand Databricks entraîne des agents de recherche par renforcement</h2>
+
+<p>Un juriste cherche une clause précise dans 50 000 contrats archivés. Un analyste financier doit recouper des chiffres enfouis dans des rapports annuels de 200 pages. Un médecin veut croiser les résultats de dizaines d'études cliniques pour répondre à une seule question. Ces tâches partagent un même schéma : fouiller des montagnes de documents, extraire les bonnes informations, puis raisonner dessus pour produire une réponse fiable. Les grands modèles de langage savent raisonner, mais ils ne connaissent que ce qu'ils ont vu pendant leur entraînement. Face à des données privées d'entreprise, ils avancent à l'aveugle — à moins qu'on leur donne des outils pour chercher.</p>
+
+<p>C'est exactement ce que propose KARL (<em>Knowledge Agents via Reinforcement Learning</em>), un système développé par l'équipe de recherche IA de Databricks et publié en mars 2026. Leur agent, entraîné par apprentissage par renforcement sur des tâches de recherche hétérogènes, rivalise avec Claude 4.6 d'Anthropic et GPT 5.2 d'OpenAI — pour une fraction du coût et de la latence.</p>
+
+<h2>Le défi : raisonner sur des connaissances qu'on ne possède pas</h2>
+
+<p>Les modèles de langage actuels excellent sur des tâches de raisonnement « pur » : mathématiques, code, logique. Mais dès qu'une question exige de consulter des documents externes — ce que les auteurs appellent le <em>grounded reasoning</em>, le raisonnement ancré dans des preuves — la difficulté change de nature. Le modèle ne peut plus se contenter de réfléchir : il doit aussi chercher, filtrer, relire, et parfois revenir en arrière.</p>
+
+<p>Or, les types de recherche varient radicalement d'une tâche à l'autre. Trouver une seule entité qui satisfait cinq contraintes croisées ne ressemble en rien à la rédaction d'un rapport de synthèse à partir de dizaines d'articles biomédicaux. Calculer un ratio financier dans un tableau enfoui au milieu d'un PDF de 150 pages demande encore une autre compétence. Un agent optimisé pour l'une de ces tâches peut échouer sur les autres.</p>
+
+<p>Les benchmarks existants — HotpotQA, BrowseComp, FinanceBench — ne capturent chacun qu'une tranche étroite de ces comportements. Et les systèmes de « deep research » comme ceux d'OpenAI s'appuient sur la recherche web, avec des contenus publics et des moteurs de recherche opaques. Rien ne garantit que leurs performances se transfèrent à des corpus privés d'entreprise, où les documents sont techniques, fragmentés, parfois informels.</p>
+
+<p>La question posée par Databricks est donc double : comment évaluer un agent de recherche sur toute la diversité des tâches réelles ? Et comment en entraîner un qui généralise au-delà de ce sur quoi il a été formé ?</p>
+
+<h2>La recette KARL : données synthétiques, renforcement multi-tâche, et mise à l'échelle au moment du test</h2>
+
+<h3>Un benchmark à six facettes</h3>
+
+<p>Les chercheurs commencent par construire KARLBench, une suite d'évaluation qui regroupe six types de recherche distincts. Chacun isole une compétence précise : retrouver une entité unique parmi des candidats trompeurs (BrowseComp-Plus), synthétiser des résultats dispersés dans la littérature biomédicale (TREC-Biogen), effectuer des calculs à partir de tableaux financiers (FinanceBench), lister exhaustivement toutes les entités qui satisfont un critère (QAMPARI), résoudre des problèmes techniques à partir de documentation logicielle (FreshStack), et agréger des faits éparpillés dans des notes internes d'entreprise (PMBench, un benchmark propriétaire créé pour l'occasion).</p>
+
+<p>L'agent n'a accès qu'à un seul outil : la recherche vectorielle. Pas de moteur web, pas de base SQL, pas de code exécutable. Ce choix délibéré isole la capacité de recherche et de raisonnement de l'orchestration d'outils multiples. Si l'agent performe bien avec un seul outil, les gains viennent de son intelligence de recherche, pas de la richesse de son arsenal.</p>
+
+<h3>Fabriquer des données d'entraînement avec un agent</h3>
+
+<p>Entraîner un agent par renforcement exige des données d'entraînement abondantes, variées et réalistes. Les produire à la main serait impensable. Les générer par simple prompting donne des résultats plats et répétitifs. L'équipe de Databricks a donc conçu un pipeline de synthèse lui-même agentique.</p>
+
+<p>Le principe ressemble à un professeur qui invente des exercices en feuilletant un manuel. L'agent-synthétiseur reçoit quelques exemples de questions-réponses et un corpus de documents. Il explore ce corpus via la recherche vectorielle — parfois sur 50 ou 60 étapes — puis génère des paires question-réponse ancrées dans les documents qu'il a trouvés. Le fait que le synthétiseur explore activement le corpus, au lieu de travailler à partir d'un lot fixe de documents, produit des questions plus diversifiées et mieux fondées.</p>
+
+<p>Vient ensuite un filtrage en deux temps. D'abord, un agent « solveur » tente de répondre à chaque question synthétique, avec huit tentatives indépendantes. Les questions résolues à chaque tentative sont trop faciles : aucun signal d'apprentissage. Celles jamais résolues sont probablement mal formulées, trop ambiguës, ou hors de portée. Seules les questions à taux de réussite intermédiaire — les plus riches en signal — sont conservées. Un second filtre élimine les questions ambiguës ou dont la réponse de référence est incorrecte.</p>
+
+<p>Le mécanisme s'améliore de lui-même : à chaque itération d'entraînement, l'agent devenu plus capable génère des données plus difficiles pour l'itération suivante. Un cercle vertueux de <em>bootstrapping</em>.</p>
+
+<h3>Apprendre par renforcement, hors politique et à grande échelle</h3>
+
+<p>Pour l'entraînement proprement dit, Databricks développe OAPL, une méthode d'apprentissage par renforcement itérative et « hors politique » (<em>off-policy</em>). La distinction avec les méthodes classiques mérite une analogie.</p>
+
+<p>Imaginons un joueur d'échecs qui s'entraîne. En apprentissage « en politique » (<em>on-policy</em>), il joue une partie, met à jour sa stratégie, puis rejoue immédiatement avec cette nouvelle stratégie. C'est précis mais lent : chaque mise à jour exige de nouvelles parties. En apprentissage « hors politique », il joue d'abord un grand nombre de parties avec sa stratégie actuelle, les stocke, puis les analyse toutes ensemble pour mettre à jour sa stratégie en un seul bloc. C'est plus rapide et plus stable, mais la difficulté est que les parties ont été jouées avec l'ancienne stratégie, pas la nouvelle.</p>
+
+<p>OAPL résout ce décalage par une formulation mathématique qui embrasse cette différence au lieu de la combattre. Là où d'autres méthodes nécessitent des heuristiques de stabilisation — pondérations tronquées, suppression de données trop décalées, rejeu de routeurs pour les modèles à mixture d'experts —, OAPL s'en passe. Le résultat : une infrastructure d'entraînement plus simple, et une extension naturelle au multi-tâche.</p>
+
+<p>L'extension multi-tâche consiste simplement à combiner les pertes de BrowseComp-Plus et TREC-Biogen, en équilibrant les deux jeux de données par volume de tokens. La simplicité de cette recette tranche avec sa puissance : l'agent entraîné sur ces deux tâches progresse sur les deux simultanément, et surtout, il généralise aux quatre tâches qu'il n'a jamais vues pendant l'entraînement.</p>
+
+<h3>Gestion du contexte : résumer pour mieux chercher</h3>
+
+<p>Les trajectoires de recherche longues posent un problème concret : le contexte du modèle sature. Pour BrowseComp-Plus, certaines trajectoires atteignent 200 étapes. Impossible de tout garder en mémoire. L'équipe intègre un mécanisme de compression dans la boucle de renforcement : quand l'historique dépasse un seuil, l'agent résume lui-même ses échanges précédents. Ce résumé est entraîné de bout en bout par la récompense finale. L'agent apprend donc non seulement à chercher, mais aussi à décider quelles informations retenir et lesquelles condenser.</p>
+
+<p>Une expérience éclairante le confirme : en substituant le modèle de compression de KARL dans un agent GLM 4.5 Air non entraîné, les performances augmentent sensiblement. L'apprentissage par renforcement a amélioré la compression indépendamment de la recherche.</p>
+
+<h2>Les résultats : performance de pointe, coût divisé</h2>
+
+<p>Sur KARLBench, KARL sans calcul supplémentaire au moment du test atteint un score global de 58,9 — au niveau de Claude Sonnet 4.5 avec effort de raisonnement élevé. Avec trois trajectoires parallèles, il monte à 64,1 et dépasse Claude Sonnet 4.6. Avec dix trajectoires, il atteint 67,5 — le score exact de Claude Opus 4.6, le meilleur modèle testé.</p>
+
+<p>Mais le score seul ne dit pas tout. KARL coûte moins de 0,10 $ par requête en appel unique, le tarif le plus bas parmi tous les modèles au-dessus de 55 points. Avec dix trajectoires parallèles, il égale Claude Opus 4.6 pour environ un tiers du coût et la moitié de la latence. Plus surprenant encore : KARL coûte moins cher par requête que son propre modèle de base, GLM 4.5 Air, tout en scorant six points de plus. L'apprentissage par renforcement lui a appris à chercher moins mais mieux.</p>
+
+<p>L'entraînement multi-tâche fait la différence face à une alternative populaire : la distillation multi-expert. L'équipe a aussi testé une approche où deux experts spécialisés (un pour BrowseComp-Plus, un pour TREC-Biogen) sont distillés dans un seul modèle par fine-tuning supervisé. Sur les tâches d'entraînement, la distillation tient la comparaison. Mais sur les tâches hors distribution, elle stagne quand on augmente le calcul au moment du test (59,4 → 59,6 avec 15 traces parallèles). KARL, lui, progresse sur les deux fronts (53,7 → 63,0). Le renforcement développe des stratégies de recherche transférables ; la distillation copie des comportements spécifiques.</p>
+
+<p>L'analyse comportementale le confirme. Après entraînement, les trajectoires de KARL sont plus courtes (médiane de 20 étapes au lieu de 50 pour BrowseComp-Plus), les requêtes de recherche plus diversifiées (+37 % de documents uniques récupérés), et les recherches inutiles après récupération de toute l'information pertinente chutent de façon spectaculaire (91 recherches superflues chez GLM 4.5 Air, contre 32 chez KARL). L'agent a appris quand s'arrêter.</p>
+
+<h2>Pourquoi ça compte</h2>
+
+<p>Les entreprises possèdent des volumes colossaux de données internes — contrats, rapports, notes de réunion, documentation technique — qui restent largement sous-exploités par les modèles actuels. Les systèmes de « deep research » grand public travaillent sur le web ouvert. Ils ne répondent pas au besoin d'un cabinet d'avocats qui veut fouiller sa jurisprudence privée, ou d'un industriel qui cherche un défaut récurrent dans dix ans de rapports de maintenance.</p>
+
+<p>KARL démontre qu'un modèle open-source de taille modérée (GLM 4.5 Air), entraîné avec la bonne méthode, peut rivaliser avec les modèles propriétaires les plus puissants sur ces tâches — à un coût compatible avec un déploiement à grande échelle. Le fait que les gains de performance s'accompagnent d'une réduction des coûts, et non l'inverse, change l'équation économique. Un agent qui cherche mieux consomme moins de tokens, donc moins de GPU, donc moins d'argent.</p>
+
+<p>La généralisation hors distribution est l'autre résultat à retenir. Un agent entraîné sur deux types de tâches (recherche d'entité et synthèse documentaire) s'améliore aussi sur quatre autres types jamais vus : raisonnement tabulaire, recherche exhaustive, raisonnement procédural, agrégation de faits. Pour un déploiement industriel, cette propriété est décisive : on ne peut pas entraîner un agent spécialisé pour chaque cas d'usage interne. Un agent généraliste qui transfère ses compétences de recherche d'un domaine à l'autre a une utilité pratique bien supérieure.</p>
+
+<h2>Ce qui reste à résoudre</h2>
+
+<p>KARL n'opère qu'avec un seul outil : la recherche vectorielle. Ajouter l'exécution de code, l'interrogation de bases structurées, ou la délégation à des sous-agents élargirait considérablement son champ d'application. Les auteurs identifient eux-mêmes cette limitation comme la prochaine étape naturelle.</p>
+
+<p>La gestion de la mémoire reste primitive. La compression par résumé fonctionne, mais un système hiérarchique — avec différents niveaux de détail selon l'ancienneté de l'information — pourrait permettre des trajectoires encore plus longues sans perte de contexte critique.</p>
+
+<p>L'analyse qualitative révèle aussi une faiblesse spécifique : le raisonnement arithmétique post-récupération. Sur les questions qui exigent un calcul à partir de données déjà récupérées, KARL préfère parfois relancer des recherches en espérant trouver un résultat pré-calculé, plutôt que de faire le calcul lui-même. Le renforcement a amélioré la stratégie de recherche mais pas la capacité de raisonnement numérique sur les preuves collectées.</p>
+
+<p>Enfin, l'apparition d'un comportement d'abandon prématuré (<em>giving up early</em>) après l'entraînement suggère que l'agent a partiellement appris une corrélation parasite : les trajectoires courtes sont souvent associées au succès, donc raccourcir une trajectoire semble « bon » — même quand la question méritait plus d'exploration. Corriger ce biais sans sacrifier l'efficacité acquise sera un équilibre délicat à trouver.</p>
+
+<p>Le code de KARLBench et les détails du pipeline de synthèse sont documentés dans l'article, ce qui rend la méthode reproductible par d'autres équipes. Reste à voir si la recette — données synthétiques agentiques, renforcement multi-tâche hors politique, mise à l'échelle au test — se transpose à d'autres familles de tâches agentiques au-delà de la recherche documentaire. Les auteurs parient que oui. Les prochains mois le diront.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

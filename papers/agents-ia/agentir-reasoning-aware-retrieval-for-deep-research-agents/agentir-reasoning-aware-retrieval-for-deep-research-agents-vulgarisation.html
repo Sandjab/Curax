@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentIR: Reasoning-Aware Retrieval for Deep Research Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AgentIR: Reasoning-Aware Retrieval for Deep Research Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>AgentIR : quand les agents de recherche apprennent à mieux chercher grâce à leur propre raisonnement</h2>
+
+<h3>Introduction</h3>
+
+<p>Un agent d'intelligence artificielle reçoit une question complexe : « Quel compositeur suédois, lauréat d'un Grammy à la fin des années 2010, a créé un morceau de progressive house dans l'arrière-salle d'un studio au début de la décennie ? » Pour répondre, l'agent décompose la tâche en une vingtaine de recherches successives. À chaque étape, il raisonne sur ce qu'il sait déjà, formule des hypothèses, puis lance une requête dans un moteur de recherche. Mais voilà le paradoxe : le système de recherche qui reçoit ces requêtes ne voit qu'une poignée de mots — « backroom studio early 2010s euphoric » — sans aucun accès au raisonnement riche que l'agent vient de produire. Résultat : le moteur renvoie des pages sur des studios de jeux vidéo au lieu de biographies de musiciens.</p>
+
+<p>C'est ce décalage que corrige AgentIR, un modèle développé par des chercheurs des universités de Waterloo, du Queensland et de Carnegie Mellon. Leur idée tient en une phrase : puisque les agents de recherche raisonnent à voix haute avant chaque requête, autant donner ce raisonnement au moteur de recherche pour qu'il comprenne ce que l'agent cherche réellement.</p>
+
+<h3>Le problème : des requêtes amputées de leur contexte</h3>
+
+<p>Depuis deux ans, une nouvelle catégorie d'outils a émergé sous le nom de « Deep Research ». Ces agents — proposés par Google, OpenAI, Alibaba et d'autres — prennent en charge des questions complexes qui nécessiteraient des heures de travail à un humain. Ils fonctionnent en boucle : raisonner, chercher, lire les résultats, raisonner à nouveau, chercher encore, jusqu'à accumuler assez d'informations pour formuler une réponse. Une tâche typique demande plus de vingt allers-retours avec le moteur de recherche.</p>
+
+<p>Le problème se situe à l'interface entre l'agent et le moteur. Quand un humain tape une requête dans un moteur de recherche, toute son intention reste dans sa tête. Le moteur ne dispose que des mots saisis. Pour un agent IA, la situation est différente : avant chaque recherche, il produit un bloc de texte — sa « trace de raisonnement » — qui décrit précisément ce qu'il cherche, pourquoi il le cherche, et ce qu'il a déjà trouvé lors des étapes précédentes. Or, les systèmes de recherche actuels ignorent complètement cette trace. Ils traitent la requête de l'agent exactement comme celle d'un humain : quelques mots isolés, sans contexte.</p>
+
+<p>Le résultat est prévisible. Les requêtes des agents, souvent formulées comme des fragments lapidaires, sont ambiguës prises hors contexte. L'agent sait que « backroom studio » désigne l'arrière-salle d'un studio d'enregistrement, mais le moteur de recherche, privé de cette information, part dans une direction erronée. Multipliez ce problème sur vingt recherches successives, et les erreurs s'accumulent.</p>
+
+<h3>La méthode : donner des yeux au moteur de recherche</h3>
+
+<p>La solution proposée par l'équipe repose sur deux briques complémentaires.</p>
+
+<p>La première, baptisée « Reasoning-Aware Retrieval », modifie la façon dont le moteur de recherche encode les requêtes. Au lieu de transformer uniquement les mots de la requête en vecteur numérique (la représentation mathématique utilisée pour comparer requêtes et documents), le système prend en entrée la requête <em>et</em> la trace de raisonnement qui la précède. L'analogie la plus parlante : c'est comme si un bibliothécaire, au lieu de recevoir un simple mot-clé sur un bout de papier, entendait d'abord le chercheur expliquer tout le contexte de sa recherche — ce qu'il a déjà lu, ce qu'il espère trouver, les hypothèses qu'il explore — avant de se mettre à chercher dans les rayons.</p>
+
+<p>La trace de raisonnement apporte trois types d'informations. D'abord, elle clarifie l'intention : le mot « euphoric », ambigu seul, prend un sens précis quand la trace mentionne un sous-genre musical caractérisé par des finales euphoriques. Ensuite, elle résume les résultats antérieurs : l'agent a déjà identifié que le prix en question est un Grammy, ce qui réduit considérablement l'espace de recherche. Enfin, elle contient des hypothèses formulées par l'agent à partir de ses connaissances propres : un pays membre de l'UE depuis 1995 est probablement la Suède, la Finlande ou l'Autriche. Ces hypothèses, souvent correctes, orientent la recherche vers des résultats pertinents.</p>
+
+<p>Un avantage pratique : cette trace de raisonnement est gratuite. L'agent la produit de toute façon dans son fonctionnement normal. Aucun calcul supplémentaire n'est nécessaire, contrairement aux méthodes d'expansion de requêtes existantes (comme HyDE) qui demandent un appel supplémentaire à un modèle de langage pour enrichir chaque requête.</p>
+
+<p>La seconde brique, appelée DR-Synth, résout un problème de données d'entraînement. Pour apprendre à un moteur de recherche à exploiter les traces de raisonnement, il faut des exemples d'entraînement : des paires associant une requête d'agent (avec sa trace) à des documents pertinents. Ces données n'existaient pas. Les jeux de données classiques de question-réponse fournissent des paires question globale / document, mais pas le découpage en sous-requêtes successives que produit un agent.</p>
+
+<p>DR-Synth fabrique ces données en faisant tourner un agent sur des questions existantes. Pour chaque question, l'agent lance ses recherches en boucle, et à chaque étape, un système de reclassement supervisé (qui connaît la bonne réponse) identifie quels documents sont réellement utiles pour la sous-requête en cours. Le document le mieux classé devient l'exemple positif ; les documents les moins bien classés deviennent des exemples négatifs. À partir de 500 questions du jeu de données WebShaper, cette méthode a produit 5 238 exemples d'entraînement — suffisamment pour entraîner un modèle performant.</p>
+
+<h3>Résultats clés : un bond de performance avec un modèle deux fois plus petit</h3>
+
+<p>Les chercheurs ont entraîné un modèle de 4 milliards de paramètres, AgentIR-4B, et l'ont évalué sur BrowseComp-Plus, un benchmark conçu pour tester les agents Deep Research sur des questions multi-étapes. Les résultats sont sans ambiguïté.</p>
+
+<p>Associé à l'agent open source Tongyi-DeepResearch, AgentIR-4B atteint 68 % de précision en réponse finale. Le meilleur modèle conventionnel de taille comparable (Qwen3-Embedding-4B) plafonne à 49 %. Un modèle conventionnel de 8 milliards de paramètres — deux fois plus gros — ne fait que 52 %. Quant à BM25, l'algorithme de recherche classique utilisé depuis trente ans, il stagne à 37 %. Le gain d'AgentIR-4B par rapport à sa base d'entraînement représente 18 points de pourcentage de précision absolue.</p>
+
+<p>Plus frappant encore : AgentIR-4B surpasse de 10 points une méthode de reclassement par modèle de langage (LLM Rerank), pourtant bien plus coûteuse en calcul. Le reclassement demande à un LLM de 8 milliards de paramètres de relire et réordonner les 20 meilleurs résultats à chaque recherche. AgentIR-4B obtient de meilleurs résultats sans cette étape supplémentaire.</p>
+
+<p>L'efficacité gagne aussi en rapidité. Avec BM25, l'agent effectue en moyenne 33 recherches par tâche. Avec AgentIR-4B, ce nombre tombe à 26. L'agent trouve ce qu'il cherche plus vite parce que chaque recherche renvoie des résultats plus pertinents.</p>
+
+<p>Un test de généralisation renforce ces conclusions. AgentIR-4B a été entraîné avec un seul agent (Tongyi-DR) et évalué sur deux autres agents aux styles de raisonnement différents (gpt-oss-120B et GLM-4.7). Les gains se maintiennent sans aucun réentraînement : 67 % de précision avec gpt-oss-120B et 65 % avec GLM-4.7, contre 48-50 % pour les modèles conventionnels.</p>
+
+<p>Les chercheurs ont également démonté le mécanisme pièce par pièce. La trace de raisonnement seule, sans entraînement spécifique, fait passer la précision de 49 % à 56 %. L'entraînement sur données synthétiques seul, sans trace de raisonnement, monte à 59 %. La combinaison des deux atteint 66 %. Chaque composant contribue, et leur synergie produit le meilleur résultat.</p>
+
+<h3>Une découverte contre-intuitive : le raisonnement courant vaut mieux que l'historique complet</h3>
+
+<p>L'analyse la plus surprenante concerne la quantité de contexte à fournir au moteur de recherche. Intuitivement, on pourrait penser que plus on donne d'historique — toutes les traces de raisonnement passées, toutes les requêtes précédentes, tous les documents déjà récupérés — mieux le moteur comprendra la situation. C'est faux.</p>
+
+<p>Les chercheurs ont testé plusieurs configurations : requêtes passées seules, requêtes + raisonnements passés, trajectoire complète avec documents. Aucune ne dépasse la simple combinaison du raisonnement courant et de la requête courante. Injecter toute la trajectoire, documents inclus, dégrade même les performances dans certains cas — 11 % des tâches ne trouvent alors aucun document pertinent, contre une proportion bien moindre avec le raisonnement courant seul.</p>
+
+<p>Deux phénomènes expliquent ce résultat. Le premier est la redondance : le raisonnement courant, produit en ayant lu tout l'historique, en résume déjà les éléments importants. À lui seul, il couvre plus de 40 % des indices atomiques contenus dans l'ensemble des raisonnements passés. Le second phénomène est plus subtil : le raisonnement courant filtre les erreurs. Aux étapes précédentes, l'agent a pu formuler des hypothèses incorrectes — « le compositeur est peut-être Jesper Kyd », « le pays est peut-être la Finlande ». Une fois ces pistes invalidées, le raisonnement courant ne les mentionne plus. Réinjecter l'historique brut réintroduit ces fausses pistes et pollue la recherche. Les mesures le confirment : ajouter des tours d'historique fait croître le nombre d'affirmations incorrectes bien plus vite que le nombre d'affirmations correctes.</p>
+
+<p>L'oubli, ici, est une qualité. Le raisonnement courant agit comme un filtre naturel qui ne conserve que les informations validées.</p>
+
+<h3>Implications pratiques</h3>
+
+<p>Pour les équipes qui développent ou déploient des agents Deep Research, cette étude change la donne sur un point précis : le moteur de recherche couplé à l'agent ne doit pas être traité comme une boîte noire interchangeable. L'interface entre l'agent et le retriever est un levier d'amélioration massif — 18 points de précision, c'est la différence entre un agent qui répond correctement deux fois sur trois et un agent qui échoue une fois sur deux.</p>
+
+<p>L'approche est aussi pragmatique sur le plan des coûts. AgentIR-4B, avec 4 milliards de paramètres, bat des modèles deux fois plus gros et des pipelines de reclassement qui mobilisent un LLM supplémentaire à chaque recherche. Moins de paramètres, pas d'appel LLM additionnel, et en prime des recherches moins nombreuses par tâche : le coût total d'inférence baisse sur tous les fronts.</p>
+
+<p>La généralisation entre agents est un signal fort pour l'industrie. Un modèle de recherche entraîné avec un agent fonctionne avec d'autres agents sans adaptation. Cela signifie qu'un fournisseur de moteur de recherche peut proposer un retriever optimisé pour les agents sans avoir à le spécialiser pour chaque client ou chaque modèle de langage.</p>
+
+<p>L'étude met aussi en garde contre une tentation naturelle : enrichir la requête avec tout le contexte disponible. Les méthodes de type HyDE, qui génèrent un document hypothétique pour enrichir la requête, se révèlent contre-productives dans ce contexte. Privé de l'historique de l'agent, le modèle d'expansion fabule — il invente un « Backroom Studio basé à Los Angeles » avec un « impact sur les réseaux sociaux ». L'hallucination, d'habitude cantonnée à la génération de texte, contamine ici la recherche d'information.</p>
+
+<h3>Pour aller plus loin</h3>
+
+<p>Plusieurs questions restent ouvertes. La méthode a été validée sur un seul benchmark (BrowseComp-Plus) avec un corpus de documents en anglais. Son comportement sur des corpus multilingues, des domaines spécialisés (médical, juridique, scientifique) ou des bases de connaissances structurées n'a pas été testé.</p>
+
+<p>La construction des données d'entraînement via DR-Synth dépend d'un « oracle reranker » qui connaît la bonne réponse. Cette supervision riche n'est pas disponible en production. Les chercheurs notent que 250 des 500 questions de départ ont produit des trajectoires correctes — la moitié des données a été jetée. Améliorer ce taux de conversion ou trouver des signaux de supervision moins coûteux serait un progrès direct.</p>
+
+<p>La découverte sur la valeur de l'oubli — le fait que le raisonnement courant, en filtrant les erreurs passées, surpasse l'historique complet — ouvre une piste de recherche que les auteurs qualifient de « context engineering pour les retrievers ». L'idée : développer des méthodes de curation qui optimisent ce que le moteur de recherche voit de l'état de l'agent, plutôt que de tout lui transmettre en vrac. À mesure que les techniques de gestion de contexte pour les agents progressent, ces contextes optimisés pourraient bénéficier directement aux moteurs de recherche, sans calcul supplémentaire.</p>
+
+<p>Un dernier point mérite attention. Les auteurs anticipent un basculement où les agents deviennent les principaux utilisateurs des moteurs de recherche, les humains devenant consommateurs des agents plutôt que des résultats de recherche eux-mêmes. Si cette prédiction se confirme, les systèmes de recherche d'information devront être repensés pour servir des « utilisateurs-agents » dont les comportements, les besoins et les modes d'interaction diffèrent fondamentalement de ceux des humains. AgentIR est un premier pas dans cette direction.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

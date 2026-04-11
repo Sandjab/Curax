@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memex(RL): Scaling Long-Horizon LLM Agents via Indexed Experience Memory — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Memex(RL): Scaling Long-Horizon LLM Agents via Indexed Experience Memory</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+<h3>Memex(RL) : Scaling Long-Horizon LLM Agents via Indexed Experience Memory</h3>
+<p><em>Wang Z., Chen H., Wang J., Wei W. — Accenture, Center for Advanced AI — arXiv 2026</em></p>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>Les agents LLM déployés sur des tâches longues (dizaines à centaines d'étapes) saturent leur fenêtre de contexte. Les trajectoires accumulent des sorties d'outils, du raisonnement intermédiaire et des observations qui finissent par dépasser le budget disponible. Les solutions existantes — troncature, résumés glissants — compressent ou suppriment les preuves passées, ce qui dégrade la capacité de l'agent à réutiliser une information apparue bien plus tôt dans l'exécution.</p>
+
+<p>Memex propose une alternative : comprimer le contexte sans jeter les preuves. Un résumé indexé compact reste dans la fenêtre de contexte active, tandis que les artefacts complets (sorties d'outils, traces, extraits de code) sont archivés dans un store externe clé-valeur sous des index stables. L'agent peut ensuite déréférencer un index spécifique pour réinjecter exactement le contenu archivé dont il a besoin. MemexRL, un cadre d'apprentissage par renforcement de type GRPO, optimise conjointement les politiques d'écriture (quoi résumer, quoi archiver, comment indexer) et de lecture (quand et quoi déréférencer).</p>
+
+<h2>2. Méthodologie</h2>
+
+<h3>2.1 Architecture Memex</h3>
+
+<p>Le mécanisme central repose sur deux opérations formalisées comme des appels d'outils dans l'espace d'actions de l'agent :</p>
+<ul>
+<li><code>CompressExperience</code> : remplace le contexte de travail courant par un résumé indexé structuré et archive les blocs de contenu dans le store externe <em>D</em>.</li>
+<li><code>ReadExperience(index)</code> : déréférence un index pour récupérer le bloc archivé et le réinjecter dans le contexte.</li>
+</ul>
+
+<p>Le résumé indexé σ se compose d'un état de progression compact et d'un ensemble de paires (index, description). Le contenu archivé supporte deux modes : écriture explicite par le modèle ou extraction par ancrage textuel (trois ancres identifient un span dans la conversation, archivé verbatim).</p>
+
+<h3>2.2 Apprentissage par renforcement (MemexRL)</h3>
+
+<p>La fonction de récompense épisodique combine le succès de la tâche avec trois pénalités normalisées entre 0 et 1 :</p>
+<ul>
+<li>Pénalité de dépassement de contexte : accumule les tokens excédant un seuil τ sur tous les pas.</li>
+<li>Pénalité de redondance : ratio d'appels d'outils identiques répétés sans changement d'état entre-temps.</li>
+<li>Pénalité de format : ratio d'appels d'outils malformés (JSON invalide, balises manquantes).</li>
+</ul>
+
+<p>Le traitement des trajectoires est segmenté aux frontières de compression : chaque segment est traité comme un échantillon d'entraînement indépendant, mais tous partagent la récompense terminale pour préserver l'assignation de crédit. Un mécanisme de déclenchement souple (soft triggering) injecte un indicateur d'état du contexte à chaque pas, transformant le moment de compression en compétence apprise plutôt qu'en règle système fixe.</p>
+
+<h3>2.3 Protocole expérimental</h3>
+
+<p>Le modèle utilisé est Qwen3-30B-A3B-Thinking-2507, un modèle MoE (~30B paramètres totaux, ~3B actifs par token). L'environnement d'évaluation est une version modifiée d'ALFWorld avec quatre altérations : suppression des commandes admissibles dans l'observation, masquage de l'observation initiale, limitation de l'action "look" à une seule utilisation par épisode, et troncature du résumé de compression à 300 tokens. L'ensemble d'entraînement contient 3553 tâches. Fenêtre de contexte : 32K tokens ; seuil de pénalité : 8K tokens.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>Le taux de succès passe de 24,2 % (sans RL) à 85,6 % (avec MemexRL), soit une amélioration de 3,5×. La longueur maximale du contexte de travail diminue de 16 934 à 9 634 tokens, une réduction d'environ 43 %, avec convergence vers le seuil de pénalité de 8 000 tokens.</p>
+
+<p>L'analyse des comportements mémoire appris révèle un changement qualitatif : le nombre moyen d'appels à <code>CompressExperience</code> passe de 6,5 à 3 par épisode, tandis que les appels à <code>ReadExperience</code> augmentent de 1 à 6-7. L'agent apprend à comprimer moins fréquemment mais de façon plus sélective, et à réutiliser davantage le store externe plutôt que de ré-exécuter des outils.</p>
+
+<p>L'analyse théorique établit deux propositions : (1) si le résumé indexé est B-bounded decision-sufficient, une politique Memex avec au plus B déréférencements par pas atteint le même rendement attendu que la politique optimale sur l'historique complet ; (2) le contexte de travail reste borné (τ_σ + BL) même quand l'historique complet croît indéfiniment.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>La faiblesse la plus sérieuse de cette étude est l'évaluation sur un seul benchmark. ALFWorld, même modifié, reste un environnement de tâches ménagères avec un espace d'actions limité et des objectifs relativement simples (naviguer, prendre un objet, le déplacer). Les modifications apportées — limitation du "look" à une seule utilisation, troncature du résumé à 300 tokens — semblent conçues pour créer une dépendance artificielle au mécanisme de récupération indexée. L'absence d'évaluation sur des tâches réellement complexes (recherche scientifique multi-documents, débogage de code, orchestration d'API) affaiblit toute prétention de généralisation.</p>
+
+<p>L'absence de comparaison avec les approches concurrentes de mémoire constitue un manque critique. Les auteurs citent MEM1, MemAgent, Memory-R1, SUPO, ReSum, FoldGRPO et AgentFold dans la revue de littérature, mais ne comparent Memex qu'à sa propre version sans RL. Impossible de savoir si le gain provient de l'architecture indexée elle-même ou simplement de l'ajout d'un entraînement RL à n'importe quelle approche de mémoire.</p>
+
+<p>Un seul modèle (Qwen3-30B-A3B) est testé. Aucune donnée ne permet de savoir si les comportements appris transfèrent à d'autres architectures ou tailles de modèles. Le warm-start depuis des démonstrations supervisées n'est pas détaillé : combien de démonstrations, de quelle qualité, quel impact sur la performance finale ?</p>
+
+<p>Les deux propositions théoriques, bien que correctes, sont proches de tautologies. La Proposition 1 dit : « si le résumé contient toute l'information nécessaire à la décision, alors décider depuis le résumé est optimal ». La Proposition 2 dit : « si chaque composant est borné, la somme est bornée ». Ces résultats formalisent l'intuition sans fournir de garantie sur la capacité du RL à apprendre des résumés réellement decision-sufficient — ce que les auteurs reconnaissent partiellement.</p>
+
+<p>Le papier ne comporte aucune section dédiée aux limitations. Les faiblesses sont dispersées dans le texte sous forme de nuances prudentes, jamais confrontées directement.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Les prompts système complets sont fournis en annexe B, ce qui facilite la reproduction du cadre expérimental. L'implémentation repose sur le framework open-source Slime (Zhu et al., 2025), et les hyperparamètres d'entraînement sont détaillés (taux d'apprentissage, weight decay, ratio de clip, coefficient KL, tailles de batch et de groupe GRPO).</p>
+
+<p>En revanche, le code de Memex lui-même n'est pas explicitement publié. Les démonstrations supervisées utilisées pour le warm-start ne sont ni décrites ni partagées. Les modifications exactes apportées à ALFWorld ne sont pas publiées sous forme de code. La reproductibilité reste donc partielle : le cadre conceptuel est clair, mais la reproduction exacte des résultats nécessiterait un effort d'ingénierie significatif sans accès au code.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>L'idée de séparer un état de contrôle compact en contexte d'un archive externe accessible par index stables est conceptuellement solide et applicable au-delà d'ALFWorld. Les agents de codage, de recherche documentaire ou d'orchestration d'API pourraient bénéficier de ce mécanisme, à condition que les comportements de compression et de récupération se généralisent à des domaines plus complexes — ce que cette étude ne démontre pas.</p>
+
+<p>L'analogie avec la mémoire épisodique humaine (indexation hippocampique de Teyler & DiScenna, 1986) et l'esprit étendu (Clark & Chalmers, 1998) est bien choisie mais reste une métaphore. Le mécanisme de dual-mode (écriture explicite / extraction par ancrage) est une contribution pratique intéressante pour l'implémentation d'agents avec mémoire externe.</p>
+
+<p>Le cadre de récompense avec pénalités normalisées (contexte, redondance, format) et le traitement segmenté des trajectoires aux frontières de compression sont des contributions techniques réutilisables pour tout entraînement RL d'agents avec gestion de mémoire.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>Memex se positionne à l'intersection de deux lignées de travaux : la mémoire LLM (MemGPT, MemoryBank, A-Mem, Mem0) et les agents long-horizon avec RL (MEM1, Memory-R1, SUPO, FoldGRPO). La distinction revendiquée — comprimer sans perte via l'indexation plutôt que via des résumés — est légitime sur le plan conceptuel. La terminologie "indexed experience memory" clarifie la différence avec les approches par similarité sémantique (RAG classique) où la récupération est floue.</p>
+
+<p>Par rapport à MemGPT (Packer et al., 2023), Memex automatise l'apprentissage des politiques de mémoire par RL plutôt que de s'appuyer sur des heuristiques. Par rapport à SUPO (Lu et al., 2025) et ReSum (Wu et al., 2025), Memex préserve les artefacts complets plutôt que de ne stocker que des résumés. Cette distinction est le cœur de la contribution, mais elle reste validée uniquement dans un cadre contrôlé et simplifié.</p>
+
+<p>L'article est un preprint Accenture (mars 2026), non encore soumis à un processus de revue par les pairs. La qualité rédactionnelle est correcte, la formalisation mathématique soignée bien que les résultats théoriques soient modestes.</p>
+
+<h2>Tableau récapitulatif — Scores de robustesse</h2>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-top: 1em;">
+<thead>
+<tr style="background-color: #f0f0f0;">
+<th style="text-align: left;">Critère</th>
+<th style="text-align: center;">Score (/5)</th>
+<th style="text-align: left;">Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question de recherche</td>
+<td style="text-align: center;">4</td>
+<td>Problème réel et bien formulé. Le goulot d'étranglement contextuel pour agents long-horizon est un défi reconnu. L'angle « comprimer sans jeter les preuves » est précis.</td>
+</tr>
+<tr>
+<td>Design expérimental</td>
+<td style="text-align: center;">2</td>
+<td>Un seul benchmark (ALFWorld modifié), un seul modèle, aucune comparaison avec des approches concurrentes. Les modifications du benchmark favorisent le mécanisme proposé.</td>
+</tr>
+<tr>
+<td>Taille d'échantillon</td>
+<td style="text-align: center;">3</td>
+<td>3 553 tâches d'entraînement, groupe GRPO de 8 rollouts par prompt. Suffisant pour ALFWorld, mais un seul environnement et un seul modèle limitent la portée statistique.</td>
+</tr>
+<tr>
+<td>Qualité des métriques</td>
+<td style="text-align: center;">3</td>
+<td>Taux de succès et longueur maximale du contexte de travail sont pertinents. L'analyse des comportements mémoire (fréquence compress/read) apporte de la profondeur. Pas de mesure de la qualité des résumés générés ni d'analyse d'erreur.</td>
+</tr>
+<tr>
+<td>Contrôle des biais</td>
+<td style="text-align: center;">2</td>
+<td>Les modifications d'ALFWorld créent un biais de confirmation : limiter "look" à une seule utilisation et tronquer les résumés à 300 tokens rend l'approche indexée artificiellement indispensable. Aucune ablation des composantes de récompense.</td>
+</tr>
+<tr>
+<td>Reproductibilité</td>
+<td style="text-align: center;">2</td>
+<td>Prompts complets en annexe, hyperparamètres détaillés, framework Slime open-source. Mais code Memex non publié, démonstrations supervisées non partagées, modifications ALFWorld non disponibles.</td>
+</tr>
+<tr>
+<td>Transparence / Limitations</td>
+<td style="text-align: center;">2</td>
+<td>Aucune section limitations dédiée. Les faiblesses (benchmark unique, modèle unique, résultats théoriques modestes) ne sont pas confrontées directement. La portée des propositions théoriques est survendue.</td>
+</tr>
+<tr>
+<td>Impact / Nouveauté</td>
+<td style="text-align: center;">4</td>
+<td>L'idée d'indexation stable avec archive complète et déréférencement explicite est une contribution conceptuelle réelle. Le cadre RL pour apprendre les comportements mémoire est réutilisable. La distinction avec les approches par similarité sémantique est claire et utile.</td>
+</tr>
+</tbody>
+<tfoot>
+<tr style="background-color: #f0f0f0; font-weight: bold;">
+<td>Note globale</td>
+<td style="text-align: center;">2.8 / 5</td>
+<td>Contribution conceptuelle solide, validation empirique insuffisante pour étayer les revendications de généralisation.</td>
+</tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
