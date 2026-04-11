@@ -433,59 +433,6 @@ def extract_pdf_fingerprint(text):
 # Deduplication PDF
 # ---------------------------------------------------------------------------
 
-def dedup_pdf_files(pdf_texts):
-    """Dedup intra-batch par fingerprint. Retourne l'ensemble des chemins exclus."""
-    fingerprints = {}
-    excluded = set()
-    for filepath, text in pdf_texts.items():
-        fp = extract_pdf_fingerprint(text)
-        if fp is None:
-            continue
-        if fp in fingerprints:
-            excluded.add(filepath)
-            print(f"  Doublon PDF exclu : {os.path.basename(filepath)} (identique a {os.path.basename(fingerprints[fp])})")
-        else:
-            fingerprints[fp] = filepath
-    return excluded
-
-
-def dedup_pdfs_against_catalog(pdf_texts, excluded, papers_catalog):
-    """Compare les nouveaux PDFs au catalogue existant par fingerprint + DOI."""
-    # Fingerprints existants
-    existing_fps = set()
-    existing_dois = set()
-    for paper_key, meta in papers_catalog.get("papers", {}).items():
-        pdf_path = os.path.join(PROJECT_ROOT, paper_key)
-        if os.path.isfile(pdf_path):
-            try:
-                text = extract_pdf_text(pdf_path)
-                fp = extract_pdf_fingerprint(text)
-                if fp:
-                    existing_fps.add(fp)
-            except Exception:
-                pass
-        doi = meta.get("doi", "")
-        if doi:
-            existing_dois.add(doi.lower())
-
-    catalog_dupes = set()
-    for filepath, text in pdf_texts.items():
-        if filepath in excluded:
-            continue
-        # Check fingerprint
-        fp = extract_pdf_fingerprint(text)
-        if fp and fp in existing_fps:
-            catalog_dupes.add(filepath)
-            print(f"  Deja importe (fingerprint) : {os.path.basename(filepath)}")
-            continue
-        # Check DOI
-        doi = extract_pdf_doi(text)
-        if doi and doi.lower() in existing_dois:
-            catalog_dupes.add(filepath)
-            print(f"  Deja importe (DOI) : {os.path.basename(filepath)}")
-    return catalog_dupes
-
-
 def inject_metadata(html_content, title, description):
     html_content = re.sub(
         r'<title>[^<]*</title>',
@@ -558,45 +505,79 @@ def analyze_article(filepath, content):
 # Dedup
 # ---------------------------------------------------------------------------
 
-def dedup_files(file_contents):
+def dedup_batch(items, fingerprint_fn):
+    """Dedup intra-batch par fingerprint.
+    items: {filepath: content_or_text}
+    fingerprint_fn: content -> str|None
+    Retourne set des chemins exclus."""
     fingerprints = {}
     excluded = set()
-    for filepath, content in file_contents.items():
-        fp = extract_content_fingerprint(content)
+    for filepath, content in items.items():
+        fp = fingerprint_fn(content)
         if fp is None:
             continue
         if fp in fingerprints:
             excluded.add(filepath)
-            print(f"  Doublon exclu : {os.path.basename(filepath)} (identique a {os.path.basename(fingerprints[fp])})")
+            print(f"  Doublon exclu : {os.path.basename(filepath)} "
+                  f"(identique a {os.path.basename(fingerprints[fp])})")
         else:
             fingerprints[fp] = filepath
     return excluded
 
 
-def dedup_against_catalog(file_contents, excluded, catalog):
-    """Compare les nouveaux fichiers aux articles deja importes dans catalog.json.
-    Retourne l'ensemble des fichiers source qui sont des doublons d'articles existants."""
-    # Construire les fingerprints des articles existants
-    existing_fps = {}
-    for article_key in catalog.get("articles", {}):
-        html_path = os.path.join(PROJECT_ROOT, article_key)
-        if not os.path.isfile(html_path):
-            continue
-        with open(html_path, encoding='utf-8', errors='replace') as f:
-            content = f.read()
-        fp = extract_content_fingerprint(content)
-        if fp is not None:
-            existing_fps[fp] = article_key
+def _read_article_content(article_key):
+    """Lit le contenu HTML d'un article depuis PROJECT_ROOT."""
+    path = os.path.join(PROJECT_ROOT, article_key)
+    if not os.path.isfile(path):
+        return None
+    with open(path, encoding='utf-8', errors='replace') as f:
+        return f.read()
 
-    # Comparer les nouveaux fichiers
+
+def _read_pdf_text(paper_key):
+    """Lit le texte extrait d'un PDF depuis PROJECT_ROOT."""
+    path = os.path.join(PROJECT_ROOT, paper_key)
+    if not os.path.isfile(path):
+        return None
+    try:
+        return extract_pdf_text(path)
+    except Exception:
+        return None
+
+
+def dedup_against_catalog(items, excluded, existing_entries,
+                          fingerprint_fn, content_reader, doi_fn=None):
+    """Compare les nouveaux items au catalogue existant.
+    existing_entries: {key: meta} du catalogue
+    content_reader(key) -> content|None
+    doi_fn(content) -> str|None, optionnel (PDFs uniquement)"""
+    existing_fps = set()
+    existing_dois = set()
+    for key, meta in existing_entries.items():
+        content = content_reader(key)
+        if content is not None:
+            fp = fingerprint_fn(content)
+            if fp:
+                existing_fps.add(fp)
+        if doi_fn:
+            doi = meta.get("doi", "")
+            if doi:
+                existing_dois.add(doi.lower())
+
     catalog_dupes = set()
-    for filepath, content in file_contents.items():
+    for filepath, content in items.items():
         if filepath in excluded:
             continue
-        fp = extract_content_fingerprint(content)
-        if fp is not None and fp in existing_fps:
+        fp = fingerprint_fn(content)
+        if fp and fp in existing_fps:
             catalog_dupes.add(filepath)
-            print(f"  Deja importe : {os.path.basename(filepath)} (identique a {existing_fps[fp]})")
+            print(f"  Deja importe (fingerprint) : {os.path.basename(filepath)}")
+            continue
+        if doi_fn:
+            doi = doi_fn(content)
+            if doi and doi.lower() in existing_dois:
+                catalog_dupes.add(filepath)
+                print(f"  Deja importe (DOI) : {os.path.basename(filepath)}")
     return catalog_dupes
 
 
@@ -1686,8 +1667,11 @@ def main():
 
         catalog = load_catalog()
         print("1. Detection des doublons...")
-        excluded = dedup_files(file_contents)
-        catalog_dupes = dedup_against_catalog(file_contents, excluded, catalog)
+        excluded = dedup_batch(file_contents, extract_content_fingerprint)
+        catalog_dupes = dedup_against_catalog(
+            file_contents, excluded, catalog["articles"],
+            extract_content_fingerprint, _read_article_content
+        )
         excluded |= catalog_dupes
         total_dupes = len(excluded)
         if total_dupes:
@@ -1794,8 +1778,11 @@ def main():
             # Deduplication
             papers_catalog = load_papers_catalog()
             print("\n2. Detection des doublons PDF...")
-            excluded = dedup_pdf_files(pdf_texts)
-            catalog_dupes = dedup_pdfs_against_catalog(pdf_texts, excluded, papers_catalog)
+            excluded = dedup_batch(pdf_texts, extract_pdf_fingerprint)
+            catalog_dupes = dedup_against_catalog(
+                pdf_texts, excluded, papers_catalog["papers"],
+                extract_pdf_fingerprint, _read_pdf_text, doi_fn=extract_pdf_doi
+            )
             excluded |= catalog_dupes
             total_dupes = len(excluded)
             if total_dupes:
