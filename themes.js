@@ -20,24 +20,6 @@ var CURAX_THEMES = {
       border: '#2d2b28', input: '#2d2b28', ring: '#d4bc8b', radius: '0.75rem'
     }
   },
-  'mx-brutalist': {
-    light: {
-      background: 'hsl(45,100%,98%)', foreground: 'hsl(150,60%,5%)', card: 'hsl(45,100%,96%)', 'card-foreground': 'hsl(150,60%,5%)',
-      primary: 'hsl(150,100%,28%)', 'primary-foreground': '#ffffff', 'primary-hover': 'hsl(150,100%,22%)',
-      secondary: 'hsl(0,100%,48%)', 'secondary-foreground': '#ffffff',
-      muted: 'hsl(45,30%,90%)', 'muted-foreground': 'hsl(150,20%,30%)',
-      accent: 'hsl(0,100%,48%)', 'accent-foreground': '#ffffff',
-      border: '#000000', input: '#000000', ring: 'hsl(150,100%,28%)', radius: '0px'
-    },
-    dark: {
-      background: 'hsl(150,80%,4%)', foreground: 'hsl(45,100%,95%)', card: 'hsl(150,60%,7%)', 'card-foreground': 'hsl(45,100%,95%)',
-      primary: 'hsl(150,100%,48%)', 'primary-foreground': 'hsl(150,80%,4%)', 'primary-hover': 'hsl(150,100%,55%)',
-      secondary: 'hsl(0,100%,55%)', 'secondary-foreground': '#ffffff',
-      muted: 'hsl(150,40%,12%)', 'muted-foreground': 'hsl(45,50%,65%)',
-      accent: 'hsl(0,100%,55%)', 'accent-foreground': '#ffffff',
-      border: 'hsl(45,100%,95%)', input: 'hsl(45,60%,30%)', ring: 'hsl(150,100%,48%)', radius: '0px'
-    }
-  },
   'sage-green': {
     light: {
       background: '#fdfdfd', foreground: '#000000', card: '#ffffff', 'card-foreground': '#1a1a1a',
@@ -56,42 +38,6 @@ var CURAX_THEMES = {
       muted: '#1e1d1a', 'muted-foreground': '#a09d96',
       accent: '#495940', 'accent-foreground': '#ffffff',
       border: '#2f281b', input: '#2f281b', ring: '#AFBEA5', radius: '1.4rem'
-    }
-  },
-  '2077': {
-    light: {
-      background: '#ffffff', foreground: '#1a1a1a', card: '#f5f5f5', 'card-foreground': '#1a1a1a',
-      primary: '#1c1c1c', 'primary-foreground': '#ffffff', 'primary-hover': '#333333',
-      secondary: '#f0f0f0', 'secondary-foreground': '#1a1a1a',
-      muted: '#f0f0f0', 'muted-foreground': '#666666',
-      accent: '#1c1c1c', 'accent-foreground': '#ffffff',
-      border: '#e0e0e0', input: '#e0e0e0', ring: '#1c1c1c', radius: '0rem'
-    },
-    dark: {
-      background: '#000000', foreground: '#ffffff', card: '#111111', 'card-foreground': '#ffffff',
-      primary: '#d6544b', 'primary-foreground': '#ffffff', 'primary-hover': '#e06b63',
-      secondary: '#1a1a1a', 'secondary-foreground': '#ffffff',
-      muted: '#1a1a1a', 'muted-foreground': '#888888',
-      accent: '#d6544b', 'accent-foreground': '#ffffff',
-      border: '#222222', input: '#222222', ring: '#d6544b', radius: '0rem'
-    }
-  },
-  astrovista: {
-    light: {
-      background: '#e8ebed', foreground: '#333333', card: '#f2f4f6', 'card-foreground': '#333333',
-      primary: '#df6035', 'primary-foreground': '#ffffff', 'primary-hover': '#c94f28',
-      secondary: '#2f4b79', 'secondary-foreground': '#ffffff',
-      muted: '#dde0e4', 'muted-foreground': '#666666',
-      accent: '#2f4b79', 'accent-foreground': '#ffffff',
-      border: '#cccccc', input: '#cccccc', ring: '#df6035', radius: '0.5rem'
-    },
-    dark: {
-      background: '#1a1a1a', foreground: '#e5e5e5', card: '#242424', 'card-foreground': '#e5e5e5',
-      primary: '#df6035', 'primary-foreground': '#ffffff', 'primary-hover': '#f07046',
-      secondary: '#284167', 'secondary-foreground': '#e5e5e5',
-      muted: '#2a2a2a', 'muted-foreground': '#999999',
-      accent: '#284167', 'accent-foreground': '#e5e5e5',
-      border: '#353535', input: '#353535', ring: '#df6035', radius: '0.5rem'
     }
   },
   offworld: {

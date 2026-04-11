@@ -16,19 +16,17 @@
   <script src="themes.js"></script>
 </head>
 <body>
+  <a href="#content" class="skip-link">Aller au contenu</a>
   <header>
     <div class="header-content">
       <div>
         <h1>Curax</h1>
-        <p id="subtitle">Index dynamique d'articles Twitter</p>
+        <p id="subtitle">Curation IA d'articles et publications</p>
       </div>
       <div class="theme-controls">
         <select id="theme-select" aria-label="Thème">
           <option value="portfolio">Portfolio</option>
-          <option value="mx-brutalist">MX-Brutalist</option>
           <option value="sage-green">Sage Green</option>
-          <option value="2077">2077</option>
-          <option value="astrovista">AstroVista</option>
           <option value="offworld">Offworld</option>
         </select>
         <button id="mode-toggle" type="button" aria-label="Basculer light/dark">
@@ -39,11 +37,11 @@
     </div>
   </header>
 
-  <nav class="tab-bar" id="tab-bar">
-    <button class="tab-button active" data-tab="articles" type="button">
+  <nav class="tab-bar" id="tab-bar" role="tablist" aria-label="Type de contenu">
+    <button class="tab-button active" data-tab="articles" type="button" role="tab" id="tab-btn-articles" aria-selected="true" aria-controls="tab-articles">
       <span class="tab-icon">📰</span> Articles
     </button>
-    <button class="tab-button" data-tab="publications" type="button">
+    <button class="tab-button" data-tab="publications" type="button" role="tab" id="tab-btn-publications" aria-selected="false" aria-controls="tab-publications">
       <span class="tab-icon">🎓</span> Publications
     </button>
   </nav>
@@ -80,12 +78,12 @@
   </div>
 
   <main id="content">
-    <div id="tab-articles" class="tab-content">
+    <div id="tab-articles" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-articles">
       <div class="welcome-message" id="loading">
         <p>Chargement...</p>
       </div>
     </div>
-    <div id="tab-publications" class="tab-content" style="display:none"></div>
+    <div id="tab-publications" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-publications" style="display:none"></div>
   </main>
 
   <footer>
@@ -163,7 +161,9 @@
       if (target) target.style.display = '';
 
       document.querySelectorAll('.tab-button').forEach(function(btn) {
-        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+        var isActive = btn.getAttribute('data-tab') === tabId;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
       });
 
       updateSubtitle(tabId);
@@ -190,6 +190,24 @@
       btn.addEventListener('click', function() {
         switchTab(this.getAttribute('data-tab'));
       });
+    });
+
+    // Keyboard navigation for tabs (arrow keys)
+    document.getElementById('tab-bar').addEventListener('keydown', function(e) {
+      var tabs = Array.from(this.querySelectorAll('.tab-button'));
+      var idx = tabs.indexOf(document.activeElement);
+      if (idx < 0) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        var next = tabs[(idx + 1) % tabs.length];
+        next.focus();
+        switchTab(next.getAttribute('data-tab'));
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        var prev = tabs[(idx - 1 + tabs.length) % tabs.length];
+        prev.focus();
+        switchTab(prev.getAttribute('data-tab'));
+      }
     });
 
     // ── Search & filter state ──
