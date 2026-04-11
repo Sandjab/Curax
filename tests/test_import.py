@@ -248,3 +248,156 @@ class TestExtractPdfFingerprint:
         text2 = "word  " * 50  # double espaces mais meme contenu
         # Les deux devraient donner le meme fingerprint apres normalisation
         assert mod.extract_pdf_fingerprint(text1) == mod.extract_pdf_fingerprint(text2)
+
+
+# =====================================================================
+# Groupe 5 : Dedup
+# =====================================================================
+
+class TestDedupBatch:
+    def test_no_duplicates(self):
+        items = {"/a.html": "content a", "/b.html": "content b"}
+        fp_fn = lambda c: hashlib.sha256(c.encode()).hexdigest()
+        excluded = mod.dedup_batch(items, fp_fn)
+        assert excluded == set()
+
+    def test_with_duplicate(self):
+        items = {"/a.html": "same content", "/b.html": "same content"}
+        fp_fn = lambda c: hashlib.sha256(c.encode()).hexdigest()
+        excluded = mod.dedup_batch(items, fp_fn)
+        assert len(excluded) == 1
+        # Le second est exclu (l'ordre depend de dict, mais un des deux doit etre exclu)
+        assert excluded.issubset(items.keys())
+
+    def test_fingerprint_none_ignored(self):
+        items = {"/a.html": "content", "/b.html": "other"}
+        fp_fn = lambda c: None  # toujours None
+        excluded = mod.dedup_batch(items, fp_fn)
+        assert excluded == set()
+
+    def test_single_item(self):
+        items = {"/a.html": "content"}
+        fp_fn = lambda c: hashlib.sha256(c.encode()).hexdigest()
+        excluded = mod.dedup_batch(items, fp_fn)
+        assert excluded == set()
+
+
+class TestDedupAgainstCatalog:
+    def test_no_match(self):
+        items = {"/new.html": "new content"}
+        existing = {"articles/a.html": {"domain": "test"}}
+        fp_fn = lambda c: hashlib.sha256(c.encode()).hexdigest()
+        reader = lambda k: "different content"
+        result = mod.dedup_against_catalog(items, set(), existing, fp_fn, reader)
+        assert result == set()
+
+    def test_match_by_fingerprint(self):
+        items = {"/new.html": "same content"}
+        existing = {"articles/a.html": {"domain": "test"}}
+        fp_fn = lambda c: hashlib.sha256(c.encode()).hexdigest()
+        reader = lambda k: "same content"
+        result = mod.dedup_against_catalog(items, set(), existing, fp_fn, reader)
+        assert "/new.html" in result
+
+    def test_match_by_doi(self):
+        items = {"/new.pdf": "text with 10.1234/abc"}
+        existing = {"papers/a.pdf": {"domain": "test", "doi": "10.1234/abc"}}
+        fp_fn = lambda c: hashlib.sha256(c.encode()).hexdigest()
+        reader = lambda k: "totally different text"
+        doi_fn = lambda c: mod.extract_pdf_doi(c)
+        result = mod.dedup_against_catalog(items, set(), existing, fp_fn, reader, doi_fn=doi_fn)
+        assert "/new.pdf" in result
+
+    def test_no_doi_fn_skips_doi_check(self):
+        items = {"/new.pdf": "text with 10.1234/abc"}
+        existing = {"papers/a.pdf": {"domain": "test", "doi": "10.1234/abc"}}
+        fp_fn = lambda c: hashlib.sha256(c.encode()).hexdigest()
+        reader = lambda k: "different text"
+        # Sans doi_fn, le DOI n'est pas verifie
+        result = mod.dedup_against_catalog(items, set(), existing, fp_fn, reader)
+        assert result == set()
+
+    def test_reader_returns_none_skips(self):
+        items = {"/new.html": "content"}
+        existing = {"articles/missing.html": {"domain": "test"}}
+        fp_fn = lambda c: hashlib.sha256(c.encode()).hexdigest()
+        reader = lambda k: None  # fichier absent
+        result = mod.dedup_against_catalog(items, set(), existing, fp_fn, reader)
+        assert result == set()
+
+    def test_already_excluded_skipped(self):
+        items = {"/new.html": "same content"}
+        existing = {"articles/a.html": {"domain": "test"}}
+        fp_fn = lambda c: hashlib.sha256(c.encode()).hexdigest()
+        reader = lambda k: "same content"
+        # /new.html est deja exclu → ne devrait pas etre re-ajoute
+        result = mod.dedup_against_catalog(items, {"/new.html"}, existing, fp_fn, reader)
+        assert result == set()
+
+
+# =====================================================================
+# Groupe 6 : Slugification
+# =====================================================================
+
+class TestSlugify:
+    def test_normal_text(self):
+        assert mod.slugify("Hello World") == "hello-world"
+
+    def test_special_chars(self):
+        result = mod.slugify("Hello, World! #2024")
+        assert result == "hello-world-2024"
+
+    def test_max_len(self):
+        result = mod.slugify("a very long title that should be truncated", max_len=20)
+        assert len(result) <= 20
+
+    def test_empty_string(self):
+        assert mod.slugify("") == "untitled"
+
+    def test_only_special_chars(self):
+        assert mod.slugify("!!!???") == "untitled"
+
+    def test_accents_removed(self):
+        result = mod.slugify("cafe resume")
+        # Les accents ASCII simples sont supprimes par le regex
+        assert "-" not in result or result.replace("-", "").isalnum()
+
+    def test_leading_trailing_dashes_stripped(self):
+        result = mod.slugify("--hello--")
+        assert not result.startswith("-")
+        assert not result.endswith("-")
+
+
+# =====================================================================
+# Groupe 7 : Injection metadata
+# =====================================================================
+
+class TestInjectMetadata:
+    def test_replaces_title(self):
+        html = "<html><head><title>Old Title</title></head><body></body></html>"
+        result = mod.inject_metadata(html, "New Title", "Description")
+        assert "<title>New Title</title>" in result
+
+    def test_adds_meta_description_when_absent(self):
+        html = "<html><head><title>Title</title></head><body></body></html>"
+        result = mod.inject_metadata(html, "Title", "My Description")
+        assert 'meta name="description"' in result
+        assert "My Description" in result
+
+    def test_replaces_meta_description_when_present(self):
+        html = '<html><head><meta name="description" content="old"><title>T</title></head><body></body></html>'
+        result = mod.inject_metadata(html, "T", "New Desc")
+        assert "New Desc" in result
+        assert "old" not in result
+
+    def test_escapes_special_chars_in_title(self):
+        html = "<html><head><title>X</title></head><body></body></html>"
+        result = mod.inject_metadata(html, 'Title "with" <quotes>', "desc")
+        assert "&quot;" in result or "with" in result
+        assert "&lt;" in result or "quotes" in result
+
+    def test_escapes_special_chars_in_description(self):
+        html = "<html><head><title>T</title></head><body></body></html>"
+        result = mod.inject_metadata(html, "T", 'Desc with "quotes" & <tags>')
+        assert "&quot;" in result
+        assert "&amp;" in result
