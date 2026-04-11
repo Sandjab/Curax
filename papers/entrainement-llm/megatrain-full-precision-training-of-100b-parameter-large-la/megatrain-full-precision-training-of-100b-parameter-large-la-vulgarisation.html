@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MegaTrain: Full Precision Training of 100B+ Parameter Large Language Models on a Single GPU — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>MegaTrain: Full Precision Training of 100B+ Parameter Large Language Models on a Single GPU</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Entraîner un modèle de 120 milliards de paramètres sur un seul GPU : le pari de MegaTrain</h2>
+
+<p>Sur les 167 universités américaines recensées par GPUsPerStudent.org, deux seulement offrent en moyenne plus d'un GPU H100 par étudiant. Deux. Le reste de la communauté scientifique travaille avec des miettes de puissance de calcul, alors que les modèles de langage qu'elle étudie dépassent désormais les cent milliards de paramètres. Une équipe de l'Université de Notre Dame et de Lehigh University propose MegaTrain, un système qui renverse la hiérarchie matérielle habituelle pour entraîner ces mastodontes sur une seule carte graphique, sans compromis sur la précision numérique.</p>
+
+<h2>Le mur de la mémoire GPU</h2>
+
+<p>Entraîner un réseau de neurones, c'est stocker simultanément trois catégories de données : les poids du modèle, les gradients qui indiquent comment les ajuster, et les états de l'optimiseur qui pilotent la vitesse et la direction de chaque ajustement. Pour un modèle de 70 milliards de paramètres, ce trio occupe au minimum 840 gigaoctets. Un GPU H200 — parmi les plus puissants du marché — dispose de 141 Go de mémoire embarquée. Le compte n'y est pas, et de loin.</p>
+
+<p>Les solutions existantes, comme ZeRO-Offload de DeepSpeed ou FSDP de PyTorch, tentent de contourner le problème en déchargeant une partie des données vers la mémoire du processeur central (la RAM de la machine). Mais elles traitent cette RAM comme un simple déversoir temporaire. Le GPU reste le propriétaire légitime des données ; la RAM n'est qu'un placard où l'on range ce qui déborde. Résultat : au-delà de 30 milliards de paramètres, ces systèmes saturent la mémoire de l'hôte à cause de copies redondantes et d'une gestion fragmentée des données. Les modèles plus gros provoquent des plantages par dépassement mémoire.</p>
+
+<p>Le problème ne se limite pas au pré-entraînement initial. La tendance actuelle en IA porte sur le post-entraînement — ajustement fin, alignement, spécialisation — des tâches moins gourmandes en calcul mais qui exigent toujours de charger l'intégralité du modèle en mémoire. Un chercheur qui veut adapter un modèle de 70 milliards de paramètres à un domaine médical se heurte au même mur qu'un labo qui pré-entraîne depuis zéro.</p>
+
+<h2>Inverser la hiérarchie : le GPU comme ouvrier intérimaire</h2>
+
+<p>MegaTrain part d'un constat simple : dans un serveur moderne, la mémoire du processeur central (DDR5 ou LPDDR5X) est dix à vingt fois plus grande que celle du GPU, et coûte cinq fois moins cher par gigaoctet. Pourquoi ne pas en faire le lieu de résidence permanent des données, plutôt qu'un débordement de secours ?</p>
+
+<p>Le système inverse le rapport de force. La RAM de la machine devient le « domicile officiel » des poids du modèle et des états de l'optimiseur. Le GPU, lui, est rétrogradé au rang de moteur de calcul temporaire : on lui envoie les données d'une couche du réseau, il fait ses multiplications matricielles, puis il renvoie les résultats et libère la place pour la couche suivante. Pensez à un artisan qui travaille dans un atelier trop petit pour stocker toutes ses pièces : au lieu de tout empiler autour de lui, il se fait livrer chaque pièce juste avant d'en avoir besoin et expédie le produit fini dès qu'il est terminé.</p>
+
+<p>Cette architecture pose un défi évident : le lien entre le CPU et le GPU (PCIe ou NVLink-C2C) est bien plus lent que la mémoire interne du GPU. Sur un système H200, le bus PCIe Gen4 transfère environ 26 Go/s, là où la mémoire HBM3e du GPU débite 4 800 Go/s — un rapport de presque 200. Si le GPU passe son temps à attendre que les données arrivent, le gain est nul.</p>
+
+<p>MegaTrain résout ce goulet d'étranglement par deux mécanismes complémentaires.</p>
+
+<h3>Le double tampon en pipeline</h3>
+
+<p>Le système maintient deux zones de transit (buffers) côté CPU et deux côté GPU. Pendant que le GPU calcule avec les poids de la couche 5, chargés dans le buffer A, les poids de la couche 6 sont déjà en train de transiter vers le buffer B. Quand le calcul de la couche 5 se termine, le GPU bascule immédiatement sur le buffer B sans attendre. Ce va-et-vient en ping-pong fonctionne sur trois flux CUDA parallèles : un pour le calcul, un pour le chargement des poids, un pour l'évacuation des gradients. Les trois opérations se chevauchent dans le temps. Le GPU ne cale jamais.</p>
+
+<p>La coordination repose sur des événements CUDA légers, pas sur des barrières de synchronisation coûteuses. Un signal « poids prêts » déclenche le calcul ; un signal « calcul terminé » déclenche l'évacuation des gradients ; un signal « évacuation terminée » libère le buffer pour le prochain chargement.</p>
+
+<h3>Les modèles stateless</h3>
+
+<p>Dans PyTorch standard, le mécanisme de différentiation automatique (autograd) construit un graphe de calcul global qui relie toutes les couches et conserve en mémoire GPU les résultats intermédiaires jusqu'à la fin de la passe arrière. Ce graphe suppose que tous les poids restent présents sur le GPU en permanence — une hypothèse que MegaTrain viole par conception.</p>
+
+<p>La solution : des « gabarits de couche » (layer templates) qui encapsulent les opérations mathématiques d'un bloc Transformer (attention + MLP) sans retenir aucun pointeur vers des données spécifiques. Avant chaque calcul, le système branche dynamiquement les poids fraîchement arrivés sur le gabarit, exécute les opérations, puis débranche. Le gabarit est réutilisé pour la couche suivante avec d'autres poids. Cette approche élimine la mémoire que le graphe autograd consommerait normalement, et garantit que l'empreinte GPU ne dépasse jamais la taille d'une seule couche.</p>
+
+<p>L'optimiseur Adam, quant à lui, tourne directement sur le CPU. Cette décision peut surprendre, mais elle est logique : la mise à jour des poids est une opération légère en calcul (quelques additions et divisions par paramètre) mais lourde en accès mémoire. L'exécuter sur le CPU avec des instructions vectorielles AVX-512 évite de transférer les états de l'optimiseur vers le GPU puis de les rapatrier — quatre fois le volume de données économisé.</p>
+
+<h2>Les chiffres qui comptent</h2>
+
+<p>Sur un seul GPU H200 avec 1,5 To de RAM, MegaTrain entraîne un modèle de 120 milliards de paramètres (GPT-OSS-120B, une architecture Mixture-of-Experts). Les systèmes concurrents — ZeRO-3, ZeRO-Infinity, FSDP — plantent tous par dépassement mémoire bien avant cette taille.</p>
+
+<p>À 14 milliards de paramètres sur un GH200, MegaTrain atteint 264 TFLOPS de débit soutenu, soit 1,84 fois la performance de ZeRO-3 avec déchargement CPU. À 32 milliards, il maintient encore 250 TFLOPS là où les autres systèmes ne démarrent même plus. Sur un serveur PCIe classique avec un A100, l'écart se creuse davantage : à 14 milliards de paramètres, MegaTrain est 12 fois plus rapide que ZeRO-3 et 8 fois plus rapide que ColossalAI-Gemini.</p>
+
+<p>Le système fonctionne aussi sur du matériel grand public. Une RTX 3090 — une carte à 24 Go de VRAM qu'on trouve dans certains PC de bureau — entraîne un modèle de 14 milliards de paramètres à 30 TFLOPS. ZeRO-3 échoue sur la même configuration. Sur une RTX A6000 (48 Go), MegaTrain pousse le débit à 57 TFLOPS avec des lots de 9 échantillons, contre 28 TFLOPS et un seul échantillon pour ZeRO-3.</p>
+
+<p>Côté précision, les vérifications sont rassurantes. Sur le benchmark MetaMathQA, MegaTrain atteint 88,99 % de précision à 7 milliards de paramètres et 92,52 % à 14 milliards — des scores quasi identiques à ceux des systèmes classiques (88,93 % et 92,41 % pour ZeRO-3). Le fait de découper l'exécution couche par couche et de recalculer les activations n'introduit aucune dérive numérique.</p>
+
+<p>Un résultat inattendu : MegaTrain gère des contextes longs avec une aisance remarquable. Sur un GH200, il entraîne un modèle de 7 milliards de paramètres avec une fenêtre de contexte de 512 000 tokens — une longueur qui ferait exploser la mémoire de la plupart des systèmes. Le débit passe de 285 TFLOPS à 1 024 tokens à plus de 400 TFLOPS à 512 000, car les séquences longues augmentent l'intensité arithmétique de l'attention et amortissent mieux le coût fixe des transferts.</p>
+
+<p>L'étude d'ablation confirme que le double tampon est la pièce maîtresse du système. Le retirer fait chuter le débit de 31 %, de 266 à 183 TFLOPS. Les autres composants (pool de gradient, intervalle de checkpointing) ont un impact plus modeste.</p>
+
+<h2>Ce que ça change concrètement</h2>
+
+<p>La première conséquence est l'accessibilité. Un labo universitaire qui dispose d'un serveur avec un GPU et beaucoup de RAM — configuration courante — peut maintenant ajuster un modèle de 70 milliards de paramètres sans louer un cluster chez un fournisseur cloud. Le coût passe de milliers de dollars par heure de calcul distribué à zéro en infrastructure externe. Pour les startups IA qui travaillent sur des domaines verticaux (droit, médecine, finance), l'ajustement fin de grands modèles sort du domaine du luxe.</p>
+
+<p>La deuxième conséquence touche l'architecture matérielle. MegaTrain montre que l'interconnexion CPU-GPU pèse plus lourd que la quantité de mémoire GPU. Le GH200, avec sa liaison NVLink-C2C à 900 Go/s entre CPU et GPU, dépasse massivement le H200 et son lien PCIe à 128 Go/s pour ce type de charge de travail. Les prochaines générations de serveurs pourraient s'orienter vers des architectures intégrées CPU-GPU plutôt que vers l'empilement de mémoire HBM sur la carte graphique.</p>
+
+<p>La troisième conséquence porte sur la consommation énergétique. Entraîner sur un seul nœud au lieu de huit réduit la consommation des interconnexions réseau, des switches, et de la coordination distribuée. Le bilan carbone d'un ajustement fin baisse mécaniquement.</p>
+
+<p>Le support des contextes longs sur un seul GPU a aussi son importance. L'entraînement sur des documents entiers (brevets, contrats, articles scientifiques) sans les découper en morceaux devient possible sans infrastructure dédiée.</p>
+
+<h2>Questions ouvertes et pistes futures</h2>
+
+<p>MegaTrain ne remplace pas les clusters pour le pré-entraînement à grande échelle. Entraîner un modèle de 120 milliards de paramètres depuis zéro sur un seul GPU prendrait des années. Le système cible le post-entraînement : ajustement fin, alignement RLHF, adaptation de domaine. La frontière entre ce qui relève du « faisable sur un seul GPU » et ce qui exige un cluster reste à préciser selon les budgets de calcul réels.</p>
+
+<p>L'extension à plusieurs GPU est la prochaine étape annoncée par les auteurs. Combiner MegaTrain avec du parallélisme de tenseur ou du parallélisme d'experts (pour les modèles MoE) permettrait de couvrir des modèles encore plus grands tout en conservant l'efficacité mémoire du système. L'intégration de stockage SSD comme niveau de mémoire supplémentaire fait aussi partie des pistes évoquées — de quoi viser, en théorie, le millier de milliards de paramètres sur du matériel courant.</p>
+
+<p>Une question reste en suspens : la performance sur des tâches d'entraînement plus longues. Les expériences du papier portent sur un benchmark mathématique avec un nombre limité d'itérations. Le comportement du système sur des campagnes d'ajustement fin de plusieurs jours, avec des centaines de milliers de pas d'optimisation, n'est pas documenté. La stabilité du pipeline de transfert sur des durées prolongées méritera d'être validée.</p>
+
+<p>La compatibilité avec d'autres optimiseurs que Adam (comme LAMB, Adafactor, ou les récents optimiseurs à mémoire réduite comme GaLore) n'est pas non plus abordée. Certains de ces optimiseurs modifient la quantité et la nature des états à stocker, ce qui pourrait changer l'équilibre du système.</p>
+
+<p>Reste le paradoxe de fond que MegaTrain met en lumière : nous concevons les systèmes d'entraînement comme si le GPU était le centre du monde, alors que la majorité des données persistantes (poids, moments, gradients accumulés) n'ont besoin du GPU que quelques millisecondes par itération. Repenser cette hiérarchie — faire du GPU un exécutant temporaire plutôt qu'un propriétaire permanent — pourrait transformer non seulement l'entraînement, mais aussi l'inférence et le service de modèles géants.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

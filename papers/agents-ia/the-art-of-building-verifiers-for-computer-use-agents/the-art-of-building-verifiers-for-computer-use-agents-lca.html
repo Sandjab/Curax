@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Art of Building Verifiers for Computer Use Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Art of Building Verifiers for Computer Use Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+<h3>« The Art of Building Verifiers for Computer Use Agents »</h3>
+<p><em>Rosset, C., Sharma, P., Zhao, A., Gonzalez-Fernandez, M., Awadallah, A. — Microsoft Research &amp; Browserbase, 2026 (preprint arXiv:2604.06240)</em></p>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>Les agents capables d'utiliser un ordinateur de façon autonome — naviguer sur le web, remplir des formulaires, interagir avec des interfaces graphiques — se multiplient. Leur évaluation bute sur un problème en apparence simple : déterminer si l'agent a réussi sa tâche. Les trajectoires d'interaction sont longues, visuellement denses et ambiguës. Un vérificateur défaillant corrompt aussi bien les benchmarks que les données d'entraînement.</p>
+
+<p>Rosset et al. documentent les principes de conception d'un tel vérificateur, baptisé Universal Verifier (UV). Quatre idées structurantes guident le système : (1) des rubriques d'évaluation aux critères spécifiques et non redondants, (2) la séparation entre récompenses de processus et de résultat, (3) la distinction entre échecs contrôlables et incontrôlables avec une stratégie de scoring sans cascade d'erreurs, et (4) une gestion du contexte visuel (captures d'écran) qui couvre l'intégralité de la trajectoire sans surcharger le modèle.</p>
+
+<p>Le travail s'accompagne de CUAVerifierBench, un benchmark de trajectoires annotées par des humains pour le processus et le résultat — une première dans le domaine des agents CUA.</p>
+
+<h2>2. Méthodologie</h2>
+
+<p>L'UV fonctionne en trois phases. D'abord, une rubrique de N critères disjoints est générée à partir de l'objectif de la tâche seul, sans voir la trajectoire de l'agent. Ensuite, une matrice de pertinence score chaque capture d'écran contre chaque critère ; les k plus pertinentes par critère sont regroupées pour analyse. Enfin, un scoring multimodal produit un score de processus (continu, 0–1), un verdict binaire de résultat, et un diagnostic d'erreurs catégorisées selon une taxonomie à 7 catégories et 24 sous-codes.</p>
+
+<p>Plusieurs mécanismes anti-hallucination renforcent la fiabilité : scoring en deux passes (avec et sans captures d'écran), séparation entre génération et notation de la rubrique, critères conditionnels résolus après observation de la trajectoire, et détection d'effets secondaires non sollicités.</p>
+
+<h3>Datasets d'évaluation</h3>
+
+<p>Deux ensembles composent CUAVerifierBench :</p>
+<ul>
+<li>Le dataset <strong>interne</strong> (140 trajectoires) : annoté par des experts, issu de WebTailBench via Fara-7B.</li>
+<li>Le dataset <strong>Browserbase OM2W</strong> (106 trajectoires) : annoté par des annotateurs externes avec double couverture, protocole en deux étapes (UV-blind puis UV-informed), agrégation par vote majoritaire (résultat) et médiane binarisée à ≥0.8 (processus).</li>
+</ul>
+
+<p>Les comparaisons portent sur WebVoyager (GPT-4o) et WebJudge (o4-mini), y compris après upgrade de ces baselines vers GPT-5.2 pour isoler l'avantage architectural de l'UV. Une étude à grande échelle (Table 3) mesure l'accord entre l'UV et les vérificateurs natifs de trois benchmarks sur ~600 trajectoires chacun. L'étude auto-research compare 96 itérations de conception entre un expert humain et un agent Claude Opus 4.6.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>Sur le dataset interne, l'UV atteint un κ de Cohen de 0.64 pour le résultat et 0.59 pour le processus, contre 0.44/0.32 pour WebJudge et 0.31/0.17 pour WebVoyager. Le taux de faux positifs tombe à 0.01 (résultat) et 0.04 (processus), là où WebVoyager affiche ≥0.45 et WebJudge ≥0.22.</p>
+
+<p>L'upgrade des baselines vers GPT-5.2 réduit leur FPR mais fait exploser leur FNR — WebVoyager passe de 0.24 à 0.44 en FNR résultat — avec un gain de κ modeste. L'avantage de l'UV est donc architectural, pas lié au modèle backbone.</p>
+
+<p>L'accord inter-annotateurs sur le dataset Browserbase se situe à κ = 0.57 (résultat) et κ = 0.45 (processus). L'UV se place dans cette fourchette (κ = 0.58 et 0.43), ce qui signifie qu'il s'accorde avec les humains aussi bien que les humains entre eux.</p>
+
+<p>Résultat marquant du protocole UV-informed : 16.6 % des jugements de résultat changent après exposition au raisonnement de l'UV, presque tous dans le sens d'un passage de succès à échec. Le κ résultat grimpe de 0.39 (UV-blind) à 0.63 (UV-informed). L'UV détecte donc des échecs que les annotateurs humains manquent initialement.</p>
+
+<p>L'étude auto-research montre qu'un agent IA atteint ~70 % de la qualité de l'expert en ~5 % du temps. Initialisé depuis les meilleurs prompts de l'expert, l'agent dépasse le pic expert — un résultat qui suggère une complémentarité entre intuition humaine (découverte de principes structurants) et optimisation automatisée (ajustement fin).</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>La principale force du travail réside dans l'approche incrémentale documentée : la Figure 1 trace 96 expériences sur trois semaines, montrant comment chaque principe contribue au κ final. Cette transparence sur le processus de recherche est rare et précieuse.</p>
+
+<p>Plusieurs faiblesses méritent attention :</p>
+
+<ul>
+<li><strong>Overfitting au dataset de développement.</strong> L'UV a été conçu itérativement sur les 140 trajectoires internes. Malgré la validation sur Browserbase, le risque d'ajustement excessif aux caractéristiques spécifiques de ce corpus persiste. Le κ effectivement inférieur sur Browserbase (0.58 vs 0.64) pourrait en témoigner.</li>
+
+<li><strong>Biais du protocole UV-informed.</strong> Montrer le raisonnement de l'UV aux annotateurs avant de recueillir leur jugement « informé » mesure davantage la persuasivité du système que son exactitude. Les 31 flips de succès vers échec pourraient refléter un effet d'ancrage plutôt qu'une correction légitime. L'absence de condition contrôle (montrer un raisonnement erroné pour tester la résistance des annotateurs) affaiblit cette analyse.</li>
+
+<li><strong>Coût computationnel non discuté.</strong> Pour une trajectoire typique de 47 captures d'écran et 3 critères, le pipeline effectue 65 appels LLM vers GPT-5.2. Aucune analyse coût-bénéfice ne quantifie la viabilité à l'échelle — un oubli surprenant pour un système présenté comme « universel ».</li>
+
+<li><strong>Diversité limitée des agents évalués.</strong> Les trajectoires proviennent principalement de Fara-7B (un modèle Microsoft) et GPT-5. Le comportement de l'UV face à des agents radicalement différents (modèles open-source, agents à base de règles, modèles plus faibles) reste inconnu.</li>
+
+<li><strong>Pas de section limitations formelle.</strong> Les limites sont dispersées dans le texte. La généralisation hors web (desktop natif, applications mobiles, environnements 3D), la sensibilité aux seuils (binarisation à 0.8, top-k screenshots), et la dépendance structurelle aux LLMs propriétaires ne font l'objet d'aucune discussion centralisée.</li>
+</ul>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Le code et les données sont annoncés en open source sur GitHub (microsoft/fara). L'algorithme est décrit avec précision (Algorithm 1, taxonomie d'erreurs en Table 10, protocole d'annotation détaillé). Le système totalise ~3 000 lignes de code et ~2 000 lignes de prompts.</p>
+
+<p>La reproductibilité effective bute sur un obstacle majeur : la dépendance à GPT-5.2, modèle propriétaire dont les poids ne sont pas accessibles. Les résultats ne peuvent être exactement répliqués sans accès au même endpoint. La variance stochastique rapportée (κ oscillant entre 0.64 et 0.71 pour des prompts identiques) complique encore la comparaison entre implémentations. Les écarts-types sur 3 runs indépendants (Table 15) atténuent ce problème sans l'éliminer.</p>
+
+<p>Les prompts complets (~2 000 lignes) ne figurent pas dans l'article ; seuls des extraits et principes sont fournis. La vérification de la promesse d'open source reste suspendue à la publication effective du dépôt.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>CUAVerifierBench comble un vide réel : aucun benchmark existant ne fournissait de labels humains pour le processus ET le résultat des trajectoires CUA. La séparation process/outcome est une contribution conceptuelle qui permet de distinguer les défaillances de l'agent de celles de l'environnement — une distinction essentielle pour le reinforcement learning sur données agentiques.</p>
+
+<p>L'étude auto-research produit un résultat nuancé. L'IA excelle dans l'optimisation incrémentale mais échoue à découvrir les ruptures conceptuelles qui génèrent les gains les plus importants (upgrade de rubrique, scoring de la rubrique entière plutôt que critère par critère). Ce constat dépasse le cadre des vérificateurs et informe le débat plus large sur l'automatisation de la recherche en IA — confirmant les observations de Lu et al. (2026) sur la complémentarité homme-machine.</p>
+
+<p>En pratique, un FPR proche de zéro est critique pour la curation de données d'entraînement : chaque faux positif injecte un signal erroné dans la boucle de training. L'UV répond directement à ce besoin. Son adoption dépendra du coût par trajectoire et de la disponibilité d'alternatives à base de modèles ouverts.</p>
+
+<p>L'analyse critique d'AgentRewardBench (FPR estimé à ~0.27 sur un échantillon de 30 trajectoires étiquetées comme succès) est un apport collatéral qui remet en question la fiabilité des annotations humaines elles-mêmes, et plaide pour une vérification systématique même des gold labels.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>L'article se positionne explicitement face à WebVoyager (He et al., 2024), WebJudge (Xue et al., 2025) et AgentRewardBench (Lù et al., 2025). Les comparaisons sont directes et quantifiées — les trois systèmes sont évalués sur les mêmes datasets avec les mêmes métriques.</p>
+
+<p>Le débat process vs. outcome reward rejoint les travaux de Lightman et al. (2023) sur la vérification pas-à-pas en mathématiques et Wang et al. (2024) sur les modèles de récompense de processus. L'originalité est de transposer cette distinction dans un contexte multimodal et agentique, où l'environnement (CAPTCHAs, murs de connexion, pages en panne) introduit une stochasticité absente des problèmes de raisonnement textuel. Cette transposition n'est pas triviale : la notion même de « pas correct » change de nature quand l'agent interagit avec un environnement non déterministe.</p>
+
+<p>AgentRx (Barke et al., 2026) aborde un problème adjacent — le diagnostic d'échec avec localisation de l'étape critique — mais sans score de processus continu ni benchmark dédié à l'évaluation du vérificateur. L'UV intègre les deux dimensions (diagnostic + scoring), ce qui en fait un système plus complet.</p>
+
+<p>Le travail reste cantonné au web. Les agents CUA opérant sur desktop natif, applications mobiles ou dans des environnements simulés n'entrent pas dans le périmètre. Cette restriction, jamais explicitement discutée, limite la portée de l'appellation « Universal » et laisse ouverte la question de la transférabilité des quatre principes à des domaines visuels radicalement différents (jeux vidéo, robotique, interfaces 3D).</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème clair, bien motivé, formulation précise avec métriques explicites. L'angle CUA multimodal est spécifique et pertinent, même si la vérification d'agents n'est pas un sujet nouveau.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Deux datasets indépendants, comparaisons avec baselines upgradées, ablations multiples, protocole d'annotation en deux phases. Risque d'overfitting sur le dataset de développement non entièrement contrôlé.</td></tr>
+<tr><td>Taille de l'échantillon</td><td>3</td><td>246 trajectoires annotées par experts au total — modeste mais compréhensible vu le coût d'annotation (~65 appels LLM par trajectoire). L'évaluation à grande échelle (~600/benchmark) compense partiellement.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Cohen's κ approprié pour l'accord inter-annotateurs, décomposition FPR/FNR informative, corrélations Pearson/Spearman pour les scores continus. Le seuil de binarisation à 0.8 mériterait une analyse de sensibilité.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Upgrade des baselines vers GPT-5.2 bien pensée pour isoler l'avantage architectural. Le protocole UV-informed introduit un biais d'ancrage. Diversité limitée des agents et des benchmarks sources.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code et données annoncés open-source, algorithme détaillé, écarts-types sur 3 runs. La dépendance à GPT-5.2 (propriétaire) empêche la réplication exacte.</td></tr>
+<tr><td>Transparence et limitations</td><td>3</td><td>Processus itératif tracé sur 96 expériences, variance stochastique documentée. Pas de section limitations formelle ; coût, généralisation hors web et sensibilité aux seuils non discutés.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>CUAVerifierBench comble un vide dans l'écosystème d'évaluation. Séparation process/outcome bien motivée. Étude auto-research éclairante. Les principes individuels pré-existent dans d'autres domaines.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Note globale de robustesse : 3.7 / 5</strong> — Travail d'ingénierie solide avec une méthodologie expérimentale sérieuse et des résultats convaincants sur la réduction des faux positifs. Les échantillons d'évaluation restent modestes, la dépendance aux LLMs propriétaires limite la reproductibilité, et l'absence de discussion systématique des limites (coût, généralisation, biais du protocole UV-informed) affaiblit la rigueur d'ensemble.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

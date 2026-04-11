@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On the Reliability Limits of LLM-Based Multi-Agent Planning — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>On the Reliability Limits of LLM-Based Multi-Agent Planning</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Un agent performant, cinq agents désastreux</h2>
+
+<p>Un agent IA seul répond correctement à 91 % des questions d'un test de culture générale universitaire. On place cinq agents identiques en chaîne, chacun relayant sa compréhension au suivant. Le score final tombe à 22 % — en dessous du hasard pour un QCM à quatre choix. Ce résultat, publié en mars 2026 par Ruicheng Ao, Siyang Gao et David Simchi-Levi (MIT / City University of Hong Kong), met à nu un problème que l'industrie de l'IA commence tout juste à affronter : les systèmes multi-agents ne sont pas toujours meilleurs que les systèmes simples. Parfois, ils sont catastrophiquement pires.</p>
+
+<p>Leur article, <em>On the Reliability Limits of LLM-Based Multi-Agent Planning</em>, pose un cadre mathématique rigoureux pour comprendre quand et pourquoi l'ajout d'agents améliore ou dégrade la qualité d'une décision. Les conclusions sont aussi élégantes qu'impitoyables.</p>
+
+<h2>Le problème : quand ajouter des cerveaux n'ajoute pas d'intelligence</h2>
+
+<p>Les systèmes multi-agents à base de grands modèles de langage (LLM) se sont multipliés en production ces deux dernières années. Service client automatisé, analyse de documents juridiques, planification logistique, navigation web autonome : dans chaque cas, l'architecture type empile des rôles. Un planificateur décompose la tâche. Un exécutant la réalise. Un critique vérifie. Un décideur tranche.</p>
+
+<p>Le schéma est séduisant sur un organigramme. Dans la pratique, ces agents partagent presque toujours les mêmes bases : même famille de modèle, même contexte récupéré par RAG, même historique de conversation. Le planificateur, l'exécutant et le critique voient le même texte. Ils ne font que le reformuler, le résumer, le commenter — sans y ajouter de fait nouveau.</p>
+
+<p>Des travaux empiriques récents documentent cette fragilité. Sur les benchmarks d'interaction web (WebArena), d'assistance généraliste (GAIA) et d'utilisation d'ordinateur (OSWorld), les performances plafonnent ou se dégradent quand le nombre d'étapes et d'agents augmente. Les causes d'échec identifiées par Cemri et al. relèvent plus souvent de la coordination que de la capacité brute du modèle. Et plusieurs équipes ont montré qu'un agent unique bien configuré peut égaler des orchestrations multi-agents à un coût bien inférieur.</p>
+
+<p>Mais ces observations restaient empiriques, dispersées, sans cadre unificateur. Personne n'avait encore identifié la limite théorique de fiabilité d'un système multi-agents qui n'apporte pas d'information nouvelle.</p>
+
+<h2>La méthode : le téléphone arabe, formalisé</h2>
+
+<p>L'intuition des chercheurs tient en une analogie. Prenez le jeu du téléphone arabe. Un message part du premier joueur, traverse plusieurs intermédiaires, et arrive déformé au dernier. Chaque relais perd des nuances. Le message final est toujours une version appauvrie de l'original — jamais enrichie, sauf si un joueur ajoute une information qu'il est le seul à détenir.</p>
+
+<p>Ao, Gao et Simchi-Levi formalisent cette intuition avec la théorie de la décision bayésienne. Ils modélisent un système multi-agents comme un graphe orienté acyclique — un réseau où l'information circule dans un seul sens, sans boucle. Chaque nœud représente un agent. Chaque arête représente un canal de communication, typiquement un message en langage naturel. Le réseau reçoit des signaux extérieurs et doit produire une action finale.</p>
+
+<p>Deux catégories de signaux traversent ce réseau. Les <em>signaux exogènes</em> proviennent de l'extérieur : la requête de l'utilisateur, le résultat d'un appel API, la réponse d'une base de données, le retour d'un test exécutable. Ce sont des informations fraîches que le système ne possédait pas avant. Les <em>signaux endogènes</em> sont les messages que les agents s'échangent entre eux — reformulations, analyses, résumés. Ces messages réorganisent l'information existante sans en créer de nouvelle.</p>
+
+<p>Le résultat central de l'article porte sur le « régime d'évidence commune » : la situation où tous les agents partagent la même information de départ et où aucun n'apporte de signal exogène. Dans ce régime, les auteurs démontrent qu'aucune architecture multi-agents — quelle que soit sa complexité, son nombre de rôles ou l'ingéniosité de ses prompts — ne peut surpasser un décideur unique bayésien qui aurait accès à la même information initiale.</p>
+
+<p>Ils quantifient aussi la perte. Sous certaines règles de score standard en théorie de la décision (les <em>proper scoring rules</em>), le coût de chaque étape de communication se mesure exactement par la distorsion qu'elle inflige à la croyance du système. Si un relais transforme un texte de 500 mots en résumé de 50 mots, la croyance du système sur la bonne réponse change — et cette distorsion se traduit directement en perte de précision.</p>
+
+<p>Le formalisme est dense, mais le message est limpide : dans le téléphone arabe, chaque intermédiaire remplace le message par sa meilleure approximation. Chaque approximation perd des nuances. Et les relais suivants ne peuvent jamais récupérer ce qui a été perdu.</p>
+
+<h2>Résultats clés : les chiffres qui parlent</h2>
+
+<p>Les auteurs ne se contentent pas de théorèmes. Ils testent leurs prédictions sur 200 questions du benchmark MMLU (culture générale universitaire, quatre choix) avec les modèles GPT-4.1-mini et o4-mini d'OpenAI. Neuf configurations expérimentales, chacune isolant une variable de design.</p>
+
+<p>La dégradation en chaîne est le résultat le plus frappant. Un agent seul sur GPT-4.1-mini atteint 90,7 % de précision. Deux agents en relais prose : 41,2 %. Trois agents : 43,5 %. Cinq agents : 22,5 %. Chaque relais ne voit que le message de l'agent précédent, pas la question originale — exactement comme dans le téléphone arabe. Sur o4-mini, le schéma se reproduit : 89,9 % en agent unique, 37,0 % avec trois agents en relais. La chute est brutale dès le premier relais. À cinq agents, le système fait pire qu'en choisissant une lettre au hasard.</p>
+
+<p>Le format de communication change tout, à architecture identique. Avec trois agents qui se transmettent du texte libre, la précision atteint 58,1 % (sur un sous-ensemble de 50 questions). Avec trois agents qui se transmettent quatre chiffres — les probabilités estimées pour chaque réponse —, elle remonte à 75,2 %. Même nombre d'agents, même structure, seul le format change. La perte par étape passe de 8,5 points en prose à 2,8 points avec le vecteur de probabilités. Un message structuré préserve l'information décisionnelle bien mieux qu'un paragraphe en langue naturelle.</p>
+
+<p>L'ajout d'outils externes n'aide que s'il apporte de l'information absente. Sur les questions MMLU, donner accès à Wikipedia à un agent seul ne change presque rien : 87,2 % contre 90,7 % sans outil. Le modèle connaissait déjà les réponses — Wikipedia est redondant. En revanche, sur un jeu de 200 questions portant sur des entités fictives inexistantes dans les données d'entraînement du modèle, l'accès à un outil de recherche fait passer la précision de 24,3 % à 82,7 %. La différence : 58,4 points de pourcentage. L'outil apporte un signal que le modèle ne possédait pas.</p>
+
+<p>Les chercheurs mesurent aussi la corrélation entre distorsion informationnelle (divergence KL entre les distributions de probabilité de l'agent d'origine et de l'agent final) et perte de précision. Le coefficient atteint 0,72 pour le relais à trois agents. Les questions où la croyance se déforme le plus sont celles où la réponse se dégrade le plus — une validation expérimentale directe du théorème sur la distorsion postérieure.</p>
+
+<h2>Implications pratiques : repenser le design des agents</h2>
+
+<p>Ces résultats redistribuent les cartes pour quiconque conçoit des systèmes multi-agents en production.</p>
+
+<p>Chaque agent ajouté doit justifier son existence par un signal nouveau. Un critique qui relit le même transcript qu'un planificateur ne peut pas améliorer la décision. Il ne fait que comprimer l'information en la reformulant — et chaque compression détruit un peu de signal. En revanche, un vérificateur qui exécute du code, interroge une API externe ou consulte une base de données indépendante peut améliorer la décision, parce qu'il apporte un fait que le système ne possédait pas.</p>
+
+<p>Le format de communication entre agents mérite autant d'attention que le choix du modèle. L'industrie investit des milliards dans la taille des modèles. L'étude montre qu'un changement de format de message — du texte libre vers des scores de confiance structurés — divise la perte d'information par trois, à modèle et architecture identiques. Pour les tâches à sortie discrète (classification, triage, routage), transmettre des distributions de probabilité plutôt que de la prose est un gain quasi gratuit.</p>
+
+<p>La revue humaine n'est pas un filet de sécurité universel. Les auteurs démontrent que la revue optimale repose sur une comparaison point par point entre le risque résiduel de la décision automatique et le coût de l'escalade humaine. Un système confiant dans sa réponse n'a pas besoin de revue. Un système incertain la justifie. Déclencher la revue humaine après un nombre fixe d'étapes ou dès qu'un « critique » émet un désaccord ne suit pas cette logique — et gaspille de la capacité humaine là où elle n'est pas nécessaire.</p>
+
+<p>Les comparaisons de systèmes multi-agents doivent aussi séparer l'effet de l'information de l'effet de l'architecture. Quand deux systèmes sont comparés et que l'un a accès à plus d'outils, plus de documents ou un contexte plus large, toute amélioration observée peut venir de l'information supplémentaire plutôt que de la meilleure orchestration. Les auteurs plaident pour des benchmarks qui contrôlent explicitement les signaux exogènes et la capacité de communication — sans quoi on attribue à l'intelligence collective ce qui relève de l'accès à l'information.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>L'étude se concentre sur le régime d'évidence commune, où tous les agents partagent la même information. Ce régime couvre une large part des déploiements actuels — mais pas tous. Quand des agents observent des signaux privés différents (un agent accède à une base clients, un autre à un historique de commandes, un troisième à un flux de capteurs), le problème change de nature. La théorie des décisions d'équipe, initiée par Marschak et Radner dans les années 1960, offre des outils pour ce cas. Leur application aux systèmes LLM reste un chantier ouvert.</p>
+
+<p>Le cadre ne modélise pas non plus le coût computationnel du raisonnement. Un modèle de type <em>reasoning</em> (comme o4-mini) qui investit davantage de calcul sur la même évidence améliore ses performances sans signal externe nouveau. Les auteurs reconnaissent ce cas sans l'intégrer dans leur formalisme. Comprendre comment le temps de raisonnement interagit avec la structure informationnelle est une piste de recherche naturelle.</p>
+
+<p>Reste une question concrète pour les praticiens : comment concevoir des protocoles de communication entre agents qui minimisent la distorsion tout en restant praticables ? Le vecteur de probabilités fonctionne bien pour un QCM à quatre choix. Pour des tâches ouvertes — rédiger un plan de projet, diagnostiquer une panne système, arbitrer entre des contraintes contradictoires —, les formats de communication structurés qui préservent l'information décisionnelle restent à inventer. Les auteurs ont posé le diagnostic. La prescription reste à écrire.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

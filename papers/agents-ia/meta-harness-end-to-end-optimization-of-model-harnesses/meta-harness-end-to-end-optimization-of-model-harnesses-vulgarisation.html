@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meta-Harness: End-to-End Optimization of Model Harnesses — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Meta-Harness: End-to-End Optimization of Model Harnesses</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Meta-Harness : quand l'IA optimise elle-même le code qui l'entoure</h2>
+
+<h3>Introduction</h3>
+
+<p>Un même modèle de langage, le même jeu de données, la même tâche — et un écart de performance de 1 à 6 selon le code qui l'enveloppe. Ce chiffre, rapporté par des travaux récents sur les benchmarks d'agents, résume un problème que les praticiens de l'IA connaissent bien. La qualité d'un système ne dépend pas uniquement du modèle, mais du <em>harness</em> : cette couche de code qui décide quelles informations stocker, récupérer et présenter au modèle à chaque étape de raisonnement.</p>
+
+<p>Des chercheurs de Stanford, du KRAFTON et du MIT viennent de publier <strong>Meta-Harness</strong>, un système qui automatise l'optimisation de ces harnesses. Leur approche : confier à un agent de code l'accès complet à l'historique des tentatives passées — code source, traces d'exécution, scores — et le laisser diagnostiquer les échecs pour proposer des améliorations ciblées. Les résultats dépassent les meilleures solutions conçues à la main sur trois domaines distincts : classification de texte, raisonnement mathématique et codage agentique.</p>
+
+<h3>Le problème : un levier massif, encore actionné à la main</h3>
+
+<p>Le harness, c'est tout le code autour du modèle. Prenons un exemple concret : quand un LLM doit classifier des textes en continu, le harness décide quels exemples passés garder en mémoire, comment les récupérer quand un nouveau texte arrive, et sous quelle forme les présenter dans le prompt. Changer une seule de ces décisions — passer de 8 exemples à 32, modifier la stratégie de récupération, reformuler le template du prompt — peut faire varier la précision de dizaines de points de pourcentage.</p>
+
+<p>Jusqu'ici, optimiser un harness se fait à la main. Un ingénieur inspecte les erreurs, ajuste des heuristiques, teste une variante, recommence. Le processus est lent et limité par la capacité humaine à explorer l'espace des designs possibles.</p>
+
+<p>Des méthodes d'optimisation automatique existent — OPRO, TextGrad, AlphaEvolve, GEPA, entre autres — mais elles partagent un défaut structurel : elles compriment trop l'information de retour. Certaines ne donnent au proposeur qu'un score numérique. D'autres résument les échecs en quelques phrases. D'autres encore limitent le feedback à des templates courts. Le proposeur voit qu'un harness a échoué, mais pas <em>pourquoi</em>.</p>
+
+<p>Or dans un harness complexe, une décision prise au début — quel exemple stocker en mémoire, par exemple — peut causer un échec vingt étapes plus tard. Comprimer cette chaîne causale en un score ou un résumé de trois lignes détruit l'information diagnostique nécessaire à l'amélioration. Les chiffres donnent l'échelle du problème : les optimiseurs existants travaillent avec 100 à 30 000 tokens de contexte par itération. Meta-Harness, lui, en exploite jusqu'à 10 millions — trois ordres de grandeur de plus.</p>
+
+<h3>La méthode : tout montrer, laisser l'agent choisir quoi regarder</h3>
+
+<p>L'idée centrale de Meta-Harness tient en une phrase : donner au proposeur l'accès à tout, et le laisser décider quoi inspecter.</p>
+
+<p>Le système fonctionne en boucle. À chaque itération, un agent de code (Claude Code avec le modèle Opus 4.6) dispose d'un système de fichiers qui contient, pour chaque harness testé précédemment, trois choses : le code source complet, les scores obtenus, et les traces d'exécution — c'est-à-dire les prompts envoyés au modèle, les réponses reçues, les appels d'outils, les mises à jour d'état internes. L'agent parcourt ces fichiers avec des commandes standard (<code>grep</code>, <code>cat</code>), identifie les points de défaillance, et propose un nouveau harness. Ce nouveau candidat est évalué, ses résultats sont ajoutés au système de fichiers, et la boucle recommence.</p>
+
+<p>Pensez-y comme la différence entre un mécanicien qui reçoit un SMS « la voiture ne démarre pas » et un mécanicien qui a accès au journal de bord complet du véhicule, aux données des capteurs moteur, et aux notes de ses collègues sur les cinq dernières réparations. Le premier peut deviner. Le second peut diagnostiquer.</p>
+
+<p>Ce choix d'architecture a une conséquence technique directe : l'historique dépasse rapidement la fenêtre de contexte du modèle. L'agent ne peut pas tout lire d'un coup. Il doit sélectionner les fichiers pertinents, naviguer dans l'arborescence, croiser les informations de plusieurs candidats. C'est précisément pour cela que le proposeur est un agent de code — un système capable d'invoquer des outils de développeur et de modifier du code — et non un simple modèle de langage répondant à un prompt fixe. En pratique, le proposeur lit en médiane 82 fichiers par itération et référence plus de 20 candidats passés à chaque étape.</p>
+
+<p>Le comportement observé dans les logs va au-delà de la simple exploration. Sur TerminalBench-2, l'agent a proposé deux premières modifications qui ont chacune dégradé les performances. À la troisième itération, il a identifié que les deux échecs partageaient un point commun — une réécriture du template de prompt — qui n'avait rien à voir avec les corrections structurelles testées en parallèle. Il a isolé cette variable confondante, testé les corrections seules, puis pivoté vers une modification purement additive qui est devenue le meilleur candidat de la série. Identifier une variable confondante, formuler une hypothèse causale, la tester de manière isolée : ce type de raisonnement est exactement ce que les optimiseurs à feedback comprimé ne peuvent pas produire, faute d'accès aux données brutes.</p>
+
+<h3>Résultats clés : des gains solides sur trois fronts</h3>
+
+<p><strong>Classification de texte en ligne.</strong> Meta-Harness a découvert des harnesses atteignant 48,6 % de précision moyenne sur trois jeux de données difficiles (droit, médecine, chimie), contre 40,9 % pour ACE — le meilleur système conçu à la main — et 40,0 % pour MCE. Le gain de 7,7 points s'accompagne d'une réduction du contexte utilisé : 11 400 tokens supplémentaires contre 50 800 pour ACE. Quatre fois moins de contexte, pour un résultat nettement meilleur.</p>
+
+<p>Face aux autres optimiseurs automatiques (OpenEvolve, TTT-Discover), Meta-Harness atteint leur performance finale en seulement 4 évaluations de harnesses au lieu de 40, puis continue à progresser pour terminer 10 points au-dessus. Les harnesses découverts généralisent aussi à des tâches jamais vues pendant la recherche : sur 9 datasets hors distribution, 73,1 % de précision moyenne contre 70,2 % pour ACE.</p>
+
+<p><strong>Raisonnement mathématique.</strong> Sur 200 problèmes de niveau Olympiade internationale de mathématiques, un unique harness découvert par le système améliore la précision de 4,7 points en moyenne par rapport à l'absence de récupération d'exemples. Ce résultat se transfère à cinq modèles différents, dont quatre n'ont jamais été utilisés pendant la phase de recherche. Le harness découvert est un programme de routage à quatre branches : selon que le problème relève de la combinatoire, de la géométrie, de la théorie des nombres ou de l'algèbre, une stratégie de récupération différente s'applique — avec des seuils, des critères de dédoublonnage et des nombres d'exemples distincts pour chaque route. Personne n'a codé ces routes. Elles ont émergé de la recherche automatique.</p>
+
+<p><strong>Codage agentique (TerminalBench-2).</strong> Ce benchmark évalue des agents sur 89 tâches longues et autonomes. Avec le modèle Haiku 4.5, Meta-Harness atteint 37,6 % de réussite, dépassant tous les agents rapportés sur le classement officiel — y compris Goose (35,5 %) et Terminus-KIRA (33,7 %). La modification découverte est d'une simplicité frappante : injecter un instantané de l'environnement (langages installés, gestionnaires de paquets, contenu du répertoire de travail) dans le prompt initial, avant que l'agent ne commence à travailler. Cela élimine les 2 à 4 tours d'exploration que l'agent gaspille habituellement à découvrir ce qui est disponible. L'ajout tient en 80 lignes de code.</p>
+
+<p>Une ablation éclaire la raison de ces gains. Quand le proposeur ne reçoit que les scores sans les traces d'exécution, la médiane des candidats proposés tombe à 34,6 % de précision. Avec des résumés générés par un LLM en plus des scores : 34,9 %. Avec l'accès complet aux traces brutes : 50,0 %. Les résumés n'aident quasiment pas. L'information diagnostique brute, si.</p>
+
+<h3>Implications pratiques</h3>
+
+<p>Le premier enseignement est contre-intuitif. Sur les trois tâches testées, le harness compte autant que le modèle. Améliorer le code autour du LLM produit des gains comparables — parfois supérieurs — à ceux obtenus en changeant de modèle. Pour les équipes qui construisent des systèmes à base de LLM, c'est un levier d'optimisation accessible, qui ne nécessite pas d'entraîner de nouveaux poids ni de migrer vers un modèle plus coûteux.</p>
+
+<p>Les harnesses découverts sont du code lisible, auditable, transférable. Une stratégie de récupération qui fonctionne avec un modèle d'aujourd'hui a de bonnes chances de fonctionner avec un modèle plus puissant demain — les expériences de transfert sur le raisonnement mathématique le confirment, avec des gains observés sur cinq modèles différents à partir d'un unique harness. Ce n'est pas du prompt engineering éphémère : ce sont des algorithmes de gestion de contexte réutilisables.</p>
+
+<p>L'inspectabilité est un bénéfice collatéral appréciable. Le surapprentissage dans l'espace du code est visible à l'œil nu. Des chaînes de <code>if-else</code> codées en dur, des mappings de classes spécifiques à un dataset se repèrent immédiatement à la relecture du code source. C'est un avantage concret par rapport à l'optimisation de poids, où le surapprentissage ne se détecte qu'indirectement.</p>
+
+<p>Un point méthodologique mérite l'attention des praticiens : les auteurs rapportent que la qualité du « skill » — la description en langage naturel donnée au proposeur pour guider la recherche — est le facteur le plus influent sur la qualité des résultats. Plus que le nombre d'itérations, plus que la taille de la population de candidats. Quelques cycles courts de 3 à 5 itérations consacrés à calibrer ce texte de guidage rapportent davantage qu'un long cycle avec un skill médiocre.</p>
+
+<h3>Pour aller plus loin</h3>
+
+<p>Meta-Harness repose sur un proposeur unique : Claude Code avec Opus 4.6. Les auteurs reconnaissent que l'approche n'est devenue praticable que grâce aux progrès récents des agents de code, autour de début 2026. Comment d'autres agents — Codex, Gemini, des modèles open source — se comporteraient-ils dans ce rôle ? La question reste sans réponse expérimentale.</p>
+
+<p>Une extension naturelle serait de co-optimiser le harness et les poids du modèle simultanément. Aujourd'hui, le modèle est gelé pendant la recherche. Mais si la stratégie de contexte influence ce que le modèle apprend à exploiter, et inversement, l'optimisation conjointe pourrait débloquer des gains supplémentaires que ni l'un ni l'autre ne peut atteindre seul.</p>
+
+<p>La scalabilité de la boucle pose aussi question. Vingt itérations produisent déjà des millions de tokens de traces. À cent itérations, le système de fichiers deviendra difficile à naviguer même pour un agent capable. Des mécanismes d'indexation ou de priorisation de l'historique seront probablement nécessaires — sans retomber dans la compression excessive que Meta-Harness cherche précisément à éviter. Trouver le bon équilibre entre exhaustivité et navigabilité est un problème ouvert.</p>
+
+<p>Un paradoxe traverse ce travail : Meta-Harness est lui-même un harness. Son propre design — la boucle minimale, l'accès au système de fichiers, le skill de guidage — pourrait en théorie être optimisé par un méta-Meta-Harness. Les auteurs le reconnaissent implicitement dans leur choix de nom. Savoir où s'arrête cette récursion, et si elle converge vers quelque chose d'utile, reste l'une des questions les plus stimulantes que cette ligne de recherche soulève.</p>
+
+<p>Ce qui est acquis, en revanche, c'est le message central de ce travail : quand on donne à un agent suffisamment d'information sur ses échecs passés — pas un résumé, pas un score, mais les données brutes — il trouve des solutions que les humains n'avaient pas envisagées. La leçon dépasse le cadre des harnesses. Elle concerne toute situation où un système itératif doit apprendre de son propre historique.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

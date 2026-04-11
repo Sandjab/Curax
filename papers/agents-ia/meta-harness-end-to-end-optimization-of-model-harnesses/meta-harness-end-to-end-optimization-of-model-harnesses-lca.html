@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meta-Harness: End-to-End Optimization of Model Harnesses — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Meta-Harness: End-to-End Optimization of Model Harnesses</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>L'écart de performance entre deux harness différents enveloppant le même LLM peut atteindre un facteur 6 sur un même benchmark. Le harness — le code qui décide quoi stocker, récupérer et présenter au modèle — pèse autant que les poids du modèle lui-même. Pourtant, sa conception reste artisanale : inspection manuelle d'échecs, ajustements heuristiques, itérations sur un petit nombre de designs.</p>
+
+<p>Lee et al. posent une question précise : peut-on automatiser l'ingénierie de harness en donnant à un agent codeur un accès sélectif à l'historique complet des tentatives précédentes ? Leur thèse centrale est que les optimiseurs de texte existants (OPRO, TextGrad, AlphaEvolve, GEPA) compriment trop agressivement le retour d'information — scores scalaires, résumés courts, fenêtres glissantes — et perdent ainsi le signal diagnostique nécessaire pour tracer les échecs en aval jusqu'aux décisions de conception en amont.</p>
+
+<p>La distinction est nette : là où un optimiseur classique reçoit entre 100 et 30 000 tokens de contexte par itération, Meta-Harness expose jusqu'à 10 millions de tokens d'information diagnostique par évaluation, accessibles via un système de fichiers que l'agent explore librement avec <code>grep</code> et <code>cat</code>.</p>
+
+<h2>Méthodologie</h2>
+
+<h3>Architecture de la boucle de recherche</h3>
+
+<p>Meta-Harness fonctionne comme une boucle externe minimaliste. À chaque itération : (1) un agent codeur (Claude Code avec Opus-4.6) inspecte un système de fichiers contenant le code source, les scores et les traces d'exécution de tous les candidats précédents ; (2) il propose un nouveau harness sous forme de programme Python exécutable ; (3) le harness est évalué sur un ensemble de recherche ; (4) tous les artefacts sont archivés dans un nouveau répertoire, et la boucle reprend.</p>
+
+<p>Le choix d'un agent codeur plutôt qu'un LLM brut est délibéré : l'historique dépasse rapidement la fenêtre de contexte, l'agent doit donc décider quoi inspecter. En pratique, le proposeur lit une médiane de 82 fichiers par itération, répartis entre code source (41 %), traces d'exécution (40 %), résumés de scores (6 %) et autres (13 %).</p>
+
+<h3>Trois domaines expérimentaux</h3>
+
+<p><strong>Classification de texte en ligne.</strong> Un LLM (GPT-OSS-120B) reçoit des exemples étiquetés un par un, met à jour sa mémoire, puis est évalué sur un ensemble test. Trois jeux de données (LawBench, Symptom2Disease, USPTO-50k). 20 itérations de recherche, 2 candidats par itération, soit 40 harness évalués. Neuf jeux supplémentaires servent de test hors distribution.</p>
+
+<p><strong>Raisonnement mathématique augmenté par récupération.</strong> Un corpus de plus de 500 000 problèmes résolus, décontaminé et dédupliqué. Recherche sur 250 problèmes de niveau olympiade, évaluation sur 200 problèmes IMO non vus, avec 5 modèles dont 4 absents de la recherche. 40 itérations, 109 harness candidats.</p>
+
+<p><strong>Codage agentique (TerminalBench-2).</strong> 89 tâches autonomes à long horizon. Initialisation à partir de Terminus-2 et Terminus-KIRA. Recherche et évaluation sur le même ensemble de 89 tâches — un choix discutable que les auteurs justifient par la taille réduite du benchmark et la pratique courante dans cette communauté.</p>
+
+<h3>Ablation</h3>
+
+<p>Sur la classification de texte, trois conditions sont comparées : scores seuls, scores + résumés LLM, interface complète avec traces. L'écart est massif : 34,6 % de précision médiane (scores seuls) contre 50,0 % (interface complète). Les résumés n'apportent rien — leur précision médiane (34,9 %) est indistinguable de la condition scores seuls.</p>
+
+<h2>Résultats principaux</h2>
+
+<h3>Classification de texte</h3>
+
+<p>Le harness découvert atteint 48,6 % de précision moyenne sur les trois jeux de test, soit +7,7 points par rapport à ACE et +8,6 par rapport à MCE. Ce gain s'accompagne d'une réduction de contexte : 11,4K tokens contre 50,8K pour ACE. La convergence est rapide — Meta-Harness atteint la précision finale d'OpenEvolve et TTT-Discover en 4 évaluations seulement, là où ces méthodes en nécessitent 40.</p>
+
+<p>Sur les 9 jeux hors distribution, le harness découvert obtient la meilleure précision moyenne (73,1 % contre 70,2 % pour ACE), avec le score le plus élevé sur 6 des 9 jeux. L'ajout naïf d'exemples few-shot au-delà de 32 dégrade la performance dans 7 cas sur 9.</p>
+
+<h3>Raisonnement mathématique</h3>
+
+<p>Un unique harness de récupération, sélectionné sur l'ensemble de recherche, améliore la précision sur les 200 problèmes IMO de +4,7 points en moyenne sur les 5 modèles. Le harness découvert est un programme BM25 à quatre routes (combinatoire, géométrie, théorie des nombres, défaut), dont la structure — prédicats de routage, seuils de déduplication, nombre d'exemples par route — a émergé de la recherche sans spécification manuelle.</p>
+
+<h3>TerminalBench-2</h3>
+
+<p>Avec Opus 4.6, le harness découvert atteint 76,4 % (rang 2, derrière ForgeCode à 81,8 % dont les résultats n'ont pas pu être reproduits à partir du code publié). Avec Haiku 4.5, 37,6 % — rang 1 parmi tous les agents Haiku 4.5 signalés. La modification principale découverte : un bootstrap d'environnement qui collecte un instantané du sandbox (répertoire, langages installés, gestionnaires de paquets, mémoire) avant la boucle agent, éliminant 2 à 4 tours exploratoires. Environ 80 lignes ajoutées à Terminus-KIRA.</p>
+
+<h2>Discussion et limites</h2>
+
+<h3>Faiblesses méthodologiques</h3>
+
+<p>Le problème le plus saillant concerne TerminalBench-2 : recherche et évaluation sur le même ensemble de 89 tâches. Les auteurs invoquent la taille du benchmark et la pratique communautaire, mais cela reste un risque de surapprentissage, même atténué par l'inspection manuelle et les audits regex. Un split 70/30 aurait été préférable, quitte à perdre du signal de recherche.</p>
+
+<p>Aucun test de significativité statistique n'est rapporté. Les résultats de classification sont présentés comme des points uniques, sans intervalles de confiance ni écarts-types sur plusieurs exécutions de recherche. La stochasticité du processus de proposition rend cette omission gênante : deux exécutions de Meta-Harness avec la même initialisation pourraient-elles diverger de 5 points ?</p>
+
+<p>Le proposeur est exclusivement Claude Code avec Opus-4.6. Les auteurs reconnaissent cette limitation en conclusion mais ne fournissent aucune donnée avec un proposeur alternatif. L'article ne peut donc pas distinguer ce qui relève de la méthode Meta-Harness de ce qui relève des capacités spécifiques d'Opus-4.6.</p>
+
+<h3>Coût computationnel</h3>
+
+<p>Le coût n'est jamais quantifié explicitement. Chaque itération implique potentiellement des millions de tokens en entrée pour le proposeur, plus l'évaluation complète du harness candidat. L'article mentionne « quelques heures de temps horloge » sans préciser le budget API correspondant. Pour une méthode destinée à être pratique, cette opacité est regrettable.</p>
+
+<h3>Généralisation limitée de l'évaluation OOD</h3>
+
+<p>L'évaluation hors distribution en classification de texte est convaincante (9 jeux supplémentaires). En revanche, le transfert cross-modèle en mathématiques porte sur un unique harness évalué sur 4 modèles non vus — une démonstration encourageante mais insuffisante pour affirmer un transfert robuste. La catégorie « modèles non vus » inclut des modèles de la même famille (GPT-5.4-nano et GPT-5.4-mini), ce qui atténue la diversité réelle.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le code du harness TerminalBench-2 est publié sur GitHub. Les appendices détaillent des conseils d'implémentation pratiques (section D) et fournissent des descriptions algorithmiques des harness découverts. Les jeux de données de classification sont publics.</p>
+
+<p>Cependant, la reproductibilité effective est limitée par plusieurs facteurs. Les modèles utilisés (Claude Opus 4.6, GPT-OSS-120B, GPT-OSS-20B) sont propriétaires et accessibles uniquement via API — leurs comportements peuvent changer sans préavis. Le corpus de récupération mathématique (535K problèmes) est décrit mais pas directement distribué. La recherche elle-même est coûteuse et stochastique : reproduire les 40 itérations d'une expérience nécessite un budget API substantiel et pourrait produire des harness différents.</p>
+
+<p>Le code complet de la boucle Meta-Harness (au-delà de l'artefact TerminalBench-2) n'est pas explicitement publié au moment de l'évaluation.</p>
+
+<h2>Impact et applications</h2>
+
+<p>La contribution principale est conceptuelle : reformuler l'ingénierie de harness comme un problème d'optimisation méta-appris, où le retour d'information prend la forme d'un système de fichiers navigable plutôt que de résumés compressés. Cette idée est élégante et immédiatement applicable — tout praticien disposant d'un agent codeur et d'un benchmark peut instancier cette boucle.</p>
+
+<p>Les harness découverts ont une propriété rare pour des artefacts générés automatiquement : ils sont lisibles et interprétables. Le harness de classification par draft-vérification, le routeur BM25 à quatre branches pour les mathématiques, le bootstrap d'environnement pour TerminalBench-2 — chacun encode une stratégie compréhensible et transférable. L'optimisation en espace de code produit des programmes, pas des poids opaques.</p>
+
+<p>L'observation la plus percutante pour la pratique : sur la classification de texte, les résumés LLM n'apportent rien par rapport aux scores bruts (Table 3). L'accès aux traces d'exécution brutes est le seul ingrédient qui compte. Cela remet en question l'approche dominante dans les optimiseurs de texte, qui investissent dans la compression du feedback plutôt que dans son accès sélectif.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Meta-Harness se situe à l'intersection de trois courants : la méta-optimisation de programmes (AlphaEvolve, FunSearch), l'optimisation de texte (TextGrad, OPRO, GEPA), et les agents à mémoire (MemGPT, MemEvolve). Sa singularité tient à la combinaison de deux choix : (a) l'espace de recherche est du code exécutable arbitraire, pas des templates ou des fonctions isolées ; (b) le canal de feedback est un système de fichiers explorable, pas un résumé fixe.</p>
+
+<p>Par rapport à AlphaEvolve/OpenEvolve, la différence est le régime d'application : ces méthodes optimisent des fonctions sans état avec un objectif scalaire propre, tandis que Meta-Harness cible des programmes à état dont les effets se propagent sur des horizons longs. Par rapport à GEPA, l'écart est l'échelle du contexte diagnostique (10M tokens contre 2-8K) et l'accès simultané à l'ensemble de la population plutôt qu'à un candidat isolé.</p>
+
+<p>L'article cite explicitement « the bitter lesson » de Rich Sutton : une fois l'espace de recherche rendu accessible, des agents génériques surpassent les solutions conçues à la main. Cette référence est appropriée — les résultats confirment le pattern, avec la nuance que l'accessibilité de cet espace de recherche dépend elle-même de la maturité des agents codeurs, une condition que les auteurs datent honnêtement à début 2026.</p>
+
+<p>La prochaine étape évoquée — co-évolution du harness et des poids du modèle — reste spéculative mais dessine une direction de recherche cohérente avec les travaux sur l'auto-amélioration récursive.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Commentaire</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td>4</td>
+      <td>Question claire, bien motivée, originalité dans le cadrage du problème. La distinction feedback compressé vs. accès sélectif est précise.</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td>4</td>
+      <td>Trois domaines diversifiés, ablation informative, comparaisons multiples. Pénalisé par l'absence de split recherche/évaluation sur TerminalBench-2.</td>
+    </tr>
+    <tr>
+      <td>Taille d'échantillon</td>
+      <td>3</td>
+      <td>Tailles raisonnables par domaine (3+9 jeux en classification, 200 problèmes IMO, 89 tâches TB-2), mais absence d'intervalles de confiance et de répétitions de la boucle de recherche.</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td>4</td>
+      <td>Métriques standard (précision, taux de passage). Analyse de frontière de Pareto bienvenue. Pas de tests de significativité.</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td>3</td>
+      <td>Décontamination du corpus mathématique, évaluation OOD en classification. Mais même ensemble pour recherche et test sur TB-2, et détection de fuite par regex insuffisante.</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td>3</td>
+      <td>Artefact TB-2 publié, appendices détaillés. Mais modèles propriétaires, corpus non distribué, coût de reproduction élevé et non quantifié.</td>
+    </tr>
+    <tr>
+      <td>Transparence et limitations</td>
+      <td>4</td>
+      <td>Limites reconnues (proposeur unique, overlap TB-2, ForgeCode non reproductible). Coût computationnel insuffisamment détaillé.</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td>5</td>
+      <td>Reformulation conceptuelle significative de l'ingénierie de harness. Résultats état de l'art sur trois domaines. Harness découverts lisibles et transférables.</td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td><strong>Note globale</strong></td>
+      <td><strong>3.8 / 5</strong></td>
+      <td>Contribution conceptuelle forte soutenue par des résultats expérimentaux solides sur trois domaines, tempérée par des lacunes méthodologiques (absence de tests statistiques, même ensemble recherche/test sur TB-2, dépendance à un proposeur propriétaire unique).</td>
+    </tr>
+  </tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

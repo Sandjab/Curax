@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How Well Do Agentic Skills Work in the Wild: Benchmarking LLM Skill Usage in Realistic Settings — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>How Well Do Agentic Skills Work in the Wild: Benchmarking LLM Skill Usage in Realistic Settings</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Les « skills » des agents IA : promesse tenue ou effet placebo ?</h2>
+
+<p>En 2026, les plateformes d'agents IA comme Claude Code, Codex ou Qwen-Code proposent toutes le même mécanisme d'extension : les <em>skills</em>. Ces fichiers structurés — des sortes de fiches de savoir-faire — encodent des recettes, des conventions de code, des workflows spécialisés qu'un agent peut consulter pour résoudre une tâche. Des milliers de skills circulent sur GitHub, sur des agrégateurs comme skillhub.club ou skills.sh. L'idée séduit : au lieu de compter uniquement sur l'entraînement du modèle, on lui fournit des connaissances à jour, ciblées, réutilisables. Sauf que personne n'avait mesuré rigoureusement si ces skills aident réellement dans des conditions d'utilisation normales. Une équipe de chercheurs de l'UC Santa Barbara, du MIT et d'IBM a posé la question — et la réponse dérange.</p>
+
+<h2>Le problème : des benchmarks trop complaisants</h2>
+
+<p>Les évaluations existantes, comme SKILLSBENCH, testent les agents avec des skills cousues main pour chaque tâche. Un exemple tiré du papier : la tâche demande d'identifier les jours d'inondation à des stations hydrologiques américaines. Les trois skills fournies donnent respectivement l'API exacte à appeler, l'URL précise où trouver les seuils de crue, et des extraits de code pour compter les jours d'inondation. Assemblées bout à bout, elles forment un guide de résolution pas à pas. L'agent n'a qu'à suivre le mode d'emploi.</p>
+
+<p>Ce protocole souffre de deux biais. D'abord, les skills sont taillées sur mesure pour chaque question — elles n'existent pas dans la réalité, où les connaissances disponibles sont génériques et rarement parfaitement alignées avec le problème à résoudre. Ensuite, elles sont directement injectées dans le contexte de l'agent, sans qu'il ait besoin de les chercher. Dans la pratique, un agent doit fouiller dans un catalogue, décider quelles skills charger, puis adapter leur contenu à sa tâche. Trois défis que les benchmarks actuels esquivent complètement.</p>
+
+<p>La question des chercheurs tient en une phrase : que se passe-t-il quand on retire ces facilités ?</p>
+
+<h2>La méthode : une épreuve de réalisme par paliers</h2>
+
+<p>L'équipe a d'abord constitué un réservoir de 34 000 skills réelles, récupérées depuis des dépôts open source sous licences permissives (MIT et Apache 2.0). Après filtrage des doublons et des fichiers mal formés, cette collection couvre un spectre large : développement web, ingénierie de données, DevOps, calcul scientifique. Rien n'est fabriqué pour l'occasion — ce sont des skills que de vrais utilisateurs ont publiées.</p>
+
+<p>Puis ils ont construit un moteur de recherche de skills avec deux modes d'indexation : un index lexical classique (BM25, la même famille d'algorithmes que les moteurs de recherche traditionnels) et un index sémantique basé sur des embeddings denses (Qwen3-Embedding-4B). L'agent peut interroger l'un, l'autre, ou les deux combinés.</p>
+
+<p>L'évaluation procède ensuite par paliers, du plus confortable au plus réaliste :</p>
+
+<ul>
+<li><strong>Chargement forcé</strong> : les skills artisanales sont injectées directement et l'agent doit toutes les utiliser. C'est la borne haute, l'équivalent d'un examen à livre ouvert où le professeur a surligné les bonnes réponses.</li>
+<li><strong>Skills artisanales disponibles</strong> : les mêmes skills sont présentes, mais l'agent décide seul lesquelles charger. Premier obstacle : la sélection.</li>
+<li><strong>Skills artisanales + distracteurs</strong> : on ajoute des skills non pertinentes récupérées du catalogue de 34 000, pour un total de cinq skills visibles. L'agent doit trier le signal du bruit.</li>
+<li><strong>Recherche avec skills artisanales dans le catalogue</strong> : plus rien n'est pré-fourni. L'agent doit chercher lui-même dans les 34 000 skills, mais les bonnes réponses sont quelque part dans le tas.</li>
+<li><strong>Recherche sans skills artisanales</strong> : les skills faites sur mesure ont été retirées du catalogue. L'agent ne peut compter que sur des skills génériques, jamais écrites pour ces tâches précises.</li>
+<li><strong>Sans aucune skill</strong> : la ligne de base, l'agent se débrouille seul.</li>
+</ul>
+
+<p>Trois modèles passent cette épreuve : Claude Opus 4.6 (Anthropic), Kimi K2.5 et Qwen3.5-397B. Chacun utilise son propre environnement d'exécution natif. Les 84 tâches de SKILLSBENCH sont exécutées trois fois chacune, dans des conteneurs Docker isolés.</p>
+
+<h3>La recherche agentique, un levier sous-estimé</h3>
+
+<p>Avant même de mesurer la performance sur les tâches, les chercheurs ont comparé plusieurs stratégies de recherche de skills. La recherche directe — on envoie la description de la tâche comme requête et on récupère les résultats les plus proches — atteint 47 % de rappel sur les cinq premiers résultats. La recherche agentique, où le modèle formule lui-même ses requêtes, inspecte les candidats, reformule et affine, grimpe à 65,5 %. L'agent surpasse la recherche brute parce qu'il peut itérer, reformuler, combiner des angles d'attaque. Comme un développeur qui ne se contente pas d'une seule recherche Google mais enchaîne les requêtes en ajustant les mots-clés selon les résultats précédents.</p>
+
+<h2>Résultats clés : la désillusion progressive</h2>
+
+<p>Le graphique central du papier raconte une histoire simple et un peu brutale. Pour Claude Opus 4.6, le taux de réussite passe de 55,4 % en chargement forcé à 51,2 % quand l'agent choisit ses skills, puis 43,5 % avec des distracteurs, 40,1 % en recherche (avec skills artisanales dans le catalogue), 38,4 % en recherche sans elles, contre 35,4 % sans aucune skill. La courbe descend régulièrement, palier après palier.</p>
+
+<p>Pour Kimi K2.5 et Qwen3.5, la situation est pire. En recherche sans skills artisanales, leurs scores tombent <em>en dessous</em> de leur ligne de base sans skill : 19,8 % contre 21,8 % pour Kimi, 19,7 % contre 20,5 % pour Qwen. Les skills non pertinentes ne sont pas neutres — elles nuisent activement. L'agent perd du temps à charger et suivre des instructions inadaptées au lieu de résoudre le problème par ses propres moyens.</p>
+
+<p>Un détail éclairant : même quand les bonnes skills sont disponibles directement (pas de recherche nécessaire), seulement 49 % des trajectoires de Claude chargent <em>toutes</em> les skills artisanales. Avec des distracteurs, ce chiffre tombe à 31 %. L'agent ne reconnaît pas systématiquement ce qui lui serait utile, même quand c'est sous son nez. Kimi affiche un meilleur taux de chargement (86 % dans le scénario simple), mais cela ne se traduit pas en meilleure performance — charger une skill et l'utiliser efficacement sont deux choses distinctes.</p>
+
+<h3>Le raffinement : un antidote partiel</h3>
+
+<p>Face à cette dégradation, les chercheurs ont testé deux stratégies de « raffinement » des skills.</p>
+
+<p>Le <strong>raffinement agnostique</strong> améliore chaque skill indépendamment, hors ligne, sans connaître la tâche cible. Un méta-processus génère des requêtes synthétiques, teste la skill, évalue si elle aide ou gêne, puis la réécrit. Les gains sont modestes et irréguliers : Claude passe de 40,1 % à 42,0 % sur SKILLSBENCH avec skills artisanales dans le catalogue. Sans connaissance de la tâche, le processus peut nettoyer la forme mais pas cibler le fond.</p>
+
+<p>Le <strong>raffinement spécifique à la requête</strong> donne de meilleurs résultats. L'agent lit la tâche, examine toutes les skills récupérées, tente une première résolution, évalue ce qui a marché et ce qui a échoué, puis compose de nouvelles skills synthétiques. Sur SKILLSBENCH avec skills artisanales dans le catalogue, Claude remonte de 40,1 % à 48,2 % — proche des 51,2 % du scénario où les bonnes skills sont fournies directement. Sur TERMINAL-BENCH 2.0, un benchmark généraliste de 89 tâches qui n'a jamais été conçu pour les skills, cette approche fait passer Claude de 57,7 % (sans skill) à 65,5 %, soit un gain de presque 8 points.</p>
+
+<p>Le papier montre un cas concret sur une tâche de parallélisme tenseur en PyTorch. Sans raffinement, l'agent récupère deux skills partiellement pertinentes : l'une couvre le partitionnement de poids mais ignore les wrappers d'autograd différentiables, l'autre fournit un pattern autograd mais sans parallélisme. L'agent n'en charge qu'une et échoue pour les configurations multi-GPU. Après raffinement, il fusionne les deux en une skill cohérente qui combine partitionnement et opérations collectives différentiables. Tous les tests passent.</p>
+
+<p>Mais cette stratégie a une limite précise. Quand les skills récupérées ne contiennent pas d'information pertinente (score de couverture inférieur à 3,5 sur 5 selon un juge LLM), le raffinement n'apporte rien. Il amplifie un signal existant plutôt qu'il n'en crée un. Quand il n'y a rien à amplifier, il tourne à vide.</p>
+
+<h2>Implications pratiques : repenser l'outillage des agents</h2>
+
+<p>Ces résultats remettent en question une hypothèse implicite de l'industrie : qu'accumuler des skills dans un catalogue suffira à rendre les agents plus compétents. La réalité est plus nuancée.</p>
+
+<p>Premier constat : la qualité d'une skill isolée compte moins que la capacité de l'agent à la trouver et à l'exploiter. Un catalogue de 34 000 skills de qualité variable peut être <em>contre-productif</em> si l'agent ne sait pas trier. Les modèles moins puissants (Kimi, Qwen dans cette étude) sont plus vulnérables aux skills non pertinentes que les modèles de tête. Cela signifie qu'un même catalogue de skills peut aider un agent et en handicaper un autre.</p>
+
+<p>Deuxième constat : les métadonnées des skills — leur nom et leur description — sont souvent insuffisantes pour que l'agent décide de les charger. Même dans le scénario le plus favorable, plus de la moitié des trajectoires de Claude ignorent au moins une skill utile. La rédaction des métadonnées est un problème de design produit, pas seulement un problème technique.</p>
+
+<p>Troisième constat : le raffinement spécifique fonctionne, mais il coûte cher. L'agent doit effectuer un passage exploratoire complet avant même de commencer la tâche réelle. Pour des tâches récurrentes ou des domaines bien couverts par le catalogue, l'investissement se justifie. Pour des tâches ponctuelles sur des sujets mal couverts, il n'apporte rien.</p>
+
+<p>Pour les équipes qui construisent des pipelines agentiques, le message est clair : ne pas surestimer l'apport des skills hors du cadre idéal. Un agent sans skill mais bien prompté peut surpasser un agent noyé sous des skills mal ciblées. Le mécanisme de recherche et de sélection mérite autant d'investissement que le contenu des skills elles-mêmes.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent ouvertes. Le raffinement agnostique, peu efficace dans cette étude, pourrait-il mieux fonctionner avec des méthodes plus sophistiquées que l'auto-évaluation par le modèle lui-même ? Les chercheurs n'ont testé qu'une seule itération de raffinement — des boucles plus longues pourraient-elles combler l'écart restant ?</p>
+
+<p>La dépendance au harness d'exécution (Claude Code, Terminus-2, Qwen-Code) est un facteur confondant que le papier reconnaît sans le résoudre. Les différences de taux de chargement entre modèles reflètent autant les choix d'implémentation du harness que les capacités du modèle sous-jacent.</p>
+
+<p>Le catalogue de 34 000 skills, bien que large, reste statique dans cette évaluation. En production, les skills évoluent, sont versionnées, parfois contradictoires entre elles. L'étude ne couvre pas non plus le cas où l'agent crée ses propres skills à la volée à partir de zéro, sans catalogue préexistant — un scénario que d'autres travaux commencent à explorer sous le nom de « skill discovery ».</p>
+
+<p>Enfin, la question de la sécurité n'est abordée qu'en marge. Des travaux parallèles (Schmotz et al., 2026) montrent que des skills malveillantes peuvent injecter des instructions dans le contexte d'un agent. Plus le mécanisme de recherche et chargement automatique se généralise, plus cette surface d'attaque grandit. Le gain de performance offert par les skills devra être mis en balance avec les risques d'une chaîne d'approvisionnement de connaissances ouverte et non vérifiée.</p>
+
+<p>L'étude de Liu et al. pose un jalon utile : elle quantifie, pour la première fois, l'écart entre le potentiel théorique des skills et leur utilité mesurée en conditions réalistes. Cet écart — environ 20 points de pourcentage entre le meilleur cas et le cas réaliste pour Claude — définit le terrain de jeu des prochaines améliorations.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

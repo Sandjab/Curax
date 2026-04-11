@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MegaTrain: Full Precision Training of 100B+ Parameter Large Language Models on a Single GPU — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>MegaTrain: Full Precision Training of 100B+ Parameter Large Language Models on a Single GPU</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+<h3>MegaTrain : entraînement full-precision de LLM 100B+ sur un seul GPU</h3>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>L'entraînement de grands modèles de langage dépassant 100 milliards de paramètres reste inaccessible à la majorité des chercheurs et praticiens. Sur 167 universités américaines, seules deux disposent en moyenne de plus d'un H100 par étudiant. Le post-entraînement (instruction tuning, alignement, adaptation de domaine) représente pourtant une charge calculatoire modeste — c'est la mémoire, pas le calcul, qui bloque.</p>
+
+<p>MegaTrain renverse l'architecture traditionnelle : la mémoire hôte (CPU) devient le stockage autoritaire des paramètres et des états de l'optimiseur, tandis que le GPU fonctionne comme un moteur de calcul transitoire. Les paramètres sont streamés couche par couche vers le GPU, utilisés, puis évacués. Cette inversion permet de découpler la taille du modèle de la capacité mémoire GPU.</p>
+
+<p>La question de recherche est limpide et directement motivée par une contrainte matérielle documentée. L'approche s'inscrit dans la lignée des travaux ZeRO-Offload et ZeRO-Infinity, mais en poussant la logique d'offloading jusqu'à son terme : le GPU ne conserve aucun état persistant.</p>
+
+<h2>2. Méthodologie</h2>
+
+<p>Le système repose sur deux innovations principales.</p>
+
+<p>Un moteur d'exécution pipeliné à double tampon orchestre trois flux CUDA concurrents : transfert de poids (H2D), calcul, et évacuation de gradients (D2H). Pendant que le GPU exécute la couche <em>i</em> depuis le Buffer 0, le flux de transfert précharge la couche <em>i+1</em> dans le Buffer 1. Des événements CUDA légers coordonnent les dépendances sans barrières globales.</p>
+
+<p>Un modèle d'exécution sans état remplace le graphe autograd persistant par un pool de templates de couches. Chaque template encapsule les kernels CUDA pour l'attention et le MLP, mais ne contient aucun pointeur de poids permanent. La primitive <em>Bind</em> associe dynamiquement les vues du buffer de streaming aux slots du template avant exécution. Cette conception élimine les métadonnées du graphe de calcul et borne la mémoire GPU à l'empreinte d'une seule couche.</p>
+
+<p>Le protocole d'évaluation couvre :</p>
+<ul>
+<li>Deux architectures matérielles principales : GH200 (96 Go HBM3, 480 Go LPDDR5X, NVLink-C2C à 900 Go/s) et H200 SXM (141 Go HBM3e, 1,5 To DDR5, PCIe Gen4)</li>
+<li>Trois systèmes PCIe supplémentaires : A100 (80 Go), RTX A6000 (48 Go), RTX 3090 (24 Go)</li>
+<li>Des modèles de 3B à 120B paramètres (famille Qwen2.5 + GPT-OSS-120B MoE)</li>
+<li>Quatre baselines : DeepSpeed ZeRO-3 Offload, ZeRO-Infinity, PyTorch Native FSDP, ColossalAI-Gemini</li>
+<li>Des études d'ablation isolant le double buffering, le pool de slabs de gradients et l'intervalle de checkpointing</li>
+<li>Des études de scalabilité en profondeur (28 à 180 couches) et en largeur (1× à 5×)</li>
+<li>Une évaluation de contexte long jusqu'à 512K tokens</li>
+</ul>
+
+<p>La correction numérique est vérifiée sur MetaMathQA (∼395 000 paires problème-réponse), avec exactement-match comme métrique.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>Sur H200, MegaTrain entraîne des modèles jusqu'à 120B paramètres là où toutes les baselines échouent au-delà de 32B. Sur GH200, le système maintient 284 TFLOPS à 7B, 264 à 14B (1,84× ZeRO-3 Offload) et reste au-dessus de 250 TFLOPS à 32B.</p>
+
+<p>La consommation mémoire hôte croît linéairement avec la taille du modèle, contre une croissance quasi-exponentielle pour les baselines. À 84 couches, MegaTrain utilise 207 Go de mémoire hôte contre 518 Go pour FSDP (2,5× plus).</p>
+
+<p>L'ablation révèle que le double buffering est la composante critique : sa suppression fait chuter le débit de 266,3 à 182,9 TFLOPS (−31,3 %). Le pool de slabs de gradients n'apporte qu'un gain marginal (3,3 %).</p>
+
+<p>Sur GPU grand public, les résultats sont frappants. Un RTX 3090 (24 Go) entraîne un modèle 14B à 30,19 TFLOPS avec batch size 3. ZeRO-3 Offload échoue en OOM à cette échelle.</p>
+
+<p>La précision sur MetaMathQA est identique aux baselines : 88,99 % à 7B et 92,52 % à 14B, confirmant l'absence de dérive numérique.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>Plusieurs faiblesses méthodologiques méritent attention.</p>
+
+<p>La validation de la correction numérique repose sur un seul benchmark (MetaMathQA) et deux échelles de modèle (7B, 14B). Aucune vérification n'est fournie pour les modèles 32B, 72B ou 120B. Pour un système qui prétend entraîner des modèles à 120B paramètres, cette absence est un angle mort significatif. La dérive numérique cumulée sur des entraînements longs, avec recomputation par blocs et mise à jour CPU de l'optimiseur, n'est pas examinée.</p>
+
+<p>La comparaison exclut les méthodes d'entraînement à efficacité paramétrique (LoRA, QLoRA). Certes, MegaTrain vise l'entraînement full-precision, mais un praticien confronté au choix « fine-tuner un 70B en LoRA sur un A100 ou en full-precision via MegaTrain » a besoin de cette comparaison pour prendre une décision éclairée. Le papier ne la fournit pas.</p>
+
+<p>Les modèles évalués proviennent quasi exclusivement de la famille Qwen2.5. L'exception (GPT-OSS-120B, un MoE) ne fait l'objet que d'un test de faisabilité sans mesure de précision. La généralisation à d'autres architectures (Llama, Mistral, Gemma) n'est pas démontrée.</p>
+
+<p>Le temps de mur (wall-clock time) pour un entraînement complet n'apparaît nulle part. Les TFLOPS par step sont rapportés, mais combien de temps faut-il pour fine-tuner un 70B sur un dataset réaliste ? Cette information est absente.</p>
+
+<p>La mise à jour de l'optimiseur sur CPU est présentée comme avantageuse (évite le round-trip des états Adam). Mais à 120B paramètres, la mise à jour CPU séquentielle pourrait devenir un goulot d'étranglement. Aucune mesure du temps CPU pour l'étape Adam n'est rapportée.</p>
+
+<p>L'évaluation de contexte long (jusqu'à 512K tokens) montre des TFLOPS croissants, ce qui est attendu : l'intensité arithmétique de l'attention croît quadratiquement. Mais la formule TFLOPS utilisée (6ND + 12LHT²) intègre cette composante, rendant la comparaison avec les résultats à contexte court délicate.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Le code est disponible sur GitHub (<code>https://github.com/DLYuanGod/MegaTrain</code>). Les spécifications matérielles sont détaillées (capacité mémoire, bande passante, interconnects). Les configurations de modèles (Table 2) et les hyperparamètres (batch size, intervalle de checkpointing) sont explicites.</p>
+
+<p>La reproductibilité reste cependant conditionnée à l'accès au matériel : un GH200 avec 480 Go de LPDDR5X et NVLink-C2C n'est pas un équipement courant. Les résultats sur RTX 3090 sont plus accessibles mais limités en portée (modèles jusqu'à 14B seulement).</p>
+
+<p>Les baselines sont décrites (DeepSpeed, PyTorch FSDP, ColossalAI-Gemini), mais les versions exactes des frameworks ne sont pas systématiquement spécifiées. Le tuning des baselines (configuration optimale de ZeRO-3, FSDP) pourrait influencer les résultats — les auteurs mentionnent avoir suivi les « recommandations officielles », sans détailler les configurations retenues.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>MegaTrain cible un besoin réel : permettre le post-entraînement de grands modèles dans des environnements à ressources GPU limitées. L'idée de traiter le GPU comme un cache de calcul transitoire plutôt que comme stockage principal est élégante et bien exécutée.</p>
+
+<p>Les résultats sur GPU grand public (RTX 3090, A6000) sont les plus convaincants en termes d'impact pratique. Entraîner un modèle 14B en full-precision sur une carte à 24 Go ouvre des possibilités concrètes pour les laboratoires universitaires et les petites équipes.</p>
+
+<p>Deux extensions naturelles sont identifiées : le support multi-GPU avec parallélisme tensoriel ou par experts, et l'intégration de stockage SSD pour repousser la frontière vers le trillion de paramètres. Le papier reste au stade de la preuve de concept single-GPU.</p>
+
+<p>L'ingénierie système est de bonne facture. Le design du pipeline à trois flux CUDA, la gestion mémoire par slabs contiguës, et le modèle d'exécution sans état témoignent d'une maîtrise technique solide. L'appendice A fournit un niveau de détail inhabituel pour ce type de publication, ce qui renforce la crédibilité technique.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>MegaTrain se positionne dans la lignée directe de ZeRO-Offload (Rajbhandari et al., 2020) et ZeRO-Infinity (Rajbhandari et al., 2021), en radicalisant leur approche d'offloading. Là où ZeRO traite la mémoire hôte comme un tampon de débordement, MegaTrain en fait le stockage autoritaire.</p>
+
+<p>La comparaison avec Ratel (Liao et al., 2025) est intéressante mais limitée : les résultats de reproduction (Table 10, appendice B) montrent des performances anormalement basses (2 à 11 TFLOPS), attribuées à des goulots SSD. Cette comparaison aurait gagné à être plus rigoureuse — les auteurs auraient pu contacter l'équipe Ratel ou identifier précisément la source de l'écart.</p>
+
+<p>Le papier ne cite pas certains travaux pertinents sur l'entraînement mémoire-efficient : les approches de gradient checkpointing avancé, les systèmes de streaming de poids existants dans l'écosystème JAX/XLA, ou les travaux récents sur la compression de gradients pendant le transfert. Cette couverture incomplète de la littérature affaiblit le positionnement.</p>
+
+<p>En tant que contribution système, MegaTrain apporte une solution d'ingénierie bien conçue à un problème pratique identifié. La validité de l'approche est démontrée de façon convaincante sur le plan du débit et de l'empreinte mémoire. Les lacunes principales — validation de correction limitée, absence de comparaison avec les méthodes parameter-efficient, et couverture architecturale étroite — laissent des questions ouvertes pour les utilisateurs potentiels.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème clair, bien motivé par des données concrètes (accès GPU universitaire), directement actionnable.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Cinq configurations matérielles, quatre baselines, ablations, études de scalabilité en profondeur et largeur. Protocole solide pour un papier système.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Bonne couverture en tailles de modèles (3B–120B) mais quasi-exclusivement Qwen2.5, et validation de correction sur un seul benchmark à deux échelles.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>TFLOPS, empreinte mémoire hôte/device, et exact-match accuracy sont des métriques standard et adaptées. Manque le wall-clock time pour des scénarios complets.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Ablations convaincantes, mais tuning des baselines peu documenté. Pas de comparaison avec les méthodes parameter-efficient. Reproduction de Ratel insuffisamment rigoureuse.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, spécifications matérielles détaillées, configurations explicites. Conditionné à l'accès au matériel spécifique.</td></tr>
+<tr><td>Transparence et limitations</td><td>3</td><td>Extensions futures mentionnées (multi-GPU, SSD). Mais silence sur la dérive numérique à grande échelle, le coût CPU de l'optimiseur, et l'absence de benchmarks diversifiés.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Contribution d'ingénierie significative, résultats probants sur GPU grand public, approche élégante. Pas de rupture conceptuelle mais une exécution soignée d'une idée poussée à son terme.</td></tr>
+</tbody>
+<tfoot>
+<tr><td><strong>Note globale</strong></td><td><strong>3.8 / 5</strong></td><td>Papier système bien exécuté avec des résultats convaincants sur le débit et la scalabilité mémoire, affaibli par une validation de correction insuffisante et une couverture expérimentale concentrée sur une seule famille de modèles.</td></tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

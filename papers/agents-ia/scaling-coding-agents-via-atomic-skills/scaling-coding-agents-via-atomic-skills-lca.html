@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scaling Coding Agents via Atomic Skills — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Scaling Coding Agents via Atomic Skills</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+<h3>Ma et al. — <em>Scaling Coding Agents via Atomic Skills</em> (2026)</h3>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>Les agents de code à base de LLM sont entraînés sur des benchmarks composites — correction de bugs, terminal coding, ingénierie ML. Cette approche produit des politiques fragiles : un agent entraîné sur SWE-bench Verified ne généralise pas au refactoring de code. Ma et al. proposent de décomposer les workflows logiciels en cinq compétences atomiques et d'entraîner une politique unique par RL conjoint sur ces compétences, plutôt que sur les tâches finales.</p>
+
+<p>L'analogie avec les « vecteurs de base » d'un espace vectoriel structure la proposition : toute tâche composite serait une combinaison linéaire de compétences élémentaires. Les cinq compétences retenues — localisation de code, édition, génération de tests unitaires, reproduction de bugs, revue de code — répondent à trois critères : spécification précise entrées/sorties, évaluation non ambiguë, réutilisabilité comme brique élémentaire.</p>
+
+<p>Le problème adressé est réel. L'entraînement sur des tâches composites souffre d'un signal de récompense creux (passer ou non une suite de tests) sans supervision sur les étapes intermédiaires. L'infinité des tâches logicielles réelles rend ce scaling impraticable. La décomposition en compétences atomiques offre une voie alternative plus structurée.</p>
+
+<h2>2. Méthodologie</h2>
+
+<h3>2.1 Construction des compétences atomiques</h3>
+
+<p>Chaque compétence est formalisée comme une distribution de tâches avec une fonction de récompense spécifique. La localisation de code utilise une correspondance exacte binaire (+1/−1) entre les fichiers prédits et ceux du patch de référence. L'édition est évaluée par passage de tous les tests unitaires et de régression. La génération de tests unitaires exige à la fois le passage sur le code correct et la détection de fautes injectées par mutation sémantique via Kimi-K2-Thinking (16 variants par fonction). La revue de code compare un jugement binaire (PR correct ou non) à une étiquette de vérité terrain. La reproduction de bugs vérifie qu'un script déclenche l'erreur avant patch et ne la déclenche plus après.</p>
+
+<p>Ces définitions sont rigoureuses sur le plan formel. Le choix de récompenses binaires strictes (pas de crédit partiel) simplifie le signal RL mais pénalise les progrès graduels. La localisation, par exemple, exige une correspondance exacte du jeu de fichiers — un fichier manquant ou superflu donne −1, sans nuance.</p>
+
+<h3>2.2 Entraînement</h3>
+
+<p>Le modèle de base est GLM-4.5-Air-Base (106B paramètres totaux, 12B actifs via MoE). Un SFT initial porte sur 1 500 trajectoires vérifiées par un juge (300 par compétence), générées par gpt-oss-120b. Le RL conjoint utilise GRPO (Group-based Relative Policy Optimization) avec normalisation intra-groupe des récompenses, ce qui atténue les différences d'échelle entre compétences.</p>
+
+<p>L'infrastructure repose sur 10 000+ sandboxes Kubernetes concurrentes, 25 000+ images Docker préconstruites, un découplage rollout/training workers asynchrone, et un jeu d'outils minimal (bash + str_replace). L'accès réseau est désactivé dans les sandboxes et l'historique git supprimé pour prévenir le reward hacking.</p>
+
+<h3>2.3 Évaluation</h3>
+
+<p>L'évaluation porte sur 10 tâches : les 5 compétences atomiques (IID) et 5 benchmarks composites OOD (SWE-bench Verified, SWE-bench Multilingual, Terminal-Bench, Code Refactoring, SEC-Bench). Le benchmark Code Refactoring est construit par les auteurs (300 tâches extraites de commits réels). Tous les résultats sont rapportés en Avg@3 (moyenne sur 3 runs).</p>
+
+<p>Deux ablations comparent le RL conjoint au RL sur une seule compétence (édition seule) et au RL sur un seul benchmark composite (SWE-bench Verified seul).</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>Le RL conjoint sur compétences atomiques améliore toutes les compétences IID par rapport au SFT : localisation 0.665→0.712, édition 0.458→0.611, reproduction 0.542→0.605, tests unitaires 0.359→0.472, revue 0.563→0.622. L'Avg(IID) passe de 0.517 à 0.604 (+16.8%).</p>
+
+<p>Les gains se transfèrent aux tâches OOD : SWE-bench Verified 0.507→0.585, Multilingual 0.300→0.389, Refactoring 0.146→0.171, SEC-Bench 0.136→0.169. L'Avg(OOD) passe de 0.248 à 0.299 (+20.6%). Les courbes d'apprentissage montrent une amélioration monotone des compétences atomiques et un transfert continu vers les tâches composites.</p>
+
+<p>L'ablation révèle que le RL sur une seule tâche composite (Verified-only) peut atteindre le même score in-domain que le RL conjoint, mais avec des gains plus faibles et moins réguliers sur les autres métriques. Le RL sur une seule compétence atomique (Editing-only) montre un profil intermédiaire : amélioration de l'édition mais dégradation ou stagnation d'autres compétences.</p>
+
+<p>Le modèle final (Base+SFT+RL) dépasse GLM-4.5-Air sur la plupart des tâches, malgré un SFT limité à 1 500 trajectoires de compétences atomiques — sans données composites.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<h3>Limites méthodologiques</h3>
+
+<p>L'évaluation repose sur une seule famille de modèles (GLM-4.5). Aucune expérience ne confirme que la décomposition atomique et le transfert observé se reproduisent sur d'autres architectures (Llama, Qwen, Mistral). Les auteurs invoquent un « effet de seuil » lié à la taille du modèle pour justifier l'usage d'un modèle 100B+, mais ne testent jamais à plus petite échelle. Cette absence affaiblit la revendication de généralité du paradigme.</p>
+
+<p>Aucun intervalle de confiance ni test de significativité n'accompagne les résultats. L'Avg@3 sur 3 runs est insuffisant pour quantifier la variabilité. Les gains OOD sur Refactoring (0.146→0.171) et SEC-Bench (0.136→0.169) sont modestes en valeur absolue ; sans mesure de variance, leur signification reste incertaine.</p>
+
+<p>La Table 3 montre des fluctuations non monotones sur certains checkpoints (RL-iter-30 régresse sur édition et revue par rapport à RL-iter-20), ce qui suggère une instabilité d'entraînement que le texte principal ne discute pas.</p>
+
+<h3>Choix de design questionnables</h3>
+
+<p>La récompense binaire stricte pour la localisation (correspondance exacte du jeu de fichiers) est présentée comme un choix délibéré, mais sa justification reste mince. Un développeur humain peut résoudre un bug en modifiant un sous-ensemble différent de fichiers que le patch de référence. Cette récompense pénalise des solutions valides alternatives.</p>
+
+<p>Le juge LLM (Kimi-K2-Thinking) utilisé pour la reproduction de bugs et la mutation sémantique introduit une dépendance à un modèle externe non contrôlé. La fidélité de ce juge n'est pas évaluée indépendamment.</p>
+
+<p>La revendication que cinq compétences forment une « base » de l'espace des tâches logicielles n'est pas démontrée formellement. Les auteurs les ont sélectionnées par analyse de workflows représentatifs, mais ne montrent pas qu'elles couvrent exhaustivement les besoins. Le debugging avancé, la compréhension architecturale, ou la migration de dépendances n'entrent pas dans ces catégories.</p>
+
+<h3>Comparaison incomplète</h3>
+
+<p>La comparaison avec GLM-4.5-Air n'est pas à armes égales : GLM-4.5-Air a subi un pipeline de post-entraînement complet (instruction tuning, alignment), tandis que le modèle proposé part de la base avec un SFT ciblé + RL. Les différences de données et de procédure de post-entraînement rendent cette comparaison difficile à interpréter.</p>
+
+<p>Aucune comparaison n'est faite avec d'autres méthodes de RL agentique récentes (SWE-RL, SoRFT) qui adressent le même problème avec des approches différentes.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Les prompts complets des cinq compétences sont fournis en annexe — un point positif. La procédure de décontamination est décrite avec précision (suppression des repos/issues/PRs liés aux benchmarks de test).</p>
+
+<p>L'infrastructure requise rend la reproduction quasi impossible hors des laboratoires industriels : 10 000+ sandboxes concurrentes, 25 000+ images Docker, un cluster Kubernetes hybride cloud. Les poids du modèle, les données d'entraînement SFT, et le benchmark Code Refactoring ne sont pas publiés. Le code source n'est pas mentionné.</p>
+
+<p>La dépendance à gpt-oss-120b pour la génération des trajectoires SFT et à Kimi-K2-Thinking pour les mutations et le jugement crée un couplage fort avec des modèles propriétaires ou spécifiques, ce qui complique toute tentative de reproduction indépendante.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>L'idée centrale — décomposer l'entraînement d'agents en compétences atomiques composables — a un potentiel structurant pour le domaine. Si le transfert se confirme sur d'autres modèles et à d'autres échelles, ce paradigme pourrait remplacer l'entraînement spécifique par benchmark. La bibliothèque de compétences atomiques pourrait s'étendre progressivement (debugging, documentation, migration), chaque ajout bénéficiant aux autres via le RL conjoint.</p>
+
+<p>L'application pratique immédiate est l'entraînement d'agents de code généralistes sans nécessiter de données supervisées pour chaque tâche cible. Les gains sur SEC-Bench et Terminal-Bench, deux benchmarks distants des compétences d'entraînement, illustrent ce potentiel.</p>
+
+<p>Les contraintes d'infrastructure limitent l'adoption à court terme aux acteurs disposant de clusters GPU/sandbox à grande échelle.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>Ce travail s'inscrit dans la lignée de SWE-bench (Jimenez et al., 2023) et SWE-agent (Yang et al., 2024) pour la définition de tâches, et de DeepSeek-R1 (DeepSeek-AI, 2026) et Kimi-K1.5 (Team et al., 2025c) pour le RL avec récompenses vérifiables. La contribution spécifique est le passage d'un RL sur tâches composites à un RL sur compétences atomiques.</p>
+
+<p>SoRFT (Ma et al., 2025c) partage l'idée d'un entraînement au niveau sous-tâche, mais se concentre sur la résolution d'issues avec des sous-tâches ordonnées, pas sur des compétences indépendantes et composables. SWE-RL (Wei et al., 2025) entraîne directement sur SWE-bench avec RL, sans décomposition — l'approche que cet article critique.</p>
+
+<p>La formalisation des trois principes de conception (spécification précise, évaluation indépendante, réutilisabilité) fournit un cadre pour étendre la bibliothèque de compétences. Reste à vérifier empiriquement que l'ajout de nouvelles compétences maintient le transfert positif observé avec cinq.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème réel et bien posé ; analogie « vecteurs de base » originale et féconde</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Ablations pertinentes (single-skill vs joint RL) mais une seule famille de modèles testée</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>10 benchmarks, 1 500 trajectoires SFT, Avg@3 sur 3 runs — raisonnable mais sans marge statistique</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Récompenses fondées sur l'exécution (bon principe) mais binaires et parfois trop strictes (localisation exacte)</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Décontamination rigoureuse ; comparaison avec GLM-4.5-Air pas entièrement contrôlée</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Prompts publiés, mais ni code, ni poids, ni données ; infrastructure industrielle requise</td></tr>
+<tr><td>Transparence / Limitations</td><td>2</td><td>Discussion superficielle des limites ; instabilités d'entraînement et absence de tests statistiques non mentionnées</td></tr>
+<tr><td>Impact / Nouveauté</td><td>4</td><td>Paradigme potentiellement structurant ; démonstration empirique du transfert atomique → composite</td></tr>
+</tbody>
+<tfoot>
+<tr><td><strong>Note globale</strong></td><td><strong>3.2 / 5</strong></td><td>Idée forte, validation préliminaire convaincante, mais généralité non démontrée au-delà d'un modèle</td></tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On the Reliability Limits of LLM-Based Multi-Agent Planning — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>On the Reliability Limits of LLM-Based Multi-Agent Planning</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+
+<h3>Référence</h3>
+<p>Ao, R., Gao, S., Simchi-Levi, D. (2026). <em>On the Reliability Limits of LLM-Based Multi-Agent Planning</em>. arXiv:2603.26993v1.</p>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>Les architectures multi-agents à base de LLM se multiplient pour des tâches opérationnelles — service client, analyse documentaire, planification, exécution web. Chaque système empile des rôles (planificateur, exécuteur, critique, réviseur), mais la question de savoir si cette multiplication améliore la fiabilité décisionnelle reste ouverte.</p>
+
+<p>Ce travail modélise ces systèmes comme des réseaux de décision délégués acycliques finis et caractérise leurs limites de fiabilité par la théorie de la décision. L'objectif central : déterminer dans quelles conditions l'ajout d'agents améliore, maintient ou dégrade la qualité de la décision terminale.</p>
+
+<p>Le cadre s'inscrit dans la lignée de la théorie des équipes de Marschak-Radner (1972) et de la comparaison d'expériences de Blackwell (1953), appliquées au contexte spécifique des workflows LLM où les agents partagent souvent la même base d'information. Cette connexion entre théorie classique de la décision et ingénierie des systèmes LLM est la contribution originale du papier.</p>
+
+<h2>2. Méthodologie</h2>
+
+<h3>Cadre théorique</h3>
+
+<p>Le modèle représente un système multi-agent par un graphe acyclique dirigé G = (V, E). Un état caché X génère un signal commun B (contexte partagé : prompt, documents récupérés) et des signaux exogènes privés Z<sub>v</sub> (sorties d'outils, requêtes API). Les arêtes transportent des messages entre nœuds, et l'action terminale A dépend de l'état de communication final M.</p>
+
+<p>Quatre résultats structurent l'analyse. La Proposition 6 établit que sans signaux exogènes nouveaux, aucun réseau délégué ne surpasse un décideur bayésien centralisé observant les mêmes signaux. Le Théorème 7 montre que dans le régime à évidence commune, l'optimisation sur les DAG multi-agents sous budget de communication fini se réduit au choix d'un encodeur stochastique sur le signal partagé. Le Théorème 8 quantifie la perte de communication sous règles de scoring propres comme une distorsion postérieure attendue — divergence KL sous perte logarithmique, erreur quadratique sous score de Brier. Le Théorème 10 formalise la règle de revue humaine optimale comme comparaison point par point du risque postérieur automatisé et du coût de revue.</p>
+
+<p>Les preuves reposent sur cinq lemmes préliminaires exploitant des résultats standards en espaces de Borel (sélecteurs mesurables ε-optimaux, distributions conditionnelles régulières). L'appareil mathématique est complet et auto-contenu.</p>
+
+<h3>Validation expérimentale</h3>
+
+<p>200 questions à choix multiples MMLU (quatre options), équilibrées entre STEM, humanités, sciences sociales et divers. Neuf conditions expérimentales varient chacune une dimension : profondeur de délégation (A, B2, B, B5), format de communication (B vs B<sub>post</sub>), accès à des signaux externes (C, D, D<sub>same</sub>, S). Deux modèles OpenAI sont utilisés : gpt-4.1-mini (avec accès aux log-probabilités de tokens) et o4-mini (modèle de raisonnement, sans log-probabilités). Les conditions principales comptent 30 répétitions par question, les secondaires 10.</p>
+
+<p>Une condition synthétique (S) utilise 200 entités fictionnelles dont les réponses ne sont accessibles que par outil de recherche. Cette condition isole l'effet d'un signal exogène véritablement non-redondant.</p>
+
+<p>Les distributions postérieures sont extraites par softmax des log-probabilités des tokens A, B, C, D. Pour les conditions de relais, un sondage intermédiaire ("If you had to answer now, which letter would you choose?") permet d'estimer la distorsion à chaque étage.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>Le résultat le plus saillant concerne la dégradation en chaîne de relais. Sur gpt-4.1-mini, la précision chute de 90,7 % (agent unique) à 41,2 % (2 agents), 43,5 % (3 agents) et 22,5 % (5 agents). Ce dernier chiffre est sous le seuil du hasard (25 %) pour une tâche à quatre choix. Sur o4-mini, la chute de (A) à (B) va de 89,9 % à 37,0 %. Dans ces conditions de relais, les agents en aval ne voient que le message relayé, pas la question originale — un choix expérimental délibéré qui amplifie l'effet mesuré.</p>
+
+<p>Le format de communication change la donne à profondeur de chaîne égale. Le relais par vecteur postérieur (B<sub>post</sub>) atteint 75,2 % contre 58,1 % pour le relais en prose libre (B), sur un sous-ensemble de 50 questions à 3 étages. La dégradation par étage passe de 8,5 points (prose) à 2,8 points (postérieur structuré). Ce résultat illustre directement le Théorème 8 : ce qui compte n'est pas le nombre d'étages mais la distorsion postérieure induite par l'interface.</p>
+
+<p>La corrélation entre divergence KL par question et perte de précision atteint r = 0,72 pour le relais à 3 agents et r = 0,44 pour 5 agents. Les probabilités extraites restent des approximations des postérieurs formels, mais la direction est cohérente avec la théorie.</p>
+
+<p>L'ajout d'outils produit un contraste net. Sur MMLU, Wikipedia n'apporte que +3,8 points (87,2 % vs 90,7 % en baseline) — l'information est déjà dans les poids du modèle, le signal est redondant au sens de Blackwell. Sur la tâche synthétique, l'outil fait passer la précision de 24,3 % à 82,7 % (+58,4 points). Le signal exogène est ici non-redondant par construction, et le gain est massif, conformément au Corollaire 9.</p>
+
+<p>La condition D<sub>same</sub> (deux spécialistes Wikipedia + agrégateur) atteint 89,8 %, identique à D (Wikipedia + Semantic Scholar). La diversification des sources n'apporte rien quand l'information sous-jacente est la même.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>Le choix de MMLU comme banc d'essai est la limite la plus visible. Des questions à choix multiples ne capturent pas la complexité des tâches de planification multi-agents réelles : pas de décomposition hiérarchique, pas d'usage séquentiel d'outils, pas de boucles de correction, pas d'environnement interactif. Les auteurs le reconnaissent, mais le fossé entre la théorie (qui cible les workflows opérationnels complexes) et la validation (QCM académiques) affaiblit la portée empirique. Des benchmarks comme WebArena, OSWorld ou SWE-bench auraient mieux correspondu au cadre théorique.</p>
+
+<p>Les conditions de relais sont artificielles. Interdire aux agents en aval l'accès à la question originale crée un scénario extrême qui ne reflète pas les architectures déployées, où le workspace partagé ou le prompt original restent généralement accessibles. Les résultats démontrent un cas limite plutôt qu'un comportement typique.</p>
+
+<p>Deux familles de modèles (gpt-4.1-mini, o4-mini) sont testées, toutes deux propriétaires et susceptibles de mise à jour sans préavis. La généralisation à Claude, Gemini, Llama ou d'autres architectures ouvertes reste inconnue. Un modèle avec de meilleures capacités de résumé pourrait montrer une dégradation en relais plus faible.</p>
+
+<p>L'extraction des postérieurs via log-probabilités de tokens est un proxy. Ces distributions ne sont pas des postérieurs bayésiens au sens formel du Théorème 8. La correspondance entre théorie et empirie reste qualitative, pas quantitative. L'analyse de distorsion postérieure n'est possible que pour gpt-4.1-mini (o4-mini ne fournit pas de log-probabilités).</p>
+
+<p>Le régime à évidence commune, sur lequel se concentre l'essentiel de l'analyse théorique (Théorème 7), suppose que tous les agents partagent exactement la même information. Cette hypothèse ne couvre pas les architectures où des agents accèdent à des sources différentes — le cas précisément où la multi-agentification se justifie. Les auteurs traitent ce cas dans le Corollaire 9 mais sans la même profondeur analytique.</p>
+
+<p>Le coût API total (~85-95 $) est modeste. Cela limite les tailles d'échantillon et le nombre de conditions testées, mais les effets observés sont suffisamment larges pour être statistiquement significatifs.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Les preuves mathématiques sont complètes, auto-contenues, et vérifiables. Chaque théorème repose sur des lemmes explicitement énoncés et démontrés. L'appareil formel est rigoureux.</p>
+
+<p>Les templates de prompts pour les neuf conditions sont fournis en annexe (Boxes 1-5), ce qui permet de reconstituer les conditions expérimentales. Le nombre de répétitions, les modèles utilisés et le coût total sont documentés.</p>
+
+<p>Aucun code ni données ne sont publiés. Sans scripts d'exécution, la reproduction demande un effort de réimplémentation significatif : gestion des appels API, extraction des log-probabilités, construction de la base de connaissances synthétique, agrégation des résultats.</p>
+
+<p>Les modèles gpt-4.1-mini et o4-mini sont des API propriétaires. Une réplication exacte n'est possible que tant que ces versions restent accessibles à l'identique. OpenAI modifie régulièrement ses modèles, ce qui rend la fenêtre de reproductibilité incertaine.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>Le résultat central — la délégation sans signal exogène nouveau ne surpasse pas le décideur centralisé — fournit un critère de conception directement applicable. Avant d'ajouter un agent à un pipeline, la question discriminante est : apporte-t-il une information que le système ne possède pas déjà ? Si la réponse est non, l'agent ajouté ne peut qu'introduire du bruit de communication.</p>
+
+<p>La décomposition en trois axes (acquisition d'information, communication, recours humain) clarifie l'évaluation des architectures multi-agents. Trop d'études comparatives attribuent des gains à la "meilleure coordination" alors que le facteur réel est un changement d'accès à l'information. Le Remark 3 du papier formule cette critique méthodologique de façon précise.</p>
+
+<p>La formalisation de la perte de communication comme distorsion postérieure (Théorème 8) offre un outil de diagnostic mesurable : estimer la divergence KL entre distributions avant et après relais pour identifier les maillons faibles d'un pipeline. L'additivité de la perte sur les chaînes sérielles (sous perte logarithmique) permet de localiser les étages les plus destructeurs.</p>
+
+<p>La règle de revue humaine du Théorème 10 a une application directe en production : ne pas escalader sur la base du nombre d'étapes ou du désaccord entre agents, mais sur le risque postérieur résiduel. Les systèmes actuels qui escaladent après N tours de débat interne utilisent un proxy sous-optimal.</p>
+
+<p>La connexion au problème de persuasion bayésienne (Kamenica-Gentzkow 2011) et à l'inattention rationnelle (Sims 2003) rend disponibles des décennies de résultats sur l'optimisation sous contrainte informationnelle pour le design de pipelines LLM.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>Ce travail se situe à l'intersection de la théorie des équipes (Radner 1962, Marschak-Radner 1972) et de l'évaluation empirique des systèmes multi-agents LLM (Cemri et al. 2025, Wan et al. 2025). La connexion est originale : les cadres classiques de la théorie de la décision n'avaient pas été appliqués systématiquement aux workflows LLM multi-agents. Le papier est explicitement positionné comme une "technical note" plutôt qu'une contribution empirique majeure, et ce positionnement est honnête.</p>
+
+<p>La réduction au problème de conception de signal dans le régime à évidence commune (Théorème 7) établit un lien formel avec trois corpus théoriques : la persuasion bayésienne, l'inattention rationnelle, et le goulot d'étranglement informationnel (Tishby et al. 2000). Ces connexions ne sont pas cosmétiques — elles importent des résultats d'optimalité et des bornes inférieures directement applicables.</p>
+
+<p>Le travail dialogue avec les résultats récents de Xia et al. (2024) et Xu et al. (2026) montrant que des systèmes mono-agent égalent ou surpassent les systèmes multi-agents. La contribution théorique explique le mécanisme : quand l'information exogène est identique, la multiplication des agents ne peut qu'introduire du bruit de communication. Elle va au-delà du constat empirique en fournissant les conditions exactes sous lesquelles ce phénomène se produit.</p>
+
+<p>La référence au contre-exemple de Witsenhausen (1968) est bien placée : elle montre que la réduction du Théorème 7 est spécifique au régime à évidence commune et ne s'étend pas au cas général avec signaux privés. Cette délimitation renforce la crédibilité du travail en identifiant précisément ses frontières d'applicabilité.</p>
+
+<p>La lacune principale par rapport à la littérature récente est l'absence de validation sur des benchmarks de planification multi-agents (SWE-bench, WebArena, OSWorld, GAIA). Les comparaisons restent limitées à MMLU et à une tâche synthétique, alors que les systèmes visés par la théorie opèrent dans des environnements interactifs à horizon long.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Question claire, bien motivée, connexion originale entre théorie de la décision classique et systèmes multi-agents LLM</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Cadre théorique rigoureux avec preuves complètes ; validation empirique sur MMLU (QCM) plutôt que sur des tâches de planification réelles</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>200 questions × 30 répétitions pour les conditions principales ; suffisant pour les grands effets observés mais modeste pour des conclusions fines</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Métriques théoriques rigoureuses (risque de Bayes, divergence KL, score de Brier) ; les log-probabilités comme proxy des postérieurs restent une approximation reconnue</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Neuf conditions bien contrôlées variant une dimension chacune ; conditions de relais artificielles ; deux familles de modèles seulement</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Preuves complètes et prompts publiés ; ni code ni données ; modèles API propriétaires susceptibles de disparaître</td></tr>
+<tr><td>Transparence / Limitations</td><td>4</td><td>Limites clairement identifiées : MMLU n'est pas un benchmark de planification, les postérieurs extraits sont des proxys, le régime à évidence commune est une simplification</td></tr>
+<tr><td>Impact / Nouveauté</td><td>4</td><td>Cadre décisionnel directement applicable à la conception de pipelines multi-agents ; critère opérationnel pour l'ajout d'agents ; connexions fécondes avec la persuasion bayésienne</td></tr>
+</tbody>
+<tfoot>
+<tr><td><strong>Note globale</strong></td><td><strong>3.5 / 5</strong></td><td>Contribution théorique solide avec preuves rigoureuses, validation empirique préliminaire sur un domaine simplifié par rapport aux applications visées</td></tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

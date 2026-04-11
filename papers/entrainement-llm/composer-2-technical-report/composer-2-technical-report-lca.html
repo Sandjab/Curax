@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Composer 2 Technical Report — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Composer 2 Technical Report</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+<h3>Composer 2 Technical Report — Cursor Research Team (2026)</h3>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>Composer 2 est un modèle de langage spécialisé pour le génie logiciel agentique — capable de naviguer dans des dépôts de code, exécuter des commandes shell, et produire des modifications cohérentes sur de longues séquences d'actions. Le rapport décrit l'entraînement en deux phases : un pretraining continu sur un mélange de données dominé par le code, suivi d'un reinforcement learning (RL) asynchrone à grande échelle.</p>
+
+<p>Le modèle part de Kimi K2.5, un Mixture-of-Experts de 1.04T paramètres (32B actifs), sélectionné après évaluation comparative de plusieurs bases open-source sur trois axes : connaissance du code (FreshBench), suivi d'état (LoCoDiff-like), et perplexité sur un dépôt interne. L'objectif central est de démontrer qu'un entraînement spécialisé peut atteindre des performances frontier en codage agentique tout en réduisant les coûts d'inférence par rapport aux modèles généralistes.</p>
+
+<p>Le rapport introduit aussi CursorBench, un benchmark interne dérivé de sessions réelles d'ingénieurs Cursor, conçu pour pallier les faiblesses identifiées dans SWE-bench et Terminal-Bench : contamination de données, sur-spécification des prompts, et scope évaluative trop étroit.</p>
+
+<h2>2. Méthodologie</h2>
+
+<h3>Pretraining continu</h3>
+
+<p>Le pretraining continu se décompose en trois sous-phases : entraînement principal à 32k tokens de contexte, extension longue-contexte à 256k tokens, et un SFT final sur des tâches ciblées. L'entraînement utilise le format MXFP8 sur GPU NVIDIA B300 avec AdamW. Des couches Multi-Token Prediction (MTP) sont entraînées en parallèle par auto-distillation pour accélérer l'inférence via décodage spéculatif.</p>
+
+<p>La relation entre pretraining et performance RL aval est étudiée expérimentalement sur Qwen3-Coder-30B-A3B à trois niveaux de compute logarithmiquement espacés. La Figure 2 montre que la perte en cross-entropie après SFT prédit la récompense RL après un nombre fixe de steps — un résultat utile pour calibrer l'investissement en pretraining.</p>
+
+<h3>Reinforcement learning asynchrone</h3>
+
+<p>Le RL opère sur des tâches de codage variées (Figure 3) : itération de features, debugging, nouvelles fonctionnalités, refactoring, tests, code review, migration, DevOps, etc. La distribution reflète des cas d'usage réels, pas seulement la correction de bugs qui domine SWE-bench. L'entraînement est en régime single-epoch (chaque prompt vu une seule fois) avec un algorithme de gradient de politique à échantillons multiples par prompt et taille de groupe fixe.</p>
+
+<p>Choix techniques documentés :</p>
+<ul>
+<li>La normalisation par écart-type des avantages de groupe est abandonnée pour éviter la dégénérescence quand tous les rollouts d'un groupe obtiennent la même récompense.</li>
+<li>La standardisation par longueur de GRPO est retirée — elle introduit un biais de longueur.</li>
+<li>L'estimateur KL k<sub>1</sub> = −log r remplace k<sub>3</sub> = (r − 1) − log r pour éviter l'explosion de variance quand les politiques divergent (Figure 4).</li>
+<li>Le masquage des rollouts trop longs n'est pas utilisé — la self-summarization réduit déjà leur fréquence.</li>
+</ul>
+
+<p>La self-summarization, introduite dans Composer 1.5, enchaîne plusieurs générations par résumés intermédiaires au sein d'un même rollout d'entraînement. La récompense finale rétropropage à travers toute la chaîne, ce qui pondère positivement les résumés associés à des trajectoires réussies et négativement ceux qui perdent de l'information critique.</p>
+
+<p>Une pénalité de longueur non-linéaire C<sub>length</sub> incite le modèle à résoudre rapidement les tâches simples tout en lui laissant du budget sur les tâches complexes. L'entrée est une combinaison pondérée de tokens de réflexion, tokens d'appels d'outils, tokens de sortie, nombre d'appels d'outils et nombre de tours.</p>
+
+<p>Un résultat mis en avant : la performance average et best-of-K augmentent simultanément durant le RL (Figure 5), contredisant plusieurs travaux récents qui suggèrent que le RL concentre la masse de probabilité sur des trajectoires existantes sans en découvrir de nouvelles.</p>
+
+<h3>Infrastructure d'entraînement</h3>
+
+<p>L'infrastructure RL répartit l'entraînement sur 3 régions GPU et 4 régions CPU. Le Context Parallelism (CP) remplace le Tensor Parallelism comme axe principal de scaling long-contexte — il réduit les communications et préserve les dimensions cachées complètes dans les projections. L'Expert Parallelism est découplé du TP pour supporter des degrés EP plus élevés.</p>
+
+<p>La synchronisation des poids entre entraînement et inférence utilise la delta compression sur S3 : chaque rang cache son upload précédent et ne transmet que le diff. Les mises à jour RL étant petites, même pour un modèle à 1T paramètres, les diffs se compriment en quelques gigaoctets. L'inférence est distribuée sur des clusters aux États-Unis et en Europe via Fireworks AI.</p>
+
+<p>Côté kernels, une variante NVFP4 avec scaling per-token (au lieu de per-tensor) élimine deux sources d'instabilité : la variance batch-dépendante et la fuite d'information inter-tokens dans le forward pass. L'arithmétique IEEE stricte (__fdiv_rn) est nécessaire pour NVFP4 — les approximations rapides provoquent la divergence après environ 100 steps RL — tandis que les approximations suffisent pour MXFP8.</p>
+
+<p>Le router replay est étendu avec un seuil de plausibilité : quand un expert rejoué obtient un score de gating inférieur au seuil dérivé des sélections top-k du routeur, il est remplacé par le candidat du routeur. Cette extension réduit le mismatch numérique au p99 entre les passes forward d'inférence et d'entraînement.</p>
+
+<h3>CursorBench</h3>
+
+<p>CursorBench est construit à partir de sessions réelles d'ingénieurs Cursor. Les tâches requièrent un médian de 181 lignes modifiées (contre 7-10 pour SWE-bench Verified/Multilingual) avec des prompts plus courts (390 caractères vs 1185-3055). Le benchmark évolue : CursorBench-3 double la taille médiane des tâches par rapport à la première itération, et les types de tâches se diversifient vers l'exécution de commandes longues, le monitoring d'expériences et l'analyse de données.</p>
+
+<p>Deux exemples illustratifs sont détaillés : un bug de transpilation esbuild 0.20.2 dans une boucle de retry où la déclaration <code>using</code> est abaissée en <code>var</code> qui n'est pas réinitialisé entre itérations (Figure 8), et la détection d'un bug de streaming par écriture d'un détecteur heuristique sur 954 réponses (Figure 12).</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>Sur CursorBench-3, Composer 2 atteint 61.3% — une amélioration relative de 37% par rapport à Composer 1.5 (44.2%) et 61% par rapport à Composer 1 (38.0%). Le gain par rapport au modèle de base Kimi K2.5 (36.0%) est massif (+25.3 points), validant l'efficacité du pipeline d'entraînement.</p>
+
+<p>Sur les benchmarks publics : 73.7% sur SWE-bench Multilingual (+7.8 points vs Composer 1.5) et 61.7% sur Terminal-Bench (+13.8 points). Les scores sont compétitifs avec les modèles frontier : GPT-5.4 obtient 76.8% sur SWE-bench Multilingual et 66.5% sur Terminal-Bench dans le harness Cursor, Opus 4.6 High obtient 75.8% et 58.0%.</p>
+
+<p>La Figure 11 repositionne ces résultats sur l'axe coût-performance. Composer 2 atteint une frontière de Pareto favorable : son coût d'inférence par tâche CursorBench est comparable aux variantes low-effort des modèles frontier, tandis que sa précision reste compétitive avec les variantes high-effort. La spécialisation domaine produit un modèle simultanément plus précis et moins coûteux que les alternatives généralistes sur le codage agentique.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>La limite la plus structurante est la nature propriétaire de CursorBench. Le benchmark est présenté comme supérieur aux alternatives publiques, mais aucun chercheur externe ne peut vérifier cette affirmation ni reproduire les résultats. Les tâches proviennent de la propre base de code de Cursor — un domaine où Composer 2, entraîné dans le même harness, bénéficie d'un avantage systémique potentiel que le rapport ne quantifie pas.</p>
+
+<p>L'évaluation des modèles tiers dans le harness Cursor pose un problème de biais d'environnement. Le rapport mentionne que les agents sont exécutés dans Anyrun avec le même backend Cursor, mais ne discute pas l'impact de ce choix sur les scores relatifs. GPT-5.4, Opus 4.6 et GLM-5, conçus pour leurs propres harness respectifs, sont potentiellement désavantagés. Les écarts entre « our harness » et « self-reported » dans le Tableau 1 le confirment : Opus 4.6 High passe de 75.8% à 77.8% sur SWE-bench Multilingual selon le harness.</p>
+
+<p>Les refus de sécurité de GPT-5.4 (5 tâches) et GPT-5.3 Codex (3 tâches) sont comptabilisés comme des échecs (score 0). Le rapport le documente en note de tableau, mais ne propose pas de score ajusté. Sur CursorBench, l'écart entre Composer 2 (61.3%) et GPT-5.4 (63.9%) est de 2.6 points — un delta que 5 tâches refusées peuvent absorber.</p>
+
+<p>L'absence de tests statistiques de significativité est frappante. Les barres de confiance apparaissent sur certaines figures, mais la taille exacte de CursorBench n'est jamais communiquée explicitement. La robustesse statistique des différences observées entre modèles proches (Composer 2 vs Opus 4.6, par exemple) reste indéterminée.</p>
+
+<p>L'affirmation que le RL améliore simultanément la performance average et best-of-K (Figure 5) contredit plusieurs travaux récents cités. L'argument aurait gagné en force avec une mesure de la diversité des trajectoires ou de l'entropie de la politique — le rapport se contente de montrer que les deux courbes montent sans analyser le mécanisme sous-jacent.</p>
+
+<p>La pénalité de longueur non-linéaire est décrite qualitativement mais ses hyperparamètres k et q ne sont pas communiqués, ni l'impact d'une ablation de ce composant.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>La reproductibilité est faible. Le modèle Composer 2 n'est pas distribué publiquement. CursorBench n'est pas accessible. L'infrastructure Anyrun et le stack d'entraînement RL sont propriétaires. Le base model Kimi K2.5 est open-source, ce qui permet en théorie de reproduire la phase de pretraining continu, mais le mix de données et les hyperparamètres détaillés manquent.</p>
+
+<p>Quelques éléments atténuent ce constat. Les kernels GEMM (BF16, MXFP8, NVFP4) ont été contribués au projet ThunderKittens. Le backward kernel Flash Attention 4 pour les « DeepSeek shapes » (QK 192 / V 128) a été mergé dans le dépôt public. Les choix algorithmiques du RL — estimateur KL, absence de normalisation des avantages, pénalité de longueur, router replay étendu — sont documentés avec assez de précision pour qu'un praticien tente de les répliquer sur un autre modèle MoE.</p>
+
+<p>Les résultats sur SWE-bench Multilingual et Terminal-Bench sont vérifiables par des tiers, bien que les conditions exactes (prompt système, outils disponibles, format d'appel) puissent différer.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>Le rapport démontre qu'un modèle MoE de taille modérée (32B actifs), spécialisé par pretraining continu puis RL, rivalise avec des modèles frontier présumés plus grands sur le codage agentique, à un coût d'inférence réduit. La contribution pratique est directe : un agent de codage performant déployé dans le produit Cursor.</p>
+
+<p>Les innovations d'infrastructure représentent les apports les plus transférables. Le RL asynchrone multi-région avec delta compression des poids, le router replay étendu avec seuil de plausibilité pour MoE, la self-summarization comme mécanisme de gestion du contexte long dans le RL, et la variante NVFP4 per-token sont des techniques applicables à tout entraînement RL sur des modèles MoE à grande échelle, pas seulement au codage.</p>
+
+<p>CursorBench, même sans être public, soulève des critiques légitimes sur les benchmarks existants — la sur-spécification des prompts, le manque de diversité des tâches, la contamination — qui alimenteront la conception de futures évaluations. La Figure 7, comparant la distribution des tailles de diff et des longueurs de prompt entre benchmarks, constitue à elle seule un argument visuel efficace pour repenser l'évaluation des agents de codage.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>Composer 2 s'inscrit dans la lignée des modèles de code spécialisés (CodeLLama, StarCoder, DeepSeek-Coder) mais franchit un cap en appliquant le RL à grande échelle pour le codage agentique, au-delà du fine-tuning supervisé. Le pipeline pretraining continu → RL rappelle les approches de DeepSeek-R1 et Kimi K1.5 pour le raisonnement mathématique, transposées ici au génie logiciel multi-étapes.</p>
+
+<p>La comparaison avec SWE-Agent, OpenHands et ChatDev est implicite : ces systèmes utilisent des modèles pré-entraînés comme politique fixe dans un harness externe, tandis que Composer 2 intègre le modèle et le harness dans une boucle d'entraînement fermée. L'approche de Cursor ressemble davantage à celle d'OpenAI avec Codex-5.3, où le modèle est spécialisé pour un environnement agentique spécifique. Le rapport ne discute pas cette convergence architecturale.</p>
+
+<p>La critique des benchmarks existants fait écho aux travaux récents d'OpenAI suspendant la publication de résultats SWE-bench Verified après détection de contamination. CursorBench est positionné comme une alternative, mais son caractère propriétaire l'exclut du débat scientifique ouvert — une tension non résolue par le rapport.</p>
+
+<p>Les contributions sur les kernels basse précision et le router replay étendu constituent des apports techniques indépendants dont l'impact dépassera probablement celui du modèle Composer 2 lui-même : ils sont open-source et applicables à tout entraînement MoE sur GPU Blackwell. La collaboration avec Colfax (Flash Attention 4) et Hazy Research (ThunderKittens) ancre ces contributions dans l'écosystème communautaire.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Claire et pertinente : la spécialisation domaine par pretraining continu + RL peut-elle produire un agent de codage frontier ? Hypothèse vérifiable avec un protocole défini.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Pipeline deux phases rigoureux, étude pretraining→RL sur Qwen, évaluations multi-benchmark et comportementales. Manque d'ablations systématiques sur les composants RL.</td></tr>
+<tr><td>Taille de l'échantillon</td><td>3</td><td>Taille de CursorBench non communiquée explicitement. Benchmarks publics standards. Pas de tests de significativité statistique.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Métriques variées et pertinentes : accuracy, coût d'inférence en dollars, tokens, latence. Frontière de Pareto coût-performance. Évaluations comportementales ciblées.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>CursorBench évite la contamination de données. Biais d'environnement pour les modèles tiers testés dans le harness Cursor. Refus de sécurité comptés comme 0 sans score ajusté.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Modèle, benchmark et infrastructure propriétaires. Kernels partiellement open-sourcés. Choix algorithmiques documentés mais recette d'entraînement complète non reproductible.</td></tr>
+<tr><td>Transparence et limitations</td><td>3</td><td>Limites des benchmarks publics discutées. Peu d'analyse des modes d'échec du modèle, des cas de dégradation par le RL, ou des risques de sur-spécialisation.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Démonstration de la viabilité du RL agentique à grande échelle. Innovations d'infrastructure transférables : router replay étendu, NVFP4 per-token, self-summarization, delta compression multi-région.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

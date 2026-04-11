@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaperOrchestra: A Multi-Agent Framework for Automated AI Research Paper Writing — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>PaperOrchestra: A Multi-Agent Framework for Automated AI Research Paper Writing</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Objectif et contexte</h2>
+
+<p>PaperOrchestra s'attaque à un problème précis : transformer des matériaux de recherche non structurés — idées brutes, logs expérimentaux — en manuscrits LaTeX prêts à soumettre en conférence. Le constat de départ est double. Les frameworks de recherche autonome (AI Scientist, CycleResearcher) couplent leur module de rédaction à leur pipeline expérimental interne, ce qui interdit leur usage comme outil d'écriture autonome. Les systèmes de revue de littérature automatisée (AutoSurvey2, LiRA) produisent des surveys génériques sans capacité à rédiger un article complet à partir de données brutes.</p>
+
+<p>Le positionnement revendiqué est celui d'un « writer standalone » capable d'ingérer des entrées hétérogènes (résumé d'idée, log expérimental, template LaTeX, guidelines de conférence, figures optionnelles) et de produire un package de soumission complet. L'ambition est légitime et le gap identifié dans la Table 1 — aucun système existant ne coche simultanément les cinq capacités — est convaincant sur le papier.</p>
+
+<h2>2. Méthodologie</h2>
+
+<h3>Architecture multi-agents</h3>
+
+<p>Le pipeline se décompose en cinq étapes séquentielles avec parallélisme partiel. Un Outline Agent structure les matériaux d'entrée en plan JSON comprenant stratégie de visualisation, plan de recherche bibliographique et plan de rédaction section par section. Un Plotting Agent (basé sur PaperBanana) génère diagrammes conceptuels et graphiques statistiques via une boucle de raffinement VLM. Un Literature Review Agent exécute une découverte hybride concurrente : recherche web via LLM grounded, puis vérification séquentielle via l'API Semantic Scholar avec matching flou (Levenshtein > 70%), filtrage temporel et déduplication par ID. Un Section Writing Agent rédige les sections restantes. Un Content Refinement Agent optimise itérativement le manuscrit via feedback de peer-review simulé (AgentReview), avec un mécanisme de rollback si le score global diminue.</p>
+
+<p>L'étape 2 (plots) et l'étape 3 (littérature) s'exécutent en parallèle, ce qui réduit la latence totale à ~40 minutes par article malgré 60-70 appels LLM.</p>
+
+<h3>Benchmark : PaperWritingBench</h3>
+
+<p>200 articles acceptés à CVPR 2025 et ICLR 2025 (100 par venue) sont rétro-ingéniérés pour produire des matériaux bruts synthétiques. L'extraction utilise MinerU pour le Markdown structuré et PDFFigures 2.0 pour les assets visuels. Un LLM (Gemini-3.1-Pro) synthétise deux composantes anonymisées et auto-contenues : un résumé d'idée (variantes Sparse et Dense) et un log expérimental. Toutes les citations, URLs et références croisées sont retirées pour éviter les fuites d'information.</p>
+
+<p>Le choix de deux variantes d'idée (Sparse ~590 mots vs Dense ~1060 mots) permet de tester la robustesse du système face à des entrées de granularité variable. Les évaluations principales utilisent le setting Sparse, plus réaliste.</p>
+
+<h3>Protocole d'évaluation</h3>
+
+<p>Quatre familles de métriques sont déployées : Citation F1 avec partition P0 (must-cite) / P1 (good-to-cite) résolue via Semantic Scholar ; score de qualité de revue de littérature sur 6 axes (0-100) par LLM-as-judge ; évaluation technique holistique via AI Scientist-v2 Reviewer et ScholarPeer ; comparaisons side-by-side (SxS) automatisées et humaines. Les SxS automatisées évaluent chaque paire dans les deux ordres pour atténuer le biais positionnel.</p>
+
+<p>L'évaluation humaine mobilise 11 chercheurs en IA sur 40 articles (20 par venue), produisant 180 évaluations pairées via une interface Streamlit dédiée.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>Les résultats SxS automatisés montrent une domination nette de PaperOrchestra sur les baselines autonomes. En qualité de revue de littérature, les marges de victoire absolues atteignent 88-99% contre Single Agent et AI Scientist-v2. En qualité globale, les marges sont de 39-86% contre AI Scientist-v2 et 52-88% contre Single Agent.</p>
+
+<p>Sous ScholarPeer, les taux d'acceptation simulés de PaperOrchestra (84% CVPR, 81% ICLR) s'approchent des articles humains (86% et 94%). L'écart avec les baselines est de +13% (CVPR) et +9% (ICLR) par rapport au meilleur concurrent autonome.</p>
+
+<p>La couverture citationnelle révèle un pattern instructif. Les baselines autonomes génèrent 9-14 citations en moyenne contre ~59 pour les articles humains. Leur F1 artificiellement compétitif résulte de leur concentration sur les citations P0 évidentes. PaperOrchestra produit 46-48 citations, avec un gain de P1 Recall de +12.6-13.8% — preuve d'une exploration bibliographique plus large que le simple matching par mots-clés.</p>
+
+<p>L'évaluation humaine confirme les tendances automatisées : marges de +50-68% en revue de littérature et +14-38% en qualité globale. La corrélation humain-autorater GPT-5 est forte pour la qualité globale (Pearson r = 0.65) mais faible pour la revue de littérature (r = 0.28).</p>
+
+<h3>Ablations</h3>
+
+<p>Sparse vs Dense : la variante Dense domine en qualité globale (43-56% vs 18-24% de wins) mais la revue de littérature atteint la quasi-parité, ce qui démontre la robustesse de l'agent bibliographique face à des entrées minimales. L'agent de raffinement itératif produit 79-81% de wins et +19-22% de taux d'acceptation. Le Plotting Agent autonome (PlotOn) reste compétitif face aux figures humaines (51-66% de ties/wins) malgré un désavantage informationnel.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<h3>Circularité évaluative</h3>
+
+<p>Le problème méthodologique central de ce travail réside dans l'utilisation massive de LLMs comme juges pour évaluer des textes générés par LLMs. Les auteurs reconnaissent un biais structurel : les évaluateurs LLM récompensent le formatage rigide (paragraphes « Problem-Gap-Solution », listes thématiques) tandis que les experts humains privilégient la densité factuelle et le flux narratif. Cette divergence se reflète dans la corrélation humain-autorater quasi nulle pour la revue de littérature (r = 0.09 avec Gemini). Malgré cette lucidité, l'essentiel des conclusions repose sur ces mêmes évaluateurs automatisés.</p>
+
+<h3>Représentativité de l'évaluation humaine</h3>
+
+<p>11 annotateurs sur 40 articles ne constituent pas un échantillon suffisant pour tirer des conclusions robustes, d'autant que la variabilité inter-annotateurs n'est pas rapportée. Le papier ne précise ni l'accord inter-juges (kappa de Cohen), ni la distribution d'expertise des évaluateurs, ni leur affiliation (interne Google ou externe).</p>
+
+<h3>Biais de provenance</h3>
+
+<p>Tous les auteurs sont affiliés à Google. Le backbone LLM principal est Gemini-3.1-Pro (Google). Les évaluateurs automatisés utilisent Gemini. PaperBanana, le module de visualisation, est développé par des chercheurs du même groupe. Cette concentration crée un risque de biais systémique non discuté : le système pourrait être optimisé — même involontairement — pour les patterns que Gemini génère et évalue favorablement.</p>
+
+<h3>Validité écologique</h3>
+
+<p>Les matériaux d'entrée sont synthétiques, générés par rétro-ingénierie d'articles publiés. Cette construction garantit la contrôlabilité mais s'éloigne du cas d'usage réel où un chercheur fournirait des notes de laboratoire authentiques, désordonnées, incomplètes. La performance sur des entrées véritablement brutes reste non démontrée.</p>
+
+<h3>Questions éthiques sous-traitées</h3>
+
+<p>La section Ethics Statement positionne le système comme « outil assistif avancé » et délègue la responsabilité aux utilisateurs. Cette position élude la question de l'usage réel : un système produisant des manuscrits à 81-84% de taux d'acceptation simulé sera utilisé pour soumettre des articles avec une supervision humaine minimale. L'impact sur l'intégrité scientifique et le volume de soumissions aux conférences mérite une analyse plus substantielle que deux paragraphes.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>La reproductibilité de ce travail est limitée par plusieurs facteurs. Le pipeline repose entièrement sur des APIs propriétaires (Gemini-3.1-Pro, Gemini-3-Flash, GPT-5) dont le comportement peut changer entre versions. Les prompts des agents sont fournis en annexe, ce qui est un point positif, mais leur interaction avec les versions spécifiques des modèles rend la reproduction exacte improbable.</p>
+
+<p>PaperWritingBench est présenté comme disponible mais le papier ne spécifie pas de licence ni de dépôt de données. La page projet existe (URL fournie) mais aucune mention explicite de release open-source du code du framework. L'analyse de coût computationnel (10 articles seulement, valeurs extrêmes retirées) ne permet pas d'estimer la variabilité réelle des temps d'exécution.</p>
+
+<p>La dépendance à Semantic Scholar pour la vérification des citations introduit un point de fragilité : toute indisponibilité ou changement d'API invalide le pipeline de revue de littérature.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>PaperOrchestra représente l'état de l'art des systèmes de rédaction scientifique automatisée en IA, avec des gains substantiels sur les baselines existantes. La décomposition en agents spécialisés — et la parallélisation littérature/plots — est une contribution d'ingénierie solide qui sera probablement adoptée par les systèmes futurs.</p>
+
+<p>PaperWritingBench comble un manque réel. L'absence de benchmark standardisé rendait les comparaisons entre systèmes d'écriture impossibles. La partition P0/P1 des citations est une contribution évaluative utile qui distingue la couverture des références indispensables de celle du contexte élargi.</p>
+
+<p>L'application la plus immédiate concerne l'accélération de la rédaction pour des chercheurs qui disposent déjà de résultats expérimentaux mais manquent de temps pour la mise en forme. Le risque symétrique — production industrielle d'articles sans contribution scientifique réelle — est réel et insuffisamment discuté.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>Ce travail se situe à l'intersection de deux lignes de recherche : les frameworks de recherche autonome (AI Scientist v1/v2, CycleResearcher, OmniScientist) et les systèmes de synthèse de littérature (AutoSurvey2, LiRA, SurveyGen-I). La Table 1 du papier cartographie efficacement le paysage et identifie le créneau non occupé : un writer standalone acceptant des entrées non structurées.</p>
+
+<p>Par rapport à AI Scientist-v2, la contribution principale est le découplage du module d'écriture du pipeline expérimental et l'amélioration massive de la revue de littérature (+33% de score global sous Gemini). Par rapport aux systèmes de survey, l'apport est la capacité de rédiger un article complet avec données expérimentales et visualisations, pas seulement une revue.</p>
+
+<p>La comparaison avec Prism (OpenAI, 2026) est mentionnée mais non évaluée expérimentalement — probablement car Prism opère comme assistant d'édition plutôt que comme générateur end-to-end. L'absence de comparaison avec des assistants d'écriture commerciaux (Overleaf AI, Writefull) laisse un angle mort sur le positionnement pratique.</p>
+
+<p>Le recours à AgentReview pour le raffinement itératif et à PaperBanana pour la génération visuelle constitue un assemblage de modules récents plutôt qu'une innovation algorithmique fondamentale. La valeur réside dans l'orchestration et l'évaluation rigoureuse, pas dans les composants individuels.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Gap bien identifié entre systèmes couplés et writers autonomes ; formulation claire du problème comme mapping entrées non structurées → manuscrit soumissible</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Évaluation multi-facettes (4 familles de métriques), ablations pertinentes (Sparse/Dense, PlotOn/Off, raffinement), deux venues distinctes</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>200 articles dans le benchmark (correct), mais seulement 11 annotateurs humains sur 40 articles ; analyse de coût sur 10 articles</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Partition P0/P1 des citations bien conçue ; mais dépendance massive aux LLM-as-judge avec corrélation humaine faible sur la revue de littérature (r=0.09)</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Anti-leakage prompt uniforme et SxS bidirectionnel, mais conflit d'intérêts non discuté (Google/Gemini omniprésent comme backbone et évaluateur)</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Prompts fournis en annexe, mais APIs propriétaires, pas de release de code confirmée, dépendance à des services externes (Semantic Scholar)</td></tr>
+<tr><td>Transparence et limitations</td><td>4</td><td>Section limitations honnête sur hallucinations visuelles et contamination des données ; reconnaissance du biais des autoraters ; dimension éthique insuffisante</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier benchmark standardisé pour l'écriture d'articles IA ; gains substantiels sur les baselines ; contribution d'ingénierie système plus qu'algorithmique</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

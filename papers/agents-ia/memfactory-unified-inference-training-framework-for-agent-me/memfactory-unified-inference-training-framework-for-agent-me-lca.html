@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MemFactory: Unified Inference &amp; Training Framework for Agent Memory — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>MemFactory: Unified Inference &amp; Training Framework for Agent Memory</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+
+<h3>1. Objectif et contexte</h3>
+
+<p>Les agents à mémoire augmentée — capables de maintenir un contexte persistant, d'accumuler des expériences et de personnaliser leurs comportements — reposent aujourd'hui sur des implémentations fragmentées. Chaque système (Memory-R1, MemAgent, RMM) embarque son propre pipeline d'entraînement, son format de données et ses hypothèses de tâche. MemFactory ambitionne de résoudre cette fragmentation en proposant un cadre unifié, modulaire et extensible, inspiré de LLaMA-Factory pour le fine-tuning standard.</p>
+
+<p>L'objectif est double : fournir une infrastructure « prête à l'emploi » reproduisant les paradigmes existants, et intégrer nativement l'optimisation par renforcement (GRPO) pour entraîner les politiques de gestion mémoire sur un seul GPU.</p>
+
+<h3>2. Méthodologie</h3>
+
+<p>L'architecture se découpe en quatre couches. La couche Module décompose le cycle de vie de la mémoire en opérations atomiques : extraction (NaiveExtractor), mise à jour via opérations CRUD (NaiveUpdater), récupération sémantique avec reranking optionnel (NaiveRetriever, RerankRetriever), et un Agent Module pour les politiques récurrentes de bout en bout. La couche Agent assemble ces modules selon un paradigme « Lego » et gère le déroulement des trajectoires (rollout). La couche Environment standardise les données et calcule des récompenses multidimensionnelles (format, LLM-as-a-Judge). La couche Trainer applique GRPO pour optimiser les politiques sans modèle de valeur auxiliaire.</p>
+
+<p>La validation empirique porte exclusivement sur l'architecture MemAgent, entraînée avec deux modèles de base (Qwen3-1.7B et Qwen3-4B-Instruct) pendant 250 pas, sur des données d'entraînement simplifiées (contexte réduit à un tiers de l'original, soit 50 à 80 documents par échantillon). Trois jeux de test sont utilisés : eval_50 et eval_100 (tâches principales) et eval_fwe_16384 (hors distribution). Les scores sont moyennés sur 4 essais indépendants par question.</p>
+
+<h3>3. Résultats principaux</h3>
+
+<p>Qwen3-1.7B passe d'un score moyen de 0.3118 à 0.3581 après entraînement RL (+14.8% relatif). Ce gain provient des tâches principales (0.4727→0.5684 sur eval_50, 0.4297→0.4863 sur eval_100), mais la performance hors distribution chute de 0.0332 à 0.0195 — une dégradation de 41%. Qwen3-4B-Instruct affiche des gains plus homogènes : +7.3% relatif en moyenne, avec une progression sur les trois jeux, y compris hors distribution (0.6270→0.6426).</p>
+
+<p>Le pipeline complet tourne sur un seul GPU NVIDIA A800 80GB.</p>
+
+<h3>4. Discussion et limites</h3>
+
+<p>La validation ne couvre qu'un seul des trois paradigmes implémentés. MemoryR1Agent et MemoryRMMAgent sont fournis « prêts à l'emploi » mais aucun résultat d'entraînement ou d'évaluation n'est rapporté pour eux. L'affirmation d'un cadre « unifié » repose donc sur une démonstration partielle.</p>
+
+<p>Aucune étude d'ablation n'isole la contribution des différentes couches ou modules. La simplification des données d'entraînement (réduction du contexte à un tiers) n'est accompagnée d'aucune analyse de son impact sur les résultats. Les auteurs ne discutent pas non plus la dégradation hors distribution du modèle 1.7B, qui suggère un surapprentissage sur la distribution d'entraînement.</p>
+
+<p>Les métriques d'évaluation ne sont pas définies dans l'article. Le lecteur doit consulter les données originales de MemAgent pour comprendre ce que mesurent les scores de la Table 2. Aucun test de significativité statistique n'accompagne les résultats malgré la variance visible entre essais.</p>
+
+<p>L'absence de comparaison avec un cadre concurrent (même un simple script d'entraînement GRPO sans la couche Module) empêche d'évaluer l'apport réel de l'abstraction modulaire par rapport au coût de complexité qu'elle introduit.</p>
+
+<h3>5. Reproductibilité</h3>
+
+<p>Le code est publié sur GitHub sous licence ouverte. Les données d'entraînement et d'évaluation proviennent du dépôt public MemAgent. L'exécution sur un seul GPU A800 80GB abaisse la barrière matérielle. Les hyperparamètres sont renvoyés au dépôt et non détaillés dans l'article — un choix courant pour les articles de framework mais qui réduit l'autonomie du lecteur.</p>
+
+<p>La dépendance à FlashAttention-2 et aux AutoClasses de HuggingFace Transformers rend le framework sensible aux versions de ces bibliothèques, point non documenté.</p>
+
+<h3>6. Impact et applications</h3>
+
+<p>MemFactory comble un vide réel : aucun cadre n'unifiait jusqu'ici l'entraînement RL et l'inférence pour agents à mémoire. La décomposition en modules atomiques avec interfaces standardisées (generate, rollout, inference) facilite l'expérimentation. L'intégration de SwanLab pour le monitoring en temps réel est un ajout pratique.</p>
+
+<p>L'impact reste conditionné à l'adoption par la communauté. Le framework supporte trois paradigmes publiés mais sa capacité à absorber de futures architectures mémoire dépend de la flexibilité réelle des interfaces — question que seul l'usage confirmera. La contribution est d'ingénierie logicielle, pas de recherche fondamentale : aucun algorithme nouveau n'est proposé.</p>
+
+<h3>7. Positionnement dans la littérature</h3>
+
+<p>MemFactory se situe à l'intersection de deux lignées. D'un côté, les frameworks d'entraînement unifié (LLaMA-Factory, MS-Swift, VERL) qui standardisent le fine-tuning mais ignorent la gestion d'état mémoire. De l'autre, les bibliothèques de construction mémoire (MemEngine, Mem0) qui structurent les modules mais n'intègrent pas l'entraînement RL.</p>
+
+<p>Face aux travaux qu'il implémente (Memory-R1, MemAgent, RMM), MemFactory ne revendique pas de supériorité algorithmique. Sa valeur réside dans l'unification : pouvoir reproduire et combiner ces approches dans un même cadre. Cette promesse est crédible sur le plan architectural mais n'est validée que pour un tiers des paradigmes annoncés.</p>
+
+<p>La comparaison avec MemOS — qui propose un « système d'exploitation » pour la mémoire des agents — n'est pas approfondie. Les auteurs le citent comme inspiration pour la couche Module sans clarifier les différences fonctionnelles.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<thead>
+<tr style="background-color: rgba(0,0,0,0.05);">
+<th style="text-align: left;">Critère</th>
+<th style="text-align: center;">Score (/5)</th>
+<th style="text-align: left;">Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question de recherche</td>
+<td style="text-align: center;">3</td>
+<td>Lacune identifiée avec clarté, mais la contribution est d'ingénierie, pas de recherche. L'originalité se limite à agréger des travaux existants sous une interface commune.</td>
+</tr>
+<tr>
+<td>Design expérimental</td>
+<td style="text-align: center;">2</td>
+<td>Un seul paradigme validé sur trois implémentés. Pas d'ablation, pas de baseline alternative, données d'entraînement simplifiées sans étude d'impact.</td>
+</tr>
+<tr>
+<td>Taille de l'échantillon</td>
+<td style="text-align: center;">2</td>
+<td>Deux modèles de base, trois jeux de test, quatre essais par question. Insuffisant pour des conclusions généralisables sur l'efficacité du framework.</td>
+</tr>
+<tr>
+<td>Qualité des métriques</td>
+<td style="text-align: center;">2</td>
+<td>Les métriques d'évaluation ne sont pas définies dans le texte. Pas de test de significativité statistique. La nature exacte des scores reste opaque sans consultation externe.</td>
+</tr>
+<tr>
+<td>Contrôle des biais</td>
+<td style="text-align: center;">2</td>
+<td>Pas d'ablation pour isoler les composants. Pas de comparaison avec un pipeline d'entraînement GRPO simple. La simplification des données crée un confondant non contrôlé.</td>
+</tr>
+<tr>
+<td>Reproductibilité</td>
+<td style="text-align: center;">4</td>
+<td>Code ouvert, données publiques, exécution mono-GPU documentée. Les hyperparamètres sont dans le dépôt mais absents de l'article.</td>
+</tr>
+<tr>
+<td>Transparence et limitations</td>
+<td style="text-align: center;">3</td>
+<td>Les limites sont mentionnées en conclusion (couverture partielle, efficacité d'entraînement) mais la dégradation hors distribution et l'absence d'ablation ne sont pas discutées.</td>
+</tr>
+<tr>
+<td>Impact et nouveauté</td>
+<td style="text-align: center;">3</td>
+<td>Remplit un vide d'infrastructure réel dans l'écosystème Memory-RL. La contribution reste d'ingénierie logicielle ; aucun algorithme ou mécanisme nouveau n'est proposé.</td>
+</tr>
+</tbody>
+<tfoot>
+<tr style="background-color: rgba(0,0,0,0.05);">
+<td><strong>Note globale</strong></td>
+<td style="text-align: center;"><strong>2.5 / 5</strong></td>
+<td>Architecture modulaire bien conçue, mais validation empirique trop étroite pour soutenir les revendications d'universalité du framework.</td>
+</tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

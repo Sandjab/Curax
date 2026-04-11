@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Single-Agent LLMs Outperform Multi-Agent Systems on Multi-Hop Reasoning Under Equal Thinking Token Budgets — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Single-Agent LLMs Outperform Multi-Agent Systems on Multi-Hop Reasoning Under Equal Thinking Token Budgets</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Les architectures multi-agents (MAS) — planificateurs, débats, essaims spécialisés — affichent des performances élevées sur de nombreuses tâches. Mais ces gains se confondent avec une augmentation du calcul à l'inférence : davantage de tokens consommés, davantage d'appels modèle. Tran et Kiela posent une question directe : que reste-t-il de l'avantage multi-agent quand on fixe le budget de tokens de raisonnement ?</p>
+
+<p>Leur réponse mobilise deux registres. D'abord un argument théorique fondé sur l'inégalité de traitement des données (Data Processing Inequality) : sous budget fixe, la décomposition multi-agent introduit des goulots de communication qui ne peuvent qu'appauvrir l'information mutuelle avec la réponse correcte. Ensuite, une vérification empirique sur trois familles de modèles (Qwen3, DeepSeek-R1-Distill-Llama, Gemini 2.5), deux benchmarks de raisonnement multi-hop (FRAMES, MuSiQue 4-hop), et cinq architectures MAS distinctes.</p>
+
+<h2>Méthodologie</h2>
+
+<h3>Protocole expérimental</h3>
+
+<p>La variable contrôlée est le budget de tokens de raisonnement (thinking tokens), défini comme le total de tokens intermédiaires excluant le prompt et la réponse finale. Six paliers sont testés : 100, 500, 1000, 2000, 5000 et 10 000 tokens. Chaque configuration SAS ou MAS reçoit le même budget global B.</p>
+
+<p>Le système mono-agent (SAS) alloue l'intégralité de B à un appel unique. Une variante SAS-L ajoute un scaffold d'analyse pré-réponse sans modifier B. Cinq architectures MAS sont évaluées : Sequential (décomposition en étapes ordonnées), Subtask-parallel (sous-tâches indépendantes), Parallel-roles (rôles spécialisés : Solver, Fact Extractor, Skeptic, Second Solver), Debate (deux débatteurs + critiques croisées), et Ensemble (candidats indépendants + juge). Sequential sert de comparaison principale car elle isole le coût de la communication inter-agents sans ajouter de diversité ou de spécialisation.</p>
+
+<h3>Évaluation</h3>
+
+<p>L'accuracy est mesurée par un LLM-as-judge qui vérifie l'équivalence sémantique entre la prédiction et la réponse de référence. Le même modèle et la même rubrique sont utilisés pour toutes les configurations. Des intervalles de confiance bootstrap à 95 % accompagnent chaque résultat.</p>
+
+<h3>Expériences complémentaires</h3>
+
+<p>Quatre familles de dégradation du contexte (suppression, masquage, substitution, distracteurs) testent la prédiction théorique selon laquelle les MAS deviennent compétitifs quand l'utilisation du contexte par l'agent unique se détériore. Une ablation par paraphrase (légère via regex, profonde via LLM) sonde la robustesse des résultats à la mémorisation de benchmark. Un audit des tokens de raisonnement Gemini révèle des écarts entre comptage API et contenu visible.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>Le résultat central est net : SAS égale ou surpasse toutes les architectures MAS sur la quasi-totalité des configurations modèle × dataset × budget. Aux budgets de 1000 tokens et au-delà, SAS domine systématiquement pour Qwen3-30B et DeepSeek-R1-70B. L'avantage persiste même à 10 000 tokens, où les MAS disposent pourtant de budgets largement supérieurs à ce que SAS consomme réellement — SAS sature souvent autour de 1300-1500 tokens effectifs.</p>
+
+<p>Deux nuances émergent. Aux budgets les plus bas (100 tokens), aucune architecture ne produit de raisonnement utile, et les différences ne sont pas significatives. Pour Gemini-2.5-Pro sur FRAMES, Sequential MAS rivalise avec SAS à certains paliers, un effet que les auteurs attribuent aux artefacts de comptage des tokens Gemini : le contenu visible de raisonnement MAS dépasse celui de SAS à budget demandé égal.</p>
+
+<p>Parmi les MAS, Debate se distingue comme la variante la plus régulièrement compétitive. Parallel-roles suit. Ensemble dépend fortement du budget et ne devient performant qu'aux budgets élevés sur Gemini-2.5-Pro. Les performances plafonnent autour de 2000-5000 tokens pour la plupart des configurations — augmenter le budget au-delà apporte des rendements décroissants.</p>
+
+<p>Les expériences de dégradation du contexte confirment la prédiction théorique : sous masquage ou substitution à α = 0.7, Sequential MAS dépasse SAS, car la décomposition multi-étapes filtre mieux un contexte corrompu qu'une passe unique sur un signal bruité.</p>
+
+<p>L'ablation par paraphrase profonde améliore les performances, ce qui suggère que les questions originales de MuSiQue souffrent d'une contamination partielle dans les données d'entraînement.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>La force de l'article réside dans son cadrage : la question est bien posée, le protocole contrôle le confondant principal (le calcul), et les prédictions théoriques sont testées empiriquement. Le cadre information-théorique via la DPI est élégant et fournit une intuition claire sur pourquoi la communication inter-agents constitue un goulot d'étranglement.</p>
+
+<p>Plusieurs limites méritent attention. L'évaluation par LLM-as-judge introduit un biais difficile à quantifier : la rubrique vérifie la présence sémantique de la réponse de référence, mais des réponses partiellement correctes ou des hallucinations cohérentes peuvent fausser le jugement dans les deux sens. Aucune vérification humaine n'est rapportée.</p>
+
+<p>Le périmètre est restreint au raisonnement textuel multi-hop sans outils. Les auteurs le reconnaissent, mais cela réduit la portée des conclusions : les MAS sont souvent déployés précisément pour orchestrer des appels d'outils, du code, ou des interactions avec des environnements — des scénarios où la décomposition apporte une valeur structurelle absente ici.</p>
+
+<p>Le comptage des tokens Gemini pose un problème méthodologique sérieux, que les auteurs documentent avec transparence. Le contenu visible de raisonnement SAS plafonne à ~350 tokens proxy quelle que soit la demande (1k à 10k), tandis que MAS produit 700-1300 tokens proxy au même budget demandé. Comparer sur la base du « budget demandé » plutôt que du calcul effectif avantage mécaniquement SAS dans cette configuration. Les auteurs défendent ce choix comme le seul reproductible, ce qui est recevable, mais l'interprétation des résultats Gemini en est fragilisée.</p>
+
+<p>Les expériences de dégradation ne portent que sur Qwen3-30B à 1000 tokens. Généraliser cette analyse à d'autres modèles et budgets renforcerait les conclusions sur les régimes où MAS devient compétitif.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Les prompts de toutes les architectures (SAS, Sequential, Debate, Ensemble, etc.) sont intégralement reproduits en annexe, ce qui est un point fort. La logique de dégradation du contexte est documentée en pseudo-code. Les hyperparamètres (température, budgets) sont spécifiés.</p>
+
+<p>En revanche, le code source n'est pas mentionné comme disponible. Les résultats sur modèles open-source (Qwen3, DeepSeek) sont reproductibles en principe, mais les résultats Gemini dépendent d'une API dont le comportement interne est opaque et susceptible de changer entre versions. La reproductibilité partielle sur Gemini est d'ailleurs un des résultats de l'article : les auteurs montrent que le comptage de tokens varie de façon non documentée.</p>
+
+<p>Les benchmarks utilisés (FRAMES, MuSiQue) sont publics. Le juge LLM utilise le même modèle que celui évalué, ce qui pourrait biaiser l'évaluation mais est clairement documenté.</p>
+
+<h2>Impact et applications</h2>
+
+<p>L'implication pratique est directe : les praticiens qui déploient des systèmes multi-agents pour le raisonnement devraient d'abord vérifier qu'un agent unique avec le même budget de calcul ne fait pas aussi bien. Le surcoût d'ingénierie, de latence et de coordination des MAS n'est justifié que dans des régimes spécifiques — contexte dégradé, modèles faibles, ou tâches nécessitant une décomposition structurelle (outils, vérification).</p>
+
+<p>L'audit méthodologique des artefacts d'évaluation (comptage opaque des tokens Gemini, vulnérabilité des benchmarks à la paraphrase) apporte une contribution transversale utile à la communauté. Ces résultats plaident pour des protocoles d'évaluation plus rigoureux dans la comparaison d'architectures agentiques.</p>
+
+<p>La prédiction théorique sur la dégradation du contexte offre un cadre décisionnel : l'intérêt des MAS croît avec la complexité du contexte à traiter, pas avec la difficulté intrinsèque de la question.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>L'article s'inscrit dans une vague récente de travaux remettant en question les gains apparents des MAS. Wang et al. (2024) et Han et al. (2025) ont montré que des stratégies de raisonnement élaborées échouent face à des baselines simples à budget normalisé. Anthropic (2025) a attribué l'avantage MAS au calcul supplémentaire. Kim et al. (2025) ont observé que les gains agentiques se concentrent sur les modèles faibles et disparaissent avec des modèles plus capables.</p>
+
+<p>La contribution spécifique de Tran et Kiela est triple : le cadrage information-théorique via la DPI, la comparaison systématique de cinq architectures MAS sous budget contrôlé, et l'identification des régimes (dégradation du contexte) où les MAS reprennent l'avantage. Le travail de Cemri et al. (2025) sur les modes de défaillance multi-agents complète leurs observations empiriques sur la dérive et les erreurs d'extraction.</p>
+
+<p>L'article ne couvre pas les scénarios multi-agents avec outils, code ou mémoire externe, qui constituent le cas d'usage principal des frameworks agentiques actuels (LangGraph, CrewAI, AutoGen). Les conclusions sont donc circonscrites au raisonnement textuel pur — un périmètre restreint mais étudié avec rigueur.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Trois sous-questions claires et bien motivées, cadrage théorique original via la DPI</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Protocole multi-modèles, multi-architectures, budgets contrôlés ; dégradation et paraphrase comme ablations</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Deux benchmarks, trois familles de modèles ; dégradation testée sur un seul modèle à un seul budget</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>LLM-as-judge sans validation humaine ; accuracy binaire assez grossière pour du raisonnement multi-hop</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Confondant principal (calcul) bien contrôlé ; artefacts Gemini identifiés et documentés ; ablation paraphrase</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Prompts complets en annexe, benchmarks publics ; pas de code publié, résultats Gemini dépendants d'une API opaque</td></tr>
+<tr><td>Transparence et limitations</td><td>4</td><td>Limites clairement énoncées (texte seul, comptage Gemini approximatif, budget cap vs usage réel)</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Cadre théorique propre, résultats pratiques exploitables, audit méthodologique transférable</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

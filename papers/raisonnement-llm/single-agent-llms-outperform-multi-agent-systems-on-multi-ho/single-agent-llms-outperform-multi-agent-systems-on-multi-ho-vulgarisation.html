@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Single-Agent LLMs Outperform Multi-Agent Systems on Multi-Hop Reasoning Under Equal Thinking Token Budgets — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Single-Agent LLMs Outperform Multi-Agent Systems on Multi-Hop Reasoning Under Equal Thinking Token Budgets</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h1>Un seul agent vaut mieux que cinq — quand le temps de réflexion est le même</h1>
+
+<h2>Introduction</h2>
+
+<p>Deux chercheurs de Stanford viennent de publier un résultat qui refroidit l'enthousiasme ambiant pour les systèmes multi-agents. Dat Tran et Douwe Kiela ont comparé, sur des tâches de raisonnement complexe, un modèle de langage qui travaille seul face à des architectures où plusieurs agents se coordonnent — planificateurs, débatteurs, vérificateurs. Le verdict, publié en avril 2026 : quand on donne exactement le même budget de réflexion à chaque configuration, l'agent unique fait aussi bien ou mieux dans la quasi-totalité des cas. Les avantages attribués aux systèmes multi-agents s'expliquent, le plus souvent, par un surplus de calcul que personne ne comptabilisait.</p>
+
+<h2>Comparer l'incomparable</h2>
+
+<p>Depuis deux ans, les architectures multi-agents se multiplient dans les publications et les produits. Un agent découpe la question, un autre cherche les faits, un troisième vérifie, un quatrième synthétise. Les scores grimpent. Mais une question reste rarement posée : ces systèmes consomment-ils la même quantité de calcul qu'un agent seul ?</p>
+
+<p>La réponse est presque toujours non. Un système multi-agents génère davantage de tokens intermédiaires — pour se coordonner, reformuler, agréger les réponses partielles. Si un agent unique produit 1 000 tokens de raisonnement et qu'un système de quatre agents en produit 4 000 au total, comparer leurs scores sans corriger cette différence revient à comparer deux coureurs dont l'un aurait eu droit à deux fois plus de foulées.</p>
+
+<p>Plusieurs études récentes avaient signalé ce biais. Tran et Kiela vont plus loin. Ils proposent un cadre théorique pour expliquer pourquoi l'agent unique devrait l'emporter à budget égal, ils identifient les conditions où les systèmes multi-agents reprennent l'avantage, et ils vérifient ces prédictions sur un dispositif expérimental large — trois familles de modèles, cinq architectures multi-agents, deux benchmarks, six niveaux de budget.</p>
+
+<h2>Égaliser le budget de réflexion</h2>
+
+<p>L'idée centrale est de contrôler ce que les auteurs appellent le <em>thinking token budget</em> — le nombre total de tokens consacrés au raisonnement intermédiaire, hors prompts et réponse finale. Pour un agent unique, ce budget correspond à la longueur de sa chaîne de pensée. Pour un système multi-agents, c'est la somme des chaînes de pensée de tous les agents réunis.</p>
+
+<p>L'analogie la plus parlante : vous avez un problème complexe et 60 minutes de réflexion. Première option, vous réfléchissez seul pendant une heure. Seconde option, vous répartissez ces 60 minutes entre quatre collègues qui travaillent en séquence, chacun passant ses conclusions au suivant par une note écrite. Dans le second cas, chaque personne dispose de moins de temps, et une partie de l'effort passe dans la rédaction et la lecture des notes de passage. Chaque transmission est une occasion de perdre un détail ou d'introduire une ambiguïté.</p>
+
+<p>Tran et Kiela formalisent cette intuition avec un principe issu de la théorie de l'information : chaque fois qu'on résume ou qu'on transmet de l'information d'un agent à un autre, on ne peut qu'en perdre ou, au mieux, la maintenir intacte. Un agent unique qui garde toute l'information en mémoire de travail dispose, par construction, d'un contexte plus riche que des agents qui communiquent par messages. Tant que cet agent exploite correctement son contexte, il a un avantage structurel.</p>
+
+<p>Les auteurs identifient aussi la limite de cet argument. Les modèles de langage actuels ne traitent pas parfaitement les longs contextes : dilution de l'attention, sensibilité au bruit, oubli des informations situées au milieu du texte. Quand le contexte se dégrade suffisamment, l'agent unique perd son avantage. Un pipeline multi-agents qui filtre et décompose l'information peut alors compenser cette dégradation.</p>
+
+<h3>Le dispositif expérimental</h3>
+
+<p>Trois familles de modèles sont testées : Qwen3-30B, DeepSeek-R1-Distill-Llama-70B, et Gemini 2.5 (Flash et Pro). Face à l'agent unique, cinq architectures multi-agents :</p>
+
+<ul>
+<li>Le <em>séquentiel</em>, où un planificateur découpe la question en étapes ordonnées et chaque agent passe ses conclusions au suivant.</li>
+<li>Les <em>sous-tâches parallèles</em>, où des agents traitent des sous-problèmes indépendants en même temps.</li>
+<li>Les <em>rôles parallèles</em> — solveur, extracteur de faits, sceptique — qui attaquent la même question sous des angles différents.</li>
+<li>Le <em>débat</em>, où deux agents répondent indépendamment puis critiquent mutuellement leurs réponses avant qu'un juge tranche.</li>
+<li>L'<em>ensemble</em>, où plusieurs agents répondent en parallèle et un juge sélectionne la meilleure réponse.</li>
+</ul>
+
+<p>Les tâches retenues sont des questions de raisonnement multi-sauts — des questions dont la réponse nécessite d'enchaîner plusieurs étapes logiques à partir de connaissances factuelles. Deux benchmarks servent d'évaluation : FRAMES et MuSiQue, ce dernier filtré aux questions à 4 sauts, les plus exigeantes. Les budgets de réflexion varient de 100 à 10 000 tokens, et chaque configuration est évaluée au même budget. Toute la validité de la comparaison repose sur ce contrôle.</p>
+
+<h2>L'agent unique tient la distance</h2>
+
+<p>Sur l'ensemble des modèles, des budgets et des benchmarks, l'agent unique égale ou dépasse les systèmes multi-agents. Les exceptions sont rares et concentrées sur les budgets les plus faibles (100 tokens), où aucune architecture ne produit de raisonnement utile.</p>
+
+<p>Quelques chiffres. Sur Qwen3-30B avec 2 000 tokens de budget, l'agent unique atteint 27,1 % de précision sur MuSiQue contre 22,9 % pour le système séquentiel et 23,4 % pour le débat. Sur DeepSeek-R1-70B, l'écart se creuse : 41,8 % contre 32,7 % pour le séquentiel au même budget. Gemini 2.5 Pro, le modèle le plus performant du lot, confirme la tendance : l'agent unique atteint 70,0 % sur FRAMES à 2 000 et 5 000 tokens, à égalité ou au-dessus de toutes les variantes multi-agents.</p>
+
+<p>Un détail révélateur : l'agent unique consomme souvent <em>moins</em> de tokens que le budget alloué tout en obtenant de meilleurs scores. Sur Qwen3 avec un budget de 10 000 tokens, l'agent unique n'en utilise que 1 462 en moyenne sur MuSiQue, alors que le système séquentiel en consomme 1 811. Plus performant et plus frugal.</p>
+
+<p>Parmi les architectures multi-agents, le débat se distingue comme la variante la plus régulièrement compétitive. Les rôles parallèles arrivent souvent en deuxième position. L'ensemble, lui, dépend davantage du budget : faible aux petits budgets, il devient compétitif sur Gemini Pro à partir de 5 000 tokens.</p>
+
+<p>Les performances s'améliorent avec le budget de réflexion, puis plafonnent. Pour la plupart des modèles, les résultats à 1 000-2 000 tokens sont déjà proches de ceux obtenus à 10 000 tokens. Au-delà d'un certain seuil, le budget supplémentaire n'apporte que des rendements décroissants — et peut même nuire, les modèles ayant tendance à sur-explorer ou à remettre en question des réponses pourtant correctes.</p>
+
+<h3>Quand le contexte se dégrade, la donne change</h3>
+
+<p>Les auteurs ont perturbé artificiellement le contexte donné à l'agent unique — en supprimant des mots, en les masquant, en les remplaçant par du texte aléatoire, ou en ajoutant des phrases parasites. Le résultat confirme la prédiction théorique.</p>
+
+<p>Sous substitution légère (30 % des tokens remplacés), l'agent unique garde l'avantage : 24,3 % contre 21,7 %. À 50 %, les deux systèmes convergent. À 70 %, le système séquentiel passe devant : 22,5 % contre 20,0 %. Le masquage produit le même schéma. Les distracteurs textuels, eux, ne suffisent pas à renverser la hiérarchie — l'agent unique reste devant, mais son avance se réduit.</p>
+
+<p>La conclusion des auteurs est précise : les systèmes multi-agents ne sont pas supérieurs en général, mais ils deviennent utiles quand l'information d'entrée est suffisamment bruitée pour qu'un raisonnement linéaire unique s'y perde.</p>
+
+<h3>Un problème de comptage chez Gemini</h3>
+
+<p>L'étude met au jour un artefact dans l'API de Gemini 2.5. Le nombre de tokens de réflexion rapporté par l'API ne correspond pas au contenu visible. Sur Gemini Flash avec un budget de 10 000 tokens, l'API signale 1 687 tokens de réflexion pour l'agent unique, mais le texte visible ne contient que 251 mots — environ 359 tokens réels. Un facteur d'inflation de 4,7.</p>
+
+<p>Le contenu visible de la réflexion plafonne, quel que soit le budget demandé. Que le budget soit de 1 000 ou de 10 000 tokens, Gemini Flash produit à peu près la même quantité de texte de réflexion visible (~350 tokens). Le système multi-agents, lui, accumule mécaniquement plus de texte visible parce qu'il enchaîne plusieurs appels API. Cette asymétrie peut fausser les comparaisons si l'on ne contrôle que le budget demandé — et non le raisonnement effectivement produit.</p>
+
+<h3>La paraphrase comme révélateur</h3>
+
+<p>Un dernier résultat mérite qu'on s'y arrête. Les auteurs ont reformulé les questions de MuSiQue de deux façons : une paraphrase légère par règles de remplacement, et une paraphrase profonde par réécriture complète via un LLM. La paraphrase légère fait baisser les scores — les remplacements mécaniques semblent brouiller des repères linguistiques utiles aux modèles. La paraphrase profonde, au contraire, améliore les performances. Sur Gemini Flash à 1 000 tokens, l'agent unique passe de 33,1 % à 35,8 %. Ce résultat suggère que les modèles ont partiellement mémorisé les formulations originales du benchmark pendant leur entraînement, et qu'une reformulation bien faite les force à raisonner plutôt qu'à réciter.</p>
+
+<h2>Ce que ça change en pratique</h2>
+
+<p>Pour les équipes qui construisent des systèmes d'IA en production, le message est direct : avant de déployer une architecture multi-agents, vérifiez que le gain ne vient pas simplement d'un budget de calcul supérieur. Un seul appel à un modèle performant, avec un prompt bien conçu, peut suffire — et coûtera moins cher en tokens, en latence et en complexité d'orchestration.</p>
+
+<p>L'architecture multi-agents se justifie dans des scénarios où l'information d'entrée est de mauvaise qualité : résultats de recherche web mal filtrés, documents longs et hétérogènes, contextes accumulés au fil de longues conversations. Pour des questions claires sur des contextes propres, l'agent unique reste le meilleur rapport performance-coût.</p>
+
+<p>Le débat entre agents, variante multi-agents la plus performante de l'étude, mérite qu'on s'y arrête. Sa mécanique — deux agents qui se critiquent mutuellement avant qu'un juge tranche — fournit un mécanisme de vérification croisée qui pourrait se montrer utile dans les applications où la fiabilité prime sur la vitesse.</p>
+
+<p>L'étude pointe aussi un problème méthodologique pour toute l'industrie. Les compteurs de tokens des API ne mesurent pas toujours ce qu'on croit. Quiconque compare des systèmes sur la base de tokens rapportés par une API risque de tirer des conclusions biaisées. Vérifier le contenu réel du raisonnement, pas seulement les chiffres de l'API, devrait devenir un réflexe.</p>
+
+<h2>Questions ouvertes</h2>
+
+<p>Cette étude se limite au raisonnement textuel multi-sauts. Elle ne couvre pas les scénarios où les agents utilisent des outils — recherche web, exécution de code, appels à des bases de données — ni le traitement multimodal. Ce sont des contextes où la spécialisation entre agents apporte potentiellement un avantage structurel que le raisonnement pur ne capture pas.</p>
+
+<p>Une variable déterminante : la capacité des futurs modèles à mieux exploiter les longs contextes. Si les prochaines générations éliminent les problèmes de dilution attentionnelle, l'avantage de l'agent unique se renforcera mécaniquement. Si ces limites persistent, les architectures hybrides — agent unique par défaut, pipeline multi-agents activé quand la qualité du contexte se dégrade — pourraient devenir la norme.</p>
+
+<p>L'expérience de paraphrase révèle un angle mort des évaluations actuelles. Si les modèles ont partiellement mémorisé les benchmarks pendant leur entraînement, les comparaisons d'architectures sur ces benchmarks sont fragiles. Construire des évaluations résistantes à cette contamination — par exemple en générant des questions originales à chaque session de test — devient une priorité pour que les résultats soient interprétables.</p>
+
+<p>L'opacité des compteurs de tokens dans les API commerciales reste un obstacle concret à la reproductibilité. Tant que les fournisseurs ne documenteront pas ce que leurs compteurs mesurent, toute comparaison entre systèmes sera bruitée par des artefacts de mesure. La communauté a besoin de standards de reporting clairs pour que les décisions d'architecture reposent sur des données fiables — pas sur des métriques gonflées.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

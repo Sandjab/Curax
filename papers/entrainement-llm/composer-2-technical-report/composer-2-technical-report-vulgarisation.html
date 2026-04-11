@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Composer 2 Technical Report — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Composer 2 Technical Report</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Un modèle qui code comme un développeur (ou presque)</h2>
+
+<p>En mars 2026, l'équipe de recherche de Cursor a publié le rapport technique de Composer 2, un modèle d'intelligence artificielle taillé sur mesure pour l'ingénierie logicielle. Pas un chatbot généraliste qui sait aussi coder. Un modèle dont chaque étape d'entraînement a été conçue pour résoudre des problèmes de développement réels — déboguer un service en production, refactoriser une base de code de plusieurs dizaines de milliers de lignes, implémenter une fonctionnalité complète à partir d'un ticket lacunaire.</p>
+
+<p>Composer 2 repose sur Kimi K2.5, un modèle open source de 1 040 milliards de paramètres dont seulement 32 milliards sont actifs à chaque inférence (architecture Mixture-of-Experts). L'équipe de Cursor l'a ensuite transformé via deux phases d'entraînement : un pré-entraînement continu centré sur le code, puis un apprentissage par renforcement à grande échelle. Le résultat : un agent capable de naviguer dans un dépôt, lire des fichiers, exécuter des commandes shell, chercher sur le web, et produire les modifications nécessaires — le tout en autonomie.</p>
+
+<p>Le rapport ne se contente pas de présenter des scores sur des benchmarks. Il décrit une infrastructure d'entraînement distribuée sur trois régions GPU et quatre régions CPU, un nouveau benchmark construit à partir de vraies sessions de développement, et des choix algorithmiques précis sur la façon d'entraîner un agent logiciel par renforcement. C'est autant un article d'ingénierie système qu'un article de machine learning.</p>
+
+<h2>2. Le décalage entre les benchmarks et la réalité du métier</h2>
+
+<p>Les benchmarks de code existants souffrent d'un problème chronique : ils ne ressemblent pas au travail quotidien d'un développeur. SWE-bench, le plus connu, se concentre sur la correction de bugs isolés dans des dépôts open source. Les énoncés y sont longs et précis (médiane : 1 185 à 3 055 caractères), les modifications attendues sont courtes (7 à 10 lignes modifiées en médiane). C'est l'équivalent d'un exercice bien cadré dans un manuel scolaire.</p>
+
+<p>Un vrai ticket de développement ressemble rarement à ça. Le rapport cite un exemple parlant : un développeur signale que « les tentatives 2 et 3 de scoring réussissent mais j'obtiens un message d'erreur "failed after 3 attempts" à la fin ». Pas de diagnostic, pas de fichier précis, juste un symptôme. L'agent doit croiser le code source avec des logs de production, ignorer des fausses pistes (des warnings sans rapport dans Datadog), et identifier la cause réelle — un bug de transpilation d'esbuild 0.20.2 qui gère mal le mot-clé <code>using</code> en JavaScript et provoque une fuite d'état entre les itérations d'une boucle de retry.</p>
+
+<p>L'équipe de Cursor identifie quatre failles dans les benchmarks publics. La contamination des données d'abord : les problèmes proviennent de dépôts open source qui finissent dans les corpus d'entraînement. OpenAI a d'ailleurs suspendu ses résultats sur SWE-bench Verified après avoir découvert que certains modèles pouvaient générer les correctifs de mémoire. Le décalage de domaine ensuite : beaucoup de tâches de Terminal-Bench ressemblent à des puzzles algorithmiques (calculer des coups d'échecs) plutôt qu'à du génie logiciel. La sur-spécification des énoncés, qui court-circuite l'effort d'interprétation que fournit un vrai développeur face à un ticket ambigu. Et enfin, l'évaluation réduite à la seule correction fonctionnelle, qui ignore la qualité du code, la lisibilité, le coût et la latence.</p>
+
+<h2>3. Deux étapes pour transformer un modèle généraliste en agent spécialisé</h2>
+
+<p>La recette de Composer 2 se résume en deux grandes phases, chacune avec sa logique propre.</p>
+
+<h3>Phase 1 : le pré-entraînement continu</h3>
+
+<p>Pensez-y comme à un stage intensif. Le modèle de base (Kimi K2.5) a déjà été entraîné sur d'énormes volumes de texte et de code, mais de façon généraliste. Le pré-entraînement continu le plonge dans un bain de données dominé par le code pendant trois sous-phases : d'abord un entraînement long sur des séquences de 32 000 tokens, puis une extension à 256 000 tokens pour gérer des contextes longs, et enfin un court affinage supervisé sur des tâches de programmation ciblées.</p>
+
+<p>L'équipe a vérifié empiriquement que cette étape améliore la suite : sur un modèle Qwen plus petit, elle a mesuré la relation entre la qualité du pré-entraînement (mesurée par la perplexité, c'est-à-dire la capacité du modèle à prédire le prochain token) et la performance finale après renforcement. La courbe est monotone — plus le pré-entraînement est poussé, meilleure est la performance après RL. C'est comme muscler les fondamentaux d'un athlète avant de l'entraîner sur son sport.</p>
+
+<h3>Phase 2 : l'apprentissage par renforcement agentique</h3>
+
+<p>C'est la phase qui distingue Composer 2 d'un simple modèle affiné. Le modèle est lâché sur des milliers de problèmes de développement, dans des environnements qui répliquent fidèlement une session Cursor réelle — mêmes outils, même interface, même structure. Pour chaque problème, plusieurs trajectoires sont générées en parallèle. Le modèle explore, écrit du code, exécute des tests, lit des logs, itère. Puis les poids sont mis à jour en fonction de la qualité des solutions.</p>
+
+<p>La distribution des tâches d'entraînement reflète ce que les développeurs font vraiment : itération sur une fonctionnalité existante (le plus fréquent), débogage, création de nouvelles fonctionnalités, refactorisation, compréhension de code, documentation, tests, revue de code, optimisation, DevOps, migration, suppression. Loin du « corrige ce bug isolé » des benchmarks académiques.</p>
+
+<p>Un ingrédient clé : la pénalité de longueur non linéaire. L'idée est simple mais efficace. Sur une question facile (renommer une variable), chaque outil supplémentaire utilisé par le modèle coûte cher en termes de récompense. Sur un problème complexe (refactoriser un module entier), le même effort marginal est bien moins pénalisé. Le modèle apprend ainsi à calibrer son effort — rapide quand c'est simple, méthodique quand c'est dur. C'est cette pénalité qui l'a poussé à découvrir spontanément l'appel d'outils en parallèle.</p>
+
+<p>Autre technique originale : l'auto-résumé. Quand une trajectoire dépasse la fenêtre de contexte, le modèle génère lui-même un résumé de ce qu'il a fait jusqu'ici, puis continue avec ce résumé comme contexte. Les bons résumés (ceux qui mènent à des solutions correctes) sont renforcés, les mauvais (ceux qui perdent de l'information critique) sont pénalisés. Le modèle apprend à compresser intelligemment son propre historique de travail.</p>
+
+<h2>4. Des gains mesurables, y compris sur des problèmes réalistes</h2>
+
+<p>Composer 2 atteint 61,3 % sur CursorBench, le benchmark interne construit à partir de vraies sessions d'ingénierie. C'est une amélioration de 37 % par rapport à Composer 1.5 (44,2 %) et de 61 % par rapport à Composer 1 (38,0 %). Par rapport à son modèle de base, Kimi K2.5, qui plafonne à 36,0 % sur le même benchmark, le gain est massif.</p>
+
+<p>Sur les benchmarks publics : 73,7 % sur SWE-bench Multilingual et 61,7 % sur Terminal-Bench. Ces scores le placent au niveau des meilleurs modèles généralistes — GPT-5.4 atteint 63,9 % sur CursorBench et 66,5 % sur Terminal-Bench, Opus 4.6 obtient 58,2 % et 58,0 % respectivement.</p>
+
+<p>Le résultat le plus frappant concerne le rapport qualité-coût. Composer 2 est un modèle de 32 milliards de paramètres actifs, bien plus petit que les modèles propriétaires avec lesquels il rivalise. Son coût d'inférence par tâche CursorBench se situe au niveau de modèles plus petits ou de variantes « effort faible » des gros modèles, tout en maintenant une précision comparable aux variantes « effort élevé ». L'équipe parle de frontière de Pareto : aucun autre modèle n'offre un meilleur compromis entre coût et précision.</p>
+
+<p>Un résultat théorique surprend aussi les chercheurs. Une partie de la communauté soutient que le RL sur les modèles de langage ne fait que concentrer la masse de probabilité sur des solutions déjà connues du modèle, sans réellement élargir son répertoire. Ici, les données racontent autre chose : la performance moyenne et la performance best-of-K (la meilleure solution parmi K tentatives) progressent toutes les deux au fil de l'entraînement. Le RL ne se contente pas de fiabiliser le modèle — il lui apprend à résoudre des problèmes qu'il ne savait pas résoudre avant.</p>
+
+<p>CursorBench lui-même évolue. Sa troisième itération (CursorBench-3) exige plus du double de fichiers modifiés et de lignes changées par rapport à la première version. La médiane des modifications est de 181 lignes, contre 7 à 10 pour SWE-bench. Les énoncés, eux, sont plus courts : 390 caractères en médiane. Plus de code à écrire, moins d'instructions. C'est le reflet fidèle de l'asymétrie du métier.</p>
+
+<h2>5. Ce que ça change pour les développeurs et l'industrie</h2>
+
+<p>Composer 2 valide une thèse que beaucoup dans l'industrie commençaient à formuler : on peut construire des modèles spécialisés qui rivalisent avec les généralistes les plus puissants, à une fraction du coût. Un modèle de 32 milliards de paramètres actifs, entraîné spécifiquement pour le code, tient tête à des modèles probablement dix fois plus gros. Pour une entreprise qui facture l'inférence à l'usage, cette différence de coût se traduit directement en marge — ou en prix plus bas pour l'utilisateur.</p>
+
+<p>L'approche « entraîner dans l'environnement de déploiement » mérite attention. L'équipe a construit Anyrun, une plateforme interne capable de lancer plus de 500 machines virtuelles Firecracker par seconde, chacune simulant un environnement de développement complet. Les rollouts d'entraînement se font dans le même harnais que le produit déployé. Quand le modèle apprend à résoudre un problème, il le fait avec les mêmes outils, les mêmes contraintes, les mêmes latences que l'utilisateur final rencontrera. Ce degré de fidélité entre entraînement et production est rare, et les résultats suggèrent qu'il paie.</p>
+
+<p>Pour les développeurs qui utilisent Cursor au quotidien, le changement se traduit par un agent plus fiable sur des tâches longues et ambiguës. Le self-summarization lui permet de maintenir sa cohérence sur des centaines d'appels d'outils. La pénalité de longueur non linéaire le rend rapide sur les demandes simples — renommer une variable, corriger une typo — sans le brider sur les refactorisations complexes. Les récompenses auxiliaires de comportement l'empêchent de dériver vers des habitudes agaçantes : laisser des commentaires de chaîne de pensée dans le code, créer des listes de tâches sans les terminer, ou n'utiliser que le terminal au lieu des outils d'édition disponibles.</p>
+
+<p>Le rapport contient aussi un signal d'alerte pour l'industrie du benchmarking. La suspension par OpenAI de ses résultats SWE-bench, la compression des scores entre modèles de capacités différentes, la contamination des données — tout cela suggère que les benchmarks publics actuels atteignent leurs limites comme outils de comparaison. CursorBench propose une alternative (tâches privées, régulièrement renouvelées, multi-critères), mais son caractère interne empêche toute vérification indépendante. Le problème de l'évaluation fiable des agents de code reste largement ouvert.</p>
+
+<h2>6. Les questions qui restent ouvertes</h2>
+
+<p>Composer 2 fonctionne dans l'environnement Cursor, avec les outils Cursor, évalué sur des tâches Cursor. La généralisation à d'autres IDE, d'autres workflows, d'autres langages sous-représentés dans l'entraînement reste à démontrer. L'équipe elle-même reconnaît que le modèle montre des faiblesses claires en intelligence et en cohérence sur certains cas.</p>
+
+<p>La question de l'horizon temporel est la plus ambitieuse. Les tâches actuelles de CursorBench se résolvent en quelques minutes à quelques dizaines de minutes. Les prochaines itérations visent des problèmes qui prendraient des heures à un développeur humain. Entraîner un agent sur des trajectoires aussi longues pose des défis algorithmiques (comment propager un signal de récompense utile sur des milliers d'étapes ?) et infrastructurels (comment maintenir des environnements fidèles pendant des heures d'exécution ?).</p>
+
+<p>L'infrastructure d'entraînement, distribuée sur trois continents avec synchronisation de poids par delta compression via S3, représente un investissement considérable. Reproduire cette approche demande non seulement les GPU Blackwell nécessaires (l'équipe utilise des formats de calcul — NVFP4, MXFP8 — spécifiques à cette architecture), mais aussi des années d'ingénierie sur la plateforme d'environnements, le système de rollout, et la pile RL asynchrone. D'autres laboratoires pourront-ils appliquer cette recette à leurs propres domaines de spécialisation ? La question reste entière.</p>
+
+<p>Enfin, le rapport effleure un sujet délicat sans le développer : les récompenses comportementales. L'équipe « surveille le modèle pour détecter des comportements émergents et introduit occasionnellement des récompenses supplémentaires ». Derrière cette phrase se cache un processus artisanal de correction en cours d'entraînement, guidé par le jugement humain. Formaliser cette boucle — définir ce qu'est un « bon » comportement d'agent au-delà de la correction fonctionnelle — sera un axe de recherche déterminant pour la prochaine génération de modèles spécialisés.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

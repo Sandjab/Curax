@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MemFactory: Unified Inference &amp; Training Framework for Agent Memory — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>MemFactory: Unified Inference &amp; Training Framework for Agent Memory</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Introduction</h2>
+
+<p>Quand vous fermez une conversation avec un chatbot IA et en ouvrez une nouvelle, le modèle repart de zéro. Il a oublié votre nom, vos préférences, le contexte de votre projet. Cette amnésie chronique est l'un des freins majeurs à la transformation des grands modèles de langage (LLM) en véritables agents autonomes, capables de travailler sur des tâches longues et de s'adapter à leurs utilisateurs au fil du temps.</p>
+
+<p>Des équipes de recherche ont commencé à greffer des systèmes de mémoire sur ces modèles : des mécanismes pour extraire les informations utiles d'une conversation, les stocker, les mettre à jour quand elles deviennent obsolètes, et les retrouver au bon moment. Certaines approches récentes vont plus loin — elles utilisent l'apprentissage par renforcement (RL) pour que le modèle apprenne lui-même quand et comment gérer sa mémoire, plutôt que de suivre des règles figées écrites par un développeur humain.</p>
+
+<p>Le problème : chaque équipe construit son propre système de A à Z, avec ses propres formats, ses propres pipelines d'entraînement, ses propres jeux de données. Reproduire ou combiner ces travaux demande un effort d'ingénierie considérable. L'équipe de MemTensor répond à ce problème avec MemFactory, un framework unifié et modulaire pour construire, entraîner et évaluer des agents à mémoire. Leur ambition : faire pour la mémoire des LLM ce que LLaMA-Factory a fait pour le fine-tuning — fournir une boîte à outils standardisée qui accélère la recherche et abaisse la barrière d'entrée.</p>
+
+<h2>2. Le problème</h2>
+
+<p>Pour comprendre le défi, il faut d'abord saisir ce qu'on entend par « mémoire » pour un agent IA. Un LLM classique traite chaque requête en se basant uniquement sur le texte qu'il reçoit dans sa fenêtre de contexte — une sorte de mémoire de travail limitée en taille. Quand la conversation dépasse cette fenêtre, les informations les plus anciennes disparaissent. C'est comme essayer de se souvenir d'une réunion d'il y a six mois en n'ayant que les dix dernières minutes de notes sous les yeux.</p>
+
+<p>Les systèmes de mémoire augmentée ajoutent une couche externe : une base de données où l'agent peut stocker des faits, des préférences, des décisions passées, puis les récupérer quand c'est pertinent. Trois opérations fondamentales structurent ce cycle : l'extraction (identifier quoi retenir), la mise à jour (ajouter, modifier ou supprimer des entrées) et la récupération (retrouver l'information utile au bon moment).</p>
+
+<p>Trois approches récentes ont montré des résultats solides en utilisant le RL pour optimiser ces opérations. Memory-R1 entraîne un gestionnaire de mémoire à exécuter des opérations CRUD — ajout, mise à jour, suppression — sur une base structurée. MemAgent compresse l'historique dans un état mémoire compact qui se met à jour de façon récurrente, segment après segment. RMM optimise la phase de récupération en apprenant à reclasser les souvenirs retrouvés selon leur pertinence réelle.</p>
+
+<p>Ces trois systèmes fonctionnent. Mais ils sont incompatibles entre eux. Chacun a son propre code d'entraînement, son propre format de données, ses propres hypothèses sur la tâche à accomplir. Vouloir prendre le module de récupération de RMM et l'intégrer dans l'architecture de Memory-R1 ? C'est un chantier d'ingénierie à part entière. C'est un peu comme si chaque fabricant d'électroménager utilisait ses propres prises électriques : chaque appareil fonctionne chez son constructeur, mais l'interopérabilité est un cauchemar.</p>
+
+<h2>3. La méthode</h2>
+
+<p>MemFactory propose une architecture en quatre couches superposées, chacune avec une responsabilité claire.</p>
+
+<p>La première, la couche Module, décompose le cycle de vie de la mémoire en briques élémentaires interchangeables. Un Extracteur analyse les conversations pour en tirer des faits structurés. Un Updater compare ces faits avec la mémoire existante et décide quoi ajouter, modifier ou supprimer. Un Retriever retrouve les souvenirs pertinents quand l'agent en a besoin. Et pour les approches qui fusionnent ces étapes — comme MemAgent, qui met à jour sa mémoire d'un seul bloc — un Agent Module prend en charge l'ensemble du processus. Chaque brique respecte une interface standardisée avec trois méthodes (<em>generate</em>, <em>rollout</em>, <em>inference</em>) qui permettent de l'utiliser aussi bien en entraînement qu'en inférence pure.</p>
+
+<p>L'analogie des Lego est parlante. Chaque brique se clipse sur les autres sans modification. Vous voulez remplacer le Retriever naïf par un Retriever avec reclassement via un modèle de raisonnement ? Vous changez une brique, le reste tient.</p>
+
+<p>La deuxième couche, l'Agent Layer, assemble ces briques en agents fonctionnels. C'est le chef d'orchestre : il charge un modèle pré-entraîné, coordonne les appels aux différents modules pendant l'interaction et produit les trajectoires d'entraînement. Le framework fournit trois agents prêts à l'emploi, calqués sur Memory-R1, MemAgent et RMM, mais la conception modulaire permet d'en créer de nouveaux en combinant les briques autrement.</p>
+
+<p>La troisième couche gère l'environnement. Elle remplit deux fonctions : convertir les données brutes en états standardisés que l'agent peut consommer, et calculer les récompenses après chaque action. Deux types d'environnements coexistent — l'un pour la mémoire à long terme (avec une base de données explicite), l'autre pour la mémoire à court terme (traitement direct de longs historiques de dialogue). Les récompenses sont multidimensionnelles : vérification du format de sortie, évaluation de la qualité par un LLM-juge, score de correspondance exacte.</p>
+
+<p>La quatrième couche est le moteur d'entraînement. MemFactory utilise GRPO (Group Relative Policy Optimization), un algorithme de RL qui élimine le besoin d'un réseau critique séparé. Dans les approches classiques comme PPO, il faut entraîner un second modèle — le critique — presque aussi gros que le modèle principal, ce qui double la mémoire GPU nécessaire. GRPO contourne le problème : pour chaque entrée, il génère un groupe de réponses candidates et les compare entre elles pour déterminer lesquelles sont meilleures que la moyenne du lot. C'est le principe de la notation relative : on ne cherche pas un score absolu, on regarde qui s'en sort le mieux dans le groupe.</p>
+
+<p>Ce choix est pragmatique. Les agents à mémoire consomment déjà beaucoup de mémoire GPU à cause des longs contextes qu'ils manipulent. Ajouter un réseau critique par-dessus rendrait l'entraînement prohibitif pour la plupart des équipes. Avec GRPO, MemFactory peut entraîner un agent complet sur un seul GPU NVIDIA A800 de 80 Go.</p>
+
+<h2>4. Résultats clés</h2>
+
+<p>L'équipe a validé MemFactory en entraînant un agent de type MemAgent avec deux modèles de base : Qwen3-1.7B (un petit modèle) et Qwen3-4B-Instruct (un modèle de taille moyenne). L'entraînement utilise les données publiques fournies par l'équipe originale de MemAgent, simplifiées pour accélérer le processus : les contextes ont été réduits à un tiers de leur longueur initiale, soit 50 à 80 documents par échantillon.</p>
+
+<p>Trois jeux de test servent à l'évaluation. Deux ensembles « in-distribution » (eval_50 et eval_100, avec respectivement 50 et 100 documents par question) et un ensemble hors distribution (eval_fwe_16384), conçu pour tester la généralisation à des contextes longs non vus pendant l'entraînement. Chaque score est moyenné sur quatre essais indépendants pour lisser la variance liée à la génération.</p>
+
+<p>Sur le petit modèle Qwen3-1.7B, MemFactory fait passer le score moyen de 0,31 à 0,36 — un gain relatif de 14,8 %. Les progrès sont concentrés sur les tâches principales : +20 % sur eval_50, +13 % sur eval_100. Le score hors distribution baisse légèrement, ce qui suggère que le petit modèle apprend des stratégies efficaces mais pas encore assez généralisables.</p>
+
+<p>Le modèle Qwen3-4B-Instruct montre un profil différent. Le gain moyen atteint 7,3 %, mais il est réparti uniformément sur les trois benchmarks, y compris le test hors distribution. Le modèle plus grand transfère mieux la politique de mémoire apprise vers des situations inédites — signe que la taille du modèle agit comme un filet de sécurité contre le surapprentissage des stratégies.</p>
+
+<p>Deux chiffres méritent attention au-delà des scores bruts. D'abord, 250 étapes d'entraînement suffisent — c'est un entraînement léger, loin des milliers d'étapes habituelles en RL. Ensuite, la totalité du pipeline tourne sur un seul GPU. Pour un domaine où les expériences de RL nécessitent souvent des clusters multi-GPU, c'est une contrainte matérielle accessible à un laboratoire universitaire ou à une startup.</p>
+
+<h2>5. Implications pratiques</h2>
+
+<p>Le premier effet tangible de MemFactory est la réduction du coût d'entrée dans la recherche sur la mémoire des agents. Avant ce framework, reproduire les résultats de Memory-R1 ou de MemAgent exigeait de décortiquer le code source de chaque projet, d'adapter les formats de données, de réécrire les boucles d'entraînement. MemFactory fournit ces implémentations prêtes à l'emploi, configurables par fichier YAML.</p>
+
+<p>Pour les équipes d'ingénierie qui construisent des agents en production — assistants personnalisés, outils d'analyse de documents longs, agents conversationnels à mémoire persistante — le framework fournit un banc d'essai standardisé. Comparer cinq stratégies de mémoire ne nécessite plus cinq projets séparés mais cinq fichiers de configuration différents.</p>
+
+<p>L'enjeu est aussi scientifique. La fragmentation des implémentations rend les comparaisons entre méthodes peu fiables : les différences de performance peuvent venir de l'algorithme lui-même ou de choix d'ingénierie périphériques (gestion du padding, format des prompts, calcul des récompenses). Un framework unifié isole la variable intéressante — la stratégie de mémoire — du bruit d'implémentation.</p>
+
+<p>La compatibilité avec un seul GPU A800 a des implications concrètes sur qui peut faire cette recherche. Les laboratoires académiques, souvent limités en ressources de calcul, peuvent désormais entraîner et itérer sur des agents à mémoire sans accès à un cluster. L'approche modulaire facilite aussi l'hybridation : un praticien pourrait combiner l'extracteur de Memory-R1 avec le retriever à reclassement de RMM — une combinaison qu'aucune des deux équipes originales n'a testée. Ces recombinaisons sont souvent la source d'innovations incrémentales mais précieuses.</p>
+
+<h2>6. Pour aller plus loin</h2>
+
+<p>MemFactory couvre trois architectures de mémoire. Le champ en compte bien davantage : mémoire épisodique, mémoire procédurale, mémoire hiérarchique, systèmes multi-agents avec mémoire partagée. La couverture actuelle est un point de départ, pas un état final.</p>
+
+<p>L'efficacité de l'entraînement reste perfectible. Les auteurs ont simplifié les données en réduisant la longueur des contextes d'un facteur trois. Cette compression accélère les itérations mais pose une question : les politiques apprises sur des contextes courts se transfèrent-elles bien aux contextes longs rencontrés en production ? Les résultats mitigés du petit modèle sur le test hors distribution suggèrent que non, du moins pas systématiquement.</p>
+
+<p>Une direction absente du papier : l'entraînement multi-tâche. Les agents actuels apprennent leur politique de mémoire sur un seul type de tâche. Un agent déployé en production devra gérer simultanément du dialogue personnalisé, de l'extraction d'information et du suivi de tâches longues. Former des politiques de mémoire robustes à cette diversité est un problème ouvert.</p>
+
+<p>La question de l'évaluation elle-même n'est pas résolue. Les benchmarks actuels mesurent la capacité à retrouver des faits précis dans un historique. Mais la mémoire humaine ne fonctionne pas uniquement par rappel factuel — elle implique aussi l'abstraction, la synthèse, l'oubli sélectif. Des benchmarks capturant ces dimensions plus subtiles manquent encore à l'appel.</p>
+
+<p>MemFactory pose les fondations d'une infrastructure commune. Le vrai test sera l'adoption par la communauté : les prochains travaux sur la mémoire des agents utiliseront-ils ce framework comme base, ou construiront-ils une fois de plus leur propre solution ? L'histoire des frameworks en deep learning — de Caffe à PyTorch en passant par TensorFlow — montre que la standardisation finit par s'imposer, mais rarement du premier coup.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

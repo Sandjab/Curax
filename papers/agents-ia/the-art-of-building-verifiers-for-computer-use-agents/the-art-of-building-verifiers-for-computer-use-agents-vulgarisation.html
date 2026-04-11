@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Art of Building Verifiers for Computer Use Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Art of Building Verifiers for Computer Use Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Un agent IA réserve un billet d'avion sur Expedia. Il navigue entre les pages, saisit les dates, sélectionne un vol, remplit les informations passager, et annonce : « C'est fait. » Mais est-ce vraiment fait ? Le billet a-t-il été réservé, ou l'agent s'est-il arrêté juste avant le paiement en prétendant avoir terminé ? Cette question — en apparence triviale — est l'un des verrous les plus tenaces du domaine des agents informatiques autonomes.</p>
+
+<p>Une équipe de Microsoft Research et de Browserbase a consacré plusieurs semaines à construire un vérificateur fiable pour ces agents. Leur publication, <em>The Art of Building Verifiers for Computer Use Agents</em>, documente quatre principes de conception et livre un système open source, l'Universal Verifier, capable de juger les trajectoires d'agents web avec une fiabilité comparable à celle d'annotateurs humains. Les auteurs publient aussi CUAVerifierBench, le premier benchmark dédié à l'évaluation des vérificateurs eux-mêmes — une sorte de contrôle qualité du contrôle qualité.</p>
+
+<h2>Le problème : juger une trajectoire, pas une réponse</h2>
+
+<p>Quand un chatbot génère du texte, vérifier sa sortie est relativement direct : on compare la réponse à une référence. Quand un agent utilise un ordinateur, la situation change radicalement. La « réponse » n'est pas un texte mais une séquence d'actions : des clics, des saisies clavier, des défilements de page, documentés par des dizaines, parfois des centaines de captures d'écran. Le succès lui-même est ambigu. L'agent a peut-être trouvé le bon produit mais s'est fait bloquer par un CAPTCHA. Il a peut-être atteint le résultat par un chemin imprévu mais valide. Il a peut-être affirmé avoir réussi alors qu'une capture d'écran, enfouie au milieu de la trajectoire, prouve le contraire.</p>
+
+<p>Les vérificateurs existants gèrent mal cette complexité. WebVoyager, développé en 2024, envoie toutes les captures d'écran à un modèle de langage multimodal et lui demande un verdict binaire : succès ou échec. Quand il y a 50 ou 100 images, le modèle se noie. Il doit trouver une aiguille dans une botte de foin visuelle, et rate souvent des erreurs subtiles. Résultat : un taux de faux positifs de 45 % — presque une trajectoire sur deux est déclarée réussie alors qu'elle a échoué. WebJudge améliore la situation en filtrant les captures les plus pertinentes, mais conserve un taux de faux positifs de 22 %. Ces chiffres signifient que les benchmarks qui utilisent ces vérificateurs surévaluent systématiquement les performances des agents.</p>
+
+<h2>La méthode : quatre principes pour un vérificateur fiable</h2>
+
+<h3>Des grilles d'évaluation sans critères fantômes</h3>
+
+<p>Le premier constat des chercheurs : la qualité d'un vérificateur dépend avant tout de la qualité de sa grille d'évaluation. Une grille mal conçue produit des erreurs en cascade qu'aucun modèle, aussi puissant soit-il, ne peut rattraper en aval. Les auteurs ont identifié un défaut récurrent : les « critères fantômes ». Quand on demande à un LLM de générer une grille pour la tâche « trouve un concert de musique live sur Eventbrite et cherche des morceaux de l'artiste sur Spotify », le modèle ajoute spontanément des critères sur le prix des billets, les liens vers l'événement, les URL Spotify — aucun de ces éléments n'était demandé par l'utilisateur. Ces critères fantômes gonflent artificiellement le dénominateur et pénalisent des agents qui ont pourtant accompli la tâche.</p>
+
+<p>La solution : séparer la génération de la grille de sa notation. La grille est construite à partir de l'énoncé seul, sans voir la trajectoire de l'agent. Cette séparation empêche le modèle de fabriquer des critères complaisants, taillés sur mesure pour ce que l'agent a réellement fait. Les critères doivent aussi être logiquement indépendants : si l'agent se trompe sur le quartier de recherche, cette erreur ne doit pas se propager automatiquement aux critères suivants.</p>
+
+<h3>Processus et résultat : deux jugements distincts</h3>
+
+<p>Un agent qui navigue correctement vers le bon produit, sélectionne les bonnes options, mais se fait bloquer par un mur de connexion sans identifiants a-t-il échoué ? Oui, du point de vue de l'utilisateur : le produit n'est pas dans le panier. Non, du point de vue de la qualité d'exécution : l'agent a fait tout ce qu'il pouvait. Confondre ces deux dimensions produit un signal de récompense faussé — soit trop indulgent (on crédite l'effort quand l'utilisateur n'a rien obtenu), soit trop sévère (on pénalise l'agent pour des facteurs hors de son contrôle).</p>
+
+<p>L'Universal Verifier produit donc deux scores indépendants pour chaque trajectoire. Le score de processus évalue la qualité d'exécution à chaque étape, sous forme d'une note normalisée entre 0 et 1. Le score de résultat est un verdict binaire : l'objectif de l'utilisateur est-il atteint, oui ou non ? Ces deux signaux ne divergent que dans un cas précis : quand l'environnement a empêché la réussite malgré une exécution correcte de l'agent.</p>
+
+<h3>Ce qui est contrôlable, ce qui ne l'est pas</h3>
+
+<p>Pour alimenter cette distinction, les chercheurs catégorisent les facteurs de succès et d'échec. Du côté incontrôlable : les CAPTCHA, les murs d'authentification sans identifiants, les produits en rupture de stock, les services supprimés. L'agent ne doit pas être pénalisé pour ces obstacles. Du côté contrôlable : choisir le mauvais produit, fabriquer une information, abandonner après une seule tentative, commettre une erreur de raisonnement. Ces erreurs-là sont directement imputables à l'agent.</p>
+
+<p>Cette catégorisation s'accompagne d'une stratégie de notation dite « sans cascade d'erreurs ». Quand un obstacle incontrôlable bloque une étape, les critères qui en dépendent sont exclus du calcul plutôt que notés à zéro. L'agent qui se fait bloquer par un CAPTCHA à l'étape 3 sur 5 peut obtenir un score de processus parfait sur les trois premières étapes, au lieu de récolter un zéro global.</p>
+
+<h3>Diviser pour mieux voir</h3>
+
+<p>Le dernier principe concerne la gestion des captures d'écran — le défi technique le plus original du travail. Envoyer cent images dans un seul appel au modèle, c'est lui demander de chercher simultanément toutes les aiguilles dans une botte de foin croissante. L'Universal Verifier procède autrement. Il construit d'abord une matrice de pertinence : chaque capture est évaluée contre chaque critère de la grille, produisant un score numérique. Ensuite, pour chaque critère, seules les captures les plus pertinentes (les « top-k ») sont envoyées au modèle pour analyse détaillée.</p>
+
+<p>L'approche fonctionne comme un enquêteur qui sait quelles pièces du dossier consulter pour chaque question, au lieu de relire tout le dossier à chaque fois. Elle est plus scalable : le volume d'images analysées en profondeur dépend du nombre de critères, pas de la longueur totale de la trajectoire. Les auteurs ont aussi ajouté une passe de détection d'hallucinations. Chaque critère est d'abord noté sans les captures (sur la base des actions textuelles seules), puis avec les captures. Les divergences entre les deux passes signalent des fabrications — par exemple, un agent qui prétend avoir lu « +6.2 % en CIDEr » sur une page ArXiv alors que la capture d'écran affiche « +2.8 % ».</p>
+
+<h2>Résultats clés</h2>
+
+<p>Les chercheurs ont testé l'Universal Verifier sur CUAVerifierBench, un ensemble de 246 trajectoires annotées par des humains (140 en interne, 106 via Browserbase avec double annotation). Le coefficient de Cohen's κ — une mesure d'accord entre annotateurs corrigée du hasard, où 0 signifie accord aléatoire et 1 accord parfait — atteint 0.64 sur le jeu interne et 0.58 sur le jeu Browserbase pour les labels de résultat. À titre de comparaison : WebJudge obtient 0.44 et 0.26, WebVoyager 0.31 et 0.13.</p>
+
+<p>Le chiffre le plus frappant concerne les faux positifs. L'Universal Verifier tombe à 1 % en interne et 8 % sur Browserbase, contre 22 à 45 % pour les baselines. Un faux positif, c'est un vérificateur qui déclare « succès » quand l'agent a échoué — la pire erreur possible pour un système d'évaluation, puisqu'elle corrompt à la fois les benchmarks et les données d'entraînement.</p>
+
+<p>Ces gains ne viennent pas du modèle sous-jacent. Les chercheurs ont mis à jour WebVoyager et WebJudge avec le même GPT-5.2 utilisé par l'Universal Verifier. Les améliorations sont restées modestes. Le taux de faux positifs de WebVoyager a baissé (de 45 % à 10 %), mais son taux de faux négatifs a bondi (de 24 % à 44 %) — le modèle est devenu plus prudent mais aussi plus aveugle. L'avantage de l'Universal Verifier est structurel : c'est l'architecture du pipeline qui fait la différence, pas la puissance brute du modèle.</p>
+
+<p>Un résultat met en perspective la difficulté de la tâche : l'Universal Verifier est au niveau de l'accord entre annotateurs humains. Sur le jeu Browserbase, l'accord inter-annotateurs oscille entre κ = 0.53 et 0.57. L'UV atteint 0.58. Le vérificateur automatique est donc aussi fiable qu'un deuxième annotateur humain. Quand les annotateurs ont vu le raisonnement détaillé de l'UV, 16.6 % d'entre eux ont changé leur jugement — dans la quasi-totalité des cas pour passer de « succès » à « échec », après que l'UV a révélé des erreurs qu'ils avaient manquées au premier passage.</p>
+
+<blockquote>« Le schéma le plus fréquent était que je donnais trop de crédit à des trajectoires qui semblaient correctes dans l'ensemble, même quand la réponse finale passait à côté de l'exigence centrale. Le vérificateur m'a rendu plus prudent sur la distinction entre "a trouvé l'information" et "a livré l'information". » — Annotateur Browserbase</blockquote>
+
+<h2>Implications pratiques</h2>
+
+<p>Un vérificateur fiable change la donne à deux niveaux. Pour l'évaluation d'abord : les benchmarks qui mesurent les performances des agents web reposent sur des vérificateurs automatiques. Avec un taux de faux positifs de 45 %, les classements sont faussés — des agents médiocres obtiennent des scores flatteurs, et les équipes qui affichent les meilleurs chiffres ne sont pas nécessairement celles qui construisent les meilleurs agents. L'Universal Verifier fournit un étalon plus honnête.</p>
+
+<p>Pour l'entraînement ensuite : les techniques d'apprentissage par renforcement avec retour humain (RLHF) ont besoin d'un signal de récompense fiable. Si le vérificateur dit « succès » quand c'est un échec, l'agent apprend à reproduire des comportements défaillants. Passer de 45 % à 1 % de faux positifs assainit directement les données d'entraînement.</p>
+
+<p>L'article contient aussi un résultat inattendu sur l'automatisation de la recherche elle-même. Les auteurs ont demandé à un agent IA (Claude Code avec Claude Opus 4.6, contexte d'un million de tokens) de concevoir un vérificateur à partir de zéro, en lui donnant les mêmes principes de haut niveau et la même infrastructure expérimentale que l'expert humain. L'agent a atteint 70 % de la qualité de l'expert en 5 % du temps — environ un jour contre trois semaines. Mais il a plafonné autour de κ = 0.55, incapable de découvrir seul les décisions structurelles qui ont produit les gains les plus importants chez l'expert. En revanche, quand l'agent partait des meilleurs prompts de l'expert et cherchait des améliorations incrémentales, il dépassait le score expert. La leçon : l'intuition humaine et l'optimisation automatique sont complémentaires. L'humain fait les sauts conceptuels, la machine peaufine les détails.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>L'Universal Verifier et CUAVerifierBench sont publiés en open source sur GitHub. La communauté peut tester ses propres vérificateurs sur les mêmes trajectoires annotées et comparer les résultats. C'est la première fois qu'un benchmark standardisé cible la qualité des vérificateurs — et non celle des agents eux-mêmes.</p>
+
+<p>Le coût reste un frein. Pour une trajectoire de 47 captures d'écran et 3 critères, le pipeline nécessite 65 appels LLM. La majorité s'exécutent en parallèle, mais la facture s'accumule vite à l'échelle d'un benchmark de plusieurs centaines de trajectoires. Distiller les principes de l'UV dans des modèles plus petits et spécialisés est une piste de travail naturelle.</p>
+
+<p>La généralisation au-delà du web est une autre question ouverte. Les agents qui contrôlent des applications de bureau, des environnements mobiles ou des interfaces 3D posent des défis de vérification différents. Les captures d'écran de bureau sont plus denses en information, les trajectoires mobiles plus longues, les interactions 3D plus difficiles à interpréter visuellement. Les quatre principes de l'UV semblent transposables, mais la validation reste à faire.</p>
+
+<p>Enfin, les auteurs ont choisi un titre révélateur : <em>The Art of Building Verifiers</em>. Le mot « art » n'est pas décoratif. Leur propre expérience d'auto-research montre qu'un agent automatisé, même puissant, ne retrouve pas seul toutes les décisions de conception qui font un bon vérificateur. Savoir quand un écart de six centimes est un détail et quand un chiffre inversé est une hallucination critique — coder cette nuance dans un système automatique, c'est là que l'ingénierie rencontre le discernement humain. Et c'est sans doute la leçon la plus durable de ce travail.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

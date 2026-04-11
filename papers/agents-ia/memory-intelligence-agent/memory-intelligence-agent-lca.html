@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Intelligence Agent — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Memory Intelligence Agent</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Les agents de recherche profonde (Deep Research Agents) combinent raisonnement LLM et outils externes pour résoudre des tâches complexes en plusieurs tours d'interaction. Leur talon d'Achille : la mémoire. Les approches à contexte long diluent l'attention, injectent du bruit et gonflent les coûts de stockage. MIA propose une architecture Manager-Planner-Executor qui sépare la mémoire épisodique compressée (non-paramétrique) de la mémoire internalisée dans les poids du Planner (paramétrique). L'objectif est double — réduire le coût de stockage tout en améliorant la qualité du raisonnement grâce à l'expérience accumulée.</p>
+
+<p>Le positionnement est clair : les méthodes existantes (Mem0, A-Mem, ExpeL, Memento) souffrent soit d'une planification sous-optimale faute d'entraînement spécifique, soit d'une sélection d'exemples en mémoire limitée à la similarité sémantique. MIA vise à résoudre ces deux problèmes simultanément par un entraînement RL alterné et un apprentissage continu au moment du test.</p>
+
+<h2>Méthodologie</h2>
+
+<h3>Architecture tripartite</h3>
+
+<p>Le Memory Manager (Qwen3-32B gelé) stocke des trajectoires historiques compressées sous forme de workflows structurés. Le Planner (Qwen3-8B, entraîné) génère des plans de recherche en s'appuyant sur des exemples contrastifs récupérés de la mémoire — trajectoires réussies et échouées. L'Executor (Qwen2.5-VL-7B, entraîné) exécute le plan via une boucle ReAct avec appels d'outils de recherche textuelle et visuelle.</p>
+
+<h3>Entraînement RL alterné</h3>
+
+<p>Deux étapes séquentielles basées sur GRPO. En étape 1, l'Executor apprend à interpréter les plans du Planner gelé et à raisonner avec les outils. En étape 2, le Planner apprend à produire de meilleurs plans et réflexions en s'appuyant sur l'Executor entraîné et gelé. Cette alternance évite l'optimisation jointe instable tout en alignant les deux agents. La fonction de récompense combine correction (70%), appel d'outils (20%) et format (10%) pour l'Executor, avec une composante réflexion supplémentaire pour le Planner.</p>
+
+<h3>Apprentissage au moment du test (TTL)</h3>
+
+<p>Pendant l'inférence, MIA génère plusieurs plans candidats par rollout, exécute chacun, puis met à jour simultanément la mémoire non-paramétrique (extraction de workflows positifs/négatifs) et paramétrique (mise à jour GRPO du Planner). Un routeur sélectionne le meilleur plan en s'appuyant sur une Meta Plan Memory contrastive. Ce mécanisme crée une boucle de rétroaction positive : de meilleures capacités produisent de meilleurs exemples de référence.</p>
+
+<h3>Auto-évolution non supervisée</h3>
+
+<p>En l'absence de vérité terrain, un cadre d'évaluation inspiré de la revue par les pairs décompose le jugement en trois dimensions orthogonales — cohérence logique, crédibilité des sources, validité du résultat — chacune évaluée par une instance Qwen3-32B. Un agent « Area Chair » synthétise les trois avis. Ce signal approximatif remplace la supervision directe pour l'extraction mémoire et la mise à jour paramétrique.</p>
+
+<h3>Récupération en mémoire</h3>
+
+<p>La récupération combine trois dimensions : similarité sémantique (embeddings SimCSE-BERT, pondération question 80% / légende image 20%), récompense de valeur (taux de succès historique), et récompense de fréquence (favorisant les entrées peu utilisées pour l'exploration). Les poids sont λ_s = 0.7, λ_v = λ_f = 0.3.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>MIA atteint une précision moyenne de 53.6% sur sept benchmarks multimodaux et 53.5% sur quatre benchmarks textuels, surpassant la meilleure baseline mémoire (Memento) de 5.5 points en multimodal et 7.5 points en textuel. Les gains les plus marqués apparaissent sur les tâches complexes : +6.4 sur LiveVQA, +9.1 sur In-house 1, +8.8 sur GAIA.</p>
+
+<p>Résultat frappant : les méthodes de mémoire contextuelle (RAG, Mem0, A-Mem) dégradent la performance par rapport à l'absence de mémoire. Ce constat empirique valide la thèse centrale — injecter du contexte brut dans l'Executor nuit au raisonnement.</p>
+
+<p>Avec un Executor 7B, MIA surpasse Qwen2.5-VL-32B de 18 points en moyenne, GPT-4o, Gemini-2.5-Pro et GPT-5.4 en accès direct. Intégré à GPT-5.4 comme Executor, MIA apporte encore +9% sur LiveVQA et +6% sur HotpotQA. Le gain décroît avec la puissance du modèle de base : Claude-Sonnet-4.6 ne gagne que +1.8%, ce qui est logique — un modèle déjà performant laisse moins de marge d'amélioration.</p>
+
+<p>L'étude d'ablation décompose les contributions : la mémoire seule dégrade légèrement les résultats (-0.4 en multimodal), mais la mémoire canalisée vers le Planner améliore de +3.5 points. Le RL alterné ajoute +2.37, le TTL +3.23. Chaque composant contribue de façon incrémentale et mesurable.</p>
+
+<p>En mode non supervisé, MIA atteint des performances comparables aux baselines supervisées et montre une auto-amélioration progressive sur trois époques (59.6 → 61.1 → 61.7 sur FVQA-test).</p>
+
+<h2>Discussion et limites</h2>
+
+<p>Plusieurs faiblesses méthodologiques méritent un examen direct.</p>
+
+<p>La dépendance au LLM-juge (Qwen3-32B) est la principale fragilité. Le même modèle fournit les récompenses d'entraînement, évalue les trajectoires pour la mémoire, ET sert de métrique d'évaluation finale. Cette circularité empêche de distinguer l'amélioration réelle du raisonnement d'un simple alignement avec les biais du juge. Aucune évaluation humaine n'est rapportée, ni même un accord inter-annotateurs entre le juge LLM et des annotateurs humains.</p>
+
+<p>Deux des sept benchmarks multimodaux sont des datasets « In-house » construits par les auteurs. Leur processus de construction est décrit, mais leur distribution, difficulté relative et biais potentiels restent peu analysés. Les résultats sur ces datasets montrent précisément les gains les plus spectaculaires de MIA (+9.1 sur In-house 1), ce qui interroge.</p>
+
+<p>Le coût computationnel du système complet est passé sous silence. MIA requiert au minimum trois modèles (Planner Qwen3-8B, Executor Qwen2.5-VL-7B, Manager Qwen3-32B) plus le juge (Qwen3-32B, potentiellement partagé). En TTL, chaque question déclenche G=4 rollouts complets avec appels d'outils, puis une mise à jour GRPO. Le coût en inférence et en latence n'est jamais quantifié.</p>
+
+<p>Le cadre d'évaluation non supervisé inspiré de la revue par les pairs est une idée stimulante, mais sa fiabilité réelle n'est pas validée. Aucune comparaison entre les jugements du cadre non supervisé et des jugements humains n'est présentée. La corrélation entre le signal approximatif et la vérité terrain reste inconnue.</p>
+
+<p>La limitation du mécanisme Reflect-Replan à un seul déclenchement est un choix pragmatique (réduction de latence) dont l'impact sur la qualité n'est pas mesuré par ablation.</p>
+
+<p>L'analyse d'erreur est absente. Les échecs de MIA ne sont pas caractérisés — sur quels types de questions le système échoue-t-il ? Quand la mémoire induit-elle en erreur plutôt qu'aider ?</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le code est publié sur GitHub, les modèles et datasets sur HuggingFace. Les hyperparamètres d'entraînement sont détaillés (taux d'apprentissage, taille de batch, nombre d'époques, longueur maximale de séquence). L'infrastructure est spécifiée : 8 GPU pour l'Executor, 4 pour le Planner, framework veRL.</p>
+
+<p>Deux obstacles à la reproduction complète subsistent. L'outil de recherche d'images utilise l'API commerciale Serper et le service d'hébergement ImgBB. Les résultats de recherche sont mis en cache pour l'entraînement, mais ces caches ne semblent pas distribués. Les datasets In-house 1 et 2, construits avec des pipelines spécifiques incluant du crawl web et de la génération LLM, seront difficiles à reconstruire à l'identique.</p>
+
+<p>Les prompts du Memory Manager, du juge LLM et des trois reviewers non supervisés sont fournis en annexe, ce qui est un bon point pour la transparence.</p>
+
+<h2>Impact et applications</h2>
+
+<p>MIA démontre qu'un petit modèle (7B) équipé d'un système mémoire sophistiqué peut rivaliser avec des modèles fermés massifs sur des tâches de recherche profonde. Le gain de +31% en moyenne pour Qwen2.5-VL-7B est substantiel et ouvre une voie concrète vers des agents de recherche déployables à moindre coût.</p>
+
+<p>L'architecture Manager-Planner-Executor est modulaire : le Planner peut être mis à jour indépendamment, l'Executor peut être remplacé par un modèle fermé sans réentraînement. Cette flexibilité a une valeur pratique réelle.</p>
+
+<p>La capacité d'auto-évolution non supervisée, même modeste (+7% et amélioration progressive sur trois époques), est la contribution la plus prospective. Si le signal approximatif du cadre peer-review s'avère fiable à plus grande échelle, MIA pourrait s'améliorer en continu en production sans annotation humaine.</p>
+
+<p>Les applications directes couvrent les assistants de recherche académique, la veille technologique automatisée et les systèmes de question-réponse multi-sources. La boucle mémoire-planification-exécution est transférable à d'autres domaines agentiques au-delà de la recherche d'information.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>MIA se situe au croisement de trois courants : les agents de recherche profonde (DeepResearcher, Search-R1, MMSearch-R1), les systèmes de mémoire agentique (Mem0, A-Mem, Memento, ExpeL), et l'apprentissage par renforcement pour les agents (GRPO, veRL). Sa contribution principale réside dans l'intégration cohérente de ces trois dimensions.</p>
+
+<p>Par rapport à Memento (Zhou et al., 2025), qui fine-tune la mémoire sans toucher au LLM, MIA va plus loin en entraînant à la fois le Planner et l'Executor par RL alterné. Par rapport à ExpeL (Zhao et al., 2024), qui apprend des expériences sans entraînement paramétrique, MIA ajoute l'internalisation dans les poids du modèle. Par rapport aux approches RAG classiques, MIA montre empiriquement que l'injection directe de contexte long dégrade la performance — un résultat qui confirme les observations de Li et al. (2024a).</p>
+
+<p>L'entraînement RL alterné rappelle les architectures manager-worker en RL hiérarchique, mais l'application à un couple planificateur-exécuteur LLM avec mémoire partagée est originale. Le TTL avec mise à jour paramétrique en ligne est peu exploré dans le contexte agentique et constitue la contribution la plus distinctive.</p>
+
+<p>La comparaison avec les modèles fermés (GPT-5.4, Gemini-3-Flash, Claude-Sonnet-4.6) positionne MIA comme un amplificateur universel, pas seulement comme un système autonome. Cette polyvalence renforce son intérêt pratique.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien délimité, motivé par des limitations concrètes des mémoires à contexte long. Originalité dans la combinaison mémoire paramétrique/non-paramétrique.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Protocole complet : 11 benchmarks, ablation incrémentale, analyse d'entraînement, généralisation aux modèles fermés. Affaibli par l'utilisation de datasets maison.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>Évaluation sur des milliers d'exemples au total. Certains benchmarks restent petits (MMSearch : 171, GAIA-Text : 103).</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Métrique unique (précision par LLM-juge). Pas d'évaluation humaine, pas de métriques complémentaires (latence, coût, qualité des plans).</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Entraînement identique des Executors pour toutes les baselines. Circularité du LLM-juge utilisé pour l'entraînement et l'évaluation. Memento limité à sa version non-paramétrique.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code, modèles et datasets publiés. Hyperparamètres détaillés. Dépendance à des API commerciales (Serper, ImgBB) pour la reproduction complète.</td></tr>
+<tr><td>Transparence et limitations</td><td>3</td><td>Discussion des limitations quasi absente. Pas d'analyse d'erreur, pas de quantification du coût computationnel, pas de validation du cadre non supervisé contre des jugements humains.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Architecture modulaire transférable, résultats compétitifs avec des modèles 7B face à des modèles massifs, mécanisme d'auto-évolution prometteur.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
