@@ -325,16 +325,6 @@
       var f = window._filters[tabId];
       var filterFn = hasActiveFilters(f) ? buildFilterPredicate(f) : null;
 
-      if (window._manifest) {
-        var domains = tabId === 'articles' ? (window._manifest.domains || []) : ((window._manifest.papers && window._manifest.papers.domains) || []);
-        for (var i = 0; i < domains.length; i++) {
-          var items = domains[i].articles || domains[i].papers || [];
-          for (var j = 0; j < items.length; j++) {
-            items[j]._domainSlug = domains[i].slug;
-          }
-        }
-      }
-
       var container = document.getElementById('tab-' + tabId);
       if (tabId === 'articles') {
         renderArticlesTab(window._manifest, container, filterFn);
@@ -344,8 +334,10 @@
 
       var resultsEl = document.getElementById('results-count');
       if (filterFn) {
-        var sub = tabId === 'articles' ? window._articlesSubtitle : window._publicationsSubtitle;
-        resultsEl.textContent = sub;
+        var count = tabId === 'articles'
+          ? (window._articlesSubtitle || '').match(/^\d+/)
+          : (window._publicationsSubtitle || '').match(/^\d+/);
+        resultsEl.textContent = (count ? count[0] : '0') + ' résultats';
         resultsEl.style.display = '';
       } else {
         resultsEl.style.display = 'none';
@@ -820,6 +812,21 @@
         if (!response.ok) throw new Error("Manifeste introuvable");
 
         window._manifest = await response.json();
+
+        // Stamp _domainSlug on each item once (no repeated mutation)
+        function stampDomainSlugs(domainList, key) {
+          for (var i = 0; i < domainList.length; i++) {
+            var items = domainList[i][key] || [];
+            for (var j = 0; j < items.length; j++) {
+              items[j]._domainSlug = domainList[i].slug;
+            }
+          }
+        }
+        stampDomainSlugs(window._manifest.domains || [], 'articles');
+        if (window._manifest.papers && window._manifest.papers.domains) {
+          stampDomainSlugs(window._manifest.papers.domains, 'papers');
+        }
+
         var articlesContainer = document.getElementById("tab-articles");
         var publicationsContainer = document.getElementById("tab-publications");
 
