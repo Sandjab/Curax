@@ -1501,6 +1501,102 @@ def cmd_reclassify_papers(args):
     print("\nTermine !")
 
 
+def cmd_regenerate_companions(args):
+    """Regenerer les LCA et vulgarisations de toutes les publications."""
+    print("Régénération des LCA et vulgarisations...\n")
+    papers_catalog = load_papers_catalog()
+    if not papers_catalog["papers"]:
+        print("Aucune publication dans papers/catalog.json.")
+        sys.exit(1)
+
+    total = len(papers_catalog["papers"])
+    print(f"1. Extraction du texte de {total} publications...")
+
+    paper_infos = []
+    for paper_key, meta in papers_catalog["papers"].items():
+        pdf_path = os.path.join(PROJECT_ROOT, paper_key)
+        if not os.path.isfile(pdf_path):
+            print(f"  SKIP {paper_key} (fichier introuvable)")
+            continue
+        text = extract_pdf_text(pdf_path)
+        if not text or len(text.strip()) < 100:
+            print(f"  SKIP {paper_key} (texte trop court)")
+            continue
+        paper_infos.append({
+            'key': paper_key,
+            'meta': meta,
+            'text': text,
+        })
+
+    if not paper_infos:
+        print("Aucune publication à traiter.")
+        sys.exit(0)
+
+    print(f"   {len(paper_infos)} publications prêtes\n")
+
+    print(f"2. Appel Claude pour LCA + vulgarisation ({args.workers} workers)...")
+
+    def _regenerate_one(info):
+        """LCA puis vulgarisation pour une publication."""
+        lca_result = call_claude_with_retry(
+            build_paper_lca_prompt(info['text'], papers_catalog["domains"]),
+            PAPER_LCA_SCHEMA,
+            timeout=600
+        )
+        vulg_result = call_claude_with_retry(
+            build_paper_vulgarisation_prompt(
+                info['text'],
+                lca_result['title'],
+                lca_result['authors']
+            ),
+            PAPER_VULGARISATION_SCHEMA,
+            timeout=600
+        )
+        return (info, lca_result, vulg_result)
+
+    done_count = 0
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = {executor.submit(_regenerate_one, info): info for info in paper_infos}
+        for future in as_completed(futures):
+            done_count += 1
+            info, lca_result, vulg_result = future.result()
+            paper_key = info['key']
+            meta = info['meta']
+
+            # Mettre à jour les scores
+            new_robustness = lca_result['robustness_global']
+            new_quality = min(round(new_robustness * 2), 10)
+
+            # Écrire les fichiers companions
+            parts = paper_key.split('/')
+            domain = parts[1]
+            slug = parts[2]
+            paper_dir = os.path.join(PAPERS_DIR, domain, slug)
+
+            lca_html = build_companion_html(meta['title'], lca_result['lca_html'], 'lca')
+            lca_path = os.path.join(paper_dir, f"{slug}-lca.html")
+            with open(lca_path, 'w', encoding='utf-8') as f:
+                f.write(lca_html)
+
+            vulg_html = build_companion_html(meta['title'], vulg_result['vulgarisation_html'], 'vulgarisation')
+            vulg_path = os.path.join(paper_dir, f"{slug}-vulgarisation.html")
+            with open(vulg_path, 'w', encoding='utf-8') as f:
+                f.write(vulg_html)
+
+            # Mettre à jour le catalogue
+            papers_catalog["papers"][paper_key]["quality_score"] = new_quality
+            papers_catalog["papers"][paper_key]["robustness_score"] = new_robustness
+
+            authors_short = meta['authors'][0] if meta.get('authors') else 'Unknown'
+            if len(meta.get('authors', [])) > 1:
+                authors_short += ' et al.'
+            print(f"  [{done_count}/{len(paper_infos)}] {slug} ({new_quality}/10, robustesse {new_robustness}/5) {authors_short}")
+
+    save_papers_catalog(papers_catalog)
+    _regenerate_manifest()
+    print(f"\nTerminé ! {done_count} publications régénérées.")
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -1551,98 +1647,7 @@ def main():
     # --regenerate-companions : régénérer LCA + vulgarisation
     # ------------------------------------------------------------------
     if args.regenerate_companions:
-        print("Régénération des LCA et vulgarisations...\n")
-        papers_catalog = load_papers_catalog()
-        if not papers_catalog["papers"]:
-            print("Aucune publication dans papers/catalog.json.")
-            sys.exit(1)
-
-        total = len(papers_catalog["papers"])
-        print(f"1. Extraction du texte de {total} publications...")
-
-        paper_infos = []
-        for paper_key, meta in papers_catalog["papers"].items():
-            pdf_path = os.path.join(PROJECT_ROOT, paper_key)
-            if not os.path.isfile(pdf_path):
-                print(f"  SKIP {paper_key} (fichier introuvable)")
-                continue
-            text = extract_pdf_text(pdf_path)
-            if not text or len(text.strip()) < 100:
-                print(f"  SKIP {paper_key} (texte trop court)")
-                continue
-            paper_infos.append({
-                'key': paper_key,
-                'meta': meta,
-                'text': text,
-            })
-
-        if not paper_infos:
-            print("Aucune publication à traiter.")
-            sys.exit(0)
-
-        print(f"   {len(paper_infos)} publications prêtes\n")
-
-        print(f"2. Appel Claude pour LCA + vulgarisation ({args.workers} workers)...")
-
-        def _regenerate_one(info):
-            """LCA puis vulgarisation pour une publication."""
-            lca_result = call_claude_with_retry(
-                build_paper_lca_prompt(info['text'], papers_catalog["domains"]),
-                PAPER_LCA_SCHEMA,
-                timeout=600
-            )
-            vulg_result = call_claude_with_retry(
-                build_paper_vulgarisation_prompt(
-                    info['text'],
-                    lca_result['title'],
-                    lca_result['authors']
-                ),
-                PAPER_VULGARISATION_SCHEMA,
-                timeout=600
-            )
-            return (info, lca_result, vulg_result)
-
-        done_count = 0
-        with ThreadPoolExecutor(max_workers=args.workers) as executor:
-            futures = {executor.submit(_regenerate_one, info): info for info in paper_infos}
-            for future in as_completed(futures):
-                done_count += 1
-                info, lca_result, vulg_result = future.result()
-                paper_key = info['key']
-                meta = info['meta']
-
-                # Mettre à jour les scores
-                new_robustness = lca_result['robustness_global']
-                new_quality = min(round(new_robustness * 2), 10)
-
-                # Écrire les fichiers companions
-                parts = paper_key.split('/')
-                domain = parts[1]
-                slug = parts[2]
-                paper_dir = os.path.join(PAPERS_DIR, domain, slug)
-
-                lca_html = build_companion_html(meta['title'], lca_result['lca_html'], 'lca')
-                lca_path = os.path.join(paper_dir, f"{slug}-lca.html")
-                with open(lca_path, 'w', encoding='utf-8') as f:
-                    f.write(lca_html)
-
-                vulg_html = build_companion_html(meta['title'], vulg_result['vulgarisation_html'], 'vulgarisation')
-                vulg_path = os.path.join(paper_dir, f"{slug}-vulgarisation.html")
-                with open(vulg_path, 'w', encoding='utf-8') as f:
-                    f.write(vulg_html)
-
-                # Mettre à jour le catalogue
-                papers_catalog["papers"][paper_key]["quality_score"] = new_quality
-                papers_catalog["papers"][paper_key]["robustness_score"] = new_robustness
-
-                authors_short = meta['authors'][0] if meta.get('authors') else 'Unknown'
-                if len(meta.get('authors', [])) > 1:
-                    authors_short += ' et al.'
-                print(f"  [{done_count}/{len(paper_infos)}] {slug} ({new_quality}/10, robustesse {new_robustness}/5) {authors_short}")
-
-        save_papers_catalog(papers_catalog)
-        _regenerate_manifest()
-        print(f"\nTerminé ! {done_count} publications régénérées.")
+        cmd_regenerate_companions(args)
         return
 
     # ------------------------------------------------------------------
