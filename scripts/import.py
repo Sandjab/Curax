@@ -1391,6 +1391,116 @@ def cmd_reclassify(args):
     print("\nTermine !")
 
 
+def cmd_reclassify_papers(args):
+    """Reclassifier les publications existantes."""
+    print("Reclassification des publications existantes...\n")
+    papers_catalog = load_papers_catalog()
+    if not papers_catalog["papers"]:
+        print("Aucune publication dans papers/catalog.json.")
+        sys.exit(1)
+
+    total = len(papers_catalog["papers"])
+    print(f"1. Appel Claude pour la taxonomie ({total} publications)...")
+    taxonomy_prompt = build_paper_reclassify_taxonomy_prompt(papers_catalog)
+    taxonomy = call_claude_with_retry(taxonomy_prompt, PAPER_TAXONOMY_SCHEMA, timeout=300)
+    papers_catalog["domains"] = taxonomy["domains"]
+    papers_catalog["observations"] = taxonomy["observations"]
+    print(f"   {len(taxonomy['domains'])} domaines, observations mises a jour\n")
+
+    print(f"2. Reclassification des {total} publications ({args.workers} workers)...")
+    changes = []
+
+    def _reclassify_paper(paper_key, meta):
+        pdf_path = os.path.join(PROJECT_ROOT, paper_key)
+        if not os.path.isfile(pdf_path):
+            return None
+        text = extract_pdf_text(pdf_path)
+        result = call_claude_with_retry(
+            build_paper_reclassify_prompt(text, taxonomy["domains"]),
+            PAPER_RECLASSIFY_SCHEMA
+        )
+        return (paper_key, meta, result)
+
+    papers_list = list(papers_catalog["papers"].items())
+    done_count = 0
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = {
+            executor.submit(_reclassify_paper, key, meta): key
+            for key, meta in papers_list
+        }
+        for future in as_completed(futures):
+            done_count += 1
+            res = future.result()
+            if res is None:
+                paper_key = futures[future]
+                print(f"  [{done_count}/{total}] SKIP {paper_key} (fichier introuvable)")
+                continue
+
+            paper_key, meta, result = res
+            new_domain = result["domain"]
+            old_domain = meta["domain"]
+
+            if new_domain not in taxonomy["domains"]:
+                print(f"  [{done_count}/{total}] {paper_key} -> ATTENTION domaine '{new_domain}' inconnu, garde '{old_domain}'")
+                new_domain = old_domain
+            else:
+                print(f"  [{done_count}/{total}] {paper_key} -> {new_domain} [{', '.join(result['tags'])}]")
+
+            # Score fige : on ne recalcule pas quality_score
+            papers_catalog["papers"][paper_key]["domain"] = new_domain
+            papers_catalog["papers"][paper_key]["tags"] = result["tags"]
+            papers_catalog["papers"][paper_key]["quality_note"] = result["quality_note"]
+
+            # Detecter changements
+            parts = paper_key.split('/')
+            old_slug = parts[2]
+            new_slug = slugify(result.get("title", ""))
+            domain_changed = old_domain != new_domain
+            slug_changed = new_slug != old_slug and new_slug != "untitled"
+
+            if domain_changed or slug_changed:
+                changes.append((paper_key, old_domain, new_domain,
+                                old_slug, new_slug if slug_changed else None))
+
+    save_papers_catalog(papers_catalog)
+    print(f"   Tags et domaines sauvegardes dans papers/catalog.json")
+
+    if changes:
+        print(f"\n3. Deplacements/renommages prevus ({len(changes)}) :")
+        for key, old_dom, new_dom, old_slug, new_slug_val in changes:
+            slug = new_slug_val or old_slug
+            new_key = f"papers/{new_dom}/{slug}/{slug}.pdf"
+            if old_dom != new_dom and new_slug_val:
+                label = "deplace + renomme"
+            elif old_dom != new_dom:
+                label = "deplace"
+            else:
+                label = "renomme"
+            print(f"  {key} -> {new_key} ({label})")
+
+        if not args.yes:
+            if not prompt_confirm("\nConfirmer les deplacements/renommages ? [y/N]"):
+                print("Deplacements annules (tags et domaines deja sauvegardes).")
+                _regenerate_manifest()
+                print("\nTermine !")
+                return
+
+        for key, old_dom, new_dom, old_slug, new_slug_val in changes:
+            new_key = move_or_rename_paper(
+                papers_catalog, key,
+                new_domain=new_dom if old_dom != new_dom else None,
+                new_slug=new_slug_val,
+            )
+            if new_key:
+                print(f"  {key} -> {new_key}")
+    else:
+        print("\n3. Aucun deplacement/renommage necessaire.")
+
+    save_papers_catalog(papers_catalog)
+    _regenerate_manifest()
+    print("\nTermine !")
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -1434,112 +1544,7 @@ def main():
     # --reclassify-papers : reclassifier les publications existantes
     # ------------------------------------------------------------------
     if args.reclassify_papers:
-        print("Reclassification des publications existantes...\n")
-        papers_catalog = load_papers_catalog()
-        if not papers_catalog["papers"]:
-            print("Aucune publication dans papers/catalog.json.")
-            sys.exit(1)
-
-        total = len(papers_catalog["papers"])
-        print(f"1. Appel Claude pour la taxonomie ({total} publications)...")
-        taxonomy_prompt = build_paper_reclassify_taxonomy_prompt(papers_catalog)
-        taxonomy = call_claude_with_retry(taxonomy_prompt, PAPER_TAXONOMY_SCHEMA, timeout=300)
-        papers_catalog["domains"] = taxonomy["domains"]
-        papers_catalog["observations"] = taxonomy["observations"]
-        print(f"   {len(taxonomy['domains'])} domaines, observations mises a jour\n")
-
-        print(f"2. Reclassification des {total} publications ({args.workers} workers)...")
-        changes = []
-
-        def _reclassify_paper(paper_key, meta):
-            pdf_path = os.path.join(PROJECT_ROOT, paper_key)
-            if not os.path.isfile(pdf_path):
-                return None
-            text = extract_pdf_text(pdf_path)
-            result = call_claude_with_retry(
-                build_paper_reclassify_prompt(text, taxonomy["domains"]),
-                PAPER_RECLASSIFY_SCHEMA
-            )
-            return (paper_key, meta, result)
-
-        papers_list = list(papers_catalog["papers"].items())
-        done_count = 0
-        with ThreadPoolExecutor(max_workers=args.workers) as executor:
-            futures = {
-                executor.submit(_reclassify_paper, key, meta): key
-                for key, meta in papers_list
-            }
-            for future in as_completed(futures):
-                done_count += 1
-                res = future.result()
-                if res is None:
-                    paper_key = futures[future]
-                    print(f"  [{done_count}/{total}] SKIP {paper_key} (fichier introuvable)")
-                    continue
-
-                paper_key, meta, result = res
-                new_domain = result["domain"]
-                old_domain = meta["domain"]
-
-                if new_domain not in taxonomy["domains"]:
-                    print(f"  [{done_count}/{total}] {paper_key} -> ATTENTION domaine '{new_domain}' inconnu, garde '{old_domain}'")
-                    new_domain = old_domain
-                else:
-                    print(f"  [{done_count}/{total}] {paper_key} -> {new_domain} [{', '.join(result['tags'])}]")
-
-                # Score fige : on ne recalcule pas quality_score
-                papers_catalog["papers"][paper_key]["domain"] = new_domain
-                papers_catalog["papers"][paper_key]["tags"] = result["tags"]
-                papers_catalog["papers"][paper_key]["quality_note"] = result["quality_note"]
-
-                # Detecter changements
-                parts = paper_key.split('/')
-                old_slug = parts[2]
-                new_slug = slugify(result.get("title", ""))
-                domain_changed = old_domain != new_domain
-                slug_changed = new_slug != old_slug and new_slug != "untitled"
-
-                if domain_changed or slug_changed:
-                    changes.append((paper_key, old_domain, new_domain,
-                                    old_slug, new_slug if slug_changed else None))
-
-        save_papers_catalog(papers_catalog)
-        print(f"   Tags et domaines sauvegardes dans papers/catalog.json")
-
-        if changes:
-            print(f"\n3. Deplacements/renommages prevus ({len(changes)}) :")
-            for key, old_dom, new_dom, old_slug, new_slug_val in changes:
-                slug = new_slug_val or old_slug
-                new_key = f"papers/{new_dom}/{slug}/{slug}.pdf"
-                if old_dom != new_dom and new_slug_val:
-                    label = "deplace + renomme"
-                elif old_dom != new_dom:
-                    label = "deplace"
-                else:
-                    label = "renomme"
-                print(f"  {key} -> {new_key} ({label})")
-
-            if not args.yes:
-                if not prompt_confirm("\nConfirmer les deplacements/renommages ? [y/N]"):
-                    print("Deplacements annules (tags et domaines deja sauvegardes).")
-                    _regenerate_manifest()
-                    print("\nTermine !")
-                    return
-
-            for key, old_dom, new_dom, old_slug, new_slug_val in changes:
-                new_key = move_or_rename_paper(
-                    papers_catalog, key,
-                    new_domain=new_dom if old_dom != new_dom else None,
-                    new_slug=new_slug_val,
-                )
-                if new_key:
-                    print(f"  {key} -> {new_key}")
-        else:
-            print("\n3. Aucun deplacement/renommage necessaire.")
-
-        save_papers_catalog(papers_catalog)
-        _regenerate_manifest()
-        print("\nTermine !")
+        cmd_reclassify_papers(args)
         return
 
     # ------------------------------------------------------------------
