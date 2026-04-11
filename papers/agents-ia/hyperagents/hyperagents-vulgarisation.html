@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HyperAgents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>HyperAgents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>HyperAgents : quand l'IA apprend à mieux s'améliorer</h2>
+
+<h2>Introduction</h2>
+
+<p>Un agent IA qui corrige ses propres erreurs, ça existe depuis quelques années. Un agent qui améliore aussi sa façon de se corriger — c'est autre chose. En mars 2026, une équipe menée par Jenny Zhang (UBC, Vector Institute) avec des collaborateurs de Meta, NYU et l'Université d'Édimbourg a publié un système baptisé HyperAgents. Son principe : un programme unique qui modifie à la fois la manière dont il résout une tâche <em>et</em> la manière dont il décide quoi modifier. Les résultats sont testés sur quatre domaines différents — programmation, relecture d'articles scientifiques, robotique et notation de mathématiques olympiques — et les gains se transfèrent d'un domaine à l'autre.</p>
+
+<h2>Le problème : un moteur d'amélioration qui ne s'améliore jamais</h2>
+
+<p>Le prédécesseur direct des HyperAgents s'appelle la Darwin Gödel Machine (DGM), publiée en 2025 par la même Jenny Zhang. Le principe de la DGM : un agent de programmation génère des variantes modifiées de lui-même, les évalue sur un jeu de tâches, et conserve les meilleures dans une archive. Les bonnes versions servent de tremplin pour les suivantes. Sur des tâches de code, ça fonctionne.</p>
+
+<p>Mais la DGM contient une pièce figée. Un mécanisme écrit à la main par les chercheurs décide <em>comment</em> l'agent doit se modifier : il analyse les résultats passés, inspecte le code de l'agent, et génère une instruction du type « améliore telle partie de ton code ». Ce mécanisme ne change jamais. Il pose un plafond.</p>
+
+<p>Sur des tâches de programmation, ce plafond gêne peu. L'agent s'améliore en codant, et comme se modifier soi-même passe aussi par du code, les deux compétences progressent ensemble. Mais dès qu'on sort du code — évaluation d'articles, conception de fonctions de récompense pour des robots, notation de preuves mathématiques — cette correspondance disparaît. Un agent qui devient meilleur en relecture d'articles ne devient pas automatiquement meilleur pour réécrire son propre code source.</p>
+
+<p>La solution naïve — ajouter un méta-méta-système qui améliore le méta-système — ne résout rien. Ça déplace le goulot d'étranglement d'un cran sans l'éliminer. On obtient une régression infinie de niveaux, chacun aussi figé que le précédent.</p>
+
+<h2>La méthode : fusionner l'ouvrier et le contremaître dans un même programme</h2>
+
+<p>L'idée centrale tient en une phrase : réunir dans un seul programme modifiable l'agent qui exécute la tâche et l'agent qui décide comment s'améliorer.</p>
+
+<p>Prenons une analogie. Dans une usine classique, un ouvrier fabrique des pièces et un contremaître lui dit comment changer sa méthode de travail. Si le contremaître ne peut pas modifier sa propre façon de superviser, l'usine finit par stagner : les mêmes types de consignes produisent les mêmes types d'améliorations, jusqu'à épuisement. Les HyperAgents fusionnent l'ouvrier et le contremaître en une seule entité, capable de modifier autant sa technique de fabrication que sa manière de décider quoi modifier. Les auteurs appellent ça l'<em>auto-modification métacognitive</em>.</p>
+
+<p>Concrètement, un hyperagent est un programme Python composé de deux parties : un agent de tâche (qui résout le problème posé) et un agent méta (qui modifie l'ensemble du programme, y compris lui-même). Python étant Turing-complet et l'agent pouvant éditer n'importe quelle ligne de son code, il peut en théorie construire n'importe quel programme calculable.</p>
+
+<p>Pour éviter qu'un agent s'enferme dans une impasse locale, les chercheurs greffent cette architecture sur le processus évolutif de la DGM. Le système résultant, DGM-Hyperagents (DGM-H), maintient une archive de variantes. À chaque itération, il sélectionne des parents parmi les hyperagents les plus performants et les moins exploités, les laisse se modifier eux-mêmes, évalue les résultats, et ajoute les nouvelles variantes à l'archive. La sélection est probabiliste : les agents performants ont plus de chances d'être choisis, mais les agents peu explorés ne sont pas écartés. Ce mécanisme empêche la convergence prématurée — le système ne mise pas tout sur un seul champion.</p>
+
+<p>L'agent de départ est volontairement minimaliste : un modèle de langage gelé avec deux outils (un terminal bash et un éditeur de fichiers), qui répond à chaque tâche par un unique appel au modèle. Pas de prompt sophistiqué, pas de pipeline élaboré. Tout le reste — les stratégies de raisonnement, les pipelines de décision, la mémoire — est découvert par le système lui-même au fil des itérations.</p>
+
+<h2>Résultats : des gains concrets sur quatre terrains différents</h2>
+
+<p>Les chercheurs ont évalué le DGM-H sur quatre domaines, avec cinq exécutions par expérience et des intervalles de confiance calculés par bootstrap sur 1 000 rééchantillonnages.</p>
+
+<h3>Programmation</h3>
+
+<p>Sur le benchmark Polyglot (tâches de modification de code dans plusieurs langages), le DGM-H passe d'un score initial de 0,084 à 0,267 sur l'ensemble de test complet. La DGM originale, conçue spécifiquement pour ce domaine, atteint 0,307. Le DGM-H fait donc presque aussi bien que le spécialiste, sans avoir été calibré pour le code.</p>
+
+<h3>Relecture d'articles scientifiques</h3>
+
+<p>L'agent doit prédire si un article de recherche en IA sera accepté ou rejeté à une conférence, en se basant sur les décisions réelles observées. L'agent initial obtient 0,0 — il ne produit même pas de réponse au bon format. Après 100 itérations d'auto-modification, le DGM-H atteint 0,710 sur les données de test. Plusieurs de ses variantes dépassent le score de l'AI-Scientist-v2, un système de relecture automatisé de référence qui plafonne à 0,630.</p>
+
+<p>Ce qui est remarquable, c'est le <em>type</em> d'amélioration. Le système ne se contente pas de retoucher des prompts. Il construit des pipelines d'évaluation structurés avec des checklists, des règles de décision explicites et des seuils de score clairement définis — le genre de machinerie qu'un ingénieur aurait mis des jours à concevoir manuellement.</p>
+
+<h3>Conception de récompenses pour la robotique</h3>
+
+<p>L'agent doit générer une fonction de récompense pour entraîner un robot quadrupède en simulation. L'agent initial obtient 0,060 : il produit surtout des fonctions qui ne compilent pas ou qui entraînent le robot à ne rien faire d'utile. Le DGM-H monte à 0,372, dépassant la fonction de récompense de référence (0,348) qui optimise directement la métrique d'évaluation.</p>
+
+<p>Sur la tâche de test — maximiser la hauteur du torse du robot — le DGM-H génère des agents qui font sauter le robot. La DGM classique, elle, reste coincée dans un optimum local : le robot se tient debout, raide, sans jamais décoller du sol.</p>
+
+<h3>Le transfert entre domaines : le résultat le plus frappant</h3>
+
+<p>Les chercheurs ont pris des hyperagents optimisés sur la relecture d'articles et la robotique, puis les ont testés sur un domaine inconnu : la notation de solutions de problèmes d'Olympiade de mathématiques (le benchmark IMO-GradingBench). L'agent initial, parti de zéro, obtient 0,0. Mais un hyperagent transféré, même sans pouvoir continuer à s'améliorer, génère en 50 itérations des variantes qui atteignent 0,630 sur les données de test.</p>
+
+<p>La DGM classique ne transfère rien. Ses agents optimisés sur d'autres domaines obtiennent 0,0 sur la notation mathématique. Les gains de la DGM dépendent d'adaptations manuelles spécifiques à chaque domaine — ce ne sont pas des compétences générales d'auto-amélioration.</p>
+
+<h3>Accumulation des gains entre exécutions</h3>
+
+<p>Dernier test : les chercheurs relancent le DGM-H sur la notation mathématique en partant d'hyperagents déjà optimisés ailleurs, cette fois en les laissant continuer à s'améliorer. Après 200 itérations, ces agents transférés atteignent un score médian de 0,640, contre 0,610 pour ceux partis de zéro. En combinant un agent transféré avec ProofAutoGrader (un système de notation existant), le score monte à 0,700, contre 0,670 pour ProofAutoGrader seul. Les améliorations se cumulent d'une exécution à l'autre.</p>
+
+<h2>Implications : ce que ça change concrètement</h2>
+
+<p>Deux innovations émergent spontanément des expériences, sans avoir été programmées par les chercheurs.</p>
+
+<p>La première est le suivi de performance. Le DGM-H invente de lui-même une classe <code>PerformanceTracker</code> qui enregistre les métriques au fil des générations, calcule des moyennes glissantes, repère les tendances et détecte les régressions. La seconde est la mémoire persistante : au lieu de traiter chaque itération comme un événement isolé, l'hyperagent stocke des analyses causales de ses résultats passés (« la génération 66 a sur-corrigé le biais d'acceptation »), identifie les meilleures générations par domaine, et formule des plans pour les itérations suivantes. Ces deux mécanismes sont précisément ce qui rend les améliorations transférables — un agent qui débarque dans un domaine inconnu sait déjà comment suivre ses progrès et capitaliser sur ses essais précédents.</p>
+
+<p>Pour l'industrie, l'intérêt est direct. Adapter un agent IA à un nouveau domaine demande aujourd'hui des semaines d'ingénierie : conception de prompts, construction de pipelines d'évaluation, ajustement des heuristiques. Si un système peut apprendre à s'adapter lui-même — et transférer cette capacité d'un domaine à l'autre — le coût de déploiement baisse fortement. Les structures que le DGM-H découvre automatiquement (suivi de performance, mémoire, pipelines de décision) sont exactement celles qu'un ingénieur construirait à la main.</p>
+
+<p>Du côté de la sécurité, les auteurs sont francs. Toutes les expériences tournent dans des environnements sandboxés, avec des limites de ressources, un accès réseau restreint et une supervision humaine. Mais un système qui s'auto-modifie peut évoluer plus vite que la capacité humaine à l'auditer. Les auteurs considèrent cette tension comme un problème ouvert — pas comme un détail réglé par les garde-fous actuels. La question se déplace : ce n'est plus « peut-on construire des systèmes auto-améliorants ? » mais « comment les superviser quand leur vitesse d'évolution dépasse notre vitesse de compréhension ? ».</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs limites restent à lever. Le DGM-H travaille avec un ensemble de tâches fixe : on lui donne des problèmes, et il s'améliore dessus. Une direction naturelle serait de co-évoluer les tâches elles-mêmes, en générant des problèmes de plus en plus difficiles à mesure que l'agent progresse — un curriculum automatique qui pousserait l'agent hors de sa zone de confort.</p>
+
+<p>La boucle externe — sélection des parents, protocole d'évaluation — reste conçue par des humains. Les auteurs montrent des résultats préliminaires où l'hyperagent modifie lui-même son mécanisme de sélection, mais ces expériences restent exploratoires. Rendre l'intégralité du processus auto-modifiable pose des questions de stabilité et de sécurité auxquelles personne n'a encore répondu.</p>
+
+<p>Le coût computationnel pèse aussi. Chaque itération implique des appels à des modèles de langage, des exécutions de code dans des sandboxes, et des évaluations sur des benchmarks. La scalabilité du processus sur des centaines de domaines simultanés reste une inconnue.</p>
+
+<p>La question la plus fondamentale : ces améliorations peuvent-elles s'accumuler sans limite ? Les résultats actuels montrent un début de cumulation — les agents transférés font mieux que ceux partis de zéro — mais la différence n'est pas statistiquement significative sur tous les tests. Savoir si le DGM-H peut atteindre une amélioration véritablement auto-accélérante, où chaque gain facilite le suivant, demandera des expériences sur des horizons bien plus longs et des domaines bien plus variés. Le code et les logs de toutes les expériences sont disponibles en open source, ce qui permet à d'autres équipes de tester cette hypothèse sur leurs propres tâches.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

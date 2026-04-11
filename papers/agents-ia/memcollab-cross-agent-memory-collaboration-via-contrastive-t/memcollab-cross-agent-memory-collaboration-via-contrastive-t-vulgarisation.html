@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEMCOLLAB: Cross-Agent Memory Collaboration via Contrastive Trajectory Distillation — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>MEMCOLLAB: Cross-Agent Memory Collaboration via Contrastive Trajectory Distillation</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand des IA partagent leurs fiches de révision</h2>
+
+<p>Deux agents IA résolvent le même problème de probabilités. Les deux trouvent la bonne réponse, mais leurs chemins de raisonnement divergent radicalement. L'un décompose le problème de haut en bas, l'autre construit sa solution brique par brique. Leur « mémoire » de résolution — les stratégies, les raccourcis, les pièges évités — est profondément personnelle, liée à leur architecture, leur taille, leurs données d'entraînement.</p>
+
+<p>Construire une base de connaissances partagée qui aide les deux agents, et n'importe quel futur agent, à mieux raisonner : c'est le défi que s'est fixé l'équipe derrière MEMCOLLAB, un cadre de travail développé à Penn State University et AG2AI. Leur article, publié en mars 2026, propose une méthode pour fabriquer une mémoire collective qui transcende les particularités de chaque modèle. L'idée centrale tient en une phrase : au lieu d'apprendre de ses propres erreurs, un agent gagne à comparer sa démarche avec celle d'un agent différent, puis à n'en garder que l'essentiel.</p>
+
+<h2>Le problème : des mémoires intransférables</h2>
+
+<p>Les déploiements modernes d'IA utilisent rarement un modèle unique. Les entreprises aiguillent les requêtes vers différents modèles selon la complexité, le coût ou la latence. Un petit modèle à 7 milliards de paramètres traite les demandes courantes ; un modèle à 32 milliards prend le relais pour le raisonnement complexe.</p>
+
+<p>Chaque modèle peut apprendre de son expérience. Après avoir résolu des centaines de problèmes, un agent accumule une « mémoire » : des schémas de résolution, des stratégies éprouvées, des erreurs types à éviter. Cette mémoire améliore ses performances futures.</p>
+
+<p>Le hic : la mémoire construite par un modèle nuit à un autre. Les chercheurs l'ont démontré par une expérience simple. Ils ont fait résoudre des problèmes du benchmark MATH500 par un modèle de 7 milliards de paramètres, puis ont injecté cette mémoire dans un modèle de 32 milliards. Les performances ont chuté par rapport au modèle de 32 milliards travaillant sans aucune mémoire.</p>
+
+<p>L'inverse est encore pire. La mémoire du modèle de 32 milliards, donnée au modèle de 7 milliards, fait tomber la précision de 52,2 % à 50,6 %. Les raccourcis de raisonnement du grand modèle désorientent le petit.</p>
+
+<p>La raison ? La mémoire brute capture simultanément deux choses : des connaissances utiles sur la résolution de problèmes ET les manies du modèle. Son style de notation préféré, sa tendance à sauter certaines étapes de vérification, ses raccourcis habituels. Ces biais sont invisibles pour le modèle qui les a produits — c'est simplement « sa façon de penser ». Mais ils deviennent du bruit, voire du poison, pour un modèle différent.</p>
+
+<p>L'analogie est celle des notes de cours. Vos notes manuscrites fonctionnent pour vous parce qu'elles encodent vos associations personnelles, vos abréviations, votre manière de structurer les idées. Passez-les à un camarade avec un style d'apprentissage différent : il fera peut-être moins bien que s'il révisait de zéro.</p>
+
+<h2>La méthode : distiller par le contraste</h2>
+
+<p>MEMCOLLAB abandonne l'extraction de mémoire à partir de l'expérience d'un seul modèle. Le système compare plutôt la manière dont deux modèles différents résolvent le même problème, puis distille ce qu'ils ont en commun quand ils réussissent — et là où ils divergent quand l'un échoue.</p>
+
+<p>Le processus se déroule en trois temps.</p>
+
+<h3>Générer des trajectoires par paires</h3>
+
+<p>Deux agents — par exemple un modèle de 7 milliards et un modèle de 32 milliards de paramètres — résolvent indépendamment les mêmes problèmes d'entraînement. Pour chaque problème, on obtient deux traces de raisonnement complètes : chaque étape intermédiaire, chaque morceau de code exécuté, chaque retour d'outil.</p>
+
+<h3>Contraster et distiller</h3>
+
+<p>Pour chaque problème, une trajectoire a mené à la bonne réponse et l'autre non. Un moteur de comparaison examine la paire et en extrait deux éléments.</p>
+
+<p>Le « patron de violation » : ce qui a cloché dans la trajectoire échouée. Pas « il a calculé 12/51 au lieu de 13/51 » — trop spécifique. Plutôt : « il a supposé que les événements étaient indépendants sans vérifier les dépendances. »</p>
+
+<p>L'« invariant de raisonnement » : ce que la trajectoire réussie a préservé. Par exemple : « en probabilités conditionnelles, énumérer explicitement les cas de conditionnement avant de calculer. »</p>
+
+<p>L'article fournit un cas concret. Deux agents résolvent un problème de tirage de cartes : quelle est la probabilité que la première carte soit un roi et la seconde un cœur ? L'un des agents traite les deux événements comme indépendants — erreur classique. L'autre conditionne correctement le second tirage sur le résultat du premier et distingue deux cas : le roi tiré est-il un cœur ou non ? La mémoire extraite de cette comparaison devient une règle abstraite : « en présence d'événements dépendants, calculer les probabilités jointes par les probabilités conditionnelles ; ne jamais présupposer l'indépendance sans justification. » Plus tard, face à un problème de sommes paires entre nombres premiers — un contexte mathématique tout à fait différent — cette même règle guide l'agent vers un dénombrement explicite des cas plutôt qu'une hypothèse d'indépendance injustifiée.</p>
+
+<p>Ces règles extraites sont abstraites. Elles ne font référence ni à des nombres précis, ni à des problèmes spécifiques, ni à des modèles particuliers. Elles capturent le principe structurel qui sépare un raisonnement correct d'un raisonnement erroné.</p>
+
+<h3>Organiser et récupérer</h3>
+
+<p>Les règles distillées sont étiquetées par catégorie de problème (algèbre, probabilités, géométrie…) et stockées dans une banque de mémoire. Quand un nouveau problème arrive, le système le classifie d'abord, puis récupère uniquement les règles pertinentes pour cette catégorie. Cela évite de noyer le modèle sous des contraintes sans rapport avec la tâche en cours.</p>
+
+<p>Pensez à deux médecins — un généraliste et un spécialiste — qui diagnostiquent les mêmes patients. Parfois le généraliste repère quelque chose que le spécialiste manque ; parfois c'est l'inverse. Une commission qualité examine les diagnostics appariés, non pour noter les médecins, mais pour extraire des principes diagnostiques : « quand les symptômes X et Y coexistent, toujours vérifier la condition Z avant de conclure W. » Ces principes aident n'importe quel médecin, quel que soit son parcours de formation.</p>
+
+<h2>Résultats : des gains mesurables des deux côtés de l'échelle</h2>
+
+<p>Les chercheurs ont testé MEMCOLLAB sur quatre benchmarks : MATH500 et GSM8K pour le raisonnement mathématique, MBPP et HumanEval pour la génération de code. Trois modèles dorsaux ont été mis à l'épreuve : Qwen2.5-7B, Qwen2.5-32B et LLaMA-3-8B.</p>
+
+<p>Le petit modèle progresse massivement. Le Qwen2.5-7B passe de 52,2 % à 67,0 % de précision sur MATH500 avec la mémoire collaborative — un bond de près de 15 points. Sur MBPP, il gagne 10 points, de 47,9 % à 57,6 %. En moyenne sur les quatre benchmarks, sa précision passe de 57,1 % à 71,6 %.</p>
+
+<p>Le grand modèle progresse aussi. Le Qwen2.5-32B, déjà à 63,8 % sur MATH500, atteint 73,8 %. Sur GSM8K, il monte de 93,0 % à 93,6 %. Les gains sont plus modestes — le modèle a moins de marge — mais ils sont constants. Sa moyenne grimpe de 70,8 % à 79,6 %.</p>
+
+<p>Le résultat le plus inattendu concerne le transfert entre familles de modèles. La mémoire construite en contrastant un modèle Qwen avec un modèle LLaMA — des architectures radicalement différentes — améliore les deux. Le LLaMA-3-8B passe de 27,4 % à 42,4 % sur MATH500 : +15 points. Et le Qwen-32B, alimenté par une mémoire construite avec le LLaMA-8B, atteint 95,2 % sur GSM8K, contre 93,6 % avec la mémoire intra-famille. Deux architectures sans rien en commun (taille, famille, données d'entraînement) produisent une mémoire partagée plus efficace que celle construite entre modèles apparentés. La diversité des perspectives aide, exactement comme en médecine où un avis croisé entre spécialités produit de meilleurs diagnostics qu'un avis entre pairs d'une même discipline.</p>
+
+<p>Un effet secondaire remarquable : les agents équipés de mémoire collaborative raisonnent en moins d'étapes. Sur MBPP, le Qwen-7B passe de 3,1 tours de raisonnement en moyenne à 1,4. Sur HumanEval, de 3,3 à 1,5. La mémoire raccourcit le chemin vers la bonne réponse en éliminant les explorations inutiles. Moins de tours signifie moins de tokens générés, donc des coûts d'inférence réduits — un argument qui pèse quand on facture à l'usage.</p>
+
+<p>Trois règles récupérées par problème donnent le meilleur résultat. Au-delà, le bruit augmente et la performance décline. Trop de contraintes simultanées dispersent l'attention du modèle au lieu de la focaliser.</p>
+
+<h2>Implications : vers une infrastructure de mémoire partagée</h2>
+
+<p>La conséquence pratique la plus directe : les organisations qui déploient plusieurs modèles d'IA pourraient maintenir une banque de mémoire unique au lieu de systèmes séparés pour chaque modèle.</p>
+
+<p>Côté coûts, construire une mémoire exige de faire tourner les modèles sur des problèmes d'entraînement et d'analyser leurs productions. Avec MEMCOLLAB, on le fait une fois et tous les modèles en profitent. Sans cette mutualisation, chaque modèle a besoin de son propre pipeline de construction de mémoire — un effort multiplié par le nombre de modèles en production.</p>
+
+<p>Les mises à jour de modèles deviennent aussi plus souples. Quand on remplace un modèle par une version plus récente, la banque de mémoire partagée n'a pas besoin d'être reconstruite de zéro. Les contraintes de raisonnement abstraites qu'elle contient ne sont pas liées aux particularités d'un modèle donné.</p>
+
+<p>L'approche a aussi des implications pour la transparence. La mémoire distillée par contraste est plus lisible que des traces brutes de modèle. Chaque entrée est une règle compréhensible : « quand X, appliquer Y, éviter Z ». On peut auditer ces règles, en retirer certaines, comprendre la guidance que les modèles reçoivent. Les régulateurs exigent de plus en plus d'explicabilité : disposer de règles de raisonnement lisibles par un humain est un atout concret.</p>
+
+<p>Des limites existent. MEMCOLLAB a été testé sur des tâches de mathématiques et de code — des domaines avec des réponses clairement justes ou fausses. Les tâches ouvertes (rédaction créative, résumé, planification stratégique) ne disposent pas du signal de correction binaire sur lequel repose le processus contrastif. Étendre le cadre à ces domaines demanderait de nouvelles façons de définir ce qu'est une trajectoire « préférée » et une trajectoire « rejetée ».</p>
+
+<p>La banque de mémoire est aussi figée une fois construite. Elle ne se met pas à jour quand les modèles rencontrent de nouveaux problèmes en production. L'une des baselines de l'étude, Dynamic Cheatsheet, évolue au moment de l'inférence. Combiner la construction collaborative de MEMCOLLAB avec une mise à jour en temps réel est une piste que les auteurs n'ont pas encore explorée.</p>
+
+<h2>Questions ouvertes et pistes futures</h2>
+
+<p>MEMCOLLAB fonctionne avec des paires d'agents. Que se passe-t-il avec cinq ou dix agents ? L'article suggère de sélectionner une trajectoire préférée et de traiter toutes les autres comme non préférées. Mais l'explosion combinatoire des comparaisons par paires reste un problème ouvert, et la qualité des règles extraites pourrait se diluer avec le nombre de perspectives contrastées.</p>
+
+<p>L'étape de classification des tâches utilise le modèle lui-même comme classifieur — une fragilité potentielle. Si le modèle se trompe de catégorie, il récupère des règles sans rapport avec le problème. Les auteurs montrent que la récupération par catégorie surpasse la récupération par similarité d'embeddings, mais n'explorent pas les cas où la classification échoue de manière systématique.</p>
+
+<p>La qualité de la mémoire dépend du jeu d'entraînement. Si les problèmes d'entraînement ne couvrent pas un type de raisonnement nécessaire au moment du test, la banque n'a rien de pertinent à offrir. L'article ne détaille pas les modes de défaillance où la mémoire récupérée est hors sujet ou obsolète.</p>
+
+<p>Une piste que l'article ne mentionne pas : utiliser la mémoire contrastive en sens inverse. Au lieu d'améliorer l'inférence, la divergence entre trajectoires pourrait servir à identifier quel modèle convient le mieux pour un problème donné. Un système d'aiguillage construit sur ce signal pourrait surpasser les méthodes actuelles de sélection de modèle.</p>
+
+<p>La question de fond porte sur la représentation. Les règles abstraites que MEMCOLLAB extrait — « en présence d'événements dépendants, calculer les probabilités jointes par multiplication des probabilités conditionnelles » — ressemblent à des heuristiques de manuel scolaire. Leur efficacité suggère que les grands modèles de langage bénéficient du même type de guidance métacognitive explicite que les étudiants humains. Un parallèle qui mériterait d'être creusé : si des règles simples et lisibles suffisent à améliorer le raisonnement de modèles à 32 milliards de paramètres, c'est peut-être que le problème n'était jamais un manque de capacité brute, mais un manque d'organisation des connaissances déjà acquises.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

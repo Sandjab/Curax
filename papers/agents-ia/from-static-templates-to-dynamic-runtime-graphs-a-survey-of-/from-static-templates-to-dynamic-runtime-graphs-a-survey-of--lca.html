@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Static Templates to Dynamic Runtime Graphs: A Survey of Workflow Optimization for LLM Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>From Static Templates to Dynamic Runtime Graphs: A Survey of Workflow Optimization for LLM Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Les systèmes à base de LLM dépassent désormais le simple échange prompt-réponse : ils orchestrent des séquences d'appels LLM, d'utilisation d'outils, de récupération d'information, d'exécution de code et de vérification. La structure de ces workflows — quels composants existent, comment ils dépendent les uns des autres, comment l'information circule — affecte directement la qualité et le coût d'exécution. Pourtant, la plupart des travaux existants traitent cette structure comme un détail d'implémentation plutôt que comme un objet d'optimisation à part entière.</p>
+
+<p>Ce survey propose de combler ce vide en introduisant le concept d'<em>agentic computation graph</em> (ACG) comme abstraction unificatrice. L'objectif est triple : fournir un vocabulaire partagé, organiser la littérature selon des axes de comparaison stables, et proposer un standard d'évaluation reproductible. Le corpus analysé comprend 77 travaux classés en trois catégories — 39 <em>core</em>, 7 <em>adjacent</em>, 31 <em>background</em> — auxquels s'ajoutent 27 ressources d'évaluation.</p>
+
+<h2>Méthodologie</h2>
+
+<p>Le survey adopte une approche narrative structurée plutôt qu'un protocole de revue systématique (PRISMA ou équivalent). Les critères d'inclusion sont explicites : un travail est retenu s'il optimise un template de workflow réutilisable, génère ou édite un graphe réalisé pour une exécution donnée, étudie la topologie de communication comme variable d'optimisation, fournit une infrastructure structurante, ou contribue un benchmark spécifique à l'évaluation de workflows.</p>
+
+<p>L'organisation repose sur une taxonomie à deux descripteurs. Le <em>graph determination time</em> (GDT) capture quand la structure est décidée : hors ligne, avant exécution, ou pendant l'exécution. Le <em>graph plasticity mode</em> (GPM) capture le degré de variation structurelle autorisé à l'inférence : aucun, sélection, génération, ou édition. Ces deux axes permettent de positionner des cas ambigus — un générateur de workflow entraîné hors ligne mais produisant un nouveau graphe par requête est dynamique selon cette taxonomie.</p>
+
+<p>Chaque méthode est résumée via une <em>comparison card</em> standardisée : setting (GDT/GPM), niveau optimisé (nœud, graphe, ou joint), représentation, signal de feedback dominant, mécanisme de mise à jour, et gestion du coût. Ce format rend les comparaisons plus directes que les descriptions ad hoc habituelles.</p>
+
+<p>La distinction entre trois objets — template réutilisable (G̅), graphe réalisé (G<sub>run</sub>), et trace d'exécution (τ) — structure l'ensemble de l'analyse. Cette séparation clarifie ce que chaque méthode optimise réellement : le design réutilisable, la structure déployée pour une exécution, ou le comportement observé à l'exécution.</p>
+
+<h2>Résultats principaux</h2>
+
+<h3>Optimisation statique</h3>
+
+<p>Les méthodes statiques fixent un template réutilisable avant déploiement. Le survey identifie trois sous-catégories : la recherche de templates hors ligne (AFlow via MCTS, ADAS via méta-recherche en espace de code, VFlow pour la génération Verilog), l'optimisation au niveau des nœuds dans un scaffold fixe (DSPy, OPRO, EvoPrompt, CAPO, GEPA), et l'optimisation conjointe structure-configuration (MASS, Maestro). Un point récurrent : la qualité du vocabulaire d'opérateurs importe autant que l'algorithme de recherche lui-même. A2Flow illustre cette idée en apprenant la bibliothèque d'opérateurs à partir de démonstrations.</p>
+
+<h3>Optimisation dynamique</h3>
+
+<p>Les méthodes dynamiques forment un spectre de plasticité structurelle croissante :</p>
+<ul>
+<li>Sélection et élagage d'un super-graphe fixe (Adaptive Graph Pruning, DAGP, AgentDropout) — validité héritée, expressivité limitée.</li>
+<li>Génération pré-exécution d'un workflow spécifique à la requête (Assemble Your Crew, G-Designer, FlowReasoner, Workflow-R1) — plus expressif mais nécessite des gardes de validité.</li>
+<li>Édition en cours d'exécution (DyFlow, AgentConductor, Aime, MetaGen, EvoFlow) — maximal en flexibilité, maximal en complexité de contrôle.</li>
+</ul>
+
+<p>Le survey dégage une règle de conception empirique : la plasticité minimale requise par la tâche devrait guider le choix. La sélection suffit quand les tâches varient principalement en difficulté. La génération se justifie quand des structures qualitativement différentes sont nécessaires. L'édition ne se justifie que lorsque l'exécution partielle révèle des informations inaccessibles a priori.</p>
+
+<h3>Signaux de feedback</h3>
+
+<p>Quatre familles de signaux guident l'optimisation : métriques scalaires (succès, accuracy), vérificateurs (tests unitaires, vérification de schéma), préférences et classements (ScoreFlow, RobustFlow), et feedback textuel dérivé des traces (GEPA, MetaGen, Maestro). Le couplage signal-algorithme n'est pas arbitraire : les vérificateurs forts autorisent des mutations graphiques agressives, les préférences stabilisent quand les récompenses absolues sont bruitées, le RL est pertinent quand la construction de workflow est séquentielle par nature.</p>
+
+<h3>Protocole d'évaluation</h3>
+
+<p>Le survey propose un protocole minimal de reporting en dix dimensions : représentation du workflow, setting structurel, configuration modèle/outils, coût d'optimisation hors ligne, coût d'inférence en ligne, statistiques de traces, métriques au niveau du graphe, tests de robustesse, protocole de randomisation, et analyse des échecs. L'argument central : rapporter uniquement la performance finale masque si un gain provient d'une meilleure structure, de plus de calcul, ou de scaffolds cachés.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>Plusieurs faiblesses méthodologiques méritent d'être relevées :</p>
+
+<p>L'absence de protocole de revue systématique est la lacune la plus visible. Aucune stratégie de recherche n'est décrite (bases interrogées, requêtes utilisées, critères d'exclusion appliqués séquentiellement). Le corpus de 77 travaux est présenté comme un inventaire compilé, sans que le lecteur puisse évaluer l'exhaustivité de la couverture ou les biais de sélection. Pour un survey qui propose des standards de reporting rigoureux aux autres, cette asymétrie est frappante.</p>
+
+<p>Le biais institutionnel potentiel n'est pas discuté. Cinq des neuf auteurs sont affiliés à IBM Research. Plusieurs frameworks IBM ou proches d'IBM figurent dans le corpus. Sans affirmer que cela biaise les conclusions, l'absence de déclaration à ce sujet tranche avec le niveau d'exigence méthodologique revendiqué ailleurs dans le texte.</p>
+
+<p>La taxonomie GDT/GPM, bien que utile, reste auto-déclarée « intentionally lightweight ». Certains travaux pourraient être classés différemment selon l'interprétation retenue — le survey lui-même reconnaît l'existence de « gray cases ». Or aucune procédure d'accord inter-annotateur ou de validation croisée du schéma de classification n'est rapportée.</p>
+
+<p>Le protocole d'évaluation proposé n'a pas été testé. Aucune étude pilote ne montre sa faisabilité, son coût additionnel pour les auteurs, ni son impact sur la comparabilité réelle des méthodes. Le protocole reste une proposition normative sans validation empirique.</p>
+
+<p>Enfin, la couverture temporelle est fortement déséquilibrée vers 2025-2026, ce qui reflète la jeunesse du domaine mais rend difficile l'identification de tendances stables versus effets de mode.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Un dépôt GitHub est mentionné (IBM/awesome-agentic-workflow-optimization), ce qui facilite la mise à jour et la vérification du corpus. Les <em>comparison cards</em> standardisées rendent les classifications vérifiables. Les définitions formelles (template, graphe réalisé, trace) sont assez précises pour être réutilisées par d'autres auteurs.</p>
+
+<p>Cependant, la reproductibilité du processus de sélection du corpus lui-même est faible : sans requêtes de recherche documentées, un autre groupe de chercheurs pourrait aboutir à un corpus sensiblement différent. Les tables de comparaison, bien que détaillées, reposent sur le jugement des auteurs pour le champ dominant (« dominant workflow-relevant entry ») sans procédure de codage explicite.</p>
+
+<h2>Impact et applications</h2>
+
+<p>La contribution principale est conceptuelle : traiter la structure du workflow comme un objet d'optimisation de premier plan. Cette perspective unifie des travaux dispersés sous des noms différents (pipelines, orchestration, plans, communication graphs) et fournit un cadre pour les comparer. La distinction template/graphe réalisé/trace est simple mais éclairante — elle permet de comprendre immédiatement pourquoi deux méthodes qui améliorent toutes deux l'accuracy finale optimisent en réalité des artefacts différents.</p>
+
+<p>Le protocole de reporting minimal, s'il est adopté, pourrait réduire les comparaisons trompeuses où une méthode semble meilleure simplement parce qu'elle dépense plus de tokens ou cache des retries dans sa boucle d'exécution.</p>
+
+<p>La « recette pratique hybride » de la section 7.5 — commencer par un scaffold statique contraint, ajouter de la recherche graphique seulement quand l'analyse des traces révèle des modes de défaillance structurels, réserver l'édition en cours d'exécution aux environnements à forte incertitude — offre un guide décisionnel concret pour les praticiens.</p>
+
+<p>Les huit problèmes ouverts identifiés (attribution de crédit structurel, expressivité vs vérifiabilité, adaptation continue, qualité des benchmarks, théorie de l'optimisation de workflows) délimitent un programme de recherche cohérent.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Le survey se positionne explicitement par rapport aux surveys existants via un tableau comparatif (Table 1). Les surveys sur les systèmes multi-agents (Chen et al., 2024b ; Tran et al., 2025) traitent la collaboration et les protocoles de communication, pas l'optimisation structurelle. Les surveys sur la planification (Huang et al., 2024) couvrent la décomposition et la réflexion comme capacités d'un agent, pas comme objet de design graphique. Les surveys sur l'apprentissage d'outils (Xu et al., 2025b) se concentrent sur la sélection et l'invocation d'outils. Le survey de Du et al. (2026) sur l'optimisation d'agents couvre un spectre plus large sans isoler la structure du workflow.</p>
+
+<p>La niche revendiquée — l'optimisation de la structure du workflow elle-même — est légitime et pas encore saturée. Le concept d'ACG formalise ce que des frameworks comme AutoGen, CAMEL ou OpenHands implémentent déjà implicitement. La taxonomie GDT/GPM offre un vocabulaire plus fin que le simple binaire statique/dynamique, même si sa granularité reste modérée.</p>
+
+<p>Un angle mort : le survey ne traite pas de la relation entre l'optimisation de workflow et les capacités intrinsèques du modèle sous-jacent. Un modèle plus capable pourrait rendre certaines optimisations structurelles superflues (comme le suggère OneFlow). Cette tension entre complexité du workflow et puissance du backbone mériterait un traitement plus approfondi.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Gap bien identifié dans la littérature, question focalisée (la structure du workflow comme objet d'optimisation), périmètre clairement délimité avec critères d'inclusion explicites.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Taxonomie GDT/GPM cohérente, comparison cards standardisées, mais absence de protocole de revue systématique (pas de PRISMA, pas de stratégie de recherche documentée).</td></tr>
+<tr><td>Taille de l'échantillon</td><td>3</td><td>77 travaux (39 core) constituent un corpus raisonnable pour un domaine jeune, avec une répartition transparente par catégorie. La complétude reste invérifiable faute de protocole de recherche.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Le schéma de classification est bien défini et réutilisable. Le protocole d'évaluation proposé est prometteur mais non validé empiriquement.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Critères d'inclusion explicites et scope tags (core/adjacent/background). Pas de discussion du biais institutionnel potentiel (5 auteurs IBM sur 9). Pas d'accord inter-annotateur sur les classifications.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Dépôt GitHub public, définitions formelles réutilisables, tables de comparaison détaillées. Le processus de sélection du corpus lui-même n'est pas reproductible.</td></tr>
+<tr><td>Transparence et limitations</td><td>3</td><td>Les limitations de la taxonomie sont mentionnées (« intentionally lightweight »), les problèmes ouverts sont honnêtes. Les limites du survey en tant que survey (biais de sélection, couverture) ne sont pas discutées.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>L'abstraction ACG et la taxonomie GDT/GPM comblent un vide réel. Le protocole de reporting minimal pourrait influencer les pratiques du domaine. La recette hybride fournit un guide praticien utile.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Note globale de robustesse : 3.5/5.</strong> Ce survey remplit bien sa mission de structuration d'un domaine fragmenté. La taxonomie proposée est utile et le protocole d'évaluation est une contribution concrète. Les principales faiblesses tiennent à l'absence de méthodologie de revue systématique et au manque de réflexivité sur les biais potentiels du processus de sélection — des lacunes courantes dans les surveys en IA mais qui contrastent avec le niveau d'exigence méthodologique que le survey impose aux travaux qu'il recense.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

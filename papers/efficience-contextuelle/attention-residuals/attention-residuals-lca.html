@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attention Residuals — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Attention Residuals</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h1>Lecture Critique : Attention Residuals</h1>
+<p><strong>Kimi Team (Moonshot AI)</strong> — arXiv 2603.15031, mars 2026</p>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>Les connexions résiduelles standard (<code>h_l = h_{l-1} + f_{l-1}(h_{l-1})</code>) accumulent les sorties de toutes les couches avec des poids unitaires fixes. Sous le régime PreNorm dominant dans les LLM actuels, cette accumulation provoque une croissance des magnitudes en O(L) avec la profondeur, diluant la contribution relative de chaque couche. Les couches profondes doivent produire des sorties de plus en plus grandes pour rester influentes — un problème documenté par Li et al. (2026) sous le nom de « dilution PreNorm ».</p>
+
+<p>L'équipe Kimi propose Attention Residuals (AttnRes) : remplacer l'accumulation fixe par une attention softmax apprise sur la dimension de profondeur. Chaque couche sélectionne quelles représentations antérieures agréger, via un pseudo-query appris w_l ∈ ℝ^d. L'analogie exploitée est directe : de même que le Transformer a remplacé la récurrence temporelle des RNN par l'attention sur la séquence, AttnRes remplace la récurrence en profondeur par l'attention sur les couches.</p>
+
+<p>Cette dualité séquence-profondeur, formalisée via les matrices semi-séparables de Dao &amp; Gu (2024), unifie sous un même cadre les connexions résiduelles standard, Highway Networks, (m)HC et AttnRes — les premières correspondant à de l'attention linéaire en profondeur, AttnRes à de l'attention softmax.</p>
+
+<h2>2. Méthodologie</h2>
+
+<h3>2.1 Full AttnRes</h3>
+
+<p>L'entrée de la couche l devient une somme pondérée de toutes les sorties précédentes : <code>h_l = Σ α_{i→l} · v_i</code>, où les poids α sont calculés par attention softmax entre un pseudo-query appris w_l et les clés normalisées (RMSNorm) des sorties précédentes. Le coût arithmétique est O(L²d) — négligeable puisque L reste modeste (< 1000 couches). Le coût mémoire O(Ld) se confond avec les activations déjà retenues pour la rétropropagation en entraînement standard.</p>
+
+<h3>2.2 Block AttnRes</h3>
+
+<p>Pour l'entraînement distribué à grande échelle (recomputation d'activations, parallélisme de pipeline), Full AttnRes impose un surcoût mémoire et communication réel. Block AttnRes regroupe les L couches en N blocs : à l'intérieur d'un bloc, les sorties s'accumulent par sommation standard ; entre blocs, l'attention softmax opère sur N représentations de niveau bloc. Mémoire et communication passent de O(Ld) à O(Nd).</p>
+
+<h3>2.3 Infrastructure</h3>
+
+<p>Trois optimisations rendent Block AttnRes pratique :</p>
+<ul>
+<li>Cache inter-étages : sous parallélisme de pipeline interleaved, chaque rang physique conserve les blocs reçus lors des étages virtuels précédents, éliminant les transmissions redondantes. Le coût maximal par transition passe de O(C) à O(P), un facteur V× d'amélioration.</li>
+<li>Stratégie d'inférence biphasée : la Phase 1 batch toutes les requêtes d'un bloc contre les représentations de blocs antérieurs ; la Phase 2 traite séquentiellement les dépendances intra-bloc et fusionne via online softmax. L'I/O mémoire par couche tombe à (N/S + 5)d lectures et 2d écritures.</li>
+<li>Prefilling économe en mémoire : les représentations de blocs sont shardées le long de la dimension séquence sur les devices de tensor-parallelism, ramenant l'empreinte de 15 Go à ~1.9 Go par device pour un contexte de 128K tokens.</li>
+</ul>
+
+<h3>2.4 Protocole expérimental</h3>
+
+<p>Les expériences couvrent deux axes :</p>
+<ul>
+<li>Scaling laws : 5 tailles de modèles MoE (194M à 528M paramètres activés), chacune entraînée en 3 variantes (baseline PreNorm, Full AttnRes, Block AttnRes N≈8), avec fenêtre de contexte 8192 tokens et schedule cosinus. Les hyperparamètres sont optimisés pour la baseline — un choix volontairement conservateur.</li>
+<li>Modèle final : architecture Kimi Linear (48B total / 3B activés), 27 blocs Transformer avec KDA/MLA hybride et MoE (8/256 experts routés + 1 partagé), pré-entraîné sur 1.4T tokens avec l'optimiseur Muon et schedule WSD, suivi d'un mid-training sur ~400B tokens de haute qualité.</li>
+</ul>
+
+<p>Les ablations portent sur le modèle 16-têtes (~436M paramètres activés) et testent : query dépendant de l'entrée, mélange indépendant de l'entrée, sigmoid vs. softmax, attention multi-tête en profondeur, suppression du RMSNorm, fenêtre glissante (SWA), et comparaison avec DenseFormer et mHC.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<h3>3.1 Scaling laws</h3>
+
+<p>Les courbes en loi de puissance (L = A × C^{-α}) montrent des pentes comparables pour les trois variantes, mais AttnRes atteint systématiquement une perte plus basse sur toute la gamme de compute. À 5.6 PFLOP/s-jours, Block AttnRes obtient 1.692 contre 1.714 pour la baseline — l'équivalent d'un avantage de 1.25× en compute. L'écart entre Full et Block AttnRes se réduit avec l'échelle, tombant à 0.001 au plus grand modèle.</p>
+
+<h3>3.2 Benchmarks downstream</h3>
+
+<p>Le modèle 48B avec Block AttnRes surpasse la baseline sur tous les benchmarks évalués (Table 3). Les gains les plus marqués apparaissent sur les tâches de raisonnement multi-étapes : GPQA-Diamond +7.5 points, Math +3.6, HumanEval +3.1. Les benchmarks de connaissances progressent aussi : MMLU +1.1, TriviaQA +1.9, C-Eval +2.9. Ce profil de gains est cohérent avec l'hypothèse que l'accès sélectif aux représentations antérieures bénéficie aux tâches compositionnelles.</p>
+
+<h3>3.3 Dynamiques d'entraînement</h3>
+
+<p>L'analyse des dynamiques révèle trois effets :</p>
+<ul>
+<li>La magnitude des sorties reste bornée avec AttnRes (pattern périodique confiné aux blocs) là où la baseline croît de façon monotone.</li>
+<li>Les gradients se distribuent plus uniformément sur la profondeur : la baseline concentre des gradients disproportionnés sur les premières couches.</li>
+<li>La perte de validation diverge surtout pendant la phase de decay, où AttnRes creuse l'écart.</li>
+</ul>
+
+<h3>3.4 Ablations</h3>
+
+<p>DenseFormer (poids scalaires fixes par couche) n'améliore pas la baseline (1.767 vs. 1.766), ce qui confirme la nécessité de poids dépendants du contenu. La fenêtre glissante (SWA, W=8+1) atteint seulement 1.764 — accéder à des couches distantes compte plus qu'augmenter le nombre de voisines. L'attention multi-tête en profondeur (H=16) dégrade les performances (1.752 vs. 1.746) : le mélange optimal en profondeur est largement uniforme sur les canaux. Le remplacement de softmax par sigmoid dégrade aussi (1.741), attribué à la normalisation compétitive du softmax qui force une sélection plus tranchée.</p>
+
+<h3>3.5 Architecture optimale</h3>
+
+<p>Un balayage de 25 configurations sous budget fixe (6.5 × 10¹⁹ FLOPs, ~2.3 × 10⁸ paramètres activés) montre qu'AttnRes déplace l'optimum vers des réseaux plus profonds et plus étroits : l'optimum baseline se situe à d_model/L_b ≈ 60, celui d'AttnRes à d_model/L_b ≈ 45. AttnRes améliore la perte dans les 25 configurations (gain de 0.019 à 0.063).</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>Plusieurs faiblesses méthodologiques méritent attention :</p>
+
+<p>L'absence d'intervalles de confiance sur l'ensemble des expériences est la lacune la plus sérieuse. Les scaling laws reposent sur des exécutions uniques à chaque taille. Un gain de 0.001 entre Full et Block AttnRes au plus grand modèle pourrait relever du bruit expérimental — impossible de trancher sans répétitions. Pour un rapport technique industriel, cette absence est courante mais pas excusable sur le plan scientifique.</p>
+
+<p>Les ablations ne portent que sur le modèle de ~436M paramètres. Rien ne garantit que les conclusions (softmax &gt; sigmoid, mono-tête &gt; multi-tête, etc.) se maintiennent à 48B. Les auteurs comparent AttnRes au modèle final uniquement en mode Block avec N≈8 — on ne sait pas ce que Full AttnRes donnerait à cette échelle.</p>
+
+<p>Le choix d'hyperparamètres optimisés pour la baseline est présenté comme conservateur. C'est vrai en un sens : les gains rapportés sont un plancher. Mais ce choix empêche de mesurer le potentiel réel d'AttnRes avec ses propres hyperparamètres optimaux, et l'écart pourrait être substantiellement plus grand — ou pas.</p>
+
+<p>Les scénarios d'échec ne sont pas discutés. Dans quels régimes AttnRes pourrait-il nuire ? L'initialisation à zéro des pseudo-queries est mentionnée comme nécessaire (l'absence provoque une « volatilité d'entraînement »), mais les auteurs ne quantifient pas cette instabilité ni n'explorent de stratégies d'initialisation alternatives.</p>
+
+<p>Le pseudo-query appris w_l ajoute un seul vecteur d-dimensionnel par couche — effectivement négligeable en paramètres. Mais la variante avec query dépendant de l'entrée (projection d×d) donne 1.731 vs. 1.737, un gain non négligeable. Cette direction est écartée pour des raisons d'I/O mémoire séquentiel à l'inférence, sans exploration d'approximations (projection low-rank, par exemple).</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Le code est disponible sur GitHub (github.com/MoonshotAI/Attention-Residuals). Le pseudocode PyTorch de la Figure 2 est suffisamment détaillé pour une réimplémentation. Les configurations de modèles (Table 2), hyperparamètres d'entraînement, et détails architecturaux sont documentés.</p>
+
+<p>Les limites de reproductibilité tiennent à l'échelle : les données d'entraînement sont propriétaires (référencées via Kimi Linear et Moonlight), l'infrastructure distribuée requise pour le modèle 48B n'est pas accessible à la plupart des laboratoires, et la recette de mid-training sur 400B tokens haute qualité n'est pas reproductible sans accès aux données. Les scaling laws sur les modèles de 194M–528M sont en revanche plus accessibles.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>Block AttnRes se présente comme un remplacement drop-in des connexions résiduelles standard : ajout d'un RMSNorm et d'un pseudo-query par couche, initialisation à zéro, partitionnement en ~8 blocs. L'overhead d'entraînement est inférieur à 4% sous parallélisme de pipeline, l'overhead d'inférence inférieur à 2%. Ce faible coût d'adoption est l'atout principal de la contribution.</p>
+
+<p>L'avantage en compute équivalent (1.25×) est significatif à grande échelle : pour un budget d'entraînement fixe, AttnRes permet d'atteindre la même performance avec 20% de compute en moins, ou une meilleure performance à budget égal. Sur les tâches de raisonnement, les gains (+7.5 sur GPQA-Diamond) sont substantiels.</p>
+
+<p>La formalisation en matrice structurée a une valeur théorique indépendante : elle connecte les connexions résiduelles, Highway Networks, (m)HC et AttnRes dans un cadre unifié de rang semi-séparable, et établit la correspondance entre attention linéaire/softmax en profondeur et sur la séquence.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>AttnRes s'inscrit dans une lignée de travaux cherchant à dépasser les limitations de l'accumulation résiduelle fixe. Highway Networks (Srivastava et al., 2015) ont introduit des portes apprises mais restent contraints à l'accès au seul état précédent. DenseFormer (Pagliardini et al., 2024) donne accès à toutes les couches antérieures mais avec des poids scalaires statiques — l'ablation montre que ce n'est pas suffisant. Hyper-Connections (Zhu et al., 2025) et mHC (Xie et al., 2026) élargissent la récurrence à m flux parallèles avec des matrices de transition apprises, mais chaque couche ne voit que l'état immédiatement précédent (compressé en m flux).</p>
+
+<p>AttnRes combine deux propriétés qu'aucune méthode antérieure ne réunissait : accès direct à toutes les sorties de couches précédentes, et pondération dépendante du contenu via softmax. La comparaison directe (Table 2, Table 4) montre que Full AttnRes surpasse mHC sur les scaling laws tout en exigeant un I/O mémoire par couche inférieur (5.5d pour Block AttnRes contre 34d pour mHC avec m=4).</p>
+
+<p>La contribution se distingue aussi de MUDDFormer (Xiao et al., 2025) qui génère des poids position-dépendants via MLP sur 4 flux découplés, et de MRLA (Fang et al., 2023) qui utilise du gating sigmoid — l'ablation sigmoid vs. softmax tranche en faveur de la normalisation compétitive. L'approche la plus proche conceptuellement est le lien avec TTT (Sun et al., 2024) et les Fast Weight Programmers (Schmidhuber, 1992) : AttnRes complète pour la profondeur la transition récurrence→attention qui a transformé le traitement des séquences.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Dualité séquence-profondeur clairement formulée, originale et bien motivée par les limitations connues de PreNorm.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Scaling laws sur 5 tailles, ablations sur 16 variantes, modèle final à 48B. Hyperparamètres conservateurs (optimisés baseline). Ablations limitées au petit modèle.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Exécutions uniques sans intervalles de confiance. Standard pour un rapport technique industriel, insuffisant pour une publication académique rigoureuse.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Benchmarks standards bien choisis (MMLU, GPQA, GSM8K, HumanEval). Analyse des dynamiques d'entraînement (magnitudes, gradients) apporte un diagnostic utile. Pas de métriques hors-distribution.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Comparaison conservatrice (hyperparamètres baseline), mais pas d'intervalles de confiance, exécutions uniques, et comparaisons limitées à PreNorm, DenseFormer et mHC.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code GitHub disponible, pseudocode PyTorch détaillé, configurations documentées. Données d'entraînement et infrastructure propriétaires.</td></tr>
+<tr><td>Transparence / limitations</td><td>3</td><td>Limites mémoire de Full AttnRes reconnues. Pas de discussion sur les cas d'échec, l'instabilité sans initialisation zéro, ou les régimes où AttnRes pourrait nuire.</td></tr>
+<tr><td>Impact / nouveauté</td><td>5</td><td>Formalisation unificatrice en matrice structurée, remplacement drop-in avec &lt;2% overhead inférence, gains cohérents sur tous les benchmarks. Contribution directement applicable.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Note globale de robustesse : 4.0 / 5</strong> — Contribution technique solide avec une idée fondatrice élégante (dualité séquence-profondeur), une validation expérimentale à échelle significative et des solutions d'infrastructure concrètes. L'absence de répétitions statistiques et la discussion insuffisante des scénarios d'échec empêchent d'atteindre le niveau de rigueur des publications académiques de référence, mais le rapport technique remplit sa fonction : démontrer qu'AttnRes fonctionne à l'échelle de production et peut être adopté immédiatement.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

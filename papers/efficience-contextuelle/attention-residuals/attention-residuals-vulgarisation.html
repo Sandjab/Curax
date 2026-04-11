@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attention Residuals — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Attention Residuals</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Les grands modèles de langage empilent des dizaines, parfois des centaines de couches de calcul. GPT-4, LLaMA, DeepSeek-V3 — tous reposent sur une même fondation technique héritée de 2015 : la connexion résiduelle. Ce câblage simple additionne la sortie de chaque couche à l'ensemble des sorties précédentes, avec un poids fixe de 1. Pas de filtrage, pas de sélection. Pendant une décennie, cette plomberie n'a pratiquement pas changé.</p>
+
+<p>L'équipe Kimi, chez Moonshot AI, propose de la remplacer. Leur méthode, baptisée <em>Attention Residuals</em> (AttnRes), permet à chaque couche de choisir activement quelles représentations antérieures elle souhaite exploiter. Le principe transpose aux couches d'un réseau la même révolution que le mécanisme d'attention a apportée au traitement des séquences de mots. Intégrée à un modèle de 48 milliards de paramètres et testée sur 1 400 milliards de tokens d'entraînement, cette technique améliore les performances sur l'ensemble des benchmarks évalués — pour un surcoût d'inférence inférieur à 2 %.</p>
+
+<h2>Le problème : une accumulation aveugle qui noie le signal</h2>
+
+<p>Dans un Transformer, chaque couche reçoit un vecteur d'entrée, le transforme, puis ajoute le résultat au vecteur d'origine. Ce raccourci — souvent appelé « autoroute des gradients » — a permis d'entraîner des réseaux profonds là où, auparavant, le signal s'évanouissait après quelques couches. Sans lui, ni GPT ni LLaMA n'existeraient.</p>
+
+<p>Mais ce mécanisme a un effet secondaire gênant. À mesure qu'on empile les couches, le vecteur résiduel accumule toutes les contributions passées avec le même poids. Imaginez une réunion de travail où chaque participant parle en même temps, au même volume, sans que personne ne puisse baisser le son de l'un ou monter celui de l'autre. Plus la réunion dure — plus le réseau est profond — plus le brouhaha couvre les contributions individuelles.</p>
+
+<p>La norme du vecteur caché croît proportionnellement au nombre de couches. Les couches profondes, pour se faire entendre par-dessus cette masse, doivent produire des sorties de plus en plus grandes. C'est le phénomène de « dilution PreNorm », du nom de la technique de normalisation utilisée dans la quasi-totalité des LLM modernes. Des travaux récents ont montré qu'une fraction significative des couches d'un modèle peut être retirée sans dégrader sensiblement les performances — signe que leur contribution est effectivement noyée dans l'accumulation.</p>
+
+<p>Plusieurs correctifs ont été tentés au fil des ans : mettre des poids fixes différents de 1 sur les connexions, utiliser des portes apprises, maintenir plusieurs flux parallèles. Tous restent prisonniers du même schéma. Chaque couche ne voit que le résultat agrégé de tout ce qui précède. L'information spécifique d'une couche antérieure, une fois mélangée au reste, ne peut plus être récupérée sélectivement.</p>
+
+<h2>La méthode : quand l'attention se tourne vers la profondeur</h2>
+
+<p>L'intuition de l'équipe Kimi part d'une analogie structurelle. Les réseaux récurrents (RNN), qui traitaient le langage mot par mot, compressaient toute la séquence passée dans un unique vecteur d'état. En 2017, le mécanisme d'attention a résolu ce goulot d'étranglement : plutôt que de tout compresser, chaque position dans la séquence regarde directement n'importe quel mot précédent et décide lequel est pertinent pour la tâche en cours.</p>
+
+<p>La connexion résiduelle reproduit exactement ce schéma de compression, mais sur l'axe de la profondeur au lieu de l'axe temporel. Chaque couche reçoit une somme fixe de toutes les couches précédentes — un état compressé, sans retour en arrière possible. AttnRes applique le même remède que celui qui a rendu les RNN obsolètes : remplacer cette compression par un mécanisme d'attention qui laisse chaque couche regarder en arrière et sélectionner les contributions antérieures pertinentes.</p>
+
+<p>Chaque couche dispose d'un petit vecteur appris — une « pseudo-requête » — qui encode ses préférences. Ce vecteur est comparé aux sorties de toutes les couches précédentes, et une distribution de probabilité (via la fonction softmax) détermine le poids accordé à chacune. La couche 42 pourrait ainsi donner 60 % de son attention à la couche 41, 25 % à l'embedding initial du token, et répartir les 15 % restants sur quelques couches intermédiaires. Ces poids varient selon le contenu traité : un token donné n'activera pas le même schéma de routage en profondeur qu'un autre.</p>
+
+<p>La version complète, Full AttnRes, stocke les sorties de toutes les couches et y donne accès individuellement. C'est optimal en qualité, mais coûteux en mémoire pour les modèles géants qui utilisent le parallélisme de pipeline et la recomputation d'activations. Les chercheurs ont donc conçu une variante allégée : Block AttnRes.</p>
+
+<p>Le principe : regrouper les couches par blocs — typiquement 8 blocs pour l'ensemble du réseau. À l'intérieur d'un bloc, les connexions résiduelles classiques fonctionnent normalement. L'attention ne s'exerce qu'entre les blocs, sur des représentations condensées. Pour reprendre l'analogie de la réunion : au lieu d'écouter individuellement les 128 participants, vous écoutez les comptes rendus de 8 chefs d'équipe. Vous perdez un peu de granularité, mais vous récupérez l'essentiel de l'information utile.</p>
+
+<p>Ce découpage réduit la mémoire et les communications réseau d'un facteur proportionnel au nombre de couches par bloc. L'équipe a complété ce design par deux optimisations d'infrastructure. Un système de cache évite de retransmettre les mêmes blocs entre les étages de pipeline. Une stratégie de calcul en deux phases amortit le coût de l'attention inter-blocs en regroupant les requêtes par lot, plutôt que de les exécuter une par une à chaque couche. Block AttnRes s'intègre comme un remplacement direct des connexions résiduelles standard, sans restructurer le reste de l'architecture.</p>
+
+<h2>Résultats clés</h2>
+
+<p>L'équipe a validé AttnRes sur trois axes : lois d'échelle, dynamiques d'entraînement, et benchmarks en aval.</p>
+
+<p>Les lois d'échelle, mesurées sur cinq tailles de modèles, confirment un gain constant quelle que soit l'échelle. Block AttnRes atteint la même perte de validation qu'un modèle standard entraîné avec 25 % de calcul supplémentaire. Full AttnRes fait légèrement mieux, mais l'écart se réduit aux grandes tailles — à peine 0,001 de différence de perte au plus grand modèle testé. Pour les praticiens, cela signifie que la variante économe en mémoire capture déjà la quasi-totalité du bénéfice.</p>
+
+<p>Sur le modèle Kimi Linear (48 milliards de paramètres totaux, 3 milliards activés, entraîné sur 1 400 milliards de tokens), l'analyse des dynamiques d'entraînement révèle deux corrections structurelles. Les magnitudes de sortie restent bornées au lieu de croître linéairement avec la profondeur : AttnRes casse le cycle d'inflation en réinitialisant l'accumulation aux frontières de bloc. Les gradients se distribuent de manière plus uniforme entre les couches. Le modèle standard concentre des gradients disproportionnés sur les premières couches ; AttnRes, grâce à la compétition softmax entre les sources, lisse cette distribution.</p>
+
+<p>Les benchmarks racontent une histoire claire. Le modèle AttnRes surpasse le baseline sur les 15 tâches évaluées. Les gains les plus marqués apparaissent sur les tâches de raisonnement multi-étapes : +7,5 points sur GPQA-Diamond (questions niveau doctorat), +3,6 sur Minerva Math, +3,1 sur HumanEval (génération de code). Les tâches de connaissance pure progressent aussi, mais plus modestement : +1,1 sur MMLU, +1,9 sur TriviaQA. Cette répartition est cohérente avec l'hypothèse des auteurs. Le raisonnement en chaîne bénéficie davantage d'un meilleur flux d'information entre couches, puisque les couches profondes doivent pouvoir s'appuyer sur des représentations intermédiaires spécifiques plutôt que sur un agrégat indifférencié.</p>
+
+<p>Côté coûts, les chiffres sont rassurants. Le surcoût d'entraînement avec parallélisme de pipeline reste inférieur à 4 %. Le surcoût d'inférence est inférieur à 2 %. Le nombre de paramètres ajoutés — un vecteur de pseudo-requête et une normalisation RMSNorm par couche — est négligeable par rapport au modèle total.</p>
+
+<p>Les ablations éclairent les choix de design et réservent quelques surprises. Remplacer softmax par sigmoïde dégrade les performances : la normalisation compétitive force le modèle à faire des choix tranchés entre les sources, ce qui semble bénéfique. Utiliser des poids fixes plutôt que des poids dépendants du contenu dégrade aussi le résultat — preuve que le routage doit s'adapter à ce que le réseau est en train de traiter. L'attention multi-tête sur l'axe de la profondeur (un mélange différent par sous-espace du vecteur) n'aide pas : quand la sortie d'une couche est pertinente, elle l'est dans sa globalité, pas seulement sur certaines dimensions.</p>
+
+<p>Un résultat inattendu émerge de l'étude architecturale. Sous budget de calcul fixe, AttnRes déplace l'optimum vers des modèles plus profonds et plus étroits. Le ratio optimal largeur/profondeur passe de 60 à 45 entre le baseline et AttnRes. Le mécanisme permet d'exploiter la profondeur supplémentaire là où les connexions résiduelles classiques saturent.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Le premier atout d'AttnRes est son caractère modulaire. Block AttnRes remplace les connexions résiduelles sans modifier le reste de l'architecture — attention, MLP, routing d'experts restent intacts. Pour les équipes qui entraînent des LLM, c'est un levier d'amélioration qui ne nécessite pas de repenser le pipeline de bout en bout.</p>
+
+<p>Le gain d'efficacité de calcul a des conséquences directes sur les budgets. Obtenir les mêmes performances avec 20 à 25 % de calcul en moins, c'est économiser des semaines de GPU sur un entraînement à grande échelle. Pour un run d'entraînement distribué sur plusieurs milliers de GPU pendant plusieurs mois, cette économie se chiffre en millions de dollars.</p>
+
+<p>L'uniformisation des gradients a un avantage opérationnel souvent sous-estimé : elle facilite le réglage des hyperparamètres. Les modèles avec des gradients déséquilibrés entre couches sont plus sensibles au learning rate et au warmup. Un flux de gradients plus homogène réduit cette fragilité et raccourcit la phase d'expérimentation qui précède chaque entraînement à grande échelle.</p>
+
+<p>Les visualisations des poids d'attention appris offrent un bonus d'interprétabilité. On peut observer quelles couches « regardent en arrière » et vers quelles sources. Les couches de self-attention du Transformer maintiennent un champ réceptif large sur l'axe de la profondeur. Les couches MLP s'appuient davantage sur leur prédécesseur immédiat. L'embedding initial — la représentation brute du token — conserve un poids non négligeable tout au long du réseau, surtout avant les couches d'attention. Le modèle garde un accès direct au signal d'entrée, même aux couches les plus profondes.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>La question la plus immédiate concerne la granularité des blocs. Avec environ 8 blocs, Block AttnRes récupère la majeure partie du gain de Full AttnRes. Les auteurs anticipent qu'avec de meilleurs interconnects entre accélérateurs, des blocs plus fins — voire Full AttnRes sans compromis — deviendront praticables, libérant le potentiel complet du mécanisme.</p>
+
+<p>L'article établit un pont formel entre les connexions résiduelles existantes et l'attention linéaire. Les variantes développées ces dernières années (Highway Networks, Hyper-Connections, Deep Delta Learning) sont toutes, une fois « déroulées », des formes d'attention linéaire sur l'axe de la profondeur. AttnRes introduit l'attention softmax sur ce même axe. Or, dans le traitement des séquences, la transition de l'attention linéaire vers l'attention softmax a été le facteur déterminant de la suprématie des Transformers sur les RNN. Peut-on pousser plus loin cette dualité temps-profondeur ? Des mécanismes d'attention sous-linéaires en mémoire, développés pour gérer les contextes longs, pourraient être transposés à l'axe de la profondeur pour des réseaux dépassant le millier de couches.</p>
+
+<p>AttnRes est compatible avec d'autres innovations récentes : normalisation hybride, routing d'experts, attention à faible rang. Ces combinaisons n'ont pas encore été explorées systématiquement. Le fait que la technique s'intègre sans modifier les autres composants du Transformer laisse un large espace d'expérimentation.</p>
+
+<p>Enfin, une observation des ablations mérite qu'on s'y attarde. Les pseudo-requêtes apprises — des vecteurs fixes, indépendants de l'entrée — fonctionnent presque aussi bien que des requêtes conditionnées sur l'état caché. Le modèle apprend un schéma de routage en profondeur qui dépend du contenu via les clés (les sorties des couches), mais pas via les requêtes. La structure optimale de flux d'information à travers un réseau profond est peut-être plus régulière qu'on ne le pensait. Le contenu dicte quelles couches produisent un signal fort ; des requêtes fixes suffisent à capter cette variation. Si cette régularité se confirme à plus grande échelle, elle simplifiera la conception et l'analyse des architectures profondes futures.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

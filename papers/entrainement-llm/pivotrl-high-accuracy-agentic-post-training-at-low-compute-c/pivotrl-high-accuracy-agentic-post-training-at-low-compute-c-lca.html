@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PivotRL: High Accuracy Agentic Post-Training at Low Compute Cost — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>PivotRL: High Accuracy Agentic Post-Training at Low Compute Cost</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h1>Lecture Critique d'Article — PivotRL: High Accuracy Agentic Post-Training at Low Compute Cost</h1>
+
+<p><strong>Auteurs :</strong> Junkeun Yi, Damon Mosk-Aoyama, Baihe Huang, Ritu Gala, Charles Wang, Sugam Dipak Devare, Khushi Bhardwaj, Abhibha Gupta, Oleksii Kuchaiev, Jiantao Jiao, Jian Zhang, Venkat Srinivasan (NVIDIA, UC Berkeley)</p>
+<p><strong>Référence :</strong> arXiv:2603.21383v1, mars 2026</p>
+
+<hr>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>Le post-entraînement des LLM pour les tâches agentiques à long horizon — utilisation d'outils conversationnels, coding, navigation web, interactions terminal — pose un dilemme récurrent. Le SFT (supervised fine-tuning) est économe en calcul mais dégrade la performance hors distribution (OOD). Le RL end-to-end (E2E RL) préserve les capacités OOD mais exige des rollouts multi-tours coûteux à chaque mise à jour de paramètres.</p>
+
+<p>PivotRL propose de résoudre cette tension en réutilisant les trajectoires SFT existantes dans un cadre de RL local. L'idée : au lieu de dérouler des trajectoires complètes depuis l'état initial, conditionner la politique sur des états intermédiaires extraits des démonstrations SFT et n'effectuer que des rollouts courts et ciblés. Deux mécanismes distinguent PivotRL d'une conversion naïve SFT→RL :</p>
+
+<ul>
+<li>Le <strong>filtrage de pivots</strong> : seuls les tours intermédiaires où les actions échantillonnées produisent des résultats mixtes (succès et échecs) sont retenus pour l'entraînement. Les tours uniformément réussis ou échoués ne génèrent aucun gradient utile sous GRPO.</li>
+<li>La <strong>récompense fonctionnelle</strong> : un vérificateur domain-spécifique attribue un score positif à toute action fonctionnellement équivalente à la démonstration, plutôt que d'exiger une correspondance exacte de chaîne de caractères.</li>
+</ul>
+
+<p>L'article cible un problème bien identifié par la communauté — la dégradation catastrophique du SFT et le coût prohibitif du E2E RL — et propose une solution intermédiaire avec des garanties théoriques. Le framework est déployé en production dans Nemotron-3-Super-120B-A12B de NVIDIA.</p>
+
+<h2>2. Méthodologie</h2>
+
+<h3>2.1. Pipeline PivotRL</h3>
+
+<p>Le processus se décompose en trois étapes. D'abord, l'extraction des tours candidats : chaque tour assistant d'une trajectoire SFT devient un candidat pivot. Ensuite, le profilage hors ligne : pour chaque état, K rollouts sont échantillonnés depuis la politique de référence gelée π₀, et seuls les tours présentant une variance de récompense non nulle et une moyenne de récompense basse sont conservés (ensemble 𝒟ₐdᵥ). Enfin, l'optimisation GRPO sur ces pivots avec récompense fonctionnelle.</p>
+
+<p>L'objectif GRPO de PivotRL (Eq. 7) est identique à celui du GRPO standard, mais les états sont tirés de 𝒟pivot plutôt que de rollouts end-to-end, et les récompenses proviennent d'un vérificateur fonctionnel plutôt que d'un matching strict.</p>
+
+<h3>2.2. Fondements théoriques</h3>
+
+<p>Deux résultats soutiennent les choix de conception. Le Théorème 3.2 établit que la norme du gradient naturel de l'objectif de récompense statewise est proportionnelle à l'écart-type de la récompense — les états à haute variance produisent donc un signal d'apprentissage plus fort sous GRPO. Le Théorème 3.3 montre que la récompense fonctionnelle déplace la masse de probabilité vers les actions acceptables tout en préservant l'ordre relatif de la politique de référence sur les actions non liées à la tâche, ce qui explique la rétention OOD.</p>
+
+<p>Ces preuves, fournies en annexe, reposent sur des hypothèses d'espaces d'actions finis et de politique de référence à support plein. Elles sont mathématiquement correctes dans ce cadre, mais leur transposition aux espaces de tokens des LLM reste une extrapolation que les auteurs ne discutent pas en détail.</p>
+
+<h3>2.3. Protocole expérimental</h3>
+
+<p>Quatre domaines agentiques servent de bancs d'évaluation in-domain : τ2-Bench (outils conversationnels, 281 774 trajectoires), SWE-Bench Verified (coding), Terminal-Bench (contrôle terminal), BrowseComp (navigation web). Huit benchmarks OOD couvrent le raisonnement mathématique (AIME25, MATH500), le coding compétitif (LiveCodeBench), les sciences (Scicode), les connaissances générales (MMLU-Pro, MMLU-ProX), et la traduction (WMT24++). Tous les entraînements partent de Qwen3-30B-A3B-Thinking-2507 et utilisent Nemo-RL pour l'optimisation et Nemo-Gym pour les rollouts.</p>
+
+<p>Chaque comparaison SFT–PivotRL utilise les mêmes prompts et trajectoires experts, ce qui isole l'effet du paradigme d'entraînement. L'ablation sur τ2-Bench retire successivement le filtrage de pivots et la récompense fonctionnelle.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<h3>3.1. Performance in-domain</h3>
+
+<p>PivotRL surpasse le SFT sur trois des quatre benchmarks : τ2-Bench (63.81 vs 58.44, +5.37), Terminal-Bench (20.00 vs 13.75, +6.25) et BrowseComp (11.30 vs 1.50, +9.80). L'amélioration moyenne in-domain est de +14.11 points par rapport au modèle de base, contre +9.94 pour le SFT.</p>
+
+<p>L'exception est SWE-Bench Verified : le SFT atteint 37.40 contre 32.67 pour PivotRL, soit un recul de 4.73 points. Les auteurs n'expliquent pas cette contre-performance de façon approfondie. Le vérificateur local sur SWE-Bench ne vérifie que les noms d'appels d'outils (sans les arguments), ce qui constitue un signal délibérément grossier — cette limitation pourrait être en cause.</p>
+
+<h3>3.2. Rétention OOD</h3>
+
+<p>Le résultat le plus frappant concerne la préservation des capacités hors distribution. Le SFT provoque une dégradation moyenne de −9.83 points sur les 8 benchmarks OOD, avec des effondrements catastrophiques après l'entraînement terminal (AIME25 chute de 86.04 à 21.56, MATH500 de 98.05 à 63.55). PivotRL maintient un changement moyen de +0.21, sans qu'aucun benchmark ne baisse de plus de 3.12 points.</p>
+
+<p>Cette asymétrie est spectaculaire et constitue l'argument principal en faveur de PivotRL. Le Théorème 3.3 en fournit une explication élégante : la récompense fonctionnelle ne modifie que la masse sur les actions localement acceptables, laissant intacte la distribution conditionnelle sur tout le reste.</p>
+
+<h3>3.3. Comparaison avec le E2E RL</h3>
+
+<p>Sur SWE-Bench, PivotRL atteint la même précision (32.67%) que le E2E RL avec environ 4× moins de tours de rollout et 5.5× moins de temps horloge. Chaque échantillon PivotRL nécessite un seul tour de rollout, contre 12 à 25 tours par trajectoire pour le E2E RL.</p>
+
+<h3>3.4. Ablation</h3>
+
+<p>Sur τ2-Bench, retirer le filtrage de pivots réduit la précision de 63.81 à 59.68. Retirer la récompense fonctionnelle (revenir au matching strict) fait chuter à 57.34 — en dessous du SFT à données identiques (58.44). Les deux composants sont nécessaires, et la récompense fonctionnelle contribue davantage que le filtrage seul.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<h3>4.1. Dépendance au vérificateur</h3>
+
+<p>PivotRL repose entièrement sur la qualité du vérificateur fonctionnel. Pour τ2-Bench, le vérificateur est décrit de manière générale ; pour SWE-Bench, il se limite à vérifier le nom de l'outil sans inspecter les arguments. Cette hétérogénéité des vérificateurs entre domaines rend difficile l'attribution des gains : on ne sait pas si les améliorations proviennent du framework PivotRL lui-même ou de la qualité du vérificateur sous-jacent.</p>
+
+<p>Les auteurs reconnaissent cette dépendance en mentionnant l'extension vers des vérificateurs non programmatiques (LLM-as-judge, process reward models), mais ne fournissent aucune expérience avec ces alternatives.</p>
+
+<h3>4.2. Modèle de base unique</h3>
+
+<p>Toutes les expériences principales utilisent Qwen3-30B-A3B-Thinking-2507. L'intégration dans Nemotron-3-Super (120B-A12B) montre une application à plus grande échelle, mais sans ablation comparable. La généralisation de PivotRL à d'autres architectures et tailles de modèles reste non démontrée.</p>
+
+<h3>4.3. Le résultat SWE-Bench</h3>
+
+<p>PivotRL sous-performe le SFT de 4.73 points sur SWE-Bench Verified — le seul benchmark où le RL local est inférieur au SFT. Ce résultat méritait une analyse plus poussée. Le vérificateur minimaliste (noms d'outils uniquement) est probablement insuffisant pour le coding agentique où l'exactitude des arguments d'édition de fichiers est critique. L'article mentionne ce choix de design comme « délibérément grossier » mais n'explore pas l'impact d'un vérificateur plus fin.</p>
+
+<h3>4.4. Données d'entraînement partiellement opaques</h3>
+
+<p>Les trajectoires pour τ2-Bench proviennent d'un pipeline synthétique interne. Les trajectoires SWE-Bench sont générées avec des outils internes à partir de modèles propriétaires (MiniMax-M2.5). Les trajectoires Terminal-Bench et BrowseComp sont collectées avec des agents internes. Cette opacité partielle limite la reproductibilité indépendante, même si les auteurs annoncent la publication de certains jeux de données et environnements via Nemo-Gym.</p>
+
+<h3>4.5. Hypothèses théoriques</h3>
+
+<p>Les théorèmes supposent des espaces d'actions finis. Les LLM opèrent sur des espaces combinatoires de séquences de tokens. Le passage de la théorie à la pratique repose sur l'hypothèse que la plupart des actions sont non pertinentes pour une tâche donnée — une hypothèse raisonnable mais non vérifiée formellement.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>L'article présente un bilan mitigé en matière de reproductibilité. Les benchmarks d'évaluation sont publics (SWE-Bench, AIME25, MATH500, etc.). Le modèle de base Qwen3-30B-A3B est open-source. Les outils Nemo-RL et Nemo-Gym sont annoncés comme open-source avec les données conversationnelles τ2. Les hyperparamètres et détails d'entraînement sont fournis en annexe.</p>
+
+<p>En revanche, les données d'entraînement pour SWE-Bench, Terminal-Bench et BrowseComp proviennent de pipelines internes. Les vérificateurs fonctionnels ne sont pas tous décrits avec assez de précision pour être reproduits. L'intégration dans Nemotron-3-Super fait référence à un rapport technique séparé sans détails suffisants dans cet article.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>PivotRL répond à un besoin concret de l'industrie : post-entraîner des LLM pour des capacités agentiques sans sacrifier les compétences de raisonnement acquises lors du pré-entraînement. La réduction de 4× des tours de rollout par rapport au E2E RL a des implications directes sur le coût d'entraînement à grande échelle.</p>
+
+<p>Le déploiement en production dans Nemotron-3-Super valide la viabilité industrielle du framework. Les gains sur τ2-Bench (+19.46 par rapport au modèle de base) et BrowseComp (+8.80) sont substantiels. L'absence de régression OOD est un avantage déterminant pour les modèles multi-tâches déployés en production, où la dégradation d'une capacité lors de l'ajout d'une autre est inacceptable.</p>
+
+<p>La limitation principale pour l'adoption est la nécessité de concevoir un vérificateur fonctionnel adapté à chaque domaine. Ce coût d'ingénierie n'est pas quantifié dans l'article.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>PivotRL s'inscrit dans une lignée de travaux cherchant à convertir des données SFT en signal RL. Setlur et al. (2026) conditionnent les rollouts sur des préfixes off-policy ; Ming et al. (2026) utilisent les tokens SFT comme récompenses de rollout. PivotRL se distingue par la combinaison du filtrage basé sur la variance de récompense et de la récompense fonctionnelle, avec une justification théorique explicite pour chaque composant.</p>
+
+<p>Par rapport aux travaux sur l'oubli catastrophique du SFT (Chu et al., 2025 ; Luo et al., 2025b), PivotRL fournit une solution directe plutôt qu'un diagnostic : la préservation de l'ordre relatif des actions non pertinentes (Théorème 3.3) explique mécaniquement pourquoi le RL local évite la régression OOD là où le SFT échoue.</p>
+
+<p>La comparaison avec le E2E RL sur SWE-Bench positionne PivotRL comme une alternative économique plutôt qu'un remplacement : à précision égale, le coût est divisé par 4 à 5.5. Toutefois, le E2E RL pourrait atteindre des précisions supérieures avec plus de budget de rollout — une comparaison que l'article n'explore pas au-delà du point d'intersection.</p>
+
+<p>L'approche GRPO sous-jacente provient de DeepSeekMath (Shao et al., 2024). PivotRL en exploite une propriété spécifique — l'annulation du gradient pour les groupes à récompense uniforme — qui n'avait pas été identifiée comme levier de sélection de données dans les travaux précédents.</p>
+
+<hr>
+
+<h2>Tableau récapitulatif — Scores de robustesse</h2>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<thead>
+<tr style="background-color: #f4f4f4;">
+<th style="text-align: left;">Critère</th>
+<th style="text-align: center;">Score (/5)</th>
+<th style="text-align: left;">Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question de recherche</td>
+<td style="text-align: center;">4</td>
+<td>Problème bien posé, motivé par une tension concrète SFT/E2E RL, avec formulation claire de la question centrale.</td>
+</tr>
+<tr>
+<td>Design expérimental</td>
+<td style="text-align: center;">4</td>
+<td>Quatre domaines agentiques, huit benchmarks OOD, ablation composant par composant, comparaison directe SFT et E2E RL à données identiques.</td>
+</tr>
+<tr>
+<td>Taille d'échantillon</td>
+<td style="text-align: center;">3</td>
+<td>Grands jeux d'entraînement (281K trajectoires pour τ2), mais un seul modèle de base pour les expériences principales. Pas de répétitions avec variance reportée.</td>
+</tr>
+<tr>
+<td>Qualité des métriques</td>
+<td style="text-align: center;">4</td>
+<td>Benchmarks standards et reconnus. Métriques de précision directes. Mesure du coût en tours de rollout et temps horloge.</td>
+</tr>
+<tr>
+<td>Contrôle des biais</td>
+<td style="text-align: center;">3</td>
+<td>Comparaison à données identiques pour SFT/PivotRL, mais hétérogénéité des vérificateurs entre domaines. Le résultat SWE-Bench défavorable à PivotRL est rapporté sans analyse approfondie.</td>
+</tr>
+<tr>
+<td>Reproductibilité</td>
+<td style="text-align: center;">3</td>
+<td>Modèle de base et benchmarks publics. Nemo-RL/Gym annoncés open-source. Données d'entraînement partiellement propriétaires. Vérificateurs insuffisamment spécifiés pour reproduction complète.</td>
+</tr>
+<tr>
+<td>Transparence et limitations</td>
+<td style="text-align: center;">3</td>
+<td>Les résultats négatifs (SWE-Bench) sont rapportés. La dépendance au vérificateur est reconnue. Mais l'écart théorie/pratique (espaces finis vs. tokens) et les limites du vérificateur SWE-Bench manquent d'analyse.</td>
+</tr>
+<tr>
+<td>Impact et nouveauté</td>
+<td style="text-align: center;">4</td>
+<td>Combinaison originale de filtrage par variance et récompense fonctionnelle, avec fondements théoriques. Déploiement production (Nemotron-3-Super). Réduction de coût 4× par rapport au E2E RL.</td>
+</tr>
+</tbody>
+<tfoot>
+<tr style="background-color: #f4f4f4; font-weight: bold;">
+<td>Note globale de robustesse</td>
+<td style="text-align: center;">3.8 / 5</td>
+<td>Contribution méthodologique solide avec validation empirique multi-domaines et déploiement industriel, tempérée par l'évaluation sur un seul modèle de base et la reproductibilité partielle.</td>
+</tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

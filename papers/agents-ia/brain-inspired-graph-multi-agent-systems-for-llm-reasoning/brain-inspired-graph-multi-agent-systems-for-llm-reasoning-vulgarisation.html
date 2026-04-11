@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain-Inspired Graph Multi-Agent Systems for LLM Reasoning — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Brain-Inspired Graph Multi-Agent Systems for LLM Reasoning</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>GPT-5 rate un problème de logique sur cinq. Claude 4.5 en mode raisonnement étendu échoue sur plus de 40 % des tâches de planification séquentielle. Ces chiffres, mesurés en mars 2026 par une équipe de l'Académie chinoise des sciences, contredisent l'idée reçue selon laquelle il suffirait de rendre les modèles de langage plus gros ou plus lents pour qu'ils raisonnent mieux. Guangfu Hao, Yuming Dai, Xianzhe Qin et Shan Yu proposent une autre voie : au lieu d'améliorer le cerveau individuel d'une IA, organiser plusieurs cerveaux en réseau, en s'inspirant de la façon dont le cerveau humain coordonne ses propres modules spécialisés.</p>
+
+<p>Leur système s'appelle BIGMAS — Brain-Inspired Graph Multi-Agent Systems. Le principe : face à un problème, un agent « architecte » conçoit à la volée un graphe d'agents spécialisés, chacun avec un rôle précis, tous connectés par un espace de travail partagé où chaque résultat intermédiaire est visible par tous. L'idée vient directement des neurosciences, et les résultats expérimentaux montrent des gains substantiels sur six modèles de pointe, y compris ceux qui disposent déjà de capacités de raisonnement étendu.</p>
+
+<h2>Le problème : quand raisonner plus longtemps ne suffit plus</h2>
+
+<p>Depuis 2024, les laboratoires d'IA misent sur les « modèles de raisonnement » (LRM) — des versions de leurs modèles qui prennent le temps de réfléchir avant de répondre, en déroulant des chaînes de pensée internes, parfois sur des milliers de tokens. OpenAI o1, DeepSeek-R1, Claude en mode thinking : tous suivent cette stratégie. Et elle fonctionne — jusqu'à un certain point.</p>
+
+<p>Des travaux récents, cités par les auteurs, ont mis en évidence un phénomène troublant : au-delà d'un seuil de complexité propre à chaque tâche, la précision de ces modèles s'effondre brutalement. Pas un déclin progressif, un effondrement. Pire : fournir explicitement l'algorithme de résolution au modèle ne change rien. Le goulot d'étranglement n'est pas la découverte de la méthode — c'est l'exécution logique cohérente sur plusieurs étapes. Comme un cuisinier qui connaît la recette mais perd le fil quand il doit gérer six préparations simultanées.</p>
+
+<p>Ce constat pose une question structurelle. Si augmenter la puissance de raisonnement d'un modèle unique atteint un plafond, peut-on distribuer la charge cognitive entre plusieurs agents spécialisés qui collaborent ? Les frameworks multi-agents existants — ReAct, Tree of Thoughts, MetaGPT — tentent cette approche, mais partagent deux faiblesses. Première faiblesse : les agents communiquent de proche en proche, chacun n'ayant qu'une vue partielle du problème. Seconde faiblesse : la topologie de collaboration est fixée à l'avance, identique quel que soit le problème posé. C'est comme si une entreprise utilisait le même organigramme pour développer un logiciel et pour organiser un déménagement.</p>
+
+<h2>La méthode : un cerveau artificiel qui se recâble à chaque problème</h2>
+
+<p>BIGMAS emprunte son architecture à la théorie de l'espace de travail global (Global Workspace Theory), formulée par le neuroscientifique Bernard Baars en 1988 et approfondie par Stanislas Dehaene. Cette théorie décrit comment le cerveau humain gère les tâches complexes : des modules spécialisés (vision, langage, mémoire, planification) forment des coalitions temporaires adaptées à la tâche en cours, et partagent leurs résultats via un « espace de travail » central accessible à tous. La composition de la coalition et la topologie de leurs interactions changent d'une tâche à l'autre — le cerveau ne traite pas un calcul mental et une conversation difficile avec la même configuration réseau.</p>
+
+<p>BIGMAS traduit ces trois principes en architecture logicielle.</p>
+
+<p>Premier principe : la spécialisation. Chaque agent du système a un rôle défini — générateur d'hypothèses, vérificateur, optimiseur, analyste, formateur de sortie. Ces rôles ne sont pas codés en dur par les chercheurs ; ils émergent des décisions d'un agent « architecte » appelé GraphDesigner.</p>
+
+<p>Deuxième principe : la coalition dynamique. Face à un nouveau problème, le GraphDesigner analyse l'énoncé et construit un graphe orienté d'agents sur mesure. Pour un problème arithmétique simple, il produit un pipeline compact de trois nœuds : générer, vérifier, formater. Pour une tâche de planification séquentielle complexe, il déploie jusqu'à neuf nœuds avec des boucles de rétroaction, des branches parallèles et des étapes de validation intermédiaires. Le graphe est littéralement différent pour chaque instance de problème.</p>
+
+<p>Troisième principe : l'espace de travail partagé. Tous les agents lisent et écrivent dans un Workspace centralisé, divisé en quatre zones. Une zone en lecture seule contient l'énoncé du problème. Une zone de travail stocke les résultats intermédiaires — chaque agent y dépose ses productions et peut consulter celles des autres. Une zone système enregistre l'historique d'exécution. Une zone réponse, accessible uniquement au nœud terminal, contient la solution finale. Aucune communication directe entre agents n'existe : tout transite par ce tableau de bord commun.</p>
+
+<p>Un Orchestrateur global supervise l'exécution. À chaque étape, il observe l'état complet du Workspace et l'historique des actions passées, puis décide quel agent activer ensuite. Quand un agent produit une sortie invalide — un format incorrect, un champ manquant —, une boucle d'autocorrection lui renvoie le message d'erreur et lui donne une nouvelle chance, sans interrompre le reste du système. Si le budget d'étapes maximal est atteint sans solution, un mécanisme de repli extrait la meilleure réponse partielle disponible.</p>
+
+<p>L'analogie avec le cerveau tient aussi dans les détails. Les neurosciences ont montré que les tâches routinières activent des modules relativement isolés, tandis que les problèmes nouveaux ou difficiles recrutent des coalitions fonctionnelles plus larges. BIGMAS reproduit ce comportement : les graphes générés pour des problèmes arithmétiques mobilisent en moyenne 3 nœuds, ceux pour la planification séquentielle en mobilisent près de 5, avec une variance bien plus élevée.</p>
+
+<h2>Résultats clés : des gains systématiques, surtout là où ça coince</h2>
+
+<p>Les chercheurs ont évalué BIGMAS sur trois tâches de raisonnement — le Jeu du 24, les Six Cinq, et la Tour de Londres — en utilisant six modèles de pointe : DeepSeek-V3.2 (standard et thinking), Claude 4.5 Sonnet (standard et thinking), Gemini 2.5 Pro et GPT-5.</p>
+
+<p>Le Jeu du 24 demande de combiner quatre nombres avec les opérations arithmétiques de base pour atteindre exactement 24. Les Six Cinq imposent de construire une expression utilisant exactement six fois le chiffre 5 (avec factorielles et concaténation autorisées) pour atteindre une cible donnée. La Tour de Londres, classique en neuropsychologie, requiert de planifier une séquence minimale de déplacements de billes entre des tiges.</p>
+
+<p>Premier résultat : BIGMAS améliore la performance de chaque modèle sur chaque tâche, sans exception. Aucune régression nulle part.</p>
+
+<p>Les gains les plus spectaculaires concernent les modèles les plus faibles. DeepSeek-V3.2 passe de 12 % à 30 % sur les Six Cinq — sa précision est multipliée par 2,5. Claude 4.5 Sonnet bondit de 15 % à 38 % sur la même tâche. Sur la Tour de Londres, DeepSeek-V3.2 triple sa précision (de 6 % à 20 %).</p>
+
+<p>Le résultat le plus frappant concerne les modèles de raisonnement étendu. Claude 4.5 en mode thinking passe de 57 % à 93 % sur la Tour de Londres — un bond de 36 points de pourcentage. Ce modèle dispose déjà d'une chaîne de pensée interne sophistiquée ; pourtant, la coordination multi-agents lui apporte un gain massif sur la planification séquentielle. Cela confirme l'hypothèse des auteurs : le problème n'est pas que ces modèles ne savent pas raisonner, c'est qu'ils peinent à maintenir la cohérence logique sur de nombreuses étapes. Distribuer cette charge entre agents spécialisés avec un état global partagé compense cette faiblesse structurelle.</p>
+
+<p>Du côté des modèles déjà performants, les gains sont plus modestes mais réels. GPT-5 atteint 100 % sur le Jeu du 24 et les Six Cinq (contre 96 % et 95 % en solo), et 98 % sur la Tour de Londres (contre 91 %). BIGMAS pousse quatre des six modèles à la perfection sur le Jeu du 24.</p>
+
+<p>Face aux frameworks multi-agents existants, BIGMAS s'impose aussi. Avec DeepSeek-V3.2 comme modèle de base, ReAct n'apporte que 1 à 6 points par rapport à l'inférence directe. Tree of Thoughts fait mieux, mais BIGMAS le dépasse de 2 à 6 points sur les trois tâches. L'écart le plus net apparaît sur les Six Cinq : 30 % pour BIGMAS contre 25 % pour Tree of Thoughts et 18 % pour ReAct.</p>
+
+<p>L'analyse des topologies de graphes révèle que le GraphDesigner adapte réellement la complexité architecturale à la difficulté du problème. Les graphes pour le Jeu du 24 comportent en moyenne 3 nœuds avec peu de variance. Ceux pour la Tour de Londres en comptent près de 5, avec des instances allant jusqu'à 9 nœuds. La distribution des rôles évolue aussi : les nœuds « analyseur » et « optimiseur », quasi absents sur les tâches arithmétiques, représentent respectivement 24 % et 12 % des nœuds sur la Tour de Londres.</p>
+
+<p>Un signal d'alerte intéressant émerge de l'analyse du routage. Les exécutions qui échouent consomment systématiquement plus de décisions de routage que celles qui réussissent. Sur la Tour de Londres, les runs corrects nécessitent en moyenne 7,3 décisions, contre 9,4 pour les runs incorrects. L'Orchestrateur, quand il ne trouve pas de solution valide, continue de boucler entre les agents jusqu'à épuisement du budget — un comportement qui pourrait servir de signal d'arrêt précoce dans de futures versions.</p>
+
+<h2>Implications pratiques : au-delà du benchmark</h2>
+
+<p>Le message central de cette recherche tient en une phrase : l'architecture de coordination compte autant que la puissance du modèle individuel. Cette conclusion a des conséquences directes pour quiconque déploie des systèmes d'IA en production.</p>
+
+<p>La première conséquence est économique. Plutôt que de payer pour le modèle le plus puissant disponible, une orchestration multi-agents bien conçue peut extraire des performances supérieures d'un modèle moins coûteux. DeepSeek-V3.2 avec BIGMAS (36 % sur le Jeu du 24) dépasse DeepSeek-V3.2 seul en mode thinking (92 % — non, en fait le mode thinking seul atteint 92 %, donc ce n'est pas un bon exemple). Le cas le plus parlant : Claude 4.5 standard avec BIGMAS (68 % sur le Jeu du 24) dépasse largement Claude 4.5 standard seul (48 %), pour un surcoût en tokens réparti majoritairement sur l'exécution des nœuds (46 à 55 % du total) plutôt que sur la coordination elle-même.</p>
+
+<p>La deuxième conséquence touche la conception de systèmes agentiques. La plupart des frameworks actuels — LangGraph, CrewAI, AutoGen — utilisent des topologies fixes définies par le développeur. BIGMAS démontre qu'une topologie adaptative, construite dynamiquement par un agent méta, surpasse les configurations statiques. Cela suggère que la prochaine génération d'outils d'orchestration devra intégrer une capacité de « méta-design » : laisser le système décider lui-même comment organiser ses agents en fonction du problème.</p>
+
+<p>La troisième conséquence est que l'espace de travail partagé — cette mémoire centrale où tout est visible par tous les agents — résout un problème récurrent dans les systèmes multi-agents : la perte d'information entre étapes. Quand les agents communiquent de proche en proche, chaque transfert est une occasion de perdre du contexte. L'espace de travail global élimine ce risque en maintenant un état cohérent et complet à tout moment.</p>
+
+<p>Pour les équipes qui construisent des applications d'IA sur des tâches nécessitant un raisonnement en plusieurs étapes — résolution de problèmes, planification, analyse de données complexes —, ces résultats indiquent qu'investir dans l'architecture d'orchestration peut rapporter autant, voire plus, qu'investir dans un meilleur modèle sous-jacent. Les deux approches sont complémentaires, pas concurrentes.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>BIGMAS a été évalué sur trois puzzles combinatoires bien définis, avec des solutions vérifiables par programme. Ces tâches isolent proprement la capacité de raisonnement, mais elles restent éloignées des problèmes ouverts du monde réel — rédiger du code, répondre à des questions nécessitant des connaissances factuelles, résoudre des problèmes de mathématiques de compétition. Les auteurs reconnaissent cette limite et identifient l'extension à ces domaines comme une priorité.</p>
+
+<p>Le GraphDesigner traite chaque problème indépendamment, sans mémoire des graphes qu'il a construits auparavant. Un mécanisme de mémoire épisodique — « pour ce type de problème, telle topologie a bien fonctionné » — pourrait accélérer la construction et améliorer la qualité des graphes sur des familles de problèmes récurrents. C'est une direction naturelle qui rappelle le fonctionnement de l'expertise humaine : un chirurgien ne reconçoit pas sa procédure à chaque opération.</p>
+
+<p>Le coût en tokens reste une question ouverte. BIGMAS consomme plus de tokens qu'une inférence directe — c'est le prix de la coordination. L'analyse montre que ce surcoût est borné et proportionnellement plus faible sur les tâches difficiles (19 % de tokens pour le design du graphe sur la Tour de Londres, contre 37 % sur le Jeu du 24). Mais pour un déploiement à grande échelle, des techniques de design de graphe conscientes du coût et des agents spécialistes fine-tunés pourraient réduire significativement la facture.</p>
+
+<p>Le signal le plus prometteur est peut-être le plus discret : le nombre de décisions de routage prédit la réussite ou l'échec d'une exécution. Si cette corrélation se confirme sur d'autres tâches, elle ouvrirait la voie à des mécanismes d'arrêt précoce intelligents — détecter qu'un run tourne en rond et basculer sur une stratégie alternative plutôt que d'épuiser le budget. L'Orchestrateur sait déjà observer l'état complet du système ; il lui manque encore la capacité de reconnaître qu'il est dans une impasse.</p>
+
+<p>L'ancrage dans les neurosciences, au-delà de l'inspiration initiale, soulève une question plus large. Les réseaux fonctionnels du cerveau ne se reconfigurent pas seulement en fonction de la tâche — ils évoluent avec l'apprentissage, comme l'ont montré des études en neuroimagerie citées par les auteurs. Un BIGMAS capable d'adapter ses topologies non seulement au problème mais aussi à son expérience accumulée se rapprocherait davantage de ce modèle biologique. La distance entre cette vision et l'implémentation actuelle reste considérable, mais la direction est tracée.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coding Agents are Effective Long-Context Processors — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Coding Agents are Effective Long-Context Processors</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+<h3>Référence</h3>
+<p>Cao, W., Yin, X., Dhingra, B. &amp; Zhou, S. (2026). <em>Coding Agents are Effective Long-Context Processors.</em> arXiv:2603.20432. Duke University.</p>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>Les fenêtres de contexte des LLM atteignent désormais des millions de tokens, mais les performances se dégradent à mesure que la longueur augmente — un phénomène documenté sous le nom de <em>context rot</em>. Les pipelines RAG classiques, eux, reposent sur une récupération figée qui limite le raisonnement multi-sauts. Cao et al. proposent une troisième voie : reformuler le traitement de longs textes comme un problème de navigation dans un système de fichiers, délégué à des agents de codage disponibles sur étagère.</p>
+
+<p>L'idée centrale est que les agents de codage, entraînés sur des dépôts de code volumineux et hiérarchiques, transfèrent naturellement leurs compétences (commandes terminal, scripts Python, recherche par motifs) au traitement de corpus textuels massifs. Aucun entraînement spécifique, aucune modification architecturale : le corpus est structuré en répertoires et fichiers, et l'agent explore librement.</p>
+
+<p>La question de recherche est claire et bien motivée. Le cadrage « traitement de texte = opération sur système de fichiers » constitue un angle original qui se distingue des approches par extension de contexte ou par RAG agentique spécialisé.</p>
+
+<h2>2. Méthodologie</h2>
+
+<h3>Protocole expérimental</h3>
+<p>Cinq benchmarks couvrent un spectre large d'échelles de contexte :</p>
+<ul>
+<li><strong>BrowseComp-Plus</strong> (750M tokens) — QA multi-sauts sur 100K documents web</li>
+<li><strong>Oolong-Synthetic</strong> (536K) et <strong>Oolong-Real</strong> (385K) — raisonnement et agrégation sur documents longs</li>
+<li><strong>LongBench-v2</strong> (188K) — QA multi-tâches en contexte long</li>
+<li><strong>Natural Questions</strong> (3T tokens) — QA sur corpus Wikipédia à échelle massive</li>
+</ul>
+
+<p>L'agent principal est Codex v0.46.0 avec GPT-5, testé sous trois configurations : sans outil de récupération, avec BM25, et avec embeddings Gemini. Claude Code avec Sonnet 4.5 est évalué sur deux benchmarks uniquement (contrainte budgétaire).</p>
+
+<p>Les baselines comprennent GPT-5 en contexte complet (avec fenêtre glissante pour les documents dépassant 200K tokens), un pipeline RAG standard, un agent ReAct avec outils de récupération, et le Recursive Language Model (RLM).</p>
+
+<h3>Limites du protocole</h3>
+<p>Chaque benchmark est sous-échantillonné à 200 exemples pour des raisons de coût. Les baselines sont recalculées sur ce même sous-ensemble — une précaution méthodologique appréciable — mais la comparaison avec le « Best Published » mélange résultats sur jeu complet (marqués d'un astérisque) et résultats sur 200 exemples. Cette asymétrie affaiblit la revendication de nouvel état de l'art.</p>
+
+<p>L'ablation sur la structure du système de fichiers (Table 2) porte sur 100 exemples seulement. Aucun test de significativité statistique n'accompagne les résultats. Sur cinq benchmarks, deux n'ont pas été évalués avec Claude Code, ce qui limite la généralisation inter-agents.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>Codex sans outil de récupération atteint les meilleurs scores sur quatre benchmarks sur cinq : 88,5 % sur BrowseComp-Plus (+11 % relatif), 71,75 sur Oolong-Syn (+11 %), 33,73 sur Oolong-Real (+56 %), 56,0 EM sur NQ (+10 %). Sur LongBench, le gain est marginal et non significatif (61,5 vs 63,3 pour Gemini 2.5 sur le jeu complet).</p>
+
+<p>Deux résultats méritent attention :</p>
+<ul>
+<li>Les outils de récupération (BM25, embeddings denses) n'améliorent pas systématiquement les performances. Sur BrowseComp-Plus, Codex + BM25 descend à 78,5 % contre 88,5 % sans retriever. L'analyse comportementale (Table 4) montre que la présence d'un retriever réduit l'usage des commandes de recherche natives, ce qui suggère un effet de substitution sous-optimal.</li>
+<li>La structure hiérarchique des fichiers apporte un gain mesurable. Un corpus organisé en dossiers surpasse un fichier JSON unique (89,0 vs 83,0 sans retriever, Table 2). L'agent exploite davantage les commandes d'indexation (<code>nl</code>) et d'extraction ciblée (<code>sed</code>) dans la configuration dossier.</li>
+</ul>
+
+<p>L'analyse des trajectoires révèle trois stratégies émergentes : raffinement itératif de requêtes pour le raisonnement multi-sauts (BrowseComp-Plus), agrégation programmatique via scripts Python pour les tâches analytiques (Oolong), et inférence directe avec recherche ciblée pour les tâches diversifiées (LongBench). Ces comportements apparaissent sans instruction explicite.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<h3>Confondants non contrôlés</h3>
+<p>La comparaison entre méthodes est biaisée par l'hétérogénéité des ressources mobilisées. Codex encapsule GPT-5 dans un agent avec exécution de code, accès terminal et boucle itérative. Le comparer à GPT-5 en contexte complet ou à un pipeline RAG à passe unique revient à comparer des systèmes de complexité radicalement différente. Le coût par requête le reflète : 0,703 $ pour Codex sans retriever sur BrowseComp-Plus contre 0,111 $ pour RAG.</p>
+
+<p>L'absence de normalisation par le coût computationnel rend difficile l'évaluation du rapport qualité-prix réel. Un budget fixe alloué à chaque méthode (par exemple, générer N réponses candidates via RAG pour le même coût qu'un appel Codex) aurait donné une comparaison plus équitable.</p>
+
+<h3>Dépendance aux modèles propriétaires</h3>
+<p>Tous les résultats reposent sur des modèles fermés (GPT-5, Codex, Claude Code, Sonnet 4.5). Le comportement de l'agent dépend de l'entraînement spécifique de Codex sur des tâches de codage, ce qui n'est ni public ni reproductible. Un changement de version du modèle pourrait invalider les résultats.</p>
+
+<h3>Contamination des données</h3>
+<p>Les auteurs reconnaissent que les scores non triviaux de GPT-5 en contexte complet sur BrowseComp-Plus et NQ (20 % et 27 %) proviennent probablement d'une contamination. Ce risque s'étend à l'agent lui-même : GPT-5 pourrait avoir vu les réponses de Natural Questions pendant son entraînement, ce qui gonflerait les scores indépendamment de la stratégie agentique.</p>
+
+<h3>Généralisation limitée</h3>
+<p>Deux agents testés, dont un seul sur l'ensemble des benchmarks. L'affirmation que les résultats ne sont « pas spécifiques à une implémentation » repose sur deux points de données avec Claude Code (Oolong-Real et LongBench), ce qui est insuffisant.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Le code est annoncé comme disponible. Les prompts sont intégralement reproduits en annexe — un effort de transparence rare et appréciable. Les benchmarks utilisés sont publics.</p>
+
+<p>La reproductibilité effective reste contrainte par la dépendance aux API propriétaires. Codex v0.46.0 est une version spécifique qui pourrait être retirée ou modifiée. Les coûts d'exécution sont documentés (Table 5), ce qui permet d'estimer le budget nécessaire pour une réplication.</p>
+
+<p>L'absence de seeds fixés ou de protocole de contrôle de la variance (répétitions multiples, intervalles de confiance) affaiblit la fiabilité des chiffres rapportés. Une seule exécution par configuration semble avoir été réalisée.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>Le cadrage « texte comme système de fichiers » ouvre une piste pratique immédiate : toute organisation disposant d'un agent de codage peut traiter des corpus volumineux sans construire de pipeline RAG dédié. Le coût unitaire (0,1–0,8 $ par requête) reste acceptable pour des applications professionnelles à faible volume.</p>
+
+<p>Le constat que les outils de récupération dégradent parfois les performances a des implications pour la conception d'agents : ajouter des outils n'est pas toujours bénéfique. Ce résultat rejoint des travaux sur l'interférence entre outils dans les systèmes agentiques.</p>
+
+<p>L'analyse des stratégies émergentes (raffinement itératif, agrégation programmatique) documente des comportements utiles pour les concepteurs d'agents, même si ces observations restent qualitatives et fondées sur des exemples choisis.</p>
+
+<p>La scalabilité au-delà de quelques centaines de requêtes reste à démontrer en contexte industriel, où la latence et le coût par requête deviennent des contraintes opérationnelles.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>Ce travail se situe à l'intersection de trois courants : l'extension des fenêtres de contexte (Comanici et al., 2025 ; Anthropic, 2025), le RAG agentique (Hui et al., 2025 ; Jin et al., 2025), et les agents de codage pour l'ingénierie logicielle (Yang et al., 2024 ; Zhang et al., 2024).</p>
+
+<p>Le concurrent le plus direct est le Recursive Language Model (Zhang et al., 2025a), qui partage l'intuition de traiter le texte comme un environnement externe explorable. La distinction repose sur le mode d'interaction : RLM utilise des sous-appels LLM récursifs avec un prompt spécialisé, tandis que Cao et al. exploitent les outils natifs d'agents de codage existants. Les résultats montrent un avantage pour l'approche agents de codage sur Oolong-Syn et Oolong-Real, mais RLM n'est pas évalué sur BrowseComp-Plus en raison de son coût, ce qui empêche une comparaison complète.</p>
+
+<p>Par rapport aux travaux montrant que l'exécution de code améliore le raisonnement des LLM (Wang et al., 2024 ; Zhang et al., 2025b), la contribution spécifique est le transfert vers le traitement de texte long — un domaine où Zhang et al. (2025b) rapportaient des performances faibles pour les agents code-exécuteurs.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Originale, clairement formulée, bien motivée par les limites documentées des approches existantes</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Cinq benchmarks à échelles variées, mais comparaison asymétrique (jeu complet vs échantillon) et couverture partielle de Claude Code</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>200 exemples par benchmark, 100 pour l'ablation ; aucun test de significativité ; une seule exécution par configuration</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Métriques standards (accuracy, EM, score Oolong) ; LLM-as-judge (GPT-5) pour BrowseComp-Plus introduit une incertitude d'évaluation</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Asymétrie de complexité entre systèmes comparés, pas de normalisation par le coût, contamination non contrôlée</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code annoncé disponible, prompts complets en annexe, benchmarks publics ; mais dépendance à des API propriétaires versionnées</td></tr>
+<tr><td>Transparence et limitations</td><td>4</td><td>Discussion franche des contraintes budgétaires, du mécanisme incertain de dégradation par retriever, de l'optimisation pour le code plutôt que le texte</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Cadrage original avec implications pratiques directes ; le résultat contre-intuitif sur les outils de récupération enrichit la réflexion sur la conception d'agents</td></tr>
+</tbody>
+</table>
+
+<p><strong>Note globale de robustesse : 3,2 / 5</strong> — Une proposition originale soutenue par des résultats empiriques cohérents sur cinq benchmarks à échelles variées. La faiblesse principale réside dans la puissance statistique insuffisante (petits échantillons, pas de tests de significativité, exécution unique) et les biais de comparaison entre systèmes de complexité inégale. La dépendance à des modèles propriétaires limite la portée scientifique des conclusions, même si la transparence sur les prompts et les coûts compense partiellement ce défaut.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Static Templates to Dynamic Runtime Graphs: A Survey of Workflow Optimization for LLM Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>From Static Templates to Dynamic Runtime Graphs: A Survey of Workflow Optimization for LLM Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les agents IA apprennent à s'organiser eux-mêmes</h2>
+
+<p>Un assistant de code qui récupère des fichiers, propose des modifications, lance des tests, puis décide tout seul s'il doit corriger son travail ou passer à la suite. Un système multi-agents où cinq spécialistes se répartissent une tâche complexe, communiquent entre eux et vérifient mutuellement leurs résultats. Ces scénarios ne relèvent plus de la science-fiction : ils décrivent le quotidien des systèmes à base de grands modèles de langage (LLM) déployés en production. Mais une question reste largement ouverte : comment organiser le travail entre ces composants ? Une équipe de chercheurs de Rensselaer Polytechnic Institute et d'IBM Research propose, dans une vaste étude de synthèse publiée en mars 2026, un cadre unifié pour penser, comparer et optimiser ces « workflows agentiques ».</p>
+
+<h2>Le défi : concevoir le bon plan de travail pour chaque situation</h2>
+
+<p>Les premiers chatbots fonctionnaient en mode question-réponse : un prompt entre, une réponse sort. Les systèmes actuels enchaînent des dizaines d'opérations — appels à un LLM, recherche d'information, exécution de code, mise à jour de mémoire, vérification des résultats — avant de produire un livrable. La qualité finale dépend autant de l'intelligence de chaque étape que de la façon dont ces étapes sont agencées entre elles.</p>
+
+<p>Prenons une analogie avec la cuisine. Un grand chef peut disposer des meilleurs ingrédients et d'un talent exceptionnel. Mais s'il prépare la sauce après avoir dressé l'assiette, ou s'il fait cuire le poisson en même temps que le soufflé dans le même four, le résultat sera médiocre. L'ordre des opérations, les dépendances entre elles et la façon dont l'information circule d'une étape à l'autre — tout cela forme ce que les chercheurs appellent la <em>structure du workflow</em>.</p>
+
+<p>Le problème, c'est que la littérature scientifique sur ce sujet est dispersée. Certains travaux parlent de « pipelines », d'autres de « graphes de communication », d'autres encore de « plans d'orchestration ». Les méthodes d'optimisation varient du tout au tout : recherche évolutionnaire, apprentissage par renforcement, élagage de graphes, génération automatique. Comparer ces approches entre elles est difficile, faute d'un vocabulaire commun et de critères d'évaluation partagés. C'est précisément ce vide que cette étude de synthèse cherche à combler.</p>
+
+<h2>Un graphe pour les gouverner tous</h2>
+
+<p>L'idée centrale de l'article tient en un concept : le <em>graphe de calcul agentique</em> (Agentic Computation Graph, ou ACG). Tout workflow d'agent LLM peut se représenter comme un graphe dirigé. Chaque nœud exécute une action atomique — un appel au modèle de langage, une requête vers une base de données, un lancement de tests unitaires, un échange de messages entre agents. Les arêtes entre les nœuds encodent les dépendances : tel nœud doit attendre le résultat de tel autre avant de s'exécuter, telle information doit transiter d'un agent spécialiste vers un agent coordinateur.</p>
+
+<p>Les chercheurs distinguent ensuite trois objets qu'il faut absolument séparer pour y voir clair.</p>
+
+<p>Le premier est le <em>template</em> : le plan réutilisable. C'est la recette écrite à l'avance, avec ses branchements conditionnels (« si la recherche échoue, réessayer une fois ») et ses boucles. Le deuxième est le <em>graphe réalisé</em> : la structure effectivement déployée pour traiter une requête donnée. Selon la difficulté de la tâche, certains nœuds du template peuvent être activés ou non, des agents supplémentaires peuvent être créés à la volée. Le troisième est la <em>trace d'exécution</em> : ce qui s'est réellement passé pendant le traitement — les appels effectués, les erreurs rencontrées, les coûts en tokens consommés, les tentatives de correction.</p>
+
+<p>Cette distinction peut sembler académique. Elle ne l'est pas. Quand un article affirme avoir « optimisé un workflow », il faut savoir de quel objet on parle. Optimiser un template réutilisable et générer un graphe sur mesure pour chaque requête sont deux activités radicalement différentes, avec des coûts et des bénéfices distincts.</p>
+
+<h3>Statique ou dynamique : quand la structure se fige-t-elle ?</h3>
+
+<p>Le principal axe d'organisation de la littérature repose sur le moment où la structure du workflow est décidée. Les méthodes <em>statiques</em> fixent un template réutilisable avant le déploiement. Le pipeline est le même pour chaque requête, même si des branchements internes peuvent varier. Les méthodes <em>dynamiques</em> construisent, sélectionnent ou modifient la structure au moment de l'exécution, en fonction de la requête reçue ou des résultats intermédiaires observés.</p>
+
+<p>Pour affiner cette distinction, l'étude introduit deux descripteurs. Le premier, <em>Graph Determination Time</em> (GDT), indique quand la structure est décidée : hors ligne, juste avant l'exécution, ou pendant l'exécution. Le second, <em>Graph Plasticity Mode</em> (GPM), indique comment la structure peut varier : pas du tout, par sélection d'un sous-graphe dans un super-graphe prédéfini, par génération d'un graphe entièrement nouveau, ou par édition en cours de route (ajout d'un vérificateur, suppression d'un agent, recâblage des communications).</p>
+
+<p>Ces deux axes créent un spectre continu de flexibilité. À une extrémité, un pipeline rigide optimisé une fois pour toutes. À l'autre, un système qui se réorganise à chaque étape en réponse aux observations.</p>
+
+<h2>Ce que révèle le panorama de 77 travaux</h2>
+
+<p>L'étude a passé au crible 77 travaux — 39 directement dédiés à l'optimisation de workflows, 7 adjacents (routage, sélection d'équipe, élagage), et 31 ressources de fond (frameworks, benchmarks, jeux de données). Plusieurs tendances se dégagent de cette analyse croisée.</p>
+
+<p>Côté statique, la recherche de templates fonctionne bien quand trois conditions sont réunies : l'espace de recherche est suffisamment contraint (opérateurs typés, langages de workflow structurés), l'évaluation est fiable (tests unitaires, vérificateurs formels), et la charge de travail est assez homogène pour qu'un template unique couvre la majorité des cas. Des systèmes comme AFlow utilisent la recherche arborescente Monte Carlo pour explorer des graphes d'opérateurs typés, tandis qu'ADAS fait évoluer du code exécutable comme un algorithme génétique. VFlow pousse la logique plus loin en intégrant des vérificateurs matériels directement dans la boucle de recherche pour la génération de circuits Verilog.</p>
+
+<p>Côté dynamique, le spectre de flexibilité se confirme dans la pratique. L'élagage adaptatif — activer ou désactiver des parties d'un super-graphe selon la difficulté de la requête — capte une bonne part des gains possibles avec un coût minimal. Quand les tâches varient davantage, la génération pré-exécution entre en jeu : des systèmes comme FlowReasoner entraînent un méta-agent par apprentissage par renforcement pour produire un workflow sur mesure à partir d'une bibliothèque d'opérateurs. Et quand l'environnement est interactif — quand des échecs d'outils ou des résultats inattendus changent la donne en cours de route — l'édition en temps réel devient incontournable. AgentConductor, par exemple, génère une topologie en YAML, l'exécute, puis la régénère en boucle jusqu'au succès ou à l'épuisement du budget.</p>
+
+<p>Un résultat transversal : l'optimisation des prompts seuls ne remplace pas une structure manquante. Si l'erreur vient du fait qu'un vérificateur n'existe pas dans le pipeline, qu'un agent communique avec le mauvais partenaire, ou que l'ordre des étapes est incorrect, aucun prompt aussi brillant soit-il ne compensera le défaut structurel. Les travaux Multi-Agent Design et Maestro le montrent en alternant optimisation de prompts et optimisation de topologie, avec des gains sur les deux fronts.</p>
+
+<p>Sur la question des signaux de rétroaction, quatre familles se distinguent. Les scores métriques (précision, taux de réussite) guident la recherche mais sont souvent bruités. Les vérificateurs (tests unitaires, validateurs de schéma) fournissent un signal dense et fiable — les gains les plus nets apparaissent quand ces vérificateurs sont à la fois bon marché et sémantiquement pertinents. Les préférences entre paires de workflows stabilisent l'optimisation quand les scores absolus sont peu fiables. Le feedback textuel extrait des traces offre une richesse sémantique supérieure (« le workflow a échoué parce que l'agent de recherche a renvoyé des résultats hors sujet ») mais peut dériver si aucun vérificateur externe ne filtre les propositions de correction.</p>
+
+<h2>Pourquoi cela change la donne pour les praticiens</h2>
+
+<p>Les équipes qui déploient des systèmes multi-agents en production se heurtent à un problème récurrent : le prototypage fonctionne, mais le passage à l'échelle révèle des fragilités structurelles. Un pipeline qui marche sur dix exemples peut exploser en coût ou en taux d'erreur sur mille requêtes hétérogènes. Les cadres proposés dans cette étude offrent un vocabulaire pour diagnostiquer ces problèmes.</p>
+
+<p>Un template statique qui échoue sur certaines catégories de requêtes n'a pas besoin d'un meilleur LLM — il a besoin d'un mécanisme de sélection ou d'adaptation dynamique. Un système dynamique dont le coût croît de façon incontrôlée n'a pas besoin de plus de puissance de calcul — il a besoin de garde-fous explicites : budgets en tokens, limites de boucles, règles d'arrêt liées à la confiance du vérificateur.</p>
+
+<p>La recette pratique que les auteurs distillent de leur analyse suit une progression en quatre temps. D'abord, partir d'un scaffold statique contraint et optimiser les composants locaux (prompts, outils, paramètres de décodage) — c'est le fruit le plus facile à cueillir. Ensuite, analyser les traces d'exécution pour identifier les échecs structurels, ceux que le tuning local ne peut pas résoudre. Ajouter alors de la recherche au niveau du graphe. Sous conditions hétérogènes, préférer la sélection ou l'élagage avant la génération complète de workflow. Réserver l'édition en temps réel aux environnements où l'exécution partielle révèle des informations que le plan initial ne pouvait pas anticiper.</p>
+
+<p>L'étude insiste aussi sur un point que beaucoup de publications négligent : le coût. Rapporter uniquement le taux de réussite sans mentionner le nombre d'appels LLM, les tokens consommés, la latence et le coût monétaire rend les comparaisons entre méthodes impossibles. Un système qui résout 85 % des tâches en dépensant 50 tokens par requête et un autre qui atteint 90 % en en dépensant 5 000 ne racontent pas la même histoire. Le protocole de reporting minimal proposé — structure du workflow, coûts en ligne et hors ligne, propriétés du graphe, tests de robustesse, analyse des échecs — pourrait, s'il est adopté, transformer la reproductibilité du domaine.</p>
+
+<h2>Les chantiers qui restent ouverts</h2>
+
+<p>L'attribution structurelle du crédit reste le problème méthodologique le plus difficile. Quand un système multi-agents réussit une tâche, comment savoir si le gain vient d'un nouveau lien de communication entre deux agents, d'un vérificateur ajouté à l'étape 3, d'un prompt reformulé, ou simplement de plus de calcul ? Les outils actuels — ablations, replay contrefactuel — sont rudimentaires face à la combinatoire des décisions structurelles.</p>
+
+<p>Le dilemme expressivité contre vérifiabilité n'a pas de solution satisfaisante. Les représentations contraintes (langages de workflow typés, schémas JSON stricts) facilitent la validation et la recherche, mais elles excluent potentiellement les structures les plus créatives. Les représentations libres (code arbitraire, texte en langage naturel) sont expressives mais difficiles à valider automatiquement. Trouver le bon point d'équilibre entre ces deux pôles est un problème de design ouvert.</p>
+
+<p>L'adaptation continue sous dérive d'environnement est à peine étudiée. Les API changent. Les registres d'outils évoluent. Les schémas de données se mettent à jour. Un template optimisé aujourd'hui peut devenir caduc dans six mois. Quelques benchmarks « vivants » commencent à mesurer la performance sous dérive, mais les protocoles contrôlés manquent encore.</p>
+
+<p>Enfin, le champ manque d'une théorie, même partielle, qui dirait dans quelles conditions la génération dynamique est nécessaire, dans quelles conditions un template statique suffit, et comment la complexité d'échantillonnage devrait évoluer avec le degré de plasticité structurelle autorisé. Les praticiens naviguent aujourd'hui à l'intuition, guidés par des résultats empiriques épars. Des résultats formels, même approximatifs, changeraient la nature des décisions d'architecture.</p>
+
+<p>L'étude recense 27 ressources d'évaluation dédiées aux workflows — benchmarks, corpus d'entraînement, environnements interactifs — et constate que la qualité de ces ressources conditionne directement la validité des résultats d'optimisation. Si un benchmark fuit des réponses, si les workflows de référence sont incohérents, si l'évaluateur récompense des hacks fragiles, l'optimisation exploitera ces failles. La curation rigoureuse des benchmarks n'est pas un sujet annexe : c'est une condition de crédibilité pour l'ensemble du domaine.</p>
+
+<p>Cette synthèse de 77 travaux ne clôt pas le débat. Elle le structure. En posant un vocabulaire partagé — templates, graphes réalisés, traces, temps de détermination, modes de plasticité — et en proposant un protocole de reporting exigeant, elle fournit les outils pour que les prochains travaux puissent enfin se comparer sur des bases communes. La question n'est plus « quel agent est le plus intelligent ? » mais « quelle organisation du travail produit le meilleur résultat pour un budget donné ? ». C'est un changement de perspective qui a le mérite de la clarté.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

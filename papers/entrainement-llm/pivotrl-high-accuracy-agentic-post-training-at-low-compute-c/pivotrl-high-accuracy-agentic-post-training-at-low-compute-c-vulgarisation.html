@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PivotRL: High Accuracy Agentic Post-Training at Low Compute Cost — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>PivotRL: High Accuracy Agentic Post-Training at Low Compute Cost</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>PivotRL : entraîner des agents IA performants sans exploser le budget de calcul</h2>
+
+<h3>1. Quand les modèles de langage passent à l'action</h3>
+
+<p>Un modèle de langage qui rédige un e-mail, c'est une chose. Un modèle qui enchaîne vingt actions — chercher sur le web, lire du code source, exécuter des commandes terminal, corriger un bug, puis soumettre un patch — c'est un tout autre défi. Ces tâches dites « agentiques » exigent que l'IA prenne des décisions séquentielles sur de longues séries d'interactions avec un environnement réel. Et c'est précisément là que les méthodes d'entraînement actuelles se heurtent à un mur.</p>
+
+<p>L'équipe de NVIDIA et UC Berkeley, menée par Junkeun Yi, Damon Mosk-Aoyama et Baihe Huang, a publié en mars 2026 PivotRL, un cadre d'entraînement qui tente de résoudre un dilemme vieux de plusieurs années : comment rendre un modèle performant sur ces tâches complexes sans mobiliser des ressources de calcul colossales, et sans détruire ses compétences existantes au passage ?</p>
+
+<h3>2. Le dilemme coût-qualité de l'entraînement post-formation</h3>
+
+<p>Deux grandes familles de méthodes se disputent le terrain pour entraîner des agents IA après leur pré-entraînement initial.</p>
+
+<p>La première, le <em>supervised fine-tuning</em> (SFT), consiste à montrer au modèle des exemples de trajectoires réussies et à lui demander de les imiter. C'est rapide, peu coûteux en calcul. Le problème : le modèle apprend par cœur. Il reproduit bien les cas vus à l'entraînement, mais ses performances s'effondrent dès qu'on le confronte à des tâches différentes. Pire, il oublie ce qu'il savait faire avant — en mathématiques, en raisonnement, en traduction. Les chercheurs appellent ce phénomène la « dégradation hors domaine » (<em>out-of-domain degradation</em>), une forme d'oubli catastrophique.</p>
+
+<p>La seconde, l'apprentissage par renforcement de bout en bout (E2E RL), laisse le modèle explorer librement l'environnement, essayer des stratégies, et recevoir une récompense à la fin. Le modèle conserve bien mieux ses compétences générales et généralise davantage. Le hic : chaque mise à jour des paramètres exige de dérouler des trajectoires complètes, parfois sur 12 à 25 tours d'interaction avec l'environnement. Le coût en calcul explose.</p>
+
+<p>D'un côté, un entraînement bon marché qui rend le modèle fragile. De l'autre, un entraînement robuste mais ruineux. PivotRL cherche le meilleur des deux mondes.</p>
+
+<h3>3. La méthode : cibler les moments qui comptent</h3>
+
+<p>L'idée de départ semble simple : puisqu'on dispose déjà de trajectoires d'experts (les mêmes données que le SFT utilise), pourquoi ne pas les réutiliser pour faire de l'apprentissage par renforcement, mais en se concentrant uniquement sur les moments décisifs ?</p>
+
+<p>Prenons une analogie. Un pilote de rallye s'entraîne sur un parcours complet. Mais les virages où il progresse vraiment sont ceux où la marge d'erreur est mince — les passages techniques où il peut aussi bien réussir brillamment que sortir de la route. Sur les longues lignes droites, il n'apprend rien de nouveau. PivotRL applique cette logique aux trajectoires d'agents IA.</p>
+
+<p>Le cadre repose sur deux mécanismes complémentaires.</p>
+
+<p><strong>Premier mécanisme : la sélection des pivots.</strong> Au lieu de s'entraîner sur chaque étape d'une trajectoire, PivotRL commence par évaluer chaque tour de décision. Pour un état donné (disons : le modèle doit choisir quelle commande exécuter dans un terminal), on fait générer plusieurs réponses possibles au modèle et on observe les résultats. Si toutes les réponses réussissent, ce tour est trop facile — rien à apprendre. Si toutes échouent, il est trop difficile pour le moment. Les tours intéressants sont ceux où les résultats divergent : certaines réponses fonctionnent, d'autres non. Ce sont les « pivots ». L'entraînement se concentre exclusivement sur ces moments-là.</p>
+
+<p>Ce filtrage élimine 71 % des tours, qui auraient produit un signal d'apprentissage nul. Le budget de calcul est donc dépensé uniquement là où il produit un effet mesurable.</p>
+
+<p><strong>Second mécanisme : la récompense fonctionnelle.</strong> Dans une tentative naïve de conversion SFT → RL, on récompenserait le modèle seulement s'il produit exactement la même chaîne de caractères que l'expert. C'est absurde dans la pratique. Si l'expert tape <code>grep -r "error" src/</code> et que le modèle tape <code>grep -rn "error" ./src</code>, le résultat est identique mais la correspondance textuelle échoue. PivotRL remplace cette comparaison stricte par un vérificateur adapté au domaine : le modèle est récompensé si son action est <em>fonctionnellement équivalente</em> à celle de l'expert, même si la formulation diffère. Selon le domaine, ce vérificateur peut être une validation de schéma, une règle d'équivalence, ou un juge IA léger.</p>
+
+<p>Concrètement, l'entraînement PivotRL se déroule ainsi : on extrait tous les tours de décision des trajectoires d'experts, on les filtre pour ne garder que les pivots, puis on lance des « rollouts » courts — une seule action par tour, pas une trajectoire entière — et on optimise avec un algorithme de type GRPO (une variante de l'optimisation de politique proximale). Le tout en maintenant une contrainte de proximité avec le modèle de référence, pour éviter qu'il dérive trop.</p>
+
+<h3>4. Les résultats : gagner sur les deux tableaux</h3>
+
+<p>Les expériences portent sur quatre domaines agentiques distincts : l'utilisation d'outils conversationnels (τ2-Bench), la résolution de bugs logiciels (SWE-Bench), le contrôle de terminal (Terminal-Bench) et la navigation web (BrowseComp). Le modèle de base est Qwen3-30B-A3B. Pour chaque comparaison, SFT et PivotRL utilisent strictement les mêmes données d'entraînement.</p>
+
+<p>En performance sur le domaine d'entraînement, PivotRL surpasse le SFT dans trois cas sur quatre. Le gain moyen par rapport au modèle de base atteint +14,11 points de pourcentage, contre +9,94 pour le SFT. Sur BrowseComp, l'écart est frappant : le SFT fait en réalité baisser la performance de 1 point, tandis que PivotRL la fait bondir de 8,8 points.</p>
+
+<p>Mais le résultat le plus significatif concerne la rétention hors domaine. Après entraînement, on mesure la performance du modèle sur huit benchmarks qui n'ont rien à voir avec les tâches agentiques : mathématiques (AIME, MATH500), code compétitif (LiveCodeBench), science (SciCode), connaissances générales (MMLU-Pro), traduction (WMT24++). Le SFT provoque une régression moyenne de −9,83 points. Après un entraînement sur le domaine terminal, la chute sur AIME25 atteint −64,48 points — le modèle passe de 86 % à 21 % de réussite en mathématiques. PivotRL, lui, maintient un écart quasi nul : +0,21 point en moyenne, sans aucun benchmark qui décroche de plus de 3 points.</p>
+
+<p>Face à l'apprentissage par renforcement de bout en bout sur SWE-Bench, PivotRL atteint une précision comparable (32,67 %) avec environ quatre fois moins de tours de rollout et 5,5 fois moins de temps d'exécution, sur le même nombre de nœuds de calcul.</p>
+
+<p>L'ablation confirme que les deux mécanismes sont indispensables. Retirer le filtrage des pivots fait chuter la précision de 63,81 à 59,68 sur τ2-Bench. Retirer la récompense fonctionnelle la fait tomber à 57,34 — en dessous du SFT classique (58,44).</p>
+
+<h3>5. Ce que ça change concrètement</h3>
+
+<p>PivotRL a été déployé en production chez NVIDIA pour l'entraînement de Nemotron-3-Super-120B-A12B, un modèle open source de grande taille. Les résultats à l'échelle industrielle sont cohérents avec les expériences académiques : sur SWE-Bench Verified, le modèle passe de 12,87 % après SFT à 61,33 % après la phase RL qui inclut PivotRL.</p>
+
+<p>Pour les équipes qui développent des agents IA, la portée est directe. Entraîner un agent sur des tâches de codage, de navigation web ou d'utilisation d'outils ne nécessite plus de faire tourner des milliers de trajectoires complètes à chaque itération. On peut partir de données de démonstration existantes — le même type de données collectées pour le SFT — et les exploiter de façon bien plus efficace via PivotRL. Le coût d'entraînement diminue, et le modèle ne sacrifie plus ses compétences générales.</p>
+
+<p>Cette propriété de rétention hors domaine a des conséquences pratiques immédiates. Jusqu'ici, spécialiser un modèle sur des tâches agentiques revenait souvent à le dégrader sur tout le reste, ce qui obligeait les équipes à maintenir plusieurs versions du même modèle ou à accepter des compromis douloureux. PivotRL offre une voie pour spécialiser sans détruire.</p>
+
+<p>Le fondement théorique éclaire aussi la compréhension de l'apprentissage par renforcement sur les modèles de langage. Les auteurs montrent formellement pourquoi les tours à résultats mixtes produisent un signal d'apprentissage plus fort sous normalisation de groupe (la variance des récompenses détermine la norme du gradient naturel), et pourquoi la récompense fonctionnelle préserve l'ordre relatif des actions non liées à la tâche (le modèle redistribue de la masse de probabilité vers les actions correctes sans perturber le classement des autres). Ces résultats dépassent le cadre de PivotRL et alimentent la réflexion sur la conception de tout algorithme RL appliqué aux LLM.</p>
+
+<h3>6. Questions ouvertes et pistes futures</h3>
+
+<p>PivotRL repose sur des vérificateurs programmatiques pour attribuer les récompenses : validation de schéma, correspondance de chaînes normalisée, règles d'équivalence. Cette approche fonctionne bien quand on peut définir formellement ce qu'est une action « correcte » à un tour donné. Mais pour des domaines où la qualité d'une action est plus subjective — rédaction, négociation, planification stratégique — il faudra d'autres types de juges. Les auteurs mentionnent l'utilisation de LLM comme juges (<em>LLM-as-a-judge</em>) et de modèles de récompense de processus (<em>process reward models</em>) comme pistes à explorer.</p>
+
+<p>Le profilage des pivots est actuellement réalisé hors ligne, une seule fois, avec le modèle de référence initial. À mesure que le modèle s'améliore pendant l'entraînement, certains pivots deviennent trop faciles et cessent d'être informatifs. La variance des récompenses par batch décroît au fil des étapes d'entraînement (les auteurs le documentent dans leurs courbes). Un profilage dynamique, recalculé périodiquement, pourrait maintenir un signal d'apprentissage fort plus longtemps. C'est une direction explicitement mentionnée par l'équipe.</p>
+
+<p>Autre angle mort : le cas de SWE-Bench, où PivotRL sous-performe le SFT (32,67 contre 37,40). Le vérificateur utilisé dans ce domaine est délibérément grossier — il vérifie seulement le type d'outil appelé, pas ses arguments. Un vérificateur plus fin pourrait combler cet écart, mais sa conception est un problème ouvert en soi.</p>
+
+<p>Enfin, PivotRL a été testé sur un modèle de 30 milliards de paramètres (activations de 3 milliards) et déployé sur un modèle de 120 milliards. La question de son comportement à des échelles encore supérieures, ou au contraire sur des modèles plus petits et moins capables, reste posée. L'économie de calcul qu'il procure — un facteur quatre en tours de rollout — prend d'autant plus de valeur que les modèles grandissent et que chaque trajectoire d'entraînement coûte cher.</p>
+
+<p>PivotRL ne prétend pas remplacer l'apprentissage par renforcement de bout en bout. Il se positionne comme un complément, applicable quand on dispose de trajectoires d'experts et qu'on veut en extraire le maximum sans payer le prix fort. Pour NVIDIA, c'est déjà un outil de production, aux côtés du SFT et du E2E RL, dans le pipeline d'entraînement de ses modèles phares.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

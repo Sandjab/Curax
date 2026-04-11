@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Effective Strategies for Asynchronous Software Engineering Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Effective Strategies for Asynchronous Software Engineering Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Les agents LLM actuels résolvent des issues GitHub isolées, mais échouent sur les tâches logicielles à long horizon impliquant des sous-tâches interdépendantes. Lorsque plusieurs agents modifient un même artefact partagé, leurs éditions interfèrent : l'un renomme une fonction, l'autre appelle encore l'ancien nom. L'intégration échoue silencieusement.</p>
+
+<p>Geng et Neubig partent d'un constat pragmatique : les développeurs humains ont résolu ce problème depuis des décennies avec des branches, des merges et des tests automatisés. Leur système CAID (Centralized Asynchronous Isolated Delegation) transpose ces primitives d'ingénierie logicielle — <code>git worktree</code>, <code>git merge</code>, graphes de dépendances, suites de tests — en mécanismes de coordination multi-agents. Un manager central décompose la tâche en sous-unités respectant un ordre de dépendance, chaque ingénieur travaille dans un worktree isolé, et l'intégration passe par des merges explicites validés par des tests.</p>
+
+<p>La question de recherche est claire et bien délimitée : la coordination branch-and-merge améliore-t-elle la performance multi-agents sur des tâches SWE complexes, à substrat agent fixe ? Le choix de contrôler le framework (OpenHands) pour isoler l'effet de la coordination est méthodologiquement sain.</p>
+
+<h2>Méthodologie</h2>
+
+<p>CAID repose sur cinq composants articulés. Le manager construit d'abord un graphe de dépendances orienté <em>G = (V, E)</em> où chaque nœud représente une unité de travail. Une unité n'est éligible que si toutes ses dépendances sont satisfaites. Le manager convertit ensuite ce graphe en affectations JSON structurées pour <em>N</em> ingénieurs, en regroupant les fichiers à forte dépendance circulaire sous un même ingénieur. Chaque ingénieur opère dans son propre <code>git worktree</code>, physiquement séparé du dépôt principal. Après implémentation et auto-vérification par tests, l'ingénieur commit ; le manager tente un merge dans main. En cas de conflit, l'ingénieur responsable le résout localement. Une boucle événementielle asynchrone (<code>asyncio</code>) orchestre l'exécution concurrente.</p>
+
+<p>L'évaluation porte sur deux benchmarks complémentaires. Commit0-Lite demande d'implémenter des bibliothèques Python complètes (tinydb, minitorch, jinja…) à partir d'un squelette et d'une suite de tests — 16 dépôts, métrique binaire par test. PaperBench évalue la capacité à reproduire les contributions d'articles de conférence — 20 papiers, scoring par juge LLM (gpt-5-mini). Trois modèles sont testés : Claude Sonnet 4.5, GLM 4.7, MiniMax 2.5. La configuration fixe 100 itérations pour l'agent unique, 50 pour le manager et 80 par ingénieur en multi-agents. Deux ingénieurs sur PaperBench, quatre sur Commit0.</p>
+
+<p>Le protocole inclut des ablations sur l'isolation (worktree vs. isolation « souple » par instructions), le nombre d'ingénieurs (2, 4, 8), et trois stratégies de vérification (revue managériale, auto-vérification, priorité à l'efficience).</p>
+
+<h2>Résultats principaux</h2>
+
+<p>CAID surpasse systématiquement l'agent unique sur les deux benchmarks et les trois modèles. Sur PaperBench, les gains absolus atteignent +26.3 points pour MiniMax 2.5 (de 10.4% à 36.7%), +7.4 points pour GLM 4.7, et +6.1 points pour Claude Sonnet 4.5 (de 57.2% à 63.3%). Sur Commit0-Lite, Claude passe de 53.1% à 59.1%, MiniMax de 42.3% à 57.0%.</p>
+
+<p>Doubler le budget d'itérations d'un agent unique (100 → 200) n'apporte que des gains marginaux, voire négatifs (Claude Sonnet 4.5 perd 3 points sur PaperBench). Le goulot d'étranglement n'est pas le temps de calcul mais la structure de l'exécution.</p>
+
+<p>L'ablation sur l'isolation confirme la nécessité du worktree. Sur PaperBench, l'isolation souple (instructions seules) dégrade la performance sous le niveau de l'agent unique (55.5% vs. 57.2%), tandis que le worktree atteint 63.3%. Sur Commit0, l'écart est plus modeste (56.1% vs. 59.1%) car les dépendances inter-fichiers y sont plus explicites.</p>
+
+<p>Le nombre optimal d'ingénieurs dépend de la modularité de la tâche. Sur Commit0, 4 ingénieurs surpassent 2 et 8. À 8 ingénieurs, la délégation se fragmente : plusieurs agents modifient des fonctions du même fichier, ce qui génère des conflits d'intégration et fait chuter la performance (exemple simpy : 92.1% à N=4, 44.3% à N=8).</p>
+
+<p>La stratégie de vérification révèle un compromis net : la revue managériale à chaque round atteint 60.2% de pass rate mais coûte 3689s, l'auto-vérification donne 55.1% en 2244s, et la priorité à l'efficience descend à 54.0% en 1909s.</p>
+
+<p>Résultat stratégique : la séquence « agent unique d'abord, multi-agents en rattrapage » est inefficace. Le score final reste proche du multi-agents direct, mais le coût et le temps sont quasi-additifs. Lancer CAID directement est plus rentable.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>La dépendance à la qualité de la délégation managériale est le talon d'Achille de CAID. L'analyse des trajectoires sur minitorch (Figure 4) le montre crûment : deux runs CAID identiques en configuration produisent 8.7% et 34.3% selon que le manager assigne ou non <code>autodiff.py</code>, fichier critique pour les tests. La délégation repose entièrement sur le prompt engineering — aucune politique apprise, aucun mécanisme de correction automatique quand le manager rate une dépendance centrale.</p>
+
+<p>Le surcoût en API et en temps d'exécution est substantiel. CAID avec Claude Sonnet 4.5 coûte 9.3$ contre 3.3$ pour l'agent unique sur PaperBench, sans réduction significative du temps mur malgré le parallélisme. L'intégration séquentielle et test-gated annule une partie du gain temporel théorique.</p>
+
+<p>L'évaluation PaperBench utilise gpt-5-mini comme juge, ce qui introduit un biais potentiel : la corrélation entre le score du juge et la qualité fonctionnelle réelle n'est pas validée indépendamment dans cette étude. Les auteurs héritent ce choix du benchmark original sans le questionner.</p>
+
+<p>Chaque configuration est exécutée une seule fois par dépôt/papier. Les tests statistiques (t-tests appariés, Appendice C) portent sur la variance inter-tâches (16 ou 20 échantillons), pas sur la variance inter-runs. Or la Figure 4 démontre une variance intra-configuration élevée. Un run MiniMax sur PaperBench ne dépasse pas le seuil de significativité (p = 0.408), et GLM sur Commit0 reste marginal (p = 0.095).</p>
+
+<p>La comparaison en budget d'itérations n'est pas strictement équivalente : l'agent unique dispose de 100 itérations, tandis que CAID utilise 50 itérations manager + 80 × N ingénieurs. Le budget total agrégé est bien supérieur, même si chaque agent individuel a moins de marge.</p>
+
+<p>L'absence de benchmark multi-agents concurrent (l'étude ne compare qu'à l'agent unique sur le même framework) limite la portée des conclusions. Aucune comparaison avec ChatDev, MetaGPT ou d'autres architectures multi-agents n'est fournie — un choix assumé mais qui restreint la validité externe.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le code source est disponible sur GitHub (<code>github.com/JiayiGeng/CAID</code>). Les prompts complets du manager et des ingénieurs sont reproduits en annexe pour Commit0 et PaperBench. Le système repose sur OpenHands v1.11.0, un SDK open-source. Les résultats détaillés par dépôt et par papier sont fournis dans les tables 4 à 9.</p>
+
+<p>La reproduction reste néanmoins conditionnée à l'accès aux API des modèles propriétaires (Claude Sonnet 4.5 en particulier), avec des coûts non négligeables (jusqu'à 15$ par run sur PaperBench). Les deux modèles open-source (GLM 4.7, MiniMax 2.5) atténuent partiellement cette dépendance. La variabilité stochastique des LLM, combinée à l'absence de runs multiples, rend la reproduction exacte des scores improbable — les tendances devraient cependant être reproductibles.</p>
+
+<h2>Impact et applications</h2>
+
+<p>L'apport principal est conceptuel autant qu'empirique : ancrer la coordination multi-agents dans des primitives logicielles existantes plutôt que dans des protocoles de communication ad hoc. Le <code>git worktree</code> comme mécanisme d'isolation, le merge comme point d'intégration, les tests comme signal de validation — ces choix sont simples, composables et déjà maîtrisés par l'écosystème de développement.</p>
+
+<p>L'insight stratégique sur l'inefficacité de la séquence « agent unique puis multi-agents » a des implications directes pour les plateformes de codage assisté. Si confirmé sur d'autres substrats, ce résultat change la logique de déploiement : mieux vaut paralléliser d'emblée que de tenter un agent seul en espérant qu'il suffise.</p>
+
+<p>Les limites de passage à l'échelle (dégradation à 8 ingénieurs) tempèrent l'enthousiasme. Le parallélisme n'est pas un levier illimité — il dépend de la capacité du manager à partitionner proprement le travail, capacité qui reste fragile et non apprise.</p>
+
+<p>La généralisation au-delà de l'ingénierie logicielle (synthèse documentaire, planification de recherche) reste spéculative, comme les auteurs le reconnaissent eux-mêmes. Les primitives exploitées (versionnement, tests automatisés) n'ont pas d'équivalents évidents dans d'autres domaines.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>CAID se distingue des architectures multi-agents basées sur la communication linguistique (ChatDev, MetaGPT, CAMEL) en remplaçant le dialogue inter-agents par des commits git et des spécifications JSON. Cette approche répond directement aux échecs d'intégration documentés par Cemri et al. (2025) et Khatua et al. (2026), qui identifient les modifications concurrentes comme mode de défaillance principal des systèmes multi-agents.</p>
+
+<p>Par rapport aux architectures hiérarchiques (Agyn, BOAD), CAID apporte l'isolation physique des workspaces là où les autres systèmes s'appuient sur des contraintes d'instructions. L'ablation sur l'isolation souple vs. worktree quantifie cette différence pour la première fois.</p>
+
+<p>Le cadre expérimental sur Commit0 et PaperBench prolonge les efforts de SWE-bench en évaluant des tâches à horizon long plutôt que des résolutions d'issues isolées. Le choix de ne comparer qu'au sein du même framework (OpenHands) est méthodologiquement rigoureux mais sacrifie la validité externe. Une comparaison avec des systèmes de coordination alternatifs sur les mêmes benchmarks renforcerait la contribution.</p>
+
+<p>L'observation selon laquelle augmenter le budget d'itérations ne compense pas les déficiences structurelles de l'agent unique rejoint les conclusions de Starace et al. (2025) sur PaperBench et celles de Kwa et al. (2025) sur les horizons de tâches. CAID transforme un problème de temps en un problème de structure d'exécution.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Justification</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td>4</td>
+      <td>Bien délimitée, angle original de transposition des primitives SWE vers la coordination multi-agents</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td>4</td>
+      <td>Deux benchmarks complémentaires, trois modèles, ablations systématiques, comparaison contrôlée sur même framework</td>
+    </tr>
+    <tr>
+      <td>Taille d'échantillon</td>
+      <td>3</td>
+      <td>16 dépôts et 20 papiers, mais un seul run par configuration — la variance intra-run démontrée en Figure 4 n'est pas capturée</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td>3</td>
+      <td>Pass rate objectif sur Commit0 ; scoring par juge LLM sur PaperBench avec biais potentiel non évalué</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td>3</td>
+      <td>Framework et modèles contrôlés, mais budgets d'itérations non strictement équivalents entre configurations ; prompts hand-crafted sans analyse de sensibilité</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td>4</td>
+      <td>Code public, prompts en annexe, SDK open-source ; dépendance aux API propriétaires et variance stochastique limitent la reproduction exacte</td>
+    </tr>
+    <tr>
+      <td>Transparence et limitations</td>
+      <td>4</td>
+      <td>Section dédiée couvrant coût, limites de la délégation et généralisation ; reconnaissance honnête des cas d'échec</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td>4</td>
+      <td>Contribution pratique et conceptuelle : l'ancrage dans les primitives SWE est simple, composable et empiriquement validé, avec des insights stratégiques directement applicables</td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td><strong>Note globale</strong></td>
+      <td><strong>3.8 / 5</strong></td>
+      <td>Travail empirique rigoureux avec une idée directrice claire, limité par la taille des évaluations et l'absence de runs multiples</td>
+    </tr>
+  </tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

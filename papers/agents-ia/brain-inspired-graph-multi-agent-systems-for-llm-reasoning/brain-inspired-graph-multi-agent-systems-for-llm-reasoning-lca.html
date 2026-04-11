@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain-Inspired Graph Multi-Agent Systems for LLM Reasoning — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Brain-Inspired Graph Multi-Agent Systems for LLM Reasoning</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+
+<h3>1. Objectif et contexte</h3>
+
+<p>Les grands modèles de langage, y compris ceux dotés de chaînes de raisonnement étendues (LRM), subissent un effondrement de précision au-delà de certains seuils de complexité. Shojaee et al. (2025) ont montré que fournir l'algorithme de résolution explicite ne corrige pas ce phénomène — le goulot d'étranglement réside dans l'exécution logique cohérente, pas dans la découverte de la solution. BIGMAS part de ce constat pour proposer une approche complémentaire : distribuer la charge cognitive entre agents spécialisés plutôt que d'augmenter la capacité d'un modèle unique.</p>
+
+<p>L'ancrage théorique repose sur la Global Workspace Theory (GWT) de Baars (1988), selon laquelle la cognition flexible émerge de coalitions dynamiques de processeurs spécialisés communiquant via un espace de travail central. Trois principes en découlent pour le design multi-agent : spécialisation des nœuds, construction de graphe adaptée au problème, et diffusion globale de l'état via un workspace partagé. L'ambition est de montrer que ces gains architecturaux sont orthogonaux aux améliorations au niveau du modèle.</p>
+
+<h3>2. Méthodologie</h3>
+
+<p>BIGMAS fonctionne en trois phases. Un agent GraphDesigner analyse chaque instance de problème et produit un graphe dirigé d'agents spécialisés, un schéma de workspace, et un contrat d'interaction. Le workspace centralisé comporte quatre partitions : contexte en lecture seule, zone de travail en lecture-écriture, métadonnées système, et réponse finale. Chaque nœud-agent lit le workspace, produit une instruction d'écriture structurée (chemin cible, action, payload), validée avant application. Un Orchestrateur global détermine le routage en conditionnant sur l'état complet du workspace et l'historique d'exécution.</p>
+
+<p>L'évaluation porte sur trois tâches combinatoires : Game24 (100 instances échantillonnées par difficulté), Six Fives (100 cibles entières dans [1, 100]), et Tower of London (100 instances réparties sur des longueurs optimales de 1 à 8 coups). Six modèles frontières sont testés : DeepSeek-V3.2 (standard et +thinking), Claude 4.5 Sonnet (standard et +thinking), Gemini 2.5 Pro, et GPT-5. Les baselines multi-agent (ReAct, Tree of Thoughts) ne sont comparées que sur DeepSeek-V3.2.</p>
+
+<p>Tous les appels LLM utilisent une température de 0.7. Le GraphDesigner est limité à 10 nœuds et 15 étapes de chemin maximum. La métrique unique est l'exactitude (accuracy) : proportion d'instances résolues satisfaisant toutes les contraintes.</p>
+
+<h3>3. Résultats principaux</h3>
+
+<p>BIGMAS améliore la précision sur les 18 combinaisons modèle×tâche sans exception. Les gains les plus marqués apparaissent sur les modèles les plus faibles : DeepSeek-V3.2 passe de 25 % à 36 % sur Game24, de 12 % à 30 % sur Six Fives, et de 6 % à 20 % sur Tower of London. Le résultat le plus frappant concerne Claude 4.5 (+thinking) sur Tower of London : +36 points de pourcentage (57 % → 93 %), alors que ce modèle dispose déjà d'un raisonnement étendu interne.</p>
+
+<p>Face aux baselines multi-agent sur DeepSeek-V3.2, BIGMAS dépasse Tree of Thoughts de 6, 5 et 2 points sur les trois tâches respectives. ReAct n'apporte que des gains marginaux (1 à 6 points sur la base). Quatre modèles sur six atteignent 100 % sur Game24 avec BIGMAS.</p>
+
+<p>L'analyse des topologies révèle une adaptation spontanée : les graphes Game24 se concentrent autour de 3 nœuds (pipeline générer-valider-formater), Six Fives varie de 3 à 9 nœuds, et Tower of London produit les graphes les plus complexes (2 à 9 nœuds, structures cycliques). La distribution des rôles montre l'émergence de nœuds Analyzer (24 %) et Optimizer (12 %) sur Tower of London, absents des tâches arithmétiques simples. Le nombre de décisions de routage corrèle avec la difficulté : les instances échouées nécessitent systématiquement plus de décisions que les réussies (7,3 vs 9,4 sur Tower of London).</p>
+
+<p>L'exécution des nœuds consomme 46 à 55 % des tokens totaux selon la tâche. Le coût du GraphDesigner représente 36,7 % pour Game24 mais seulement 18,9 % pour Tower of London, où les exécutions sont plus longues.</p>
+
+<h3>4. Discussion et limites</h3>
+
+<p>L'absence d'étude d'ablation est la lacune méthodologique la plus sérieuse. BIGMAS combine trois innovations — graphe dynamique, workspace centralisé, orchestration globale — sans jamais isoler la contribution de chacune. Le lecteur ne peut pas déterminer si les gains proviennent du workspace partagé, de la topologie adaptative, de l'orchestration conditionnée sur l'état complet, ou de la simple décomposition en sous-tâches avec davantage d'appels LLM. Un système à graphe fixe avec workspace partagé, ou un graphe dynamique sans workspace, auraient permis de trancher.</p>
+
+<p>La comparaison avec les baselines multi-agent (ReAct, Tree of Thoughts) se limite à un seul modèle backbone (DeepSeek-V3.2), le plus faible du panel. Cette restriction empêche de vérifier si l'avantage de BIGMAS sur ces baselines se maintient avec des modèles plus capables. Graph of Thoughts et Buffer of Thoughts, cités dans la revue de littérature, ne figurent pas parmi les baselines — une omission gênante vu leur proximité conceptuelle.</p>
+
+<p>Les trois benchmarks sont des puzzles combinatoires à solution vérifiable, bien choisis pour mesurer le raisonnement sans confondant, mais étroits. Aucune tâche de raisonnement en langage naturel, de génération de code, ou de résolution de problème ouvert n'est incluse. La généralisation de BIGMAS à des tâches où la vérification automatique est impossible reste entièrement spéculative.</p>
+
+<p>L'article ne rapporte aucun intervalle de confiance ni test statistique sur les résultats principaux. Avec 100 instances par tâche, une différence de 2 points (Tower of London, BIGMAS vs. ToT) pourrait ne pas être significative. Le protocole ne mentionne pas non plus si les évaluations sont sur un seul run ou moyennées sur plusieurs — un point critique à température 0.7.</p>
+
+<p>Le coût en tokens n'est pas rapporté en termes de ratio performance/coût. BIGMAS utilise plusieurs appels LLM par instance (GraphDesigner + nœuds + Orchestrateur), contre un seul pour le modèle de base. Les gains de précision doivent être mis en regard du coût multiplicatif, surtout pour les modèles déjà performants où le gain marginal est faible (GPT-5 : +4 % sur Game24 pour un pipeline multi-agent complet).</p>
+
+<p>L'analogie avec la Global Workspace Theory, bien que stimulante, reste métaphorique. Le lien entre les propriétés computationnelles du cerveau et celles d'un système multi-agent LLM n'est pas formalisé au-delà de la correspondance terminologique (spécialisation → rôles d'agent, coalition → graphe, broadcast → workspace). Le cadre neuroscientifique motive le design mais ne le contraint ni ne le prédit.</p>
+
+<h3>5. Reproductibilité</h3>
+
+<p>Aucun dépôt de code n'est mentionné. Les prompts utilisés pour le GraphDesigner, les agents-nœuds et l'Orchestrateur ne sont pas reproduits dans l'article ni en annexe. Le format structuré des instructions d'écriture (chemin, action, payload) est décrit abstraitement mais les templates concrets manquent. Sans ces éléments, une réplication indépendante exigerait un effort d'ingénierie de prompt substantiel et aboutirait probablement à un système différent.</p>
+
+<p>La description algorithmique (Algorithm 1) est claire et complète. Le workspace à quatre partitions et le protocole de validation sont suffisamment formalisés pour guider une réimplémentation de la logique de contrôle. Les hyperparamètres (MAX_NODES=10, MAX_PATH_LENGTH=15, température=0.7, R corrections) sont explicites. L'échantillonnage des instances Game24 (stratifié par difficulté) est décrit ; les instances exactes ne sont pas fournies.</p>
+
+<h3>6. Impact et applications</h3>
+
+<p>La démonstration que des gains architecturaux multi-agent sont additifs avec les améliorations au niveau du modèle a une portée pratique directe : les développeurs de systèmes LLM peuvent investir simultanément dans de meilleurs modèles et de meilleures architectures de coordination. Le résultat sur Claude 4.5 (+thinking) / Tower of London (+36 points) est le plus convaincant, car il montre un bénéfice massif là où le raisonnement étendu seul échoue.</p>
+
+<p>L'émergence spontanée de topologies adaptées au problème, sans ingénierie manuelle des rôles, suggère un mécanisme de méta-apprentissage implicite dans le GraphDesigner. Si cette propriété se confirme sur des tâches plus diversifiées, elle pourrait réduire le besoin de pipelines multi-agent conçus à la main.</p>
+
+<p>La portée reste limitée tant que l'évaluation ne dépasse pas les puzzles combinatoires. Les applications réelles (assistance au code, raisonnement juridique, planification logistique) impliquent des contraintes de latence et de coût que l'article n'aborde pas.</p>
+
+<h3>7. Positionnement dans la littérature</h3>
+
+<p>BIGMAS se situe à l'intersection de deux courants : les frameworks multi-agent LLM (MetaGPT, AutoGen, CAMEL, GPTSwarm) et les méthodes d'augmentation du raisonnement (CoT, ToT, GoT, BoT). La contribution principale — combiner construction de graphe dynamique et workspace centralisé — distingue BIGMAS des systèmes à topologie fixe (MetaGPT, LLMCompiler) et des approches sans état global partagé (ReAct, Reflexion).</p>
+
+<p>Graph of Thoughts (Besta et al., 2024) modélise déjà le raisonnement comme un graphe arbitraire avec boucles et fusions, mais dans un contexte mono-modèle. BIGMAS étend cette idée au cadre multi-agent avec spécialisation des nœuds. L'absence de comparaison directe avec GoT affaiblit le positionnement revendiqué.</p>
+
+<p>L'ancrage neuroscientifique via la GWT rappelle les travaux de Minsky (Society of Mind, 1986) et les approches récentes de Zhuge et al. (GPTSwarm, 2024) sur l'optimisation de graphes d'agents. La filiation est reconnue mais la distinction spécifique — l'adaptation per-instance du graphe plutôt qu'une optimisation globale sur un ensemble de tâches — est clairement articulée.</p>
+
+<p>Le constat de Shojaee et al. (2025) sur l'effondrement de précision des LRM fournit la motivation empirique la plus solide. Les résultats de BIGMAS sur les LRM corroborent cette analyse : le raisonnement étendu et la coordination multi-agent adressent des goulots d'étranglement distincts.</p>
+
+<h3>Tableau récapitulatif des scores de robustesse</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Justification</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td>4</td>
+      <td>Hypothèse claire et bien motivée par les travaux sur l'effondrement de précision des LRM ; ancrage GWT original.</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td>3</td>
+      <td>Trois tâches, six modèles, mais baselines multi-agent testées sur un seul modèle ; pas d'ablation des composants.</td>
+    </tr>
+    <tr>
+      <td>Taille d'échantillon</td>
+      <td>3</td>
+      <td>100 instances par tâche — raisonnable pour des expériences computationnelles, mais insuffisant pour des différences de 2-5 points sans test statistique.</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td>3</td>
+      <td>L'exactitude sur des tâches vérifiables est une métrique propre ; l'absence de métrique coût-normalisée et de mesure de correction partielle réduit la portée analytique.</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td>2</td>
+      <td>Aucune ablation, pas d'analyse de sensibilité aux hyperparamètres, comparaisons incomplètes avec les baselines proches (GoT, BoT absents).</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td>2</td>
+      <td>Ni code, ni prompts, ni instances de test publiés. La formalisation algorithmique est correcte mais ne suffit pas à reproduire le système.</td>
+    </tr>
+    <tr>
+      <td>Transparence et limitations</td>
+      <td>4</td>
+      <td>Section limitations honnête couvrant la portée des benchmarks, l'absence de mémoire épisodique, les hyperparamètres fixes et le surcoût en tokens.</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td>4</td>
+      <td>Combinaison originale de graphe dynamique + workspace centralisé ; résultats cohérents démontrant l'orthogonalité des gains multi-agent et modèle. Généralisation encore à prouver.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Note globale de robustesse : 3,2 / 5.</strong> L'architecture est bien conçue et les résultats cohérents sur six modèles frontières, mais l'absence d'ablations, de tests statistiques et de matériel de reproduction limite la solidité des conclusions causales avancées.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
