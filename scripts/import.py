@@ -638,55 +638,6 @@ def save_papers_catalog(catalog):
     print(f"  Catalog papers ecrit dans {PAPERS_CATALOG_PATH}")
 
 
-def migrate_to_catalog():
-    """Migration one-time : lit les 8 manifests de domaine + observations.md
-    et construit catalog.json. Les scores /5 sont convertis en /10 (x2, plafonne a 10)."""
-    catalog = {"domains": {}, "articles": {}, "observations": ""}
-
-    # Lire observations.md
-    obs_path = os.path.join(ARTICLES_DIR, "observations.md")
-    if os.path.isfile(obs_path):
-        with open(obs_path, encoding='utf-8') as f:
-            catalog["observations"] = f.read().strip()
-
-    # Lire les manifests de domaine
-    for domain_name in sorted(os.listdir(ARTICLES_DIR)):
-        domain_dir = os.path.join(ARTICLES_DIR, domain_name)
-        manifest_path = os.path.join(domain_dir, "manifest.json")
-        if not os.path.isfile(manifest_path):
-            continue
-
-        with open(manifest_path, encoding='utf-8') as f:
-            manifest = json.load(f)
-
-        # Ajouter le domaine
-        catalog["domains"][domain_name] = {
-            "name": manifest.get("name", domain_name.replace("-", " ").title()),
-            "description": manifest.get("description", ""),
-            "icon": manifest.get("icon", ""),
-        }
-
-        # Ajouter les articles
-        for fname, meta in manifest.get("articles", {}).items():
-            article_path = f"articles/{domain_name}/{fname}"
-            old_score = meta.get("quality_score", 3)
-            new_score = min(old_score * 2, 10)
-            catalog["articles"][article_path] = {
-                "domain": domain_name,
-                "tags": [],
-                "quality_score": new_score,
-                "quality_note": meta.get("quality_note", ""),
-            }
-
-    total = len(catalog["articles"])
-    domains = len(catalog["domains"])
-    print(f"Migration terminee : {total} articles dans {domains} domaines")
-    print(f"Scores convertis de /5 a /10 (x2, plafonne a 10)")
-
-    save_catalog(catalog)
-    return catalog
-
-
 # ---------------------------------------------------------------------------
 # Prompt builders
 # ---------------------------------------------------------------------------
@@ -1362,19 +1313,9 @@ def main():
                         help="reclassifier les publications (domain, tags, quality_note ; score figé, compagnons non régénérés)")
     parser.add_argument('--regenerate-companions', action='store_true',
                         help="régénérer les LCA et vulgarisations de toutes les publications existantes")
-    parser.add_argument('--migrate', action='store_true',
-                        help="migration one-time des manifests de domaine vers catalog.json")
     parser.add_argument('--workers', type=int, default=3,
                         help="nombre de workers parallèles pour le scoring (défaut: 3)")
     args = parser.parse_args()
-
-    # ------------------------------------------------------------------
-    # --migrate : migration one-time
-    # ------------------------------------------------------------------
-    if args.migrate:
-        print("Migration des manifests de domaine vers catalog.json...\n")
-        migrate_to_catalog()
-        return
 
     # ------------------------------------------------------------------
     # --reclassify : reclassifier tous les articles existants
@@ -1383,7 +1324,7 @@ def main():
         print("Reclassification de tous les articles existants...\n")
         catalog = load_catalog()
         if not catalog["articles"]:
-            print("Aucun article dans catalog.json. Lancez --migrate d'abord.")
+            print("Aucun article dans catalog.json. Importez des articles d'abord.")
             sys.exit(1)
 
         total = len(catalog["articles"])
