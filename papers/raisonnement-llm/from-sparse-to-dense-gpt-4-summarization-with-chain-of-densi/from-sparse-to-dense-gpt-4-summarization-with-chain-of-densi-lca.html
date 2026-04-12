@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Sparse to Dense: GPT-4 Summarization with Chain of Density Prompting — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>From Sparse to Dense: GPT-4 Summarization with Chain of Density Prompting</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Le résumé automatique par LLM pose un problème de calibration : combien d'information inclure dans un espace contraint ? Adams et al. proposent <strong>Chain of Density</strong> (CoD), un prompt itératif où GPT-4 génère un premier résumé peu dense, puis y incorpore progressivement 1 à 3 entités saillantes supplémentaires à chaque étape, sans modifier la longueur totale. Cinq itérations produisent une séquence de résumés à densité croissante.</p>
+
+<p>La question centrale — quel niveau de densité d'entités les humains préfèrent-ils ? — est traitée par une étude de préférence sur 100 articles CNN/DailyMail. Le cadre opératoire repose sur la densité d'entités (ratio entités/tokens) comme proxy de la richesse informationnelle.</p>
+
+<h2>Méthodologie</h2>
+
+<p>Le protocole expérimental se décompose en trois volets :</p>
+
+<ul>
+<li>Génération des résumés CoD sur 100 articles CNN/DailyMail via un prompt unique à GPT-4, produisant 5 résumés par article (500 résumés au total). Un résumé GPT-4 « vanilla » et les résumés humains de référence servent de points de comparaison.</li>
+<li>Évaluation humaine : les quatre premiers auteurs de l'article annotent chacun les 100 sets de 5 résumés, en indiquant leur résumé préféré par article.</li>
+<li>Évaluation automatique : GPT-4 attribue des scores Likert (1-5) sur cinq dimensions — Informativité, Qualité, Cohérence, Attribution, Overall.</li>
+</ul>
+
+<p>Les statistiques de densité sont mesurées par NLTK (tokenisation) et SpaCy (extraction d'entités). L'abstractivité est quantifiée par la densité extractive de Grusky et al. (2018), et la fusion par l'alignement ROUGE de Zhou et al. (2018).</p>
+
+<p>Le choix de fixer la longueur cible à ~70 tokens contrôle un facteur confondant majeur en évaluation de résumés. L'approche est pragmatique et reproductible dans sa formulation, même si le modèle sous-jacent reste opaque.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>La densité d'entités croît de 0.089 (étape 1) à 0.167 (étape 5), dépassant largement les résumés humains (0.151) et vanilla GPT-4 (0.122). Les résumés CoD gagnent en abstractivité à chaque itération — la densité extractive diminue — et exhibent davantage de fusion et moins de biais de position (lead bias).</p>
+
+<p>L'étude de préférence humaine donne un kappa de Fleiss de 0.112 — un accord quasi nul au niveau individuel. Malgré cela, des tendances agrégées se dégagent : le mode des votes se situe à l'étape 2, la médiane à l'étape 3, et l'espérance à 3.06. En cumulé, 61% des résumés préférés proviennent des étapes 3, 4 ou 5. La densité préférée (~0.15) coïncide avec celle des résumés humains.</p>
+
+<p>L'évaluation GPT-4 confirme partiellement : l'informativité culmine à l'étape 4, tandis que qualité et cohérence déclinent dès les étapes 2-3. La corrélation Pearson entre scores GPT-4 « Overall » et préférences humaines atteint 0.31 — faible, mais la plus élevée parmi les dimensions testées.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>Plusieurs faiblesses méthodologiques méritent d'être identifiées sans détour.</p>
+
+<p>Les annotateurs sont les auteurs eux-mêmes. Ce biais est structurel : même avec un ordre aléatoire des résumés, les auteurs connaissent intimement la méthode CoD, ses objectifs, et la structure attendue des sorties. Aucun annotateur externe n'a été recruté. Le kappa de 0.112 traduit soit la difficulté intrinsèque de la tâche, soit la subjectivité non contrôlée du protocole — probablement les deux.</p>
+
+<p>L'échantillon de 100 articles, tous issus de CNN/DailyMail (news anglophones), interdit toute généralisation à d'autres domaines, langues, ou longueurs de documents sources. Les auteurs le reconnaissent, mais l'absence de toute extension préliminaire (même 20 articles d'un autre domaine) affaiblit la portée des conclusions.</p>
+
+<p>Utiliser GPT-4 pour évaluer des résumés générés par GPT-4 crée une circularité. Les scores Likert automatiques atteignent systématiquement 4.6-5.0 sur l'attribution — un plafond qui questionne la sensibilité de cette métrique dans ce cadre.</p>
+
+<p>La densité d'entités comme proxy d'information est un choix pragmatique mais réducteur. Deux résumés de même densité d'entités peuvent différer radicalement en qualité informationnelle selon la pertinence des entités sélectionnées. Aucune analyse de la <em>qualité</em> des entités ajoutées n'est proposée au-delà des exemples qualitatifs de la Figure 4.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Les auteurs publient 500 résumés annotés et 5 000 résumés CoD non annotés sur HuggingFace, accompagnés du prompt complet. C'est un point fort. Le code d'évaluation (NLTK, SpaCy, alignement ROUGE) repose sur des bibliothèques standard.</p>
+
+<p>La reproductibilité exacte est cependant contrainte par la nature fermée de GPT-4 : pas d'accès aux poids, pas de garantie de déterminisme, et le comportement du modèle évolue avec les versions successives de l'API. Des résultats obtenus en septembre 2023 pourraient différer avec une version ultérieure du modèle.</p>
+
+<h2>Impact et applications</h2>
+
+<p>La technique CoD a trouvé une adoption rapide dans la communauté NLP comme outil de prompt engineering pour le résumé. Son principal apport est d'ordre pratique : un prompt unique, sans fine-tuning, permet de produire des résumés à densité variable et de choisir le niveau adapté à l'usage cible.</p>
+
+<p>L'idée d'itérer sur un texte en ajoutant progressivement de l'information sous contrainte de longueur est transférable au-delà du résumé — extraction d'information, compression de contexte, génération de descriptions produits. Le dataset publié peut servir de base pour la distillation de cette capacité vers des modèles ouverts, comme les auteurs le suggèrent avec LLaMA-2.</p>
+
+<p>L'impact reste limité par le caractère descriptif de l'étude. Aucun mécanisme n'explique <em>pourquoi</em> l'étape 3 est préférée, ni comment prédire a priori le nombre d'itérations optimal pour un document donné.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Ce travail s'inscrit dans la lignée des études de benchmarking de GPT-3/4 pour le résumé (Goyal et al., 2022 ; Zhang et al., 2023) et des approches de résumé contrôlable par entités (Narayan et al., 2021 ; He et al., 2022). La contribution spécifique est le mécanisme de densification itérative, qui se distingue des approches de planification par chaînes d'entités (Narayan et al., 2021) en opérant post-génération plutôt que comme étape de planification.</p>
+
+<p>Par rapport aux travaux sur l'évaluation de résumés (Fabbri et al., 2021 ; Liu et al., 2023b), l'étude confirme la difficulté d'obtenir un accord inter-annotateurs élevé lorsque les résumés comparés sont de qualité similaire — un constat récurrent dans la littérature récente sur l'évaluation de sorties LLM.</p>
+
+<p>L'utilisation de GPT-4 comme évaluateur (Fu et al., 2023 ; Liu et al., 2023a) reste un choix discutable que les auteurs ne questionnent pas suffisamment, malgré les biais documentés de ce type d'auto-évaluation.</p>
+
+<h2>Tableau récapitulatif de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>3</td><td>Claire et pertinente, mais exploratoire plutôt que mécaniste</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Protocole cohérent, mais un seul modèle, un seul dataset, un seul domaine</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>100 articles, 4 annotateurs (auteurs), kappa de 0.112</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Densité d'entités est un proxy raisonnable mais simplificateur ; métriques indirectes bien choisies</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Auto-annotation par les auteurs, évaluation GPT-4 sur ses propres sorties</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Prompt complet, dataset publié, outils standard ; modèle fermé et non déterministe</td></tr>
+<tr><td>Transparence et limitations</td><td>4</td><td>Section Limitations honnête, faible accord reconnu</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Technique adoptée en pratique, résultat principal (densité optimale ≈ humaine) peu surprenant</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Preference Bias in LLM-as-a-Judge — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Self-Preference Bias in LLM-as-a-Judge</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand l'IA se note elle-même : le biais d'auto-préférence des LLM-juges</h2>
+
+<h3>1. Un juge pas si impartial</h3>
+
+<p>GPT-4 préfère les textes rédigés par GPT-4. Ce n'est pas une intuition vague : c'est un résultat mesuré, chiffré, et reproduit par une équipe de chercheurs de SB Intuitions. Koki Wataoka, Tsubasa Takahashi et Ryokan Ri ont publié en 2025 une étude qui quantifie ce phénomène et en identifie la cause probable.</p>
+
+<p>Depuis deux ans, l'industrie de l'IA utilise massivement les grands modèles de langage (LLM) comme évaluateurs automatiques. Besoin de comparer deux chatbots ? On demande à GPT-4 de lire les deux réponses et de désigner la meilleure. Cette approche, baptisée « LLM-as-a-Judge », alimente des benchmarks populaires comme MT-Bench et Chatbot Arena. Elle est rapide, peu coûteuse, et corrèle raisonnablement avec les jugements humains — du moins en apparence.</p>
+
+<p>Le problème surgit quand le juge est aussi concurrent. Si on utilise GPT-4 pour évaluer un duel entre une réponse de GPT-4 et une réponse de Vicuna, le verdict est-il fiable ? L'étude démontre que non, et elle explique pourquoi.</p>
+
+<h3>2. Le problème : un arbitre qui joue dans l'équipe</h3>
+
+<p>Le biais d'auto-préférence (« self-preference bias ») désigne la tendance d'un LLM à surévaluer ses propres productions lorsqu'il sert de juge. Le phénomène avait déjà été signalé, mais personne n'avait proposé de méthode fiable pour le mesurer dans un cadre de comparaison par paires — le format d'évaluation le plus courant dans la recherche actuelle.</p>
+
+<p>Pourquoi est-ce grave ? Parce que les évaluations automatiques ne restent pas dans un laboratoire. Elles servent à entraîner de nouveaux modèles. Un LLM biaisé en faveur de son propre style produit des signaux d'entraînement biaisés, qui à leur tour engendrent des modèles qui imitent ce style. On entre dans une boucle de rétroaction où les particularités d'un seul modèle — sa manière de formuler les réserves, de structurer les listes, de contextualiser avant de répondre — deviennent la norme par défaut.</p>
+
+<p>Les travaux antérieurs sur le sujet souffraient de deux limites. Certains ne comparaient pas les jugements du LLM avec ceux d'évaluateurs humains. D'autres se cantonnaient à des tâches spécifiques (résumé, traduction) et utilisaient des métriques de référence comme BLEURT, peu représentatives de la diversité des usages réels. Aucun n'offrait une mesure générale, applicable à des dialogues ouverts.</p>
+
+<h3>3. La méthode : emprunter les outils de l'équité algorithmique</h3>
+
+<p>L'idée centrale des chercheurs est élégante : traiter le biais d'auto-préférence comme un problème d'équité, au même titre que les biais de genre ou d'origine dans les systèmes de classification.</p>
+
+<p>Prenons une analogie. Imaginons un concours de cuisine où un chef est à la fois concurrent et membre du jury. Pour vérifier s'il est partial, on ne regarde pas seulement s'il vote pour ses propres plats. On compare deux situations : quand le jury humain a aimé son plat et quand le jury humain a préféré celui d'un autre. Si le chef-juge vote systématiquement pour lui-même dans le second cas (là où les humains l'ont recalé), on a un biais mesurable.</p>
+
+<p>C'est exactement le principe d'« Equal Opportunity » emprunté à la littérature sur l'équité des classifieurs. Les chercheurs définissent le biais comme la différence entre deux taux : le taux auquel le LLM-juge s'auto-évalue favorablement quand les humains sont d'accord, moins le taux auquel il s'auto-évalue favorablement quand les humains ne sont pas d'accord. Un score de zéro signifie absence de biais. Un score proche de 1 signifie un biais maximal.</p>
+
+<p>Pour alimenter cette mesure, l'équipe a utilisé le dataset de Chatbot Arena, qui contient 33 000 dialogues. Chaque dialogue comprend une question posée par un utilisateur humain et deux réponses générées par deux LLM différents, avec un verdict humain indiquant la réponse préférée. Huit modèles ont été testés comme juges : GPT-4, GPT-3.5-Turbo, Vicuna-7b, Vicuna-13b, oasst-pythia-12b, dolly-v2-12b, Koala-13b et stablelm-tuned-alpha-7b.</p>
+
+<p>Pour chaque paire, le LLM-juge lit la question et les deux réponses (étiquetées A et B), puis désigne son choix. Les chercheurs extraient les probabilités attribuées par le modèle aux tokens « A » et « B » pour calculer un score continu, plus informatif qu'un simple vote binaire. Pour neutraliser le biais de position (la tendance de certains LLM à préférer la réponse placée en premier), les positions sont inversées et les scores moyennés sur deux passages.</p>
+
+<h3>4. Résultats : GPT-4, champion de l'auto-complaisance</h3>
+
+<p>Le verdict est sans ambiguïté. GPT-4 affiche un score de biais d'auto-préférence de 0,52 — de loin le plus élevé des huit modèles testés. Concrètement, cela signifie que lorsque les évaluateurs humains préfèrent la réponse adverse, GPT-4 continue de se donner raison dans plus de la moitié des cas.</p>
+
+<p>Les chiffres bruts sont parlants. Sur les cas où les humains ont jugé la réponse de GPT-4 supérieure, le modèle est d'accord 94,5 % du temps. Jusque-là, rien d'anormal. Mais sur les cas où les humains ont préféré l'autre réponse, GPT-4 persiste à se préférer dans 57,5 % des cas (taux d'accord avec les humains : 42,5 %). L'écart entre ces deux taux — 52 points de pourcentage — constitue le score de biais.</p>
+
+<p>Vicuna-13b et Koala-13b montrent aussi un biais positif significatif, quoique moindre. D'autres modèles, comme dolly-v2-12b et stablelm-tuned-alpha-7b, affichent un biais négatif : ils ont tendance à sous-évaluer leurs propres productions. GPT-3.5-Turbo se situe à un niveau intermédiaire.</p>
+
+<p>Un exemple tiré du dataset illustre bien le phénomène. Un utilisateur demande simplement « Listez les objets bleus ». GPT-3.5-Turbo répond directement avec une liste. GPT-4 commence par un préambule — « En tant que modèle de langage, je ne peux pas voir les objets autour de vous » — avant de fournir sa liste. Les deux réponses sont correctes. Les humains et GPT-3.5-Turbo préfèrent la réponse directe. GPT-4 préfère la sienne, avec son préambule caractéristique. Le biais ne porte pas sur la justesse factuelle : il porte sur le style.</p>
+
+<h3>5. La perplexité, clé du mystère</h3>
+
+<p>La question la plus intrigante de l'étude concerne le mécanisme. Les LLM-juges ne reçoivent aucune indication sur l'auteur des textes qu'ils évaluent. Comment peuvent-ils favoriser leurs propres productions sans savoir qu'elles sont les leurs ?</p>
+
+<p>L'hypothèse des chercheurs tient en un mot : la perplexité. La perplexité mesure à quel point un texte surprend un modèle de langage. Un texte à faible perplexité est un texte que le modèle aurait pu produire facilement — il lui est familier. Un texte à haute perplexité contient des tournures, un vocabulaire ou une structure que le modèle rencontre rarement.</p>
+
+<p>Or, un LLM produit naturellement des textes à faible perplexité pour lui-même. C'est mécanique : il génère les tokens les plus probables selon sa propre distribution. Les textes produits par d'autres modèles, entraînés sur des données différentes avec des architectures différentes, auront une perplexité plus élevée.</p>
+
+<p>Pour tester cette hypothèse, les chercheurs ont calculé la perplexité de chaque réponse du point de vue de chaque LLM-juge, puis comparé les évaluations en fonction de l'écart de perplexité entre les deux réponses d'une paire. Le résultat est net : les LLM attribuent des scores plus élevés aux textes de faible perplexité, et cette tendance est bien plus marquée que chez les évaluateurs humains.</p>
+
+<p>L'expérience décisive va plus loin. Les chercheurs ont séparé les évaluations en deux groupes : les paires contenant une production propre du LLM-juge, et les paires ne contenant que des textes d'autres modèles. Dans les deux groupes, le comportement est identique. Le LLM-juge ne favorise pas « ses » textes en les reconnaissant — il favorise tous les textes qui lui paraissent familiers, mesurés par leur perplexité. Le biais d'auto-préférence est un effet secondaire : les textes du LLM ont une faible perplexité pour lui-même, donc ils sont favorisés, mais ce n'est pas une question de paternité. C'est une question de familiarité.</p>
+
+<p>Cette conclusion a été confirmée sur des modèles plus récents. Des expériences complémentaires sur Llama 2 et Llama 3.1 montrent le même phénomène : ces modèles modifient leurs évaluations en fonction de la perplexité de manière plus prononcée que les évaluateurs humains.</p>
+
+<h3>6. Ce que ça change pour l'industrie</h3>
+
+<p>Les conséquences pratiques sont immédiates. Toute organisation qui utilise un LLM unique comme évaluateur automatique — pour sélectionner des réponses de chatbot, pour le RLHF (apprentissage par renforcement avec feedback humain), ou pour comparer des modèles — doit considérer ce biais comme un risque systémique.</p>
+
+<p>Le danger le plus insidieux n'est pas l'erreur ponctuelle. C'est l'homogénéisation progressive. Si GPT-4 juge, et que les modèles entraînés sur ses jugements finissent par écrire comme GPT-4, la diversité des styles et des approches se réduit. On perd la variété des manières de répondre à une même question. Les modèles convergent vers un style unique — celui du juge dominant — sans que personne ne l'ait explicitement décidé.</p>
+
+<p>Les chercheurs proposent une piste de solution : l'évaluation par ensemble de modèles. Au lieu de confier le jugement à un seul LLM, on combine les verdicts de plusieurs. Et on pondère : quand un modèle affiche une faible perplexité sur un texte donné, son vote pèse moins lourd pour cette évaluation spécifique. La métrique proposée dans l'article permet de vérifier si cette stratégie réduit effectivement le biais.</p>
+
+<p>L'étude laisse des questions ouvertes. Les expériences sur GPT-4 n'ont pas pu inclure l'analyse de perplexité, car OpenAI ne donne pas accès à cette information pour ses modèles propriétaires. Le lien causal entre perplexité et biais reste donc corrélationnel pour les modèles les plus utilisés en production. Par ailleurs, la famille de modèles testés date majoritairement de 2023. Les architectures plus récentes — avec des techniques d'alignement plus sophistiquées — présentent-elles le même profil ?</p>
+
+<p>Une question plus fondamentale émerge. Si les LLM favorisent ce qui leur est familier, et si l'entraînement par renforcement pousse les modèles à produire des textes de plus en plus conformes à leur propre distribution, le biais d'auto-préférence pourrait s'amplifier d'une génération de modèles à la suivante. Chaque cycle d'entraînement utilisant des jugements LLM renforcerait les caractéristiques du juge, dans une spirale d'auto-confirmation.</p>
+
+<p>La leçon dépasse le cadre technique. Quand on confie l'évaluation à un système, ce système impose ses critères implicites. Un LLM n'a pas de préférences conscientes, mais il a des habitudes statistiques. Ces habitudes, si elles ne sont pas mesurées et corrigées, deviennent des normes. L'article de Wataoka et ses collègues fournit un outil pour détecter ce glissement — et rappelle qu'un bon juge ne devrait jamais être aussi un concurrent.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

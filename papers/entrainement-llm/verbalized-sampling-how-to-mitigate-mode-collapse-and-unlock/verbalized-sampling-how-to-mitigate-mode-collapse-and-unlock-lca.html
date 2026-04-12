@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verbalized Sampling: How to Mitigate Mode Collapse and Unlock LLM Diversity — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Verbalized Sampling: How to Mitigate Mode Collapse and Unlock LLM Diversity</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>L'alignement post-entraînement (RLHF, DPO) réduit la diversité des sorties des LLM — un phénomène appelé mode collapse. Les travaux antérieurs attribuaient ce problème aux algorithmes d'optimisation ou aux modèles de récompense inadéquats. Zhang et al. proposent une explication différente et plus fondamentale : le <strong>biais de typicalité</strong> inscrit dans les données de préférence humaines elles-mêmes. L'hypothèse s'ancre dans des résultats établis de psychologie cognitive — effet de simple exposition, fluence de traitement, congruence aux schémas — selon lesquels les annotateurs humains favorisent systématiquement les textes familiers et prévisibles.</p>
+
+<p>À partir de cette analyse, les auteurs introduisent le Verbalized Sampling (VS), une méthode de prompting qui contourne le mode collapse sans modifier le modèle ni son entraînement. Au lieu de demander une réponse unique (« raconte une blague sur le café »), VS demande au modèle de verbaliser une distribution de réponses avec leurs probabilités respectives (« génère 5 blagues sur le café avec leurs probabilités »).</p>
+
+<h2>Méthodologie</h2>
+
+<h3>Cadre théorique</h3>
+
+<p>La formalisation repose sur le modèle de Bradley-Terry utilisé dans RLHF. La fonction de récompense est décomposée en trois termes : l'utilité réelle de la tâche <em>r<sub>true</sub></em>, un terme de biais de typicalité pondéré par α (le log-likelihood sous le modèle de base), et un bruit. Quand α &gt; 0, la solution analytique de l'objectif RLHF régularisé par KL produit un exposant γ = 1 + α/β &gt; 1 qui aiguise la distribution de référence. Lorsque plusieurs réponses ont une utilité réelle équivalente — cas fréquent en écriture créative — ce biais agit comme départage et concentre la masse sur les complétions les plus typiques.</p>
+
+<h3>Validation empirique du biais</h3>
+
+<p>Sur le dataset HELPSTEER, 6 874 paires de réponses à un même prompt, appariées sur la note de correction, sont comparées via leur log-likelihood sous Llama 3.1 405B Base et GLM 4.5 Base. La régression logistique Bradley-Terry donne α̂ = 0,57 ± 0,07 et 0,65 ± 0,07 respectivement (p &lt; 10⁻¹⁴). Les ratios de cotes indiquent 1,42-1,47× plus de chances qu'une réponse typique soit jugée meilleure, indépendamment de la correction. Quatre datasets supplémentaires (OpenAI TL;DR, UltraFeedback, HelpSteer-v2, Skywork Preference) sur cinq modèles de base confirment un taux de biais systématiquement supérieur à 50 %.</p>
+
+<h3>Protocole expérimental</h3>
+
+<p>Les expériences couvrent quatre catégories de tâches : écriture créative (poèmes, histoires, blagues — 100 prompts chacun, N=30 échantillons), simulation de dialogue (PersuasionForGood, 200 instances de test), QA ouverte (40 questions, N=100 réponses), et génération de données synthétiques (1 000 problèmes mathématiques). Dix modèles sont testés : GPT-4.1, GPT-4.1-mini, Gemini-2.5-Flash/Pro, Claude-3.7-Sonnet, Claude-4-Sonnet, Llama-3.1-70B-Instruct, Qwen3-235B, OpenAI o3, DeepSeek R1.</p>
+
+<p>Toutes les comparaisons respectent un budget de calcul constant (N réponses totales par méthode). Trois variantes de VS sont évaluées : VS-Standard, VS-CoT (avec raisonnement étape par étape), et VS-Multi (multi-tours).</p>
+
+<h2>Résultats principaux</h2>
+
+<p>En écriture créative, VS-Standard augmente la diversité sémantique de 1,6 à 2,1× par rapport au prompting direct. VS-CoT repousse la frontière de Pareto diversité-qualité : la diversité progresse sans dégradation de la qualité. Une étude humaine sur Prolific (30 annotateurs, accord inter-annotateurs de 0,54 à 0,87 selon la tâche) confirme ces gains, avec une amélioration de 25,7 % des scores de diversité humains.</p>
+
+<p>Un résultat émergent se dessine : les modèles plus capables bénéficient davantage de VS. Les gains de diversité des grands modèles (GPT-4.1, Gemini-2.5-Pro) sont 1,5 à 2 fois supérieurs à ceux des petits modèles. Les variantes VS-CoT et VS-Multi compensent la « charge cognitive » — là où le prompting structuré dégrade la qualité des petits modèles, les grands modèles en tirent profit.</p>
+
+<p>En simulation de dialogue sur PersuasionForGood, VS produit des distributions de donations plus proches du comportement humain réel. GPT-4.1 avec VS égale un Llama-3.1-8B fine-tuné spécifiquement pour cette tâche. DeepSeek-R1 le dépasse sur la médiane des donations. La diversité lexicale (Distinct-1/2/3) et sémantique se rapproche des niveaux humains, bien que la lisibilité reste plus élevée que celle des conversations humaines naturelles.</p>
+
+<p>En QA ouverte, la divergence KL entre la distribution des réponses VS et une distribution de référence extraite du corpus RedPajama atteint 0,12 pour Claude-4-Sonnet — contre une divergence nettement plus élevée en prompting direct, qui s'effondre sur 2-3 réponses. La couverture des réponses valides passe de 0,10 (direct) à 0,71 (VS-Multi) sans perte de précision.</p>
+
+<p>Pour la génération de données synthétiques, le fine-tuning sur 1 000 problèmes mathématiques générés par VS-Multi produit une précision moyenne de 37,5 % sur MATH500/OlympiadBench/Minerva Math, contre 30,6 % avec le prompting direct — qui dégrade même la performance par rapport au modèle de base (32,8 %).</p>
+
+<h3>Ablations</h3>
+
+<p>L'ablation sur la température montre que VS est orthogonal au scaling de température : les deux se combinent pour repousser la frontière Pareto. L'ablation sur les étapes de post-entraînement (famille Tulu-3) révèle que le prompting direct perd 76,2 % de la diversité du modèle de base après DPO, contre 33,2 % pour VS. VS permet aussi un réglage continu de la diversité via le seuil de probabilité dans le prompt, sans modifier les paramètres de décodage.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>La formalisation théorique repose sur l'hypothèse de récompenses plates sur un sous-ensemble S de réponses. Cette hypothèse est raisonnable pour les tâches créatives mais moins évidente pour des tâches factuelles à réponse unique. Les auteurs le reconnaissent, et les expériences en commonsense reasoning et sécurité montrent que VS ne dégrade ni la précision factuelle ni la sûreté — mais le cadre théorique ne prédit pas pourquoi.</p>
+
+<p>Le coût computationnel augmente : générer k candidats avec probabilités coûte plus de tokens qu'une réponse unique. Les auteurs contrôlent le budget total N, mais la latence par appel augmente. Ce surcoût n'est pas quantifié précisément.</p>
+
+<p>La dépendance à la capacité du modèle est une limitation réelle. Les petits modèles peinent avec la « charge cognitive » de la verbalisation de probabilités. La solution — utiliser des modèles plus grands — contredit partiellement l'objectif d'accessibilité de la méthode.</p>
+
+<p>L'évaluation de la qualité par Claude-3.7-Sonnet comme juge introduit un biais potentiel : un LLM aligné évalue des sorties conçues pour échapper au mode collapse de l'alignement. Les auteurs ne discutent pas cette circularité. L'étude humaine sur Prolific compense en partie ce problème, mais elle ne porte que sur la diversité, pas sur la qualité.</p>
+
+<p>L'échantillonnage de 100 prompts par tâche créative est modeste. Les intervalles de confiance sont fournis via des t-tests, mais la représentativité thématique des prompts pourrait influencer les résultats.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Le code expérimental est fourni en matériel supplémentaire. Les prompts complets occupent plus de dix pages d'annexe. Les hyperparamètres d'inférence (température, top-p) sont documentés par modèle. L'infrastructure est décrite (cluster 8×H100, APIs officielles ou OpenRouter). L'étude humaine a reçu l'approbation IRB de Northeastern University.</p>
+
+<p>Reproduire l'intégralité des expériences nécessite un accès aux APIs de GPT-4.1, Gemini-2.5, Claude-4-Sonnet, et DeepSeek R1 — un coût non négligeable. Les résultats sur modèles propriétaires ne sont reproductibles qu'avec ces mêmes versions d'API, qui peuvent évoluer.</p>
+
+<h2>Impact et applications</h2>
+
+<p>VS est immédiatement applicable : c'est un changement de prompt, sans entraînement, sans accès aux logits, compatible avec tous les modèles via API. Le réglage de diversité par seuil de probabilité offre un contrôle granulaire absent des méthodes de décodage classiques.</p>
+
+<p>Les applications directes incluent la génération de données synthétiques diversifiées (les gains sur les benchmarks mathématiques le démontrent), la simulation sociale réaliste, et l'écriture créative assistée. Le lien avec l'inférence-time scaling est pertinent : VS pourrait remplacer le repeated sampling naïf, qui souffre précisément du mode collapse identifié ici.</p>
+
+<p>La contribution théorique — le biais de typicalité comme cause fondamentale du mode collapse — a des implications au-delà de VS. Elle suggère que l'amélioration des algorithmes d'alignement (meilleurs modèles de récompense, régularisation KL adaptative) ne suffira pas tant que les données de préférence elles-mêmes porteront ce biais cognitif. Cette perspective déplace le problème du côté de la collecte et de la curation des données.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Les travaux de Padmakumar &amp; He (2024) et West &amp; Potts (2025) ont documenté le mode collapse post-alignement sans en identifier la cause au niveau des données. Xiao et al. (2024) l'attribuaient à l'optimisation KL-régularisée, Chakraborty et al. (2024) à l'inadéquation d'un reward model unique. Zhang et al. complètent ces analyses en amont : même avec un reward model parfait et un algorithme optimal, le biais dans les annotations humaines suffit à produire le mode collapse.</p>
+
+<p>Le prompting par liste (Wang et al., 2023 ; Dubois et al., 2023) est un précurseur direct. VS s'en distingue par l'ajout des probabilités verbalisées, ce qui — selon l'analyse théorique — change le mode de la réponse : d'une liste uniforme vers une approximation de la distribution pré-entraînement. La validation empirique (KL divergence de 0,12 sur les états US) soutient cette distinction, bien que la différence entre « liste » et « distribution avec probabilités » mériterait une analyse plus fine du mécanisme interne.</p>
+
+<p>Par rapport aux méthodes de décodage diversifié (µ-sampling, mirostat, min-p, REAL-sampling), VS opère à un niveau différent : il modifie l'entrée plutôt que la procédure de génération, et les ablations montrent que les deux approches se combinent. Cette orthogonalité renforce la thèse que le mode collapse a des causes multiples — algorithmiques et liées aux données — qui appellent des remèdes complémentaires.</p>
+
+<h2>Tableau récapitulatif de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Hypothèse originale et clairement formulée, ancrée dans la psychologie cognitive</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Quatre catégories de tâches, dix modèles, ablations multiples ; quelques hypothèses théoriques simplificatrices</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>100 prompts par tâche créative, 200 dialogues de test ; suffisant pour les tendances, modeste pour la généralisation</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Combinaison de métriques automatiques établies et d'évaluation humaine ; le LLM-as-judge introduit un biais circulaire potentiel</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Budget de calcul contrôlé et modèles multiples ; circularité du juge LLM non discutée</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code, prompts et paramètres fournis ; dépendance aux APIs propriétaires</td></tr>
+<tr><td>Transparence et limitations</td><td>4</td><td>Section limitations honnête sur le coût et la dépendance au scale ; éthique avec approbation IRB</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Perspective data-centric originale sur le mode collapse, solution pratique et immédiatement déployable</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

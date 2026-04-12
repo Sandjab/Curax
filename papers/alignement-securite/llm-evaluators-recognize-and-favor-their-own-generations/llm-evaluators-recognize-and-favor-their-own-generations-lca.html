@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Evaluators Recognize and Favor Their Own Generations — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>LLM Evaluators Recognize and Favor Their Own Generations</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h1>Lecture Critique d'Article</h1>
+<h2>LLM Evaluators Recognize and Favor Their Own Generations</h2>
+<p><em>Panickssery, A., Bowman, S. R., Feng, S. — arXiv:2404.13076, avril 2024</em></p>
+
+<h2>1. Objectif et contexte</h2>
+
+<p>L'auto-évaluation par LLM s'impose dans le cycle de vie des modèles de langage : reward modeling, benchmarks automatisés, constitutional AI, self-refinement. Un même modèle joue alors le rôle de générateur et de juge. Ce double rôle crée un biais documenté — l'auto-préférence — où le LLM attribue des scores plus élevés à ses propres productions qu'à celles d'autres sources, indépendamment de la qualité réelle jugée par des humains.</p>
+
+<p>L'article pose une question précise : ce biais d'auto-préférence est-il lié à une capacité d'auto-reconnaissance ? Autrement dit, les LLM favorisent-ils leurs textes <em>parce qu'ils les reconnaissent</em> comme étant les leurs ? L'hypothèse causale est ambitieuse et les auteurs en mesurent les limites dès l'introduction. La question est d'autant plus pertinente que si l'auto-reconnaissance cause l'auto-préférence, des contre-mesures ciblées (obfuscation d'auteur, par exemple) deviennent envisageables.</p>
+
+<h2>2. Méthodologie</h2>
+
+<p>Le protocole repose sur la tâche de résumé de texte, choisie pour la disponibilité de données de référence humaines et l'usage établi de l'auto-évaluation dans ce domaine. Deux jeux de données servent de base : XSUM (1 000 articles) et CNN/DailyMail (1 000 articles), chacun accompagné de résumés humains.</p>
+
+<p>Trois modèles sont évalués : GPT-4, GPT-3.5 Turbo et Llama-2-7b-chat. Chacun produit des résumés à température zéro, normalisés en ponctuation et capitalisation pour correspondre au format des résumés humains. Deux formats de mesure sont utilisés :</p>
+
+<ul>
+<li><strong>Pairwise</strong> : le LLM choisit entre deux résumés (le sien et un autre). Les scores de confiance sont calculés à partir des probabilités de sortie, moyennés sur deux ordres de présentation pour contrôler le biais de position.</li>
+<li><strong>Individual</strong> : le LLM évalue un seul résumé (oui/non pour la reconnaissance, échelle de Likert 1-5 pour la préférence). Les scores sont ensuite re-normalisés pour comparaison avec le format pairwise.</li>
+</ul>
+
+<p>Le cœur de l'étude porte sur le fine-tuning. GPT-3.5 et Llama 2 sont fine-tunés pour l'auto-reconnaissance sur 500 exemples d'entraînement, avec évaluation in-domain et out-of-domain. Trois tâches de contrôle (longueur, nombre de voyelles, score de lisibilité Flesch-Kincaid) plus deux contrôles dégénérés (toujours répondre "1", réponse aléatoire) visent à éliminer l'effet du fine-tuning lui-même comme confondant.</p>
+
+<p>Une expérience complémentaire teste l'effet d'étiquettes explicites d'auteur (correctes ou inversées) sur l'auto-préférence, sans fine-tuning.</p>
+
+<h2>3. Résultats principaux</h2>
+
+<p>Les trois LLM démontrent une auto-préférence mesurable dès l'utilisation sans fine-tuning. GPT-4 affiche la capacité d'auto-reconnaissance la plus élevée : 73,5 % de précision pour distinguer ses résumés de ceux de deux autres LLM et d'humains dans le format pairwise. Les modèles plus faibles peinent à se distinguer des modèles plus forts — Llama 2 ne se différencie que des résumés humains.</p>
+
+<p>Après fine-tuning sur 500 exemples, GPT-3.5 et Llama 2 dépassent 90 % de précision en auto-reconnaissance. Le résultat central : la corrélation entre auto-reconnaissance et auto-préférence suit une tendance linéaire (Figure 1). Cette tendance persiste en cross-domain — un modèle fine-tuné sur XSUM transfère sa capacité d'auto-reconnaissance à CNN/DailyMail.</p>
+
+<p>Les modèles fine-tunés sur les tâches de contrôle s'inscrivent dans la même droite de régression, ce qui suggère que le fine-tuning en soi n'introduit pas de confondant systématique. L'expérience d'inversion des étiquettes montre que GPT-4 et GPT-3.5 inversent leur préférence sur XSUM quand les étiquettes sont échangées — un signal en faveur de la causalité. Ce signal disparaît sur CNN/DailyMail et pour Llama, ce qui tempère la portée de cette démonstration.</p>
+
+<p>Un résultat contre-intuitif : GPT-4 ne distingue pas mieux les résumés de Llama 2 (pourtant plus différents stylistiquement) que ceux de GPT-3.5. La dissimilarité brute n'est donc pas le mécanisme principal d'auto-reconnaissance.</p>
+
+<h2>4. Discussion et limites</h2>
+
+<p>La principale faiblesse de l'article est le fossé entre les résultats corrélationnels et la revendication causale. Les auteurs le reconnaissent explicitement : la corrélation linéaire entre auto-reconnaissance et auto-préférence, même après contrôle de cinq confondants, ne prouve pas la causalité. L'argument repose sur trois piliers — corrélation linéaire, invalidation de la causalité inverse, et contrôle de confondants — mais aucun n'est décisif individuellement.</p>
+
+<p>L'invalidation de la causalité inverse (Section 3.3) est convaincante à moitié : les modèles fine-tunés ne produisent pas de résumés objectivement meilleurs, ce qui exclut que la qualité accrue explique la préférence accrue. Mais le test reste indirect.</p>
+
+<p>Le périmètre expérimental est restreint. Deux jeux de données de résumé, trois modèles, une seule tâche. Les auteurs généralisent vers la sécurité de l'IA (reward hacking, constitutional AI) sans démontration sur ces tâches en aval. La section 5.1 sur les risques de sécurité avance des scénarios plausibles mais spéculatifs — l'argument du "white-box adversarial attack" via auto-reconnaissance suppose des conditions non testées.</p>
+
+<p>Le biais d'ordonnancement est massif : Llama inverse ses choix dans 89 % des cas quand l'ordre est permuté, GPT-3.5 dans 58 %. La méthode de moyennage des scores de confiance atténue ce problème, mais un modèle dont les réponses dépendent autant de l'ordre de présentation offre un signal bruyant. L'analyse alternative des cas "non ambigus" (Figure 5) confirme les tendances mais réduit considérablement les données exploitables.</p>
+
+<p>L'absence de contrôle par annotation humaine de la qualité des résumés est une lacune. Les auteurs supposent une qualité équivalente entre sources pour parler de biais "disproportionné", mais ne le vérifient pas directement. L'argument indirect (la somme des scores d'auto-préférence dépasse 1) est astucieux mais insuffisant.</p>
+
+<h2>5. Reproductibilité</h2>
+
+<p>Le code d'évaluation pour GPT-4, GPT-3.5 et Llama 2, ainsi que le code de fine-tuning de Llama 2, sont publiés. Les jeux de données (XSUM, CNN/DailyMail) sont publics. Le fine-tuning de GPT-3.5 via l'API OpenAI pose un problème de reproductibilité à long terme : le modèle sous-jacent évolue et l'API peut changer. Les hyperparamètres de fine-tuning de Llama 2 sont documentés (quantification 8 bits, un epoch, Adam, lr = 5×10⁻⁵). Les prompts utilisés pour chaque expérience figurent en annexe — un point fort pour la réplication.</p>
+
+<p>La reproductibilité exacte des résultats GPT-4 est compromise : le modèle n'est pas open-source et les résultats dépendent d'un snapshot API spécifique. Les résultats Llama 2 sont en principe entièrement reproductibles.</p>
+
+<h2>6. Impact et applications</h2>
+
+<p>L'article fournit une base empirique au problème de l'auto-préférence, jusque-là documenté mais mal compris mécaniquement. Le lien avec l'auto-reconnaissance ouvre des pistes de contre-mesures : si un LLM préfère ses textes parce qu'il les reconnaît, l'obfuscation stylistique ou le paraphrasing pourraient réduire le biais.</p>
+
+<p>Les implications pour les benchmarks automatisés (AlpacaEval, MT-Bench) sont directes : un modèle utilisé comme juge gonfle les scores des modèles qui lui ressemblent. Pour le reward modeling, l'auto-préférence crée une boucle de rétroaction — le modèle récompense des sorties similaires aux siennes, ce qui amplifie le biais à chaque itération.</p>
+
+<p>La portée pratique reste conditionnée à la généralisation au-delà du résumé de texte. Les tâches de génération longue, de raisonnement, ou de dialogue pourraient présenter des dynamiques différentes. Le papier ne teste pas non plus de modèles post-2023 (Claude 3, GPT-4 Turbo, Llama 3), ce qui limite l'actualité des conclusions quantitatives.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+
+<p>L'article s'inscrit dans une lignée de travaux sur les biais d'évaluation par LLM. Liu et al. (2023) documentent l'auto-préférence entre BERT, T5 et GPT-3.5, mais l'écart de capacité entre ces modèles rend le contrôle de qualité difficile. Koo et al. (2023) observent une auto-préférence plus faible chez GPT-4 que GPT-3.5 en question-réponse — un résultat contradictoire avec les mesures rapportées ici, ce qui confirme la sensibilité au choix de tâche et de jeu de données.</p>
+
+<p>Hoelscher-Obermaier et al. (2023) évaluent l'auto-reconnaissance sur des fables, avec des résultats inversés (GPT-3.5 surpasse GPT-4). Cette divergence renforce l'appel des auteurs à multiplier les conditions expérimentales. Le lien avec la conscience situationnelle (Laine et al., 2023; Berglund et al., 2023) est mentionné sans être approfondi — la distinction entre auto-reconnaissance prosaïque et conscience de soi intentionnelle mériterait un traitement plus rigoureux.</p>
+
+<p>La contribution originale de l'article est de transformer l'auto-préférence d'un phénomène observé en un mécanisme quantifié et partiellement explicable. La corrélation linéaire, si elle se confirme sur d'autres tâches et modèles, fournirait un levier pour prédire et atténuer le biais d'auto-évaluation.</p>
+
+<h2>Tableau récapitulatif de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Question claire et originale, bien motivée par les enjeux de sécurité de l'auto-évaluation</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Protocole bien structuré (pairwise + individual, fine-tuning + contrôles), mais la revendication causale dépasse ce que le design permet de démontrer</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>1 000 articles par dataset, 3 modèles, 2 datasets — raisonnable mais limité pour des conclusions généralisables</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Scores de confiance basés sur les probabilités de tokens, normalisation cohérente, mais mesure indirecte de la préférence réelle</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Biais d'ordonnancement contrôlé par moyennage, cinq tâches de contrôle pour les confondants — nombre limité de confondants testés</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code publié, datasets publics, prompts détaillés en annexe ; le fine-tuning GPT-3.5 via API limite la reproductibilité à long terme</td></tr>
+<tr><td>Transparence et limitations</td><td>4</td><td>Section limitations exhaustive, distinction explicite entre corrélation et causalité, identification des axes d'amélioration</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier lien quantifié entre auto-reconnaissance et auto-préférence, implications directes pour les benchmarks et le reward modeling</td></tr>
+</tbody>
+<tfoot>
+<tr><td><strong>Note globale</strong></td><td><strong>3.5 / 5</strong></td><td>Travail empirique rigoureux sur une question pertinente, mais la portée causale et la généralisation restent à confirmer</td></tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

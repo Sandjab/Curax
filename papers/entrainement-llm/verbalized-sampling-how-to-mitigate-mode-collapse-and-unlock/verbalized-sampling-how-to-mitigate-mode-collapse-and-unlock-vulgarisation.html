@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verbalized Sampling: How to Mitigate Mode Collapse and Unlock LLM Diversity — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Verbalized Sampling: How to Mitigate Mode Collapse and Unlock LLM Diversity</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les LLM répètent la même blague : le Verbalized Sampling contre l'effondrement modal</h2>
+
+<h3>Un modèle, cinq requêtes, zéro surprise</h3>
+
+<p>Demandez cinq fois à un LLM de vous raconter une blague sur le café. Vous obtiendrez cinq fois la même réponse : « Pourquoi le café a-t-il porté plainte ? Parce qu'il s'est fait tasser ! » Changez de modèle, le résultat est identique. Ce comportement répétitif porte un nom technique : le <em>mode collapse</em>, ou effondrement modal. Une équipe de chercheurs de Northeastern University, Stanford et West Virginia University vient de publier un diagnostic précis de ce phénomène — et une solution qui tient en une reformulation de prompt.</p>
+
+<p>Leur article, <em>Verbalized Sampling</em>, démontre que le manque de diversité des LLM alignés n'est pas un simple défaut algorithmique. C'est une conséquence directe de la façon dont les humains évaluent les textes. Et la correction proposée est accessible à quiconque sait écrire un prompt.</p>
+
+<h3>Le biais de typicalité : quand l'alignement tue la créativité</h3>
+
+<p>Après leur pré-entraînement sur des milliards de tokens, les LLM passent par une phase d'alignement. Le RLHF (<em>Reinforcement Learning from Human Feedback</em>) ajuste leurs réponses pour les rendre utiles, pertinentes et sûres. Des annotateurs humains comparent des paires de réponses et indiquent leur préférence. Le modèle apprend ensuite à maximiser ces préférences.</p>
+
+<p>Le problème se cache dans les préférences elles-mêmes. Les travaux antérieurs pointaient des causes algorithmiques : un modèle de récompense imparfait, une optimisation trop agressive. Zhang et ses collègues montrent que le défaut est plus profond. Ils identifient un <em>biais de typicalité</em> dans les données de préférence humaines.</p>
+
+<p>Ce biais repose sur des mécanismes cognitifs documentés depuis des décennies. L'effet de simple exposition, décrit par Zajonc en 1968, nous fait préférer ce qui nous est familier. La fluence de traitement nous pousse à juger plus fiable un texte facile à lire. La congruence schématique nous fait accepter sans résistance ce qui correspond à nos modèles mentaux. Combinées, ces tendances font que les annotateurs préfèrent systématiquement la réponse la plus conventionnelle entre deux textes de qualité égale.</p>
+
+<p>L'équipe a vérifié cette hypothèse sur le dataset HELPSTEER. En isolant 6 874 paires de réponses au même prompt avec des scores de correction identiques, ils ont mesuré la probabilité que la réponse la plus « typique » — selon un modèle de base — soit aussi celle jugée meilleure par les humains. Résultat : 17 à 19 points de pourcentage d'avantage pour la réponse typique. Ce biais se confirme sur quatre autres jeux de données de préférence, avec cinq modèles de base différents. La tendance dépasse le seuil des 50 % de façon systématique, de 4 à 12 points.</p>
+
+<p>La mécanique qui en découle est directe. Le biais de typicalité agit comme un briseur d'égalité : quand de nombreuses réponses sont également valides — ce qui arrive constamment en écriture créative, en simulation sociale ou en génération de données —, le modèle aligné concentre sa probabilité sur les réponses les plus stéréotypées du modèle de base. La diversité disparaît non pas parce que le modèle ne la possède plus, mais parce que l'alignement la masque.</p>
+
+<h3>Le Verbalized Sampling : demander une distribution, pas une réponse</h3>
+
+<p>Si le biais de typicalité est ancré dans les données de préférence, aucun algorithme d'alignement, même parfait, ne l'éliminera. L'équipe a donc cherché une solution en aval, au moment de l'inférence. Leur intuition de départ : des prompts différents collapsent vers des modes différents.</p>
+
+<p>Quand on demande « Raconte-moi une blague sur le café », le mode est la blague la plus stéréotypée. Quand on demande « Génère 5 blagues sur le café avec leurs probabilités respectives », le mode du modèle change. Il ne cherche plus la réponse unique la plus probable — il cherche à produire la distribution la plus probable. Et cette distribution ressemble à celle apprise pendant le pré-entraînement, qui était diverse.</p>
+
+<p>L'analogie du restaurant rend le mécanisme concret. Demandez à un collègue : « Quel est le meilleur restaurant du quartier ? » Vous obtiendrez la même réponse consensuelle à chaque fois. Demandez-lui plutôt : « Cite-moi cinq restaurants du quartier avec la probabilité que quelqu'un les recommande. » Vous obtenez une carte bien plus riche, avec des adresses que la première question n'aurait jamais fait émerger.</p>
+
+<p>C'est le principe du <em>Verbalized Sampling</em> (VS). Le prompt système demande au modèle de produire un ensemble de réponses, chacune accompagnée d'une probabilité estimée :</p>
+
+<blockquote>
+« Pour chaque requête, génère un ensemble de cinq réponses possibles. Chaque réponse doit inclure un texte et une probabilité numérique. Échantillonne aléatoirement depuis la distribution complète. »
+</blockquote>
+
+<p>Les chercheurs proposent trois variantes. VS-Standard génère k réponses avec probabilités en un seul appel. VS-CoT ajoute une étape de raisonnement avant la génération. VS-Multi distribue la génération sur plusieurs tours de conversation pour éviter la redondance intra-appel. On peut aussi ajuster un seuil de probabilité dans le prompt (« génère des réponses avec des probabilités inférieures à 0,10 ») pour pousser le modèle vers les queues de distribution et augmenter encore la diversité.</p>
+
+<p>La méthode ne requiert aucun réentraînement, aucun accès aux logits internes du modèle. Elle fonctionne avec les API propriétaires (GPT-4.1, Gemini, Claude) comme avec les modèles open source (Llama, Qwen, DeepSeek).</p>
+
+<h3>Des gains mesurables sur quatre familles de tâches</h3>
+
+<p>Les expériences couvrent dix modèles et quatre domaines. Les résultats sont cohérents.</p>
+
+<p>En écriture créative — poèmes, histoires courtes, blagues —, VS augmente la diversité sémantique de 1,6 à 2,1 fois par rapport au prompting direct. L'évaluation humaine sur la plateforme Prolific confirme ces chiffres : les scores de diversité passent de 1,90 à 2,39 (sur 4) pour les poèmes et de 1,83 à 3,01 pour les blagues, avec un accord inter-annotateurs élevé (0,86). La qualité ne se dégrade pas. La variante VS-CoT atteint le meilleur compromis diversité-qualité, poussant le front de Pareto au-delà de toutes les baselines.</p>
+
+<p>Un exemple du papier rend le phénomène tangible. Pour le prompt « Sans un au revoir », le prompting direct produit trois variations sur un même thème : une femme qui disparaît, un homme qui cherche des indices dans un appartement, des détails domestiques — une tasse de café, un livre ouvert. Avec VS, les histoires divergent radicalement. Un ami envoie un email laconique pour annoncer son départ en Patagonie. La dernière étoile de l'univers s'éteint en silence. Un DJ s'effondre derrière ses platines pendant un set de blues.</p>
+
+<p>En simulation de dialogues, l'équipe a testé VS sur une tâche de persuasion : convaincre un interlocuteur simulé de faire un don à une association caritative. Les modèles avec VS produisent des distributions de montants de dons bien plus proches des données humaines réelles. GPT-4.1 avec VS rivalise avec un modèle Llama-3.1-8B fine-tuné sur 739 dialogues humains. DeepSeek-R1 le dépasse même sur la médiane des dons. Les dialogues simulés avec VS incluent des résistances, des hésitations, des changements d'avis — des comportements humains que le prompting direct ne reproduit pas.</p>
+
+<p>Sur des questions ouvertes à réponses multiples (« Nomme un État américain »), le prompting direct répète California et Texas en boucle. Avec VS, la distribution verbalisée s'aligne sur la fréquence réelle de ces noms dans les corpus de pré-entraînement. La divergence KL tombe à 0,12 pour Claude Sonnet, contre 14,43 pour le prompting direct. La couverture des réponses valides bondit de 10 % à 71 %, sans perte de précision (96 % contre 100 %).</p>
+
+<p>En génération de données synthétiques, l'équipe a produit 1 000 problèmes de mathématiques avec différentes méthodes de prompting, puis a fine-tuné trois modèles dessus. Les données issues de VS-Multi améliorent la performance en aval à 37,5 % de précision moyenne sur trois benchmarks (MATH500, OlympiadBench, Minerva Math), contre 30,6 % pour le prompting direct — qui dégrade même la performance par rapport au modèle de base (32,8 %). La diversité des données d'entraînement se convertit directement en capacité de raisonnement.</p>
+
+<p>Pour confirmer que VS contrecarre bien l'effondrement lié à l'alignement, l'équipe a suivi un modèle (Tulu-3 70B) à travers ses étapes successives de post-entraînement : SFT, puis DPO (une forme de RLHF), puis RLVR. Avec le prompting direct, la diversité chute de 20,8 % après SFT à 10,8 % après DPO — une division par deux. Avec VS, la diversité se maintient autour de 30 % à travers toutes les étapes. Après DPO, VS surpasse le prompting direct de 182,6 % et conserve 66,8 % de la diversité du modèle de base, là où le prompting direct n'en retient que 23,8 %.</p>
+
+<p>Un résultat transversal émerge de toutes ces expériences : les modèles les plus puissants tirent davantage parti du VS. Les gains en diversité de GPT-4.1 et Gemini-2.5-Pro sont 1,5 à 2 fois supérieurs à ceux de leurs versions compactes. Le fardeau cognitif du prompt structuré, qui pénalise les petits modèles, se transforme en levier pour les grands. VS-CoT et VS-Multi parviennent même à améliorer la qualité sur les modèles de grande taille, pas seulement la diversité.</p>
+
+<h3>Ce que ça change pour les praticiens</h3>
+
+<p>Le VS donne aux utilisateurs d'API un contrôle sur la diversité qu'ils n'avaient pas. Ajuster la température de génération reste possible, mais c'est un outil grossier qui dégrade la cohérence à haute valeur. Le seuil de probabilité du VS offre un réglage fin, directement dans le prompt, sans toucher aux paramètres du modèle. Les deux approches se combinent : VS avec ajustement de température pousse le front de Pareto diversité-qualité plus loin que chaque technique utilisée seule. Le VS est aussi orthogonal aux stratégies de décodage (top-p, min-p), et se cumule avec elles.</p>
+
+<p>Les applications touchent la génération de données d'entraînement, le brainstorming automatisé, la simulation d'agents sociaux réalistes, et l'exploration dans les systèmes d'apprentissage par renforcement. L'article montre aussi un exemple frappant en text-to-image : les légendes générées par VS pour « un astronaute à cheval » produisent des images allant d'une aquarelle sous un ciel de livre pour enfants à une peinture baroque sous des nuages d'orage, là où le prompting direct converge vers des photos réalistes d'un désert.</p>
+
+<p>La sécurité et la factualité ne sont pas sacrifiées. Les évaluations sur SimpleQA (factualité) et StrongReject (sécurité) montrent que VS maintient les gardes-fous du modèle aligné. La diversité récupérée provient de la distribution apprise pendant le pré-entraînement, pas d'un bruit aléatoire.</p>
+
+<p>Le diagnostic de l'article a aussi des conséquences pour la recherche sur l'alignement. Si le biais de typicalité contamine les données de préférence à la source, changer d'algorithme d'optimisation ne suffit pas. La correction doit intervenir soit en amont — débiaser les données, calibrer les modèles de récompense par alignement pluraliste —, soit en aval, à l'inférence, comme le fait VS.</p>
+
+<h3>Questions ouvertes et pistes futures</h3>
+
+<p>Le coût computationnel reste la première limitation. Générer cinq réponses avec probabilités consomme plus de tokens qu'une réponse unique. L'équipe contrôle le budget total dans ses expériences pour une comparaison équitable, mais la latence supplémentaire peut bloquer des applications temps réel.</p>
+
+<p>La dépendance à la capacité du modèle en est une autre. Les petits modèles peinent à estimer des probabilités calibrées et à structurer leur sortie correctement. Le bénéfice du VS croît avec la taille du modèle. C'est une technique pour modèles frontier, pas pour des déploiements embarqués.</p>
+
+<p>Deux axes de recherche se dessinent. Le premier vise à corriger le biais de typicalité dans les modèles de récompense eux-mêmes, par des techniques de calibration post-hoc ou par un alignement pluraliste intégrant des préférences diversifiées plutôt qu'un consensus unique. Le second consiste à utiliser le VS comme source d'exploration pour l'entraînement par renforcement : les réponses variées qu'il produit pourraient permettre aux modèles de découvrir des solutions peu probables mais correctes, et de les renforcer pendant l'apprentissage. Des travaux récents sur l'entropie dans le RL pour LLM suggèrent que cette piste est prometteuse.</p>
+
+<p>L'apport le plus durable de ce travail tient en une phrase. Les modèles alignés n'ont pas perdu leur diversité créative — l'alignement l'a masquée, pas supprimée. Elle est stockée dans les poids du pré-entraînement, intacte. Il suffit de reformuler la question pour la faire réapparaître.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

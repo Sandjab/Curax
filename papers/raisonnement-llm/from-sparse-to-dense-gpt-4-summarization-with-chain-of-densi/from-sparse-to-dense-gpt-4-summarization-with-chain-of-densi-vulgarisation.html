@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Sparse to Dense: GPT-4 Summarization with Chain of Density Prompting — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>From Sparse to Dense: GPT-4 Summarization with Chain of Density Prompting</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Un résumé de 70 mots peut être creux ou bourré d'informations. La différence ne tient pas au nombre de mots, mais à leur densité — combien de faits utiles chaque mot transporte. Les grands modèles de langage comme GPT-4 produisent des résumés fluides, grammaticalement irréprochables, mais souvent trop vagues. L'équipe de Griffin Adams (Columbia University) et Alexander Fabbri (Salesforce AI) a mis au point une technique de prompt appelée «&nbsp;Chain of Density&nbsp;» (CoD) pour forcer GPT-4 à produire des résumés de plus en plus denses, sans jamais allonger le texte. Leur question&nbsp;: jusqu'où peut-on compresser l'information avant que le résumé devienne illisible&nbsp;?</p>
+
+<h2>Le problème&nbsp;: trouver le bon dosage</h2>
+
+<p>Résumer un texte, c'est comprimer de l'information. Mais la compression a deux extrêmes. D'un côté, le résumé trop lâche&nbsp;: «&nbsp;Cet article traite d'un incident lors d'un Grand Prix.&nbsp;» Correct, mais inutile. De l'autre, le résumé trop serré, qui empile noms propres, chiffres et détails au point de devenir un télégramme inintelligible.</p>
+
+<p>Les humains qui rédigent des résumés — journalistes, documentalistes, chercheurs — naviguent instinctivement entre ces deux pôles. Ils savent quand un détail supplémentaire enrichit le texte et quand il l'alourdit. Les LLM, eux, n'ont pas ce calibrage fin. Quand on demande à GPT-4 de «&nbsp;résumer en 70 mots&nbsp;», il produit un texte correct mais en dessous de la densité informationnelle d'un résumé humain.</p>
+
+<p>Les chercheurs ont mesuré cette densité avec un indicateur simple&nbsp;: le ratio entités/tokens. Une «&nbsp;entité&nbsp;» désigne ici tout élément informatif spécifique — un nom de personne, un lieu, un chiffre, un événement. Un résumé humain typique d'un article CNN/DailyMail contient environ 8,8 entités pour 60 mots, soit une densité de 0,151. Un résumé GPT-4 standard atteint 8,5 entités pour 70 mots — densité de 0,122. L'écart est net&nbsp;: le résumé GPT-4 utilise plus de mots pour dire moins de choses.</p>
+
+<h2>La méthode&nbsp;: densifier par itérations</h2>
+
+<p>Le principe de Chain of Density ressemble à la réécriture d'un SMS quand on dépasse la limite de caractères. On commence par une version longue et vague, puis on remplace les formulations creuses par des faits concrets, sans jamais dépasser le budget de mots initial.</p>
+
+<p>Le prompt CoD demande à GPT-4 de répéter cinq fois un cycle en deux étapes. D'abord, identifier une à trois entités saillantes du texte source qui manquent dans le résumé précédent. Ensuite, réécrire le résumé en intégrant ces entités, en gardant exactement le même nombre de mots. Pour faire de la place, le modèle doit fusionner des phrases, comprimer des tournures, supprimer les formules vides.</p>
+
+<p>Le premier résumé est volontairement verbeux — environ 80 mots de prose diluée, du type «&nbsp;cet article traite de…&nbsp;». C'est le point de départ. À chaque itération, le texte se resserre. Les chevilles comme «&nbsp;cet article discute&nbsp;» disparaissent, remplacées par des faits. Les phrases simples fusionnent en phrases composées qui transportent plus d'information par syllabe.</p>
+
+<p>Prenons l'exemple donné par les auteurs, un article sur un accrochage entre Jenson Button et Pastor Maldonado lors du Grand Prix de Chine. Le premier résumé mentionne juste deux pilotes et un incident. Au cinquième passage, le même espace de 70 mots contient les noms des écuries (McLaren, Lotus), le tour de l'incident (tour 49), la pénalité exacte (cinq secondes plus deux points de superlicence), les conséquences pour les autres pilotes (Fernando Alonso gagne deux places, Button se fait doubler par Nico Rosberg), et même les écuries des pilotes secondaires. Le texte reste lisible, mais chaque mot porte une information.</p>
+
+<p>Un détail du prompt mérite attention. Les entités «&nbsp;manquantes&nbsp;» doivent respecter cinq critères&nbsp;: être pertinentes pour le sujet principal, spécifiques (cinq mots ou moins), nouvelles (absentes du résumé précédent), fidèles au texte source, et pouvoir provenir de n'importe quelle partie de l'article. Ce dernier point combat un biais connu des modèles de résumé&nbsp;: la tendance à surreprésenter le début du texte, ce que la littérature appelle le <em>lead bias</em>.</p>
+
+<p>Le format de sortie est un JSON contenant cinq dictionnaires, chacun avec les entités ajoutées et le nouveau résumé. GPT-4 produit les cinq versions en un seul appel, ce qui rend la méthode économe en requêtes API.</p>
+
+<h2>Résultats&nbsp;: le point de bascule se situe au milieu</h2>
+
+<p>Les chercheurs ont testé CoD sur 100 articles du jeu de données CNN/DailyMail. Les statistiques confirment que le mécanisme fonctionne comme prévu. La densité d'entités passe de 0,089 (étape 1) à 0,167 (étape 5). Le nombre de tokens reste stable autour de 70 — il baisse même légèrement à l'étape 2, quand les formulations creuses du premier jet sont élaguées.</p>
+
+<p>Trois effets indirects apparaissent au fil des itérations. Les résumés deviennent plus abstractifs — ils reformulent davantage au lieu de copier des fragments du texte source. Le taux de fusion augmente&nbsp;: chaque phrase du résumé synthétise un nombre croissant de phrases sources. Et le biais de début d'article diminue — les entités ajoutées aux étapes tardives proviennent du milieu ou de la fin de l'article, pas seulement des premiers paragraphes.</p>
+
+<p>La question centrale&nbsp;: quel niveau de densité les humains préfèrent-ils&nbsp;? Les quatre premiers auteurs de l'article ont évalué les 500 résumés (5 étapes × 100 articles) en classant leur version favorite. 61&nbsp;% des résumés préférés correspondent aux étapes 3, 4 ou 5. L'étape médiane préférée est la 3, avec une densité moyenne de 0,148 — quasi identique à celle des résumés humains (0,151) et nettement supérieure à celle d'un prompt GPT-4 standard (0,122).</p>
+
+<p>L'accord entre annotateurs est faible (kappa de Fleiss à 0,112). Ce n'est pas surprenant&nbsp;: les différences entre résumés successifs sont subtiles, et la notion de «&nbsp;bon résumé&nbsp;» reste subjective. Mais la tendance agrégée est claire. Les résumés trop creux (étape 1, 8,3&nbsp;% des votes) et les résumés les plus denses (étape 5, 15,5&nbsp;%) sont les moins choisis. Le pic se situe aux étapes 2 et 3.</p>
+
+<p>GPT-4, utilisé comme évaluateur automatique sur cinq dimensions (informativité, qualité, cohérence, attributabilité, évaluation globale), confirme ce schéma avec des nuances. L'informativité grimpe jusqu'à l'étape 4. La cohérence, elle, chute dès l'étape 2. La qualité rédactionnelle baisse à partir de l'étape 3. Le score global culmine à l'étape 4, tiré par l'informativité malgré la perte de fluidité.</p>
+
+<p>L'analyse qualitative illustre ce compromis avec deux exemples côte à côte. Dans le premier, l'ajout du nom «&nbsp;Liverpool&nbsp;» et des buteurs enrichit le résumé sans nuire à sa lisibilité — la compression se fait par des reformulations naturelles (« a potential route back into the game&nbsp;» devient «&nbsp;a comeback&nbsp;»). Dans le second, l'intégration forcée de détails sur une cyberattaque contre TV5Monde produit une phrase maladroite où les entités s'entassent sans articulation logique. La densification a un rendement décroissant&nbsp;: chaque entité supplémentaire coûte plus cher en lisibilité que la précédente.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Pour quiconque utilise des LLM en production, cette recherche fournit un levier concret. Un simple prompt «&nbsp;résumez ce texte&nbsp;» produit des résumés sous-denses. La technique CoD permet de calibrer la densité informationnelle sans multiplier les appels API — un seul prompt génère cinq variantes de densité croissante.</p>
+
+<p>Le résultat le plus actionnable&nbsp;: la densité idéale pour des résumés d'articles de presse se situe autour de 0,15 entité par token, ce qui correspond aux étapes 2-3 de la chaîne. Si vous construisez un pipeline de résumé automatique, vous pouvez utiliser CoD et sélectionner systématiquement le résumé d'étape 3 pour obtenir un bon équilibre entre information et lisibilité.</p>
+
+<p>La technique sert aussi de contrôle qualité. En comparant la densité d'entités d'un résumé produit par votre système à la référence de 0,15, vous obtenez un indicateur rapide de sur- ou sous-densité, sans évaluation humaine.</p>
+
+<p>Pour les applications temps réel — chatbots, assistants de recherche, flux d'actualités — chaque mot économisé compte. Un résumé plus dense transmet plus d'information par token généré, ce qui réduit la latence perçue par l'utilisateur et le coût d'inférence. La densification n'est pas qu'un exercice académique&nbsp;: c'est une optimisation directe du rapport signal/coût.</p>
+
+<p>Les 500 résumés annotés et les 5&nbsp;000 résumés non annotés sont disponibles sur HuggingFace. Ce dataset rend possible la «&nbsp;distillation de densité&nbsp;»&nbsp;: entraîner des modèles open source plus petits (les auteurs mentionnent LLaMA 2) à reproduire le comportement de densification de GPT-4, sans dépendre d'une API propriétaire.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>La limitation la plus évidente&nbsp;: CoD n'a été testé que sur des articles de presse (CNN/DailyMail). Les articles de presse ont une structure prévisible — pyramide inversée, faits en début de texte, détails en fin. La densité idéale de 0,15 pourrait ne pas s'appliquer à des textes scientifiques, juridiques ou narratifs, où la structure informationnelle diffère radicalement.</p>
+
+<p>Le choix d'utiliser les entités nommées comme proxy de densité est pragmatique mais réducteur. Un résumé peut être dense en raisonnement ou en relations causales sans contenir beaucoup d'entités au sens strict. Une mesure de densité qui intègrerait les relations entre concepts, pas seulement leur présence, donnerait une image plus fine.</p>
+
+<p>Le faible accord inter-annotateurs (kappa 0,112) pose une question de fond. Si quatre experts ne s'accordent pas sur ce qui fait un bon résumé, comment construire un signal de récompense fiable pour le fine-tuning de modèles&nbsp;? Les auteurs notent que ce phénomène se retrouve dans d'autres études sur l'évaluation de résumés produits par des LLM. La subjectivité n'est pas un défaut de l'étude — c'est une propriété du problème.</p>
+
+<p>GPT-4 étant un modèle fermé, les poids ne sont pas disponibles. La reproductibilité dépend de la stabilité de l'API, qui peut évoluer entre les versions. Les résumés publiés sur HuggingFace figent un instantané des capacités du modèle à un moment donné, mais rien ne garantit que le même prompt produira les mêmes résultats dans six mois.</p>
+
+<p>Deux pistes se dessinent pour la suite. La première&nbsp;: appliquer CoD à d'autres tâches que le résumé — extraction d'information, génération de fiches produit, rédaction de briefs. Le mécanisme de densification itérative est générique et ne dépend pas du domaine. La seconde&nbsp;: automatiser le choix de l'étape optimale. Plutôt que de toujours prendre l'étape 3, un classifieur léger pourrait apprendre à sélectionner le niveau de densité adapté au contenu et au contexte d'usage.</p>
+
+<p>Cette recherche rappelle une évidence souvent oubliée dans la course aux modèles toujours plus gros&nbsp;: la qualité d'une sortie LLM dépend autant du prompt que du modèle. Chain of Density est un prompt de 200 mots. Son impact sur la qualité des résumés est mesurable et reproductible. Avant de changer de modèle, il reste souvent des gains à chercher dans la façon dont on lui parle.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Preference Bias in LLM-as-a-Judge — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Self-Preference Bias in LLM-as-a-Judge</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+<h3>Publication évaluée</h3>
+<p><strong>Self-Preference Bias in LLM-as-a-Judge</strong> — Wataoka, K., Takahashi, T., Ri, R. (SB Intuitions, 2025)</p>
+
+<h2>1. Objectif et contexte</h2>
+<p>Le recours aux LLM comme évaluateurs automatiques de systèmes de dialogue (LLM-as-a-judge) s'est généralisé, mais ces juges portent leurs propres biais. L'article cible un biais précis : la tendance des LLM à surévaluer leurs propres productions par rapport au jugement humain.</p>
+<p>Trois contributions sont revendiquées : une métrique formelle du biais d'auto-préférence fondée sur l'Equal Opportunity, sa mesure empirique sur huit LLM, et l'identification de la perplexité comme mécanisme explicatif sous-jacent. La question est pertinente — si un LLM évaluateur favorise systématiquement ses propres sorties, toute boucle d'auto-amélioration ou de RLHF utilisant ce juge risque de converger vers un monoculture stylistique.</p>
+
+<h2>2. Méthodologie</h2>
+<p>La métrique proposée (Définition 4.1) transpose le concept d'Equal Opportunity au contexte d'évaluation pairée. Le biais se calcule comme la différence entre deux taux de rappel : celui du LLM évaluateur lorsqu'il juge ses propres sorties favorablement cotées par les humains, et celui lorsque les humains ont préféré l'autre réponse. Un biais de 0 signifie absence de distorsion ; un biais positif indique une auto-préférence.</p>
+<p>Le protocole expérimental repose sur le dataset Chatbot Arena (33 000 dialogues), où chaque paire de réponses possède une annotation humaine. Huit LLM servent simultanément de générateurs et d'évaluateurs : GPT-4, GPT-3.5-Turbo, Vicuna-7b/13b, oasst-pythia-12b, dolly-v2-12b, Koala-13b et stablelm-tuned-alpha-7b. Les scores d'évaluation sont calculés via les probabilités de sortie sur les tokens « A » et « B », normalisées (Équation 3). Le biais de position est atténué par inversion des positions et moyennage.</p>
+<p>L'analyse de perplexité constitue la seconde phase. Les différences de perplexité entre réponses A et B sont discrétisées en bins, et les taux de victoire du LLM évaluateur sont comparés à ceux des humains dans chaque bin. Une segmentation supplémentaire sépare les paires contenant une sortie propre du LLM de celles n'en contenant pas.</p>
+<p>Deux limitations méthodologiques pèsent sur ce protocole. D'abord, la perplexité de GPT-4 et GPT-3.5-Turbo — les modèles affichant le plus fort biais — reste inaccessible, ce qui affaiblit la démonstration causale sur les cas les plus critiques. Ensuite, l'étude complémentaire sur Llama 2/3 manque d'annotations humaines pour les réponses de ces modèles, rendant impossible la mesure du biais au sens de la Définition 4.1 pour cette famille.</p>
+
+<h2>3. Résultats principaux</h2>
+<p>GPT-4 présente un biais d'auto-préférence de 0.520 — le plus élevé parmi les huit modèles. Ce chiffre provient d'un déséquilibre frappant : un rappel de 94,5 % quand les humains sont d'accord avec GPT-4, contre seulement 42,5 % quand ils ne le sont pas. Vicuna-13b et Koala-13b suivent avec des biais significatifs. Trois modèles (oasst-pythia-12b, dolly-v2-12b, stablelm-tuned-alpha-7b) affichent un biais négatif, sous-évaluant leurs propres sorties.</p>
+<p>L'analyse de perplexité révèle un gradient clair : les LLM attribuent des scores plus élevés aux réponses de faible perplexité, et ce gradient est plus prononcé que chez les évaluateurs humains. La segmentation entre paires contenant ou non une sortie propre ne montre pas de différence significative pour la plupart des modèles. Le biais ne cible donc pas spécifiquement les sorties « propres » — il cible les sorties « familières », mesurées par la perplexité. Les sorties propres ayant naturellement une perplexité plus basse (Figure 5), le biais d'auto-préférence en découle.</p>
+<p>Les expériences sur Llama 2 et Llama 3.1 confirment le même patron : ces modèles modifient leurs évaluations en fonction de la perplexité davantage que les humains.</p>
+
+<h2>4. Discussion et limites</h2>
+<p>L'explication par la perplexité est convaincante mais reste corrélationnelle. Aucune intervention causale (perturbation contrôlée de la perplexité sans modification du contenu sémantique) n'est réalisée. La perplexité corrèle avec de nombreuses propriétés textuelles — registre, complexité syntaxique, longueur — et l'article ne démêle pas ces facteurs.</p>
+<p>L'absence d'accès à la perplexité de GPT-4 est une lacune structurelle. C'est précisément le modèle dont le biais est maximal, et la démonstration repose sur l'extrapolation depuis des modèles plus faibles. L'argument est plausible mais non vérifié sur le cas central.</p>
+<p>Le ground truth humain de Chatbot Arena, bien que massif, n'est pas exempt de ses propres biais (crowd-sourcing, auto-sélection des utilisateurs, instructions minimales). Traiter ces annotations comme référence absolue pour définir « l'absence de biais » est un raccourci que les auteurs ne discutent pas.</p>
+<p>La suggestion d'évaluation ensembliste pondérée par la perplexité (Section 6) reste à l'état d'esquisse. Aucune expérience ne valide cette piste de mitigation, ce qui limite la portée pratique immédiate de l'article.</p>
+<p>Le choix d'Equal Opportunity plutôt que Demographic Parity est justifié, mais les auteurs auraient pu explorer d'autres métriques de fairness (Equalized Odds, Calibration) pour tester la robustesse de leurs conclusions à travers différentes définitions.</p>
+
+<h2>5. Reproductibilité</h2>
+<p>Le dataset Chatbot Arena est public. Le protocole de calcul des scores (Équation 3) et la métrique de biais (Définition 4.1) sont formalisés avec précision. Le prompt d'évaluation provient de Zheng et al. [2024].</p>
+<p>Aucun dépôt de code n'est référencé. La reproductibilité dépend de l'accès aux API propriétaires (GPT-4, GPT-3.5-Turbo) et de versions spécifiques de ces modèles, qui évoluent sans garantie de stabilité. Les résultats sur les modèles propriétaires ne sont donc pas reproductibles au sens strict. Les expériences sur modèles open-source (Vicuna, Koala, Llama) sont en principe reproductibles si les checkpoints exacts sont identifiés.</p>
+
+<h2>6. Impact et applications</h2>
+<p>La métrique proposée comble un manque : avant ce travail, la littérature manquait d'un indicateur standardisé pour quantifier le biais d'auto-préférence en évaluation pairée. L'ancrage dans la théorie de l'équité algorithmique (Equal Opportunity) permet d'intégrer ce biais dans les cadres existants de fairness.</p>
+<p>L'implication pratique est directe pour les pipelines de RLHF et d'auto-amélioration : utiliser un LLM comme juge de ses propres sorties amplifie ses conventions stylistiques. Le résultat de GPT-4 (biais de 0.520) est un signal d'alerte concret pour les praticiens qui utilisent ce modèle comme évaluateur par défaut dans MT-Bench ou des benchmarks similaires.</p>
+<p>L'explication par la perplexité, si elle se confirme causalement, ouvrirait une voie de mitigation technique : pondérer ou recalibrer les évaluations en fonction de la perplexité du texte évalué. Ce mécanisme reste à valider expérimentalement.</p>
+
+<h2>7. Positionnement dans la littérature</h2>
+<p>Panickssery et al. (2024) avaient relié auto-préférence et auto-reconnaissance, sans comparaison humaine. Xu et al. (2024) et Stureborg et al. (2024) quantifiaient le biais en évaluation absolue (score unique), limitée à des tâches spécifiques avec des métriques référencées comme BLEURT. Ce travail se distingue par le cadre pairwise, plus fiable pour les jugements humains, et par la formalisation via l'équité algorithmique.</p>
+<p>L'article s'inscrit dans un courant plus large de caractérisation des biais LLM-as-a-judge, aux côtés du biais de position (Zheng et al., 2024 ; Li et al., 2024) et du biais de verbosité (Saito et al., 2023). La contribution spécifique — relier le biais d'auto-préférence à la perplexité plutôt qu'à une auto-reconnaissance explicite — déplace le cadre explicatif d'un mécanisme cognitif vers un artefact statistique du processus de génération.</p>
+<p>La limitation principale par rapport aux travaux concurrents : l'analyse causale reste incomplète. Des travaux futurs devront isoler l'effet de la perplexité des confondants stylistiques pour confirmer le mécanisme proposé.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<thead>
+<tr style="background-color: rgba(0,0,0,0.05);">
+<th style="text-align: left;">Critère</th>
+<th style="text-align: center;">Score (/5)</th>
+<th style="text-align: left;">Commentaire</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question de recherche</td>
+<td style="text-align: center;">4</td>
+<td>Claire, bien délimitée, pertinente pour les pipelines d'évaluation automatique</td>
+</tr>
+<tr>
+<td>Design expérimental</td>
+<td style="text-align: center;">3</td>
+<td>Cadre pairwise solide mais incomplet — perplexité inaccessible pour GPT-4, Llama sans annotations humaines</td>
+</tr>
+<tr>
+<td>Taille d'échantillon</td>
+<td style="text-align: center;">4</td>
+<td>33 000 dialogues Chatbot Arena, huit modèles évaluateurs, expériences complémentaires Llama</td>
+</tr>
+<tr>
+<td>Qualité des métriques</td>
+<td style="text-align: center;">3</td>
+<td>Métrique formelle bien fondée (Equal Opportunity), mais dépendante d'un ground truth humain non exempt de biais</td>
+</tr>
+<tr>
+<td>Contrôle des biais</td>
+<td style="text-align: center;">3</td>
+<td>Biais de position corrigé par inversion ; pas de contrôle des confondants (longueur, registre, complexité)</td>
+</tr>
+<tr>
+<td>Reproductibilité</td>
+<td style="text-align: center;">3</td>
+<td>Dataset public et protocole détaillé, mais pas de code disponible et dépendance aux API propriétaires</td>
+</tr>
+<tr>
+<td>Transparence / Limitations</td>
+<td style="text-align: center;">3</td>
+<td>Lacunes sur GPT-4 reconnues ; biais du ground truth humain non discuté ; mitigation non validée</td>
+</tr>
+<tr>
+<td>Impact / Nouveauté</td>
+<td style="text-align: center;">4</td>
+<td>Première métrique formelle du biais d'auto-préférence en pairwise ; explication par la perplexité originale</td>
+</tr>
+</tbody>
+<tfoot>
+<tr style="background-color: rgba(0,0,0,0.05);">
+<td><strong>Note globale</strong></td>
+<td style="text-align: center;"><strong>3.4 / 5</strong></td>
+<td>Contribution méthodologique utile avec démonstration empirique substantielle, affaiblie par l'absence de preuve causale sur le modèle central</td>
+</tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

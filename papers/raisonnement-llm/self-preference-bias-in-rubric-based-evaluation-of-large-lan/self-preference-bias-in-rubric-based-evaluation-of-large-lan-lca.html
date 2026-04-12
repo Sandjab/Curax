@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Preference Bias in Rubric-Based Evaluation of Large Language Models — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Self-Preference Bias in Rubric-Based Evaluation of Large Language Models</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+
+<h3>1. Objectif et contexte</h3>
+
+<p>Le biais d'auto-préférence (self-preference bias, SPB) des LLM utilisés comme juges est documenté depuis 2023 pour la comparaison par paires et l'évaluation directe. L'évaluation par rubriques binaires — où le juge rend un verdict oui/non sur chaque critère — s'impose rapidement dans les benchmarks récents (HealthBench, PaperBench, WildBench, MultiChallenge) et dans le reward modeling pour le reinforcement learning. Aucune étude n'avait mesuré si le SPB persiste dans ce paradigme, malgré sa promesse théorique d'éliminer les problèmes d'ordre de présentation et de calibration numérique propres aux autres méthodes.</p>
+
+<p>Pombal, Rei et Martins comblent ce manque avec deux axes complémentaires : un benchmark à vérité terrain programmatique (IFEval, 541 prompts, critères vérifiables automatiquement) pour isoler le SPB de toute subjectivité, et un benchmark médical à rubriques subjectives (HealthBench, 5 000 instances, 48 562 rubriques) pour mesurer l'impact pratique sur le classement de modèles frontière.</p>
+
+<h3>2. Méthodologie</h3>
+
+<p>Douze modèles de cinq familles (Gemma 3, Llama 4, Qwen 3, GPT, Claude 4.5) servent à la fois de générateurs et de juges, ce qui produit une matrice 12×12 de paires juge-générateur. Les auteurs formalisent le SPB via le ratio HSPP-R, extension du HSPP de Chen et al. (2025). Ce ratio compare le taux de surestimation d'un juge envers ses propres sorties à son taux de surestimation moyen envers les modèles de familles tierces. Un ratio de 1 signale l'absence de biais ; au-dessus, le juge se favorise.</p>
+
+<p>Deux granularités de mesure coexistent. Au niveau rubrique (Orub), on calcule le taux de faux positifs : parmi les rubriques objectivement échouées par un générateur, combien le juge marque-t-il comme satisfaites ? Au niveau instance (Oinst), on compare les ordres de classement entre paires de générateurs selon le juge et selon la vérité terrain. Les quatre paradigmes d'évaluation — rubrique unique (SR), toutes rubriques (AR), évaluation directe (DA) et comparaison par paires (PWC) — sont testés sur IFEval pour les modèles open-weights ; seul SR est appliqué sur HealthBench, avec un ensemble majoritaire de cinq grands modèles comme référence.</p>
+
+<p>Ce choix d'ensemble comme vérité terrain pour HealthBench est la concession méthodologique centrale. Les rubriques subjectives n'ont pas de réponse programmatique, et les auteurs recourent à un vote majoritaire parmi les plus grands modèles de chaque famille. La circularité partielle est assumée : les modèles évalués participent à la construction de la référence, ce qui pourrait sous-estimer le SPB plutôt que le gonfler.</p>
+
+<h3>3. Résultats principaux</h3>
+
+<p>Sur IFEval, 11 juges sur 12 affichent un HSPP-R supérieur à 1 en auto-évaluation. GPT-5 atteint 1,47 : il est 47 % plus susceptible de surestimer ses propres sorties que celles de modèles sans lien de famille. GPT-oss-120B monte à 1,50 pour le biais familial. Claude 4.5 Sonnet est le seul modèle avec un HSPP-R auto inférieur à 1 (0,98), mais son HSPP-R familial est à 1,10.</p>
+
+<p>La comparaison entre paradigmes révèle une hiérarchie claire. La comparaison par paires (PWC) amplifie le SPB car le juge dispose directement de sa propre sortie face à celle d'un concurrent, ce qui facilite l'identification et le favoritisme. L'évaluation par rubriques (SR et AR) et l'évaluation directe (DA) produisent un SPB similaire et moindre que PWC. La présentation rubrique par rubrique (SR) génère un SPB légèrement supérieur à la présentation groupée (AR), probablement parce que le champ réduit simplifie la rationalisation d'un verdict favorable.</p>
+
+<p>L'agrégation en comité de cinq juges (un par famille) réduit le SPB et améliore la précision pour chaque membre. Le SPB résiduel ne disparaît pas : un juge dont le verdict est moyenné avec quatre autres conserve une tendance mesurable à se surestimer.</p>
+
+<p>Sur HealthBench, la matrice de différences centrées (Figure 5) montre des effets pratiques saisissants. GPT-5 s'attribue un bonus relatif d'environ 4 points sur 100 par rapport à l'ensemble de référence. Gemma-4B s'auto-surestime de près de 11 points. La famille Llama fait exception avec des HSPP-R inférieurs à 1, suggérant une absence de SPB ou un léger biais inverse.</p>
+
+<p>L'analyse par tranches de rubriques sur HealthBench dégage quatre facteurs aggravants : (1) les rubriques négatives (pénalisant un comportement indésirable) sont plus vulnérables au SPB que les positives — les juges répugnent à se sanctionner ; (2) les rubriques courtes et longues génèrent plus de SPB que les rubriques de longueur intermédiaire, selon une courbe en U ; (3) les catégories subjectives comme les renvois d'urgence médicale provoquent un SPB élevé, tandis que la vérification factuelle reste relativement épargnée ; (4) le désaccord inter-juges prédit le SPB — filtrer les rubriques à faible accord élimine les cas les plus biaisés.</p>
+
+<h3>4. Discussion et limites</h3>
+
+<p>La principale fragilité tient à la référence HealthBench. Le vote majoritaire de cinq modèles — un par famille — construit une vérité terrain imparfaite. Si une famille domine les quatre autres sur un sous-ensemble de rubriques, ses biais deviennent la norme. Les auteurs argumentent que cette configuration sous-estime plutôt qu'elle ne surestime le SPB, puisque chaque famille contribue à la référence. L'argument est raisonnable mais pas vérifiable sans annotations humaines.</p>
+
+<p>Le périmètre des modèles propriétaires est restreint par le coût. GPT-5 et Claude 4.5 ne sont testés qu'en mode SR, pas en AR, DA ou PWC. L'absence de ces données empêche de confirmer si la hiérarchie des paradigmes observée sur les modèles open-weights se reproduit pour les modèles propriétaires.</p>
+
+<p>La définition de « famille » reste binaire (même famille ou non) sans gradient de proximité. Un modèle distillé à partir d'un autre, ou entraîné sur des données synthétiques générées par un tiers, pourrait exhiber un SPB croisé que la métrique actuelle ne capture pas. Les auteurs le reconnaissent brièvement sans proposer de formalisation.</p>
+
+<p>Aucune analyse de variance ou intervalle de confiance n'accompagne les ratios HSPP-R. Les résultats sont présentés en valeurs ponctuelles. Pour des taux de surestimation portant sur quelques centaines d'instances, la variabilité d'échantillonnage n'est pas négligeable, et un HSPP-R de 1,03 pourrait ne pas différer significativement de 1,00.</p>
+
+<p>Le choix d'un effort de raisonnement par défaut pour les modèles propriétaires laisse ouverte la question de l'impact du budget de calcul sur le SPB. Un modèle avec plus de tokens de raisonnement pourrait être plus ou moins susceptible au biais — la question n'est pas explorée.</p>
+
+<h3>5. Reproductibilité</h3>
+
+<p>Le code expérimental est annoncé comme disponible sur GitHub. Les prompts complets pour les quatre paradigmes et les deux benchmarks figurent en annexe (Figures 7-11), ce qui permet la réplication exacte des conditions d'évaluation. IFEval est un benchmark public avec vérité terrain programmatique. HealthBench est public avec ses 48 562 rubriques et son méta-évaluation.</p>
+
+<p>Les modèles open-weights (Gemma 3, Llama 4, Qwen 3) sont accessibles. Les modèles propriétaires (GPT-5, GPT-oss-120B, Claude 4.5) dépendent d'API commerciales dont le comportement peut évoluer entre versions, ce qui affecte la reproductibilité à long terme. Les auteurs ne précisent pas les dates d'accès aux API ni les versions exactes des endpoints utilisés.</p>
+
+<h3>6. Impact et applications</h3>
+
+<p>Les résultats ont des conséquences directes pour trois communautés. Les concepteurs de benchmarks disposent de recommandations concrètes : privilégier les rubriques positives de longueur intermédiaire, utiliser le désaccord inter-juges comme signal d'alerte, et éviter les catégories subjectives sans vérification croisée. Les équipes d'alignement et de RLHF qui utilisent des verdicts par rubriques comme signaux de récompense doivent intégrer le risque d'une boucle de rétroaction où le modèle s'optimise pour ses propres préférences plutôt que pour la qualité réelle. Les praticiens qui publient des classements de modèles frontière devraient systématiquement reporter les résultats d'ensembles multi-familles plutôt que ceux d'un juge unique.</p>
+
+<p>La démonstration que le SPB persiste avec des critères entièrement objectifs suggère que le biais n'est pas un artefact de l'ambiguïté des rubriques mais une propriété des modèles eux-mêmes, ce qui réoriente les stratégies d'atténuation vers l'entraînement ou l'intervention sur les activations (comme le steering proposé par Roytburg et al.) plutôt que vers le seul raffinement des critères d'évaluation.</p>
+
+<h3>7. Positionnement dans la littérature</h3>
+
+<p>Cette étude prolonge les travaux de Chen et al. (2025) sur le HSPP en l'étendant au paradigme par rubriques et en introduisant la variante familiale. Elle confirme les observations de Wataoka et al. (2024) selon lesquelles le SPB corrèle avec la capacité du juge à identifier ses propres sorties, et celles de Verga et al. (2024) sur l'efficacité partielle des jurys multi-modèles. Le résultat différenciant — le SPB subsiste même avec des critères programmatiquement vérifiables — n'avait pas de précédent direct. L'analyse factorielle sur HealthBench (polarité des rubriques, longueur, thème) est inédite et fournit les premières recommandations empiriques pour la conception de rubriques résistantes au SPB.</p>
+
+<p>Par rapport à Roytburg et al. (2025) qui proposent le steering d'activations comme remède, Pombal et al. restent diagnostiques sans implémenter de correction. La complémentarité est évidente : le diagnostic précis des facteurs aggravants (rubriques négatives, longueurs extrêmes) permettrait de cibler les interventions d'activation steering sur les cas les plus problématiques.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Lacune identifiée avec précision ; première étude du SPB en évaluation par rubriques ; question pertinente pour le benchmarking et le RLHF.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Matrice complète 12×12 juge-générateur, quatre paradigmes comparés, deux benchmarks (objectif et subjectif). L'ensemble comme référence subjective est une concession raisonnable.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>541 prompts IFEval, 5 000 instances et 48 562 rubriques HealthBench, 12 modèles de 5 familles. Couverture adéquate pour les conclusions avancées.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>HSPP-R bien formalisé avec variantes self/family, deux granularités (instance et rubrique). Absence d'intervalles de confiance autour des ratios.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Séparation self/famille, centrage par la tendance moyenne du juge, inversion de l'ordre en PWC. La circularité de la référence HealthBench reste un confondant résiduel.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code annoncé sur GitHub, prompts complets en annexe, benchmarks publics. Les API propriétaires limitent la reproductibilité à long terme ; versions d'endpoints non spécifiées.</td></tr>
+<tr><td>Transparence et limitations</td><td>4</td><td>Limites de la référence ensemble, restriction des modèles propriétaires au mode SR, et ambiguïté de la notion de « famille » discutées explicitement.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Résultats directement exploitables pour la conception de rubriques et le choix de panels de juges. La persistance du SPB avec des critères objectifs réoriente les stratégies d'atténuation.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
