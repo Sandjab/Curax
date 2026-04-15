@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEMENTO: Teaching LLMs to Manage Their Own Context — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>MEMENTO: Teaching LLMs to Manage Their Own Context</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article — MEMENTO</h2>
+
+<h3>1. Objectif et contexte</h3>
+
+<p>Les modèles de raisonnement produisent des chaînes de pensée de plusieurs dizaines de milliers de tokens sans mécanisme interne pour organiser, comprimer ou hiérarchiser leurs étapes intermédiaires. Chaque token passé reste dans la fenêtre d'attention au même coût, et le modèle n'a aucun moyen appris de signaler qu'un résultat intermédiaire mérite d'être conservé tandis qu'une longue dérivation peut être condensée.</p>
+
+<p>MEMENTO propose d'entraîner les LLM à segmenter leur raisonnement en blocs sémantiquement cohérents, à générer après chaque bloc un résumé compressé (le « memento »), puis à masquer le bloc original via une attention sparse — le modèle ne voit plus que les mementos précédents et le bloc courant. L'objectif est double : réduire le KV cache et le coût de calcul, tout en préservant la capacité de raisonnement.</p>
+
+<p>Ce travail se distingue des approches antérieures (InftyThink, Accordion-Thinking) par un point architectural précis : les entrées KV du memento sont calculées alors que le bloc complet est encore visible, puis retenues après masquage. Cette rétention crée un canal d'information implicite absent des méthodes qui reconstruisent le contexte à partir du seul texte résumé.</p>
+
+<h3>2. Méthodologie</h3>
+
+<h3>2.1 Construction du dataset OPENMEMENTOS</h3>
+
+<p>Le pipeline part de 228K traces de raisonnement issues d'OpenThoughts-v3 (générées par QwQ-32B) et les annote en quatre étapes :</p>
+
+<ul>
+<li>Découpage en phrases atomiques avec protection des blocs de code et des expressions mathématiques multilignes — réduction de ~2× des frontières candidates (397 → 187 par trace).</li>
+<li>Scoring de chaque frontière inter-phrase par GPT-5.x (0 = milieu de calcul, 3 = transition majeure), traité par lots.</li>
+<li>Optimisation algorithmique de la segmentation maximisant le score moyen des coupures tout en pénalisant le déséquilibre de taille des blocs (coefficient de variation, λ = 0.5, minimum 200 tokens par bloc).</li>
+<li>Génération itérative des mementos : un compresseur GPT-5.x produit un résumé par bloc, un juge GPT-5.x évalue sur 6 dimensions (0-10), et une boucle de rétroaction (max 2 itérations) porte le taux d'acceptation de 28% à 92%.</li>
+</ul>
+
+<p>Le factoring du problème — scoring local par LLM, optimisation globale par algorithme, raffinement itératif par juge — est une décision de conception bien motivée. La tentative initiale de segmentation directe par LLM avait échoué face à la nature combinatoire du problème.</p>
+
+<h3>2.2 Entraînement</h3>
+
+<p>Un SFT en deux étapes sépare l'apprentissage du format de la gestion du contexte :</p>
+
+<ul>
+<li>Étape 1 (attention complète) : le modèle apprend le format bloc-memento avec une perte sur tous les tokens, sans masquage.</li>
+<li>Étape 2 (attention memento) : après chaque memento complété, le bloc précédent est masqué de toute attention future. Le modèle apprend à produire des mementos autosuffisants.</li>
+</ul>
+
+<p>Quatre tokens spéciaux sont ajoutés, initialisés comme moyenne d'embeddings sémantiquement proches plus bruit gaussien. L'entraînement utilise 31K échantillons sur 32 GPU B200, avec des hyperparamètres identiques pour tous les modèles (lr = 8×10⁻⁵, 5 époques, batch 512).</p>
+
+<p>Une phase de RL (CISPO, variante de GRPO) sur Qwen3-8B récupère une partie de l'écart de précision. Le cap de 7K tokens par bloc empêche le modèle de contourner la compression en produisant des blocs géants.</p>
+
+<h3>2.3 Infrastructure d'inférence</h3>
+
+<p>Un fork de vLLM implémente le masquage physique des entrées KV — pas un masquage logique qui nécessiterait des kernels d'attention custom, mais une suppression réelle des tokens du cache. L'implémentation fonctionne avec FlashAttention et FlashInfer standards, opère au niveau Python, et s'installe comme patch.</p>
+
+<h3>3. Résultats principaux</h3>
+
+<p>L'évaluation couvre 14 benchmarks (mathématiques de compétition, MATH-500, GPQA Diamond, LiveCodeBench v6) sur quatre familles de modèles : Qwen3-8B, Qwen3-32B, Phi-4-reasoning 14B, Olmo-3-7B-Think.</p>
+
+<p>Sur Qwen3-32B, MEMENTO perd 2,6 points de pourcentage sur AIME'26 (72,6% vs 75,2%) tout en divisant le pic de KV cache par ~2×. Sur MATH-500, l'écart tombe sous 1 pp. L'écart moyen sur cinq groupes de benchmarks se réduit avec l'échelle : −6,3 pp à 8B, −3,5 pp à 32B.</p>
+
+<p>La compression par bloc atteint 5-20× (médiane), avec des tailles de mementos remarquablement stables (260-615 caractères) quelle que soit la longueur du bloc source — le modèle a appris une compétence de compression, pas un ratio fixe.</p>
+
+<p>Le débit de service augmente de 1,75× à concurrence maximale sur un seul GPU B200 (4 290 tok/s vs 2 447). Le temps de complétion d'un batch de 240 requêtes diminue de 37%.</p>
+
+<p>Le RL sur Qwen3-8B fait remonter AIME'26 de 57,3% à 64,9% et GPQA-D de 55,8% à 62,9% (au-dessus du baseline vanilla à 61,4%), tout en conservant un pic KV à 1,48 GB contre 2,71 GB pour le modèle de base.</p>
+
+<p>Résultat inattendu : Olmo-3-7B-Think, avec son architecture hybride (24 couches sliding-window sur 32), ne bénéficie que modestement du masquage (0,85-0,93× au lieu de 0,35-0,47×). Les 24 couches à fenêtre glissante plafonnent déjà leur KV cache à 4096 tokens — le masquage ne profite qu'aux 8 couches à attention complète.</p>
+
+<h3>4. Discussion et limites</h3>
+
+<h3>4.1 Le canal d'information dual</h3>
+
+<p>La découverte centrale : recomputer les KV des mementos sans contexte du bloc (mode « restart ») fait chuter la précision de 15 pp sur AIME'24 (66,1% → 50,8%). Le texte du memento est identique dans les deux conditions — seules les représentations KV diffèrent. Les mementos fonctionnent donc comme des pointeurs compressés vers un état de raisonnement caché dans le cache, pas comme des remplacements textuels autonomes.</p>
+
+<p>L'expérience de sondage (injection d'un code à 5 chiffres dans un bloc masqué) confirme que l'information fuit à travers les couches profondes : 26,7% de précision pour Qwen3-8B au niveau masqué contre 10% de chance. Ce signal se concentre dans les couches supérieures (26,5% à la dernière couche vs 10,8% à la 4ᵉ). Un transformeur jouet à 4 couches reproduit le même pattern, avec une fuite constante à travers les checkpoints d'entraînement — le canal est architectural, pas appris.</p>
+
+<h3>4.2 Limites méthodologiques</h3>
+
+<p>La dépendance à GPT-5.x pour le scoring des frontières, la compression et le jugement introduit un couplage avec un modèle propriétaire. La reproductibilité du pipeline de génération de données est donc conditionnelle à l'accès à ce modèle ou à un modèle de capacité équivalente.</p>
+
+<p>L'évaluation d'Olmo-3 utilise 8 générations par problème (contre 64 pour les autres modèles) et HuggingFace Transformers au lieu de vLLM — cette hétérogénéité rend les comparaisons directes avec les autres familles moins fiables.</p>
+
+<p>Le mode d'échec où le masquage de blocs induit une génération excessive (Figure 5c : 3× plus de tokens, AUC KV 2,1× plus élevé) n'est traité que par le cap de 7K tokens en RL. Aucune analyse systématique n'évalue la fréquence de ce phénomène hors des exemples illustratifs.</p>
+
+<p>La comparaison avec InftyThink, InftyThink+ et Accordion-Thinking reste discursive. Aucun benchmark direct sur les mêmes modèles et tâches n'est fourni — la différenciation repose sur des arguments architecturaux (rétention KV vs restart) plutôt que sur une comparaison empirique contrôlée.</p>
+
+<p>Les contrôles SFT (entraînement sur OpenThoughts brut) subissent eux-mêmes une dégradation par rapport au modèle de base, ce qui rend l'attribution précise de la perte à la compression (vs au SFT additionnel) plus ambiguë qu'un simple delta ne le suggère.</p>
+
+<h3>5. Reproductibilité</h3>
+
+<p>Le dataset OPENMEMENTOS (228K traces segmentées et annotées) est public. Le fork vLLM avec masquage natif des blocs est publié. Les hyperparamètres d'entraînement sont exhaustivement documentés (Appendice A.2.1). Les prompts complets du pipeline de génération de données sont fournis.</p>
+
+<p>Le point faible : la chaîne de génération des données repose sur GPT-5.x, un modèle propriétaire. Reproduire le dataset depuis zéro nécessite soit un accès à ce modèle, soit un substitut dont l'équivalence n'est pas garantie. Les modèles entraînés eux-mêmes ne semblent pas publiés au moment de la rédaction.</p>
+
+<p>Le code d'évaluation (evaluate_vllm.py), la vérification des réponses (pipeline SymPy + normalisation Hendrycks), et les configurations de génération sont décrits avec une précision suffisante pour une réplication indépendante.</p>
+
+<h3>6. Impact et applications</h3>
+
+<p>MEMENTO répond à un goulet d'étranglement pratique du déploiement des modèles de raisonnement : le coût mémoire linéaire des longues chaînes de pensée. La réduction de 2-3× du pic KV cache se traduit directement en gain de débit (1,75×) et en capacité à servir plus de requêtes concurrentes sur le même matériel.</p>
+
+<p>La découverte du canal KV implicite a des implications au-delà de l'efficience : elle révèle que les représentations internes des LLM encodent une information plus riche que le texte généré, ce qui remet en question les méthodes de compression purement textuelles.</p>
+
+<p>L'extension naturelle identifiée par les auteurs — appliquer MEMENTO aux tâches agentiques à long horizon où les étapes d'agent forment des blocs naturels — est crédible et potentiellement plus impactante que le cas du raisonnement mathématique, car les fenêtres de contexte y sont le goulot principal.</p>
+
+<p>La compatibilité démontrée avec l'architecture sliding-window d'Olmo-3 (même si les gains y sont limités) et le fonctionnement avec les kernels d'attention standards élargissent l'applicabilité pratique.</p>
+
+<h3>7. Positionnement dans la littérature</h3>
+
+<p>MEMENTO s'inscrit dans une lignée récente de travaux sur la compression du raisonnement (InftyThink, Accordion-Thinking, PENCIL, LightThinker, Breadcrumbs) mais se différencie sur un axe technique précis : la rétention des états KV après masquage, là où tous les prédécesseurs reconstruisent le contexte à partir du texte seul. La démonstration quantitative de l'importance de ce canal (−15 pp) est l'argument le plus convaincant du papier.</p>
+
+<p>Par rapport aux méthodes de compression KV au niveau de l'inférence (ThinKV, R-KV, Reasoning Path Compression), MEMENTO opère au niveau de l'entraînement — les deux approches sont orthogonales et potentiellement composables, bien qu'aucune expérience de composition ne soit présentée.</p>
+
+<p>L'échelle d'expérimentation (3 familles, 8B-32B, 14 benchmarks, dataset public de 228K traces) dépasse celle des travaux concurrents (typiquement ≤7B, un ou deux benchmarks). Le RL post-SFT, rendu possible par l'intégration vLLM, ajoute une dimension que seul Accordion-Thinking partage parmi les approches par résumé.</p>
+
+<p>Le positionnement par rapport à PENCIL (Yang et al., 2025) ouvre une question fondamentale : la compression de contexte peut-elle, au-delà de l'efficience mémoire, permettre de résoudre des problèmes plus difficiles que le CoT standard ? MEMENTO ne répond pas à cette question mais fournit l'infrastructure pour l'explorer.</p>
+
+<h3>Tableau récapitulatif des scores de robustesse</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+<thead>
+<tr style="background-color: #f0f0f0;">
+<th style="text-align: left;">Critère</th>
+<th style="text-align: center;">Score (/5)</th>
+<th style="text-align: left;">Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question de recherche</td>
+<td style="text-align: center;">4</td>
+<td>Problème bien défini et motivé par un goulet pratique réel. L'angle du canal KV implicite ajoute une dimension originale à la question de la compression de contexte.</td>
+</tr>
+<tr>
+<td>Design expérimental</td>
+<td style="text-align: center;">4</td>
+<td>Protocole solide : 3 familles de modèles, SFT en deux étapes avec ablation, contrôles sur OpenThoughts brut, RL post-SFT. Pipeline de données en 4 étapes bien justifié. La dépendance à GPT-5.x pour la génération de données est un point aveugle.</td>
+</tr>
+<tr>
+<td>Taille de l'échantillon</td>
+<td style="text-align: center;">4</td>
+<td>228K traces d'entraînement, 14 benchmarks, 64 générations par problème en mathématiques de compétition. Échelle suffisante pour les conclusions avancées.</td>
+</tr>
+<tr>
+<td>Qualité des métriques</td>
+<td style="text-align: center;">4</td>
+<td>Métriques pertinentes et complémentaires : pass@1, pic KV, AUC KV, débit. L'expérience de sondage par injection de passcode est un protocole élégant pour isoler le canal implicite. Erreurs standards rapportées.</td>
+</tr>
+<tr>
+<td>Contrôle des biais</td>
+<td style="text-align: center;">3</td>
+<td>Contrôles SFT présents mais imparfaits (le SFT lui-même dégrade les performances). Hétérogénéité d'évaluation pour Olmo-3 (8 vs 64 générations, backend différent). Pas de comparaison empirique directe avec InftyThink ou Accordion-Thinking.</td>
+</tr>
+<tr>
+<td>Reproductibilité</td>
+<td style="text-align: center;">4</td>
+<td>Dataset public, fork vLLM publié, prompts complets fournis, hyperparamètres exhaustifs. La dépendance à GPT-5.x pour la création du dataset est la seule barrière significative.</td>
+</tr>
+<tr>
+<td>Transparence et limitations</td>
+<td style="text-align: center;">4</td>
+<td>Discussion franche des limites : dégradation à petite échelle, gains limités sur sliding-window, mode d'échec par génération excessive. L'ambiguïté d'attribution SFT/compression aurait mérité plus d'analyse.</td>
+</tr>
+<tr>
+<td>Impact et nouveauté</td>
+<td style="text-align: center;">5</td>
+<td>Contribution à trois niveaux — méthode (compression apprise de la chaîne de pensée), infrastructure (vLLM avec masquage natif), et découverte (canal dual KV). Le dataset public de 228K traces est un apport durable pour la communauté.</td>
+</tr>
+</tbody>
+<tfoot>
+<tr style="background-color: #f0f0f0;">
+<td><strong>Note globale</strong></td>
+<td style="text-align: center;"><strong>4.2 / 5</strong></td>
+<td>Travail de haute qualité technique avec des résultats expérimentaux convaincants et des contributions pratiques immédiates. Les faiblesses (dépendance GPT-5.x, absence de comparaison directe avec les concurrents) n'entament pas la solidité des conclusions principales.</td>
+</tr>
+</tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

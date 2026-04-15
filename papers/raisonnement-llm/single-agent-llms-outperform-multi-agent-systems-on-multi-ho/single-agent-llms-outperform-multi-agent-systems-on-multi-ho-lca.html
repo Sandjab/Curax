@@ -129,89 +129,101 @@
   <div class="companion-content">
     <h2>Objectif et contexte</h2>
 
-<p>Les architectures multi-agents (MAS) — planificateurs, débats, essaims spécialisés — affichent des performances élevées sur de nombreuses tâches. Mais ces gains se confondent avec une augmentation du calcul à l'inférence : davantage de tokens consommés, davantage d'appels modèle. Tran et Kiela posent une question directe : que reste-t-il de l'avantage multi-agent quand on fixe le budget de tokens de raisonnement ?</p>
+<p>Les architectures multi-agents (MAS) — planificateurs, débats, essaims spécialisés — affichent des performances empiriques élevées sur de nombreuses tâches. Mais ces gains sont systématiquement confondus avec un surplus de calcul : plus d'agents signifie plus de tokens consommés. Tran et Kiela posent une question précise : que se passe-t-il quand on normalise le budget de tokens de raisonnement entre systèmes mono-agent (SAS) et multi-agents ?</p>
 
-<p>Leur réponse mobilise deux registres. D'abord un argument théorique fondé sur l'inégalité de traitement des données (Data Processing Inequality) : sous budget fixe, la décomposition multi-agent introduit des goulots de communication qui ne peuvent qu'appauvrir l'information mutuelle avec la réponse correcte. Ensuite, une vérification empirique sur trois familles de modèles (Qwen3, DeepSeek-R1-Distill-Llama, Gemini 2.5), deux benchmarks de raisonnement multi-hop (FRAMES, MuSiQue 4-hop), et cinq architectures MAS distinctes.</p>
+<p>L'article poursuit trois objectifs. Fournir un argument théorique expliquant pourquoi les SAS devraient être plus efficaces en information sous budget fixe. Identifier les régimes où les MAS deviennent compétitifs. Diagnostiquer les artefacts méthodologiques qui gonflent artificiellement les gains des MAS dans la littérature existante.</p>
+
+<p>Le travail s'inscrit dans une lignée récente de publications (Wang et al. 2024, Han et al. 2025, Anthropic 2025, Kim et al. 2025) qui remettent en cause l'avantage supposé des architectures multi-agents une fois le calcul contrôlé. La contribution spécifique est de coupler un cadre information-théorique à une validation empirique à travers plusieurs familles de modèles.</p>
 
 <h2>Méthodologie</h2>
 
+<h3>Cadre théorique</h3>
+
+<p>L'argument repose sur l'inégalité de traitement des données (Data Processing Inequality, DPI). Si <em>C</em> désigne le contexte complet accessible au SAS et <em>M = g(C)</em> les messages échangés entre agents dans un MAS, la chaîne de Markov Y ↔ C ↔ M implique I(Y; C) ≥ I(Y; M). L'information mutuelle avec la réponse correcte ne peut qu'être réduite par le passage à travers le canal de communication inter-agents. Tout estimateur opérant sur M peut être reproduit par un estimateur opérant sur C, ce qui donne Pe(C) ≤ Pe(M) : l'erreur minimale du SAS est toujours inférieure ou égale à celle du MAS.</p>
+
+<p>L'argument est étendu au cas d'un contexte dégradé. Quand le SAS n'utilise qu'un contexte effectif C̃α (par suppression, masquage ou substitution), la garantie théorique ne tient plus. Un MAS bien conçu peut alors récupérer de l'information que le SAS perd dans sa passe unique. Cette extension produit une prédiction testable : le MAS devient compétitif quand la dégradation du contexte dépasse un certain seuil.</p>
+
 <h3>Protocole expérimental</h3>
 
-<p>La variable contrôlée est le budget de tokens de raisonnement (thinking tokens), défini comme le total de tokens intermédiaires excluant le prompt et la réponse finale. Six paliers sont testés : 100, 500, 1000, 2000, 5000 et 10 000 tokens. Chaque configuration SAS ou MAS reçoit le même budget global B.</p>
+<p>Deux benchmarks de raisonnement multi-hop : FRAMES (questions factuelles avec récupération) et MuSiQue (questions 4-hop). Trois familles de modèles : Qwen3-30B-A3B, DeepSeek-R1-Distill-Llama-70B, et Gemini 2.5 (Flash et Pro). Cinq architectures MAS sont comparées au SAS : Sequential, Subtask-parallel, Parallel-roles, Debate, Ensemble. Toutes opèrent sous le même budget global de tokens de raisonnement B (de 100 à 10 000 tokens).</p>
 
-<p>Le système mono-agent (SAS) alloue l'intégralité de B à un appel unique. Une variante SAS-L ajoute un scaffold d'analyse pré-réponse sans modifier B. Cinq architectures MAS sont évaluées : Sequential (décomposition en étapes ordonnées), Subtask-parallel (sous-tâches indépendantes), Parallel-roles (rôles spécialisés : Solver, Fact Extractor, Skeptic, Second Solver), Debate (deux débatteurs + critiques croisées), et Ensemble (candidats indépendants + juge). Sequential sert de comparaison principale car elle isole le coût de la communication inter-agents sans ajouter de diversité ou de spécialisation.</p>
+<p>Le choix du Sequential comme comparaison principale est judicieux : c'est l'analogue multi-agents le plus proche du SAS (même structure sérielle), la seule différence étant l'externalisation des états intermédiaires en messages explicites. Les budgets sont répartis entre agents (B/k pour k étapes séquentielles).</p>
 
-<h3>Évaluation</h3>
+<p>L'évaluation utilise un LLM-as-judge avec rubrique fixe, vérifiant la présence sémantique de la réponse de référence dans la prédiction. Les intervalles de confiance à 95 % sont obtenus par bootstrap.</p>
 
-<p>L'accuracy est mesurée par un LLM-as-judge qui vérifie l'équivalence sémantique entre la prédiction et la réponse de référence. Le même modèle et la même rubrique sont utilisés pour toutes les configurations. Des intervalles de confiance bootstrap à 95 % accompagnent chaque résultat.</p>
+<h3>Expériences de dégradation</h3>
 
-<h3>Expériences complémentaires</h3>
-
-<p>Quatre familles de dégradation du contexte (suppression, masquage, substitution, distracteurs) testent la prédiction théorique selon laquelle les MAS deviennent compétitifs quand l'utilisation du contexte par l'agent unique se détériore. Une ablation par paraphrase (légère via regex, profonde via LLM) sonde la robustesse des résultats à la mémorisation de benchmark. Un audit des tokens de raisonnement Gemini révèle des écarts entre comptage API et contenu visible.</p>
+<p>Quatre familles de perturbation sont appliquées au contexte de raisonnement de Qwen3-30B-A3B sur MuSiQue avec un budget fixe de 1 000 tokens : suppression aléatoire de tokens, masquage, substitution par des tokens aléatoires du vocabulaire, et injection de phrases distractrices. Chaque famille est testée à trois niveaux d'intensité (α = 0.3, 0.5, 0.7 ou k = 10, 20, 30).</p>
 
 <h2>Résultats principaux</h2>
 
-<p>Le résultat central est net : SAS égale ou surpasse toutes les architectures MAS sur la quasi-totalité des configurations modèle × dataset × budget. Aux budgets de 1000 tokens et au-delà, SAS domine systématiquement pour Qwen3-30B et DeepSeek-R1-70B. L'avantage persiste même à 10 000 tokens, où les MAS disposent pourtant de budgets largement supérieurs à ce que SAS consomme réellement — SAS sature souvent autour de 1300-1500 tokens effectifs.</p>
+<p>Le SAS est le système le plus performant ou statistiquement indistinguable du meilleur pour tous les budgets sauf le plus faible (100 tokens, où aucun raisonnement utile ne se produit). Ce résultat est stable à travers les trois familles de modèles et les deux benchmarks. Le SAS consomme aussi moins de tokens de raisonnement que les variantes MAS à performance égale ou supérieure.</p>
 
-<p>Deux nuances émergent. Aux budgets les plus bas (100 tokens), aucune architecture ne produit de raisonnement utile, et les différences ne sont pas significatives. Pour Gemini-2.5-Pro sur FRAMES, Sequential MAS rivalise avec SAS à certains paliers, un effet que les auteurs attribuent aux artefacts de comptage des tokens Gemini : le contenu visible de raisonnement MAS dépasse celui de SAS à budget demandé égal.</p>
+<p>Parmi les architectures MAS, Debate est la plus régulièrement compétitive. Parallel-roles suit de près, surtout sur FRAMES. Ensemble dépend davantage du budget et ne devient fort qu'à budget élevé sur Gemini-2.5-Pro FRAMES.</p>
 
-<p>Parmi les MAS, Debate se distingue comme la variante la plus régulièrement compétitive. Parallel-roles suit. Ensemble dépend fortement du budget et ne devient performant qu'aux budgets élevés sur Gemini-2.5-Pro. Les performances plafonnent autour de 2000-5000 tokens pour la plupart des configurations — augmenter le budget au-delà apporte des rendements décroissants.</p>
+<p>La performance croît avec le budget puis sature. À 1 000–2 000 tokens, les moyennes sont déjà proches des niveaux à 5 000–10 000 tokens. Au-delà, certains systèmes sur-explorent ou « sur-raisonnent » sans gain supplémentaire.</p>
 
-<p>Les expériences de dégradation du contexte confirment la prédiction théorique : sous masquage ou substitution à α = 0.7, Sequential MAS dépasse SAS, car la décomposition multi-étapes filtre mieux un contexte corrompu qu'une passe unique sur un signal bruité.</p>
+<p>La variante SAS-L (scaffold d'analyse multi-perspective) améliore les résultats principalement sur les modèles Gemini, où le canal de raisonnement visible stagne sans incitation. Sur les modèles open-source, le gain est marginal ou nul.</p>
 
-<p>L'ablation par paraphrase profonde améliore les performances, ce qui suggère que les questions originales de MuSiQue souffrent d'une contamination partielle dans les données d'entraînement.</p>
+<h3>Dégradation du contexte</h3>
+
+<p>Les résultats confirment la prédiction théorique. Sous substitution (la dégradation la plus disruptive), le SAS domine à α = 0.3 (0.243 vs 0.217), les deux systèmes convergent à α = 0.5, et le Sequential prend l'avantage à α = 0.7 (0.225 vs 0.200). Le masquage produit un croisement similaire. La suppression montre la même tendance mais de façon plus atténuée. Les distracteurs ne suffisent pas à inverser l'avantage du SAS.</p>
+
+<h3>Artefacts d'évaluation</h3>
+
+<p>L'analyse diagnostique de la comptabilité des tokens Gemini révèle un facteur d'inflation de 4.7× entre les tokens rapportés par l'API et le contenu visible du raisonnement (1 687 tokens rapportés vs ~359 tokens visibles pour Gemini-2.5-Flash à un budget de 10 000). Le contenu visible du raisonnement SAS plafonne autour de 350 tokens, indépendamment du budget demandé. Le Sequential MAS produit davantage de texte visible à budget égal, créant un avantage de calcul effectif non contrôlé.</p>
+
+<p>L'ablation par paraphrase met en lumière un possible effet de mémorisation des benchmarks : la paraphrase profonde (via LLM) améliore les performances, tandis que la paraphrase légère (regex) les dégrade.</p>
 
 <h2>Discussion et limites</h2>
 
-<p>La force de l'article réside dans son cadrage : la question est bien posée, le protocole contrôle le confondant principal (le calcul), et les prédictions théoriques sont testées empiriquement. Le cadre information-théorique via la DPI est élégant et fournit une intuition claire sur pourquoi la communication inter-agents constitue un goulot d'étranglement.</p>
+<p>Le cadre théorique via la DPI est élégant mais repose sur une hypothèse forte : le SAS a accès au contexte complet C et l'utilise de façon optimale. Les auteurs reconnaissent cette idéalisation et la transforment en variable expérimentale via les expériences de dégradation. L'argument ne prouve pas que le SAS est toujours meilleur — il montre que tout avantage du MAS doit provenir soit d'un surplus de calcul, soit d'une dégradation du contexte du SAS.</p>
 
-<p>Plusieurs limites méritent attention. L'évaluation par LLM-as-judge introduit un biais difficile à quantifier : la rubrique vérifie la présence sémantique de la réponse de référence, mais des réponses partiellement correctes ou des hallucinations cohérentes peuvent fausser le jugement dans les deux sens. Aucune vérification humaine n'est rapportée.</p>
+<p>Le périmètre est volontairement limité au raisonnement multi-hop textuel. Les tâches impliquant des outils, de la vision ou des contraintes de sécurité sont explicitement exclues. Cette restriction est raisonnable pour un premier résultat contrôlé mais empêche toute généralisation aux cas d'usage typiques des MAS en production (orchestration d'outils, vérification croisée dans des workflows complexes).</p>
 
-<p>Le périmètre est restreint au raisonnement textuel multi-hop sans outils. Les auteurs le reconnaissent, mais cela réduit la portée des conclusions : les MAS sont souvent déployés précisément pour orchestrer des appels d'outils, du code, ou des interactions avec des environnements — des scénarios où la décomposition apporte une valeur structurelle absente ici.</p>
+<p>L'évaluation par LLM-as-judge avec le même modèle que celui testé pose un risque de biais d'auto-préférence, même si la rubrique est fixe et commune. Les auteurs n'abordent pas ce point. L'utilisation d'un modèle évaluateur distinct aurait renforcé la crédibilité des résultats.</p>
 
-<p>Le comptage des tokens Gemini pose un problème méthodologique sérieux, que les auteurs documentent avec transparence. Le contenu visible de raisonnement SAS plafonne à ~350 tokens proxy quelle que soit la demande (1k à 10k), tandis que MAS produit 700-1300 tokens proxy au même budget demandé. Comparer sur la base du « budget demandé » plutôt que du calcul effectif avantage mécaniquement SAS dans cette configuration. Les auteurs défendent ce choix comme le seul reproductible, ce qui est recevable, mais l'interprétation des résultats Gemini en est fragilisée.</p>
+<p>Les deux benchmarks (FRAMES et MuSiQue 4-hop) partagent un format similaire — questions factuelles multi-hop à réponse concise. La diversité des tâches est limitée. Des tâches de raisonnement mathématique, de génération longue ou de planification donneraient une image plus complète.</p>
 
-<p>Les expériences de dégradation ne portent que sur Qwen3-30B à 1000 tokens. Généraliser cette analyse à d'autres modèles et budgets renforcerait les conclusions sur les régimes où MAS devient compétitif.</p>
+<p>La découverte des artefacts de comptabilité Gemini est un apport méthodologique important. Elle montre que les comparaisons « à budget égal » sur API propriétaires sont intrinsèquement fragiles, puisque le budget demandé et le calcul effectivement réalisé divergent de façon opaque.</p>
 
 <h2>Reproductibilité</h2>
 
-<p>Les prompts de toutes les architectures (SAS, Sequential, Debate, Ensemble, etc.) sont intégralement reproduits en annexe, ce qui est un point fort. La logique de dégradation du contexte est documentée en pseudo-code. Les hyperparamètres (température, budgets) sont spécifiés.</p>
+<p>Les prompts de chaque architecture sont intégralement reproduits en annexe (Annexe D), ce qui permet de reconstruire les pipelines. Les hyperparamètres sont spécifiés (température 0 sauf Ensemble à 0.7). Les intervalles de confiance bootstrap sont fournis pour chaque résultat.</p>
 
-<p>En revanche, le code source n'est pas mentionné comme disponible. Les résultats sur modèles open-source (Qwen3, DeepSeek) sont reproductibles en principe, mais les résultats Gemini dépendent d'une API dont le comportement interne est opaque et susceptible de changer entre versions. La reproductibilité partielle sur Gemini est d'ailleurs un des résultats de l'article : les auteurs montrent que le comptage de tokens varie de façon non documentée.</p>
-
-<p>Les benchmarks utilisés (FRAMES, MuSiQue) sont publics. Le juge LLM utilise le même modèle que celui évalué, ce qui pourrait biaiser l'évaluation mais est clairement documenté.</p>
+<p>Aucun dépôt de code n'est mentionné. Les benchmarks FRAMES et MuSiQue sont publics, mais les filtres appliqués (MuSiQue 4-hop uniquement) et les splits exacts ne sont pas décrits. La reproductibilité sur les modèles Gemini est compromise par l'opacité de la comptabilité API que les auteurs eux-mêmes documentent. Les résultats sur Qwen3 et DeepSeek sont plus reproductibles puisque les modèles sont open-source.</p>
 
 <h2>Impact et applications</h2>
 
-<p>L'implication pratique est directe : les praticiens qui déploient des systèmes multi-agents pour le raisonnement devraient d'abord vérifier qu'un agent unique avec le même budget de calcul ne fait pas aussi bien. Le surcoût d'ingénierie, de latence et de coordination des MAS n'est justifié que dans des régimes spécifiques — contexte dégradé, modèles faibles, ou tâches nécessitant une décomposition structurelle (outils, vérification).</p>
+<p>Le message pratique est clair : avant de déployer une architecture multi-agents, vérifier qu'elle surpasse un agent unique à budget de calcul équivalent. Pour le raisonnement multi-hop, les gains observés des MAS dans la littérature s'expliquent largement par un surplus de tokens non comptabilisé.</p>
 
-<p>L'audit méthodologique des artefacts d'évaluation (comptage opaque des tokens Gemini, vulnérabilité des benchmarks à la paraphrase) apporte une contribution transversale utile à la communauté. Ces résultats plaident pour des protocoles d'évaluation plus rigoureux dans la comparaison d'architectures agentiques.</p>
+<p>L'identification du régime de dégradation du contexte comme condition nécessaire à l'avantage des MAS fournit un critère de décision opérationnel. Sur des contextes longs, bruités ou hétérogènes, les pipelines multi-agents structurés (décomposition, filtrage, vérification croisée) gardent leur utilité.</p>
 
-<p>La prédiction théorique sur la dégradation du contexte offre un cadre décisionnel : l'intérêt des MAS croît avec la complexité du contexte à traiter, pas avec la difficulté intrinsèque de la question.</p>
+<p>L'analyse des artefacts de comptabilité API a une portée méthodologique au-delà de cette étude. Elle appelle à une standardisation de la mesure du calcul effectif dans les évaluations de systèmes agentiques.</p>
 
 <h2>Positionnement dans la littérature</h2>
 
-<p>L'article s'inscrit dans une vague récente de travaux remettant en question les gains apparents des MAS. Wang et al. (2024) et Han et al. (2025) ont montré que des stratégies de raisonnement élaborées échouent face à des baselines simples à budget normalisé. Anthropic (2025) a attribué l'avantage MAS au calcul supplémentaire. Kim et al. (2025) ont observé que les gains agentiques se concentrent sur les modèles faibles et disparaissent avec des modèles plus capables.</p>
+<p>L'article s'inscrit dans le courant « budget-aware evaluation » initié par Wang et al. (2024) et Han et al. (2025). Il se distingue par le couplage d'un cadre théorique (DPI) avec une validation empirique multi-modèles et multi-architectures. La prédiction testable sur la dégradation du contexte est une contribution propre qui dépasse le simple constat empirique « SAS ≥ MAS à budget égal ».</p>
 
-<p>La contribution spécifique de Tran et Kiela est triple : le cadrage information-théorique via la DPI, la comparaison systématique de cinq architectures MAS sous budget contrôlé, et l'identification des régimes (dégradation du contexte) où les MAS reprennent l'avantage. Le travail de Cemri et al. (2025) sur les modes de défaillance multi-agents complète leurs observations empiriques sur la dérive et les erreurs d'extraction.</p>
+<p>Les résultats convergent avec les travaux concurrents de Kim et al. (2025), qui montrent que les gains agentiques se concentrent sur les modèles faibles et les régimes difficiles, et de Cemri et al. (2025), qui taxonomisent les modes de défaillance des MAS (dérive, perte d'information, artefacts d'évaluation). La concordance entre ces études indépendantes renforce la robustesse du constat global.</p>
 
-<p>L'article ne couvre pas les scénarios multi-agents avec outils, code ou mémoire externe, qui constituent le cas d'usage principal des frameworks agentiques actuels (LangGraph, CrewAI, AutoGen). Les conclusions sont donc circonscrites au raisonnement textuel pur — un périmètre restreint mais étudié avec rigueur.</p>
+<p>Le travail laisse ouvertes deux questions. D'abord, le comportement sur des tâches non factuelles (raisonnement mathématique, planification, génération créative) où la structure multi-agents pourrait apporter des bénéfices orthogonaux à l'efficience informationnelle. Ensuite, l'interaction entre la qualité du modèle de base et le régime de rentabilité des MAS — les modèles frontier de demain pourraient déplacer le seuil de dégradation auquel les MAS deviennent utiles.</p>
 
-<h2>Tableau récapitulatif des critères de robustesse</h2>
+<h2>Tableau récapitulatif des scores de robustesse</h2>
 
 <table>
 <thead>
-<tr><th>Critère</th><th>Score (/5)</th><th>Commentaire</th></tr>
+<tr><th>Critère</th><th>Score</th><th>Commentaire</th></tr>
 </thead>
 <tbody>
-<tr><td>Question de recherche</td><td>4</td><td>Trois sous-questions claires et bien motivées, cadrage théorique original via la DPI</td></tr>
-<tr><td>Design expérimental</td><td>4</td><td>Protocole multi-modèles, multi-architectures, budgets contrôlés ; dégradation et paraphrase comme ablations</td></tr>
-<tr><td>Taille d'échantillon</td><td>3</td><td>Deux benchmarks, trois familles de modèles ; dégradation testée sur un seul modèle à un seul budget</td></tr>
-<tr><td>Qualité des métriques</td><td>3</td><td>LLM-as-judge sans validation humaine ; accuracy binaire assez grossière pour du raisonnement multi-hop</td></tr>
-<tr><td>Contrôle des biais</td><td>4</td><td>Confondant principal (calcul) bien contrôlé ; artefacts Gemini identifiés et documentés ; ablation paraphrase</td></tr>
-<tr><td>Reproductibilité</td><td>3</td><td>Prompts complets en annexe, benchmarks publics ; pas de code publié, résultats Gemini dépendants d'une API opaque</td></tr>
-<tr><td>Transparence et limitations</td><td>4</td><td>Limites clairement énoncées (texte seul, comptage Gemini approximatif, budget cap vs usage réel)</td></tr>
-<tr><td>Impact et nouveauté</td><td>4</td><td>Cadre théorique propre, résultats pratiques exploitables, audit méthodologique transférable</td></tr>
+<tr><td>Question de recherche</td><td>4/5</td><td>Trois questions claires, bien motivées par la littérature et le cadre théorique. Originalité dans le couplage DPI + validation empirique.</td></tr>
+<tr><td>Design expérimental</td><td>4/5</td><td>Budget contrôlé, 3 familles de modèles, 5 architectures MAS, expériences de dégradation. Limité à 2 benchmarks de format similaire.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3/5</td><td>2 benchmarks, 4 modèles, 6 niveaux de budget. Intervalles de confiance bootstrap fournis. La diversité des tâches reste faible.</td></tr>
+<tr><td>Qualité des métriques</td><td>3/5</td><td>LLM-as-judge avec rubrique fixe. Risque d'auto-préférence non discuté. La comptabilité des tokens Gemini est reconnue comme non fiable.</td></tr>
+<tr><td>Contrôle des biais</td><td>4/5</td><td>Le confondant principal (budget de calcul) est explicitement contrôlé. Ablation par paraphrase, analyse diagnostique des artefacts API.</td></tr>
+<tr><td>Reproductibilité</td><td>3/5</td><td>Prompts complets en annexe. Pas de dépôt de code. Modèles open-source reproductibles, résultats Gemini dépendants de l'API.</td></tr>
+<tr><td>Transparence et limitations</td><td>5/5</td><td>Discussion franche des artefacts de comptabilité, du périmètre limité (texte multi-hop uniquement), et des faiblesses du budget control API.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4/5</td><td>Cadre DPI appliqué à SAS vs MAS, prédiction testable sur la dégradation, diagnostic méthodologique des artefacts d'évaluation.</td></tr>
 </tbody>
 </table>
   </div>

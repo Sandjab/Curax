@@ -127,106 +127,127 @@
     <p class="doc-type">Lecture Critique d'Article</p>
   </div>
   <div class="companion-content">
-    <h2>Objectif et contexte</h2>
+    <h2>Lecture Critique d'Article — Memory Intelligence Agent</h2>
 
-<p>Les agents de recherche profonde (Deep Research Agents) combinent raisonnement LLM et outils externes pour résoudre des tâches complexes en plusieurs tours d'interaction. Leur talon d'Achille : la mémoire. Les approches à contexte long diluent l'attention, injectent du bruit et gonflent les coûts de stockage. MIA propose une architecture Manager-Planner-Executor qui sépare la mémoire épisodique compressée (non-paramétrique) de la mémoire internalisée dans les poids du Planner (paramétrique). L'objectif est double — réduire le coût de stockage tout en améliorant la qualité du raisonnement grâce à l'expérience accumulée.</p>
+<h3>1. Objectif et contexte</h3>
 
-<p>Le positionnement est clair : les méthodes existantes (Mem0, A-Mem, ExpeL, Memento) souffrent soit d'une planification sous-optimale faute d'entraînement spécifique, soit d'une sélection d'exemples en mémoire limitée à la similarité sémantique. MIA vise à résoudre ces deux problèmes simultanément par un entraînement RL alterné et un apprentissage continu au moment du test.</p>
+<p>Les agents de recherche profonde (Deep Research Agents) combinent raisonnement LLM et outils externes, mais leurs systèmes de mémoire actuels souffrent de trois défauts : dilution attentionnelle par les contextes longs, bruit introduit par les trajectoires non pertinentes, et coûts de stockage croissants. MIA propose une architecture Manager-Planner-Executor à mémoire duale — non-paramétrique (trajectoires compressées dans un buffer) et paramétrique (connaissances internalisées dans le Planner via RL). L'objectif est double : améliorer la recherche profonde multimodale et textuelle, et permettre l'auto-évolution en environnement non supervisé.</p>
 
-<h2>Méthodologie</h2>
+<p>Le positionnement est clair : là où les systèmes existants (Mem0, A-Mem, ExpeL, Memento) injectent la mémoire comme contexte long ou comme guidance statique, MIA transforme les expériences passées en capacité de planification via entraînement continu. La distinction entre mémoire de processus (comment un résultat est obtenu) et mémoire factuelle (quel est le résultat) structure bien la contribution.</p>
 
-<h3>Architecture tripartite</h3>
+<h3>2. Méthodologie</h3>
 
-<p>Le Memory Manager (Qwen3-32B gelé) stocke des trajectoires historiques compressées sous forme de workflows structurés. Le Planner (Qwen3-8B, entraîné) génère des plans de recherche en s'appuyant sur des exemples contrastifs récupérés de la mémoire — trajectoires réussies et échouées. L'Executor (Qwen2.5-VL-7B, entraîné) exécute le plan via une boucle ReAct avec appels d'outils de recherche textuelle et visuelle.</p>
+<p>L'architecture sépare trois rôles. Le Memory Manager (Qwen3-32B gelé) compresse les trajectoires historiques en résumés structurés, gère un buffer avec scoring tri-dimensionnel (similarité sémantique, récompense de qualité, récompense de fréquence). Le Planner (Qwen3-8B entraîné) génère des plans de recherche en few-shot CoT à partir des mémoires récupérées. L'Executor (Qwen2.5-VL-7B entraîné) exécute le plan en boucle ReAct avec des outils de recherche texte et image.</p>
 
-<h3>Entraînement RL alterné</h3>
+<p>L'entraînement RL alterné en deux étapes repose sur GRPO. L'étape 1 entraîne l'Executor à suivre les plans (Planner gelé), l'étape 2 entraîne le Planner à générer de meilleurs plans (Executor gelé). Les fonctions de récompense combinent correction (70%), appel d'outil (20%) et format (10%) pour l'Executor ; correction finale (70%), correction intermédiaire (20%), réflexion (5%) et format (5%) pour le Planner.</p>
 
-<p>Deux étapes séquentielles basées sur GRPO. En étape 1, l'Executor apprend à interpréter les plans du Planner gelé et à raisonner avec les outils. En étape 2, le Planner apprend à produire de meilleurs plans et réflexions en s'appuyant sur l'Executor entraîné et gelé. Cette alternance évite l'optimisation jointe instable tout en alignant les deux agents. La fonction de récompense combine correction (70%), appel d'outils (20%) et format (10%) pour l'Executor, avec une composante réflexion supplémentaire pour le Planner.</p>
+<p>Le test-time learning (TTL) constitue le mécanisme le plus original. Pendant l'inférence, le Planner génère G plans candidats, l'Executor les exécute, puis les résultats alimentent simultanément la mémoire non-paramétrique (extraction de workflows positifs/négatifs) et la mémoire paramétrique (mise à jour du Planner via GRPO en ligne). Un Router sélectionne le meilleur plan via une Meta Plan Memory contrastive.</p>
 
-<h3>Apprentissage au moment du test (TTL)</h3>
+<p>Le cadre d'évaluation non supervisé s'inspire du processus de peer-review : trois reviewers spécialisés (cohérence logique, crédibilité des sources, validité des résultats) alimentent un Area Chair qui synthétise le jugement. Les quatre rôles sont instanciés par un seul Qwen3-32B avec des prompts distincts.</p>
 
-<p>Pendant l'inférence, MIA génère plusieurs plans candidats par rollout, exécute chacun, puis met à jour simultanément la mémoire non-paramétrique (extraction de workflows positifs/négatifs) et paramétrique (mise à jour GRPO du Planner). Un routeur sélectionne le meilleur plan en s'appuyant sur une Meta Plan Memory contrastive. Ce mécanisme crée une boucle de rétroaction positive : de meilleures capacités produisent de meilleurs exemples de référence.</p>
+<h3>3. Résultats principaux</h3>
 
-<h3>Auto-évolution non supervisée</h3>
+<p>Sur 7 benchmarks multimodaux, MIA (Executor Qwen2.5-VL-7B) atteint 53.6% de précision moyenne, dépassant Memento (le meilleur baseline mémoire) de 5.5 points. Les gains sont marqués sur LiveVQA (+6.4), In-house 1 (+9.1) et FVQA-test (+3.3). Sur 4 benchmarks textuels, MIA atteint 53.5% contre 46.0% pour Memento, avec un écart de 8.8 points sur GAIA.</p>
 
-<p>En l'absence de vérité terrain, un cadre d'évaluation inspiré de la revue par les pairs décompose le jugement en trois dimensions orthogonales — cohérence logique, crédibilité des sources, validité du résultat — chacune évaluée par une instance Qwen3-32B. Un agent « Area Chair » synthétise les trois avis. Ce signal approximatif remplace la supervision directe pour l'extraction mémoire et la mise à jour paramétrique.</p>
+<p>Un résultat frappant : les méthodes à mémoire contextuelle longue (RAG, Mem0, A-Mem) dégradent les performances par rapport au baseline sans mémoire. Seules les méthodes qui abstraient la mémoire en guidance de haut niveau (ReasoningBank, ExpeL, Memento, MIA) apportent des gains — et MIA domine cette catégorie.</p>
 
-<h3>Récupération en mémoire</h3>
+<p>La scalabilité vers les modèles frontier est démontrée : MIA améliore GPT-5.4 de 8.9 points sur LiveVQA et 6.4 sur HotpotQA, Gemini-3-Flash de 3.1/2.6, et Claude-Sonnet-4.6 de 1.8/1.7. La corrélation inverse entre capacité de base et marge d'amélioration est cohérente — les modèles déjà puissants bénéficient moins de la planification externe.</p>
 
-<p>La récupération combine trois dimensions : similarité sémantique (embeddings SimCSE-BERT, pondération question 80% / légende image 20%), récompense de valeur (taux de succès historique), et récompense de fréquence (favorisant les entrées peu utilisées pour l'exploration). Les poids sont λ_s = 0.7, λ_v = λ_f = 0.3.</p>
+<p>L'étude d'ablation montre que chaque composant contribue de façon incrémentale : la mémoire seule pour l'Executor dégrade (-0.4 multimodal), mais la mémoire canalisée vers le Planner améliore (+3.5). La réflexion ajoute +0.43, le Planner entraîné +2.37, et le TTL +3.23. L'auto-évolution non supervisée sur 3 époques montre une progression continue (FVQA-test : 65.1 → 66.4 → 67.1).</p>
 
-<h2>Résultats principaux</h2>
+<h3>4. Discussion et limites</h3>
 
-<p>MIA atteint une précision moyenne de 53.6% sur sept benchmarks multimodaux et 53.5% sur quatre benchmarks textuels, surpassant la meilleure baseline mémoire (Memento) de 5.5 points en multimodal et 7.5 points en textuel. Les gains les plus marqués apparaissent sur les tâches complexes : +6.4 sur LiveVQA, +9.1 sur In-house 1, +8.8 sur GAIA.</p>
+<p>Le recours systématique à un LLM Judger (Qwen3-32B) pour l'évaluation de la correction pose un problème de circularité : le même modèle fournit les récompenses d'entraînement et les métriques d'évaluation. Aucune évaluation humaine ne vient valider la fiabilité de ce juge. La précision rapportée dépend de la concordance entre le juge LLM et la réalité — un biais systématique du juge se propagerait dans tous les résultats sans être détecté.</p>
 
-<p>Résultat frappant : les méthodes de mémoire contextuelle (RAG, Mem0, A-Mem) dégradent la performance par rapport à l'absence de mémoire. Ce constat empirique valide la thèse centrale — injecter du contexte brut dans l'Executor nuit au raisonnement.</p>
+<p>Deux des sept benchmarks multimodaux (In-house 1 et In-house 2) ne sont pas publics. Les pipelines de construction de ces jeux sont décrits, mais sans accès aux données, la reproductibilité de ces résultats spécifiques reste impossible. Les gains les plus spectaculaires de MIA apparaissent précisément sur In-house 1 (+9.1 vs Memento), ce qui affaiblit leur valeur probante.</p>
 
-<p>Avec un Executor 7B, MIA surpasse Qwen2.5-VL-32B de 18 points en moyenne, GPT-4o, Gemini-2.5-Pro et GPT-5.4 en accès direct. Intégré à GPT-5.4 comme Executor, MIA apporte encore +9% sur LiveVQA et +6% sur HotpotQA. Le gain décroît avec la puissance du modèle de base : Claude-Sonnet-4.6 ne gagne que +1.8%, ce qui est logique — un modèle déjà performant laisse moins de marge d'amélioration.</p>
+<p>Le coût computationnel total du pipeline est absent. Le TTL nécessite G rollouts par question (G=4 en test), chacun impliquant des interactions multi-tours avec des outils de recherche, puis une passe GRPO. Multiplié par des milliers d'exemples, la charge GPU et la latence réelle ne sont jamais quantifiées. Pour un système visant le déploiement continu, cette omission est gênante.</p>
 
-<p>L'étude d'ablation décompose les contributions : la mémoire seule dégrade légèrement les résultats (-0.4 en multimodal), mais la mémoire canalisée vers le Planner améliore de +3.5 points. Le RL alterné ajoute +2.37, le TTL +3.23. Chaque composant contribue de façon incrémentale et mesurable.</p>
+<p>Le framework d'évaluation non supervisé (3 reviewers + AC) utilise un seul modèle (Qwen3-32B) avec des prompts différents. La diversité des perspectives revendiquée est artificielle — les biais du modèle sous-jacent contaminent les quatre rôles. La comparaison supervisé/non supervisé (Table 3 : 53.6 vs 50.6 en moyenne multimodale) montre un écart de 3 points, mais sans analyse d'erreur permettant de comprendre quand et pourquoi le juge non supervisé échoue.</p>
 
-<p>En mode non supervisé, MIA atteint des performances comparables aux baselines supervisées et montre une auto-amélioration progressive sur trois époques (59.6 → 61.1 → 61.7 sur FVQA-test).</p>
+<p>La configuration des outils varie entre benchmarks : wiki25 local pour certains, Serper en ligne pour d'autres. Cette hétérogénéité rend les comparaisons inter-benchmarks moins lisibles.</p>
 
-<h2>Discussion et limites</h2>
+<h3>5. Reproductibilité</h3>
 
-<p>Plusieurs faiblesses méthodologiques méritent un examen direct.</p>
+<p>Le code est disponible sur GitHub (ECNU-SII/MIA), les poids du modèle et les données sur HuggingFace (LightningCreeper/MIA). Les hyperparamètres d'entraînement sont détaillés (learning rate, batch size, nombre d'époques, longueurs de séquence). Le framework veRL est identifié comme base d'implémentation RL.</p>
 
-<p>La dépendance au LLM-juge (Qwen3-32B) est la principale fragilité. Le même modèle fournit les récompenses d'entraînement, évalue les trajectoires pour la mémoire, ET sert de métrique d'évaluation finale. Cette circularité empêche de distinguer l'amélioration réelle du raisonnement d'un simple alignement avec les biais du juge. Aucune évaluation humaine n'est rapportée, ni même un accord inter-annotateurs entre le juge LLM et des annotateurs humains.</p>
+<p>Les limitations à la reproductibilité : les deux jeux In-house ne sont pas partagés, le cache Serper utilisé pour l'entraînement en mode offline n'est pas distribué, et les prompts du Memory Manager et des reviewers non supervisés sont partiellement reportés (renvoi à l'Appendix G qui est tronquée dans le texte fourni). L'infrastructure requise (8 GPU pour l'Executor, 4 GPU pour le Planner) est explicite.</p>
 
-<p>Deux des sept benchmarks multimodaux sont des datasets « In-house » construits par les auteurs. Leur processus de construction est décrit, mais leur distribution, difficulté relative et biais potentiels restent peu analysés. Les résultats sur ces datasets montrent précisément les gains les plus spectaculaires de MIA (+9.1 sur In-house 1), ce qui interroge.</p>
+<h3>6. Impact et applications</h3>
 
-<p>Le coût computationnel du système complet est passé sous silence. MIA requiert au minimum trois modèles (Planner Qwen3-8B, Executor Qwen2.5-VL-7B, Manager Qwen3-32B) plus le juge (Qwen3-32B, potentiellement partagé). En TTL, chaque question déclenche G=4 rollouts complets avec appels d'outils, puis une mise à jour GRPO. Le coût en inférence et en latence n'est jamais quantifié.</p>
+<p>MIA apporte deux contributions techniques transférables. La conversion bidirectionnelle entre mémoire paramétrique et non-paramétrique — le Planner internalise les workflows en poids, puis les workflows extraits enrichissent le buffer — crée une boucle d'apprentissage continu applicable au-delà de la recherche profonde. L'entraînement RL alterné Planner/Executor formalise un patron de co-optimisation entre agent cognitif et agent opérationnel.</p>
 
-<p>Le cadre d'évaluation non supervisé inspiré de la revue par les pairs est une idée stimulante, mais sa fiabilité réelle n'est pas validée. Aucune comparaison entre les jugements du cadre non supervisé et des jugements humains n'est présentée. La corrélation entre le signal approximatif et la vérité terrain reste inconnue.</p>
+<p>L'applicabilité pratique dépend du coût du TTL. Un agent déployé en production devrait effectuer 4 rollouts par question avec mise à jour GRPO en ligne — la faisabilité en latence et en GPU pour des requêtes utilisateur en temps réel n'est pas démontrée. Le gain de 31% avec un Executor 7B par rapport au baseline sans mémoire est convaincant pour les cas batch (traitement différé de corpus), moins évident pour l'interactif.</p>
 
-<p>La limitation du mécanisme Reflect-Replan à un seul déclenchement est un choix pragmatique (réduction de latence) dont l'impact sur la qualité n'est pas mesuré par ablation.</p>
+<p>Le mécanisme d'auto-évolution non supervisé, s'il tient ses promesses, résoudrait un verrou majeur : l'absence de labels de qualité en déploiement ouvert. Les résultats montrent une progression sur 3 époques, mais la convergence à long terme (10+ époques) et les risques de dérive (reward hacking du juge interne) restent inexplorés.</p>
 
-<p>L'analyse d'erreur est absente. Les échecs de MIA ne sont pas caractérisés — sur quels types de questions le système échoue-t-il ? Quand la mémoire induit-elle en erreur plutôt qu'aider ?</p>
+<h3>7. Positionnement dans la littérature</h3>
 
-<h2>Reproductibilité</h2>
+<p>MIA se situe à l'intersection de trois courants : les agents de recherche profonde (DeepResearcher, Search-R1, MMSearch-R1), les systèmes de mémoire agent (Mem0, A-Mem, Memento, MemEvolve), et l'apprentissage par renforcement pour agents (GRPO, veRL). La comparaison directe avec Memento est la plus informative — les deux approches découplent la mémoire du LLM principal, mais Memento fine-tune la mémoire en gelant le LLM tandis que MIA entraîne le Planner tout en compressant la mémoire.</p>
 
-<p>Le code est publié sur GitHub, les modèles et datasets sur HuggingFace. Les hyperparamètres d'entraînement sont détaillés (taux d'apprentissage, taille de batch, nombre d'époques, longueur maximale de séquence). L'infrastructure est spécifiée : 8 GPU pour l'Executor, 4 pour le Planner, framework veRL.</p>
+<p>Par rapport à ExpeL, qui apprend des succès et échecs passés, MIA ajoute l'internalisation paramétrique et le TTL continu. Par rapport à Memory-R1, qui modélise la mémoire comme processus de décision markovien, MIA sépare explicitement planification et exécution. La démonstration que la mémoire contextuelle longue dégrade les performances des agents de recherche (RAG, Mem0, A-Mem sous-performent le baseline) confirme les observations de Li et al. (2024a) et justifie l'approche par abstraction.</p>
 
-<p>Deux obstacles à la reproduction complète subsistent. L'outil de recherche d'images utilise l'API commerciale Serper et le service d'hébergement ImgBB. Les résultats de recherche sont mis en cache pour l'entraînement, mais ces caches ne semblent pas distribués. Les datasets In-house 1 et 2, construits avec des pipelines spécifiques incluant du crawl web et de la génération LLM, seront difficiles à reconstruire à l'identique.</p>
+<p>Le gap principal avec la littérature concerne l'évaluation : les travaux récents sur LLM-as-judge (biais d'auto-préférence, sensibilité au format) ne sont pas discutés, alors que toute la chaîne évaluative repose sur un juge Qwen3-32B non validé par annotation humaine.</p>
 
-<p>Les prompts du Memory Manager, du juge LLM et des trois reviewers non supervisés sont fournis en annexe, ce qui est un bon point pour la transparence.</p>
+<h3>Tableau récapitulatif des scores de robustesse</h3>
 
-<h2>Impact et applications</h2>
-
-<p>MIA démontre qu'un petit modèle (7B) équipé d'un système mémoire sophistiqué peut rivaliser avec des modèles fermés massifs sur des tâches de recherche profonde. Le gain de +31% en moyenne pour Qwen2.5-VL-7B est substantiel et ouvre une voie concrète vers des agents de recherche déployables à moindre coût.</p>
-
-<p>L'architecture Manager-Planner-Executor est modulaire : le Planner peut être mis à jour indépendamment, l'Executor peut être remplacé par un modèle fermé sans réentraînement. Cette flexibilité a une valeur pratique réelle.</p>
-
-<p>La capacité d'auto-évolution non supervisée, même modeste (+7% et amélioration progressive sur trois époques), est la contribution la plus prospective. Si le signal approximatif du cadre peer-review s'avère fiable à plus grande échelle, MIA pourrait s'améliorer en continu en production sans annotation humaine.</p>
-
-<p>Les applications directes couvrent les assistants de recherche académique, la veille technologique automatisée et les systèmes de question-réponse multi-sources. La boucle mémoire-planification-exécution est transférable à d'autres domaines agentiques au-delà de la recherche d'information.</p>
-
-<h2>Positionnement dans la littérature</h2>
-
-<p>MIA se situe au croisement de trois courants : les agents de recherche profonde (DeepResearcher, Search-R1, MMSearch-R1), les systèmes de mémoire agentique (Mem0, A-Mem, Memento, ExpeL), et l'apprentissage par renforcement pour les agents (GRPO, veRL). Sa contribution principale réside dans l'intégration cohérente de ces trois dimensions.</p>
-
-<p>Par rapport à Memento (Zhou et al., 2025), qui fine-tune la mémoire sans toucher au LLM, MIA va plus loin en entraînant à la fois le Planner et l'Executor par RL alterné. Par rapport à ExpeL (Zhao et al., 2024), qui apprend des expériences sans entraînement paramétrique, MIA ajoute l'internalisation dans les poids du modèle. Par rapport aux approches RAG classiques, MIA montre empiriquement que l'injection directe de contexte long dégrade la performance — un résultat qui confirme les observations de Li et al. (2024a).</p>
-
-<p>L'entraînement RL alterné rappelle les architectures manager-worker en RL hiérarchique, mais l'application à un couple planificateur-exécuteur LLM avec mémoire partagée est originale. Le TTL avec mise à jour paramétrique en ligne est peu exploré dans le contexte agentique et constitue la contribution la plus distinctive.</p>
-
-<p>La comparaison avec les modèles fermés (GPT-5.4, Gemini-3-Flash, Claude-Sonnet-4.6) positionne MIA comme un amplificateur universel, pas seulement comme un système autonome. Cette polyvalence renforce son intérêt pratique.</p>
-
-<h2>Tableau récapitulatif des scores de robustesse</h2>
-
-<table>
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
 <thead>
-<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+<tr style="background-color: #f0f0f0;">
+<th>Critère</th>
+<th>Score (/5)</th>
+<th>Justification</th>
+</tr>
 </thead>
 <tbody>
-<tr><td>Question de recherche</td><td>4</td><td>Problème bien délimité, motivé par des limitations concrètes des mémoires à contexte long. Originalité dans la combinaison mémoire paramétrique/non-paramétrique.</td></tr>
-<tr><td>Design expérimental</td><td>4</td><td>Protocole complet : 11 benchmarks, ablation incrémentale, analyse d'entraînement, généralisation aux modèles fermés. Affaibli par l'utilisation de datasets maison.</td></tr>
-<tr><td>Taille d'échantillon</td><td>4</td><td>Évaluation sur des milliers d'exemples au total. Certains benchmarks restent petits (MMSearch : 171, GAIA-Text : 103).</td></tr>
-<tr><td>Qualité des métriques</td><td>3</td><td>Métrique unique (précision par LLM-juge). Pas d'évaluation humaine, pas de métriques complémentaires (latence, coût, qualité des plans).</td></tr>
-<tr><td>Contrôle des biais</td><td>3</td><td>Entraînement identique des Executors pour toutes les baselines. Circularité du LLM-juge utilisé pour l'entraînement et l'évaluation. Memento limité à sa version non-paramétrique.</td></tr>
-<tr><td>Reproductibilité</td><td>4</td><td>Code, modèles et datasets publiés. Hyperparamètres détaillés. Dépendance à des API commerciales (Serper, ImgBB) pour la reproduction complète.</td></tr>
-<tr><td>Transparence et limitations</td><td>3</td><td>Discussion des limitations quasi absente. Pas d'analyse d'erreur, pas de quantification du coût computationnel, pas de validation du cadre non supervisé contre des jugements humains.</td></tr>
-<tr><td>Impact et nouveauté</td><td>4</td><td>Architecture modulaire transférable, résultats compétitifs avec des modèles 7B face à des modèles massifs, mécanisme d'auto-évolution prometteur.</td></tr>
+<tr>
+<td>Question de recherche</td>
+<td>4</td>
+<td>Problème bien identifié (inefficacité de la mémoire longue pour DRA), formulation claire, originalité dans la dualité paramétrique/non-paramétrique.</td>
+</tr>
+<tr>
+<td>Design expérimental</td>
+<td>4</td>
+<td>11 benchmarks, ablation progressive, comparaison avec baselines mémoire sous conditions contrôlées (même Executor). Variabilité des outils entre benchmarks.</td>
+</tr>
+<tr>
+<td>Taille d'échantillon</td>
+<td>4</td>
+<td>Milliers d'exemples par benchmark (2384 LiveVQA, 7405 HotpotQA, 12576 2Wiki). Couverture multimodale et textuelle.</td>
+</tr>
+<tr>
+<td>Qualité des métriques</td>
+<td>3</td>
+<td>Précision via LLM Judger sans validation humaine. Pas de métriques secondaires (latence, coût, calibration du juge).</td>
+</tr>
+<tr>
+<td>Contrôle des biais</td>
+<td>3</td>
+<td>Même entraînement Executor pour les baselines mémoire. Circularité juge/récompense non adressée. Deux datasets internes.</td>
+</tr>
+<tr>
+<td>Reproductibilité</td>
+<td>4</td>
+<td>Code, modèles et données publics sur GitHub/HuggingFace. Hyperparamètres détaillés. Datasets In-house non partagés.</td>
+</tr>
+<tr>
+<td>Transparence et limitations</td>
+<td>3</td>
+<td>Limitations techniques reconnues brièvement. Coûts computationnels absents. Pas d'analyse d'erreur qualitative ni de cas d'échec.</td>
+</tr>
+<tr>
+<td>Impact et nouveauté</td>
+<td>4</td>
+<td>Architecture mémoire duale avec TTL continu, mécanisme d'auto-évolution non supervisé original. Gains empiriques substantiels sur modèles 7B et frontier.</td>
+</tr>
 </tbody>
+<tfoot>
+<tr style="background-color: #f0f0f0;">
+<td><strong>Note globale</strong></td>
+<td><strong>3.8 / 5</strong></td>
+<td>Travail empirique solide avec architecture bien motivée, mais la chaîne d'évaluation entièrement LLM-dépendante et l'opacité sur les coûts limitent la portée des conclusions.</td>
+</tr>
+</tfoot>
 </table>
   </div>
   <script>
