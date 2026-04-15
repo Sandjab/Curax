@@ -21,9 +21,8 @@ flowchart LR
 ```
 
 1. `import.py` classifie les articles HTML et publications PDF via Claude CLI
-2. `generate_manifest.py` lit les deux catalogues et produit `manifest.json`
-3. La GitHub Action exécute `generate_manifest.py` à chaque push dans `articles/` ou `papers/`
-4. `index.html` lit le manifeste et affiche les contenus dans deux onglets avec scores, tags et observations
+2. À la fin de chaque import, `import.py` invoque `generate_manifest.py` qui lit les deux catalogues et produit `manifest.json`
+3. `index.html` lit le manifeste et affiche les contenus dans deux onglets avec scores, tags et observations
 
 Pas de framework, pas de bundler — vanilla HTML/CSS/JS et Python stdlib (+ `pdfplumber` pour les PDFs).
 
@@ -33,7 +32,7 @@ Pas de framework, pas de bundler — vanilla HTML/CSS/JS et Python stdlib (+ `pd
 ├── index.html                          # Page d'accueil (vanilla JS, onglets, theming)
 ├── style.css                           # Design system (6 thèmes, light/dark, responsive)
 ├── themes.js                           # Thèmes partagés (index.html + documents compagnons)
-├── manifest.json                       # Généré automatiquement par l'Action
+├── manifest.json                       # Généré par import.py via generate_manifest.py
 ├── articles/
 │   ├── catalog.json                    # Source de vérité articles
 │   └── {domaine}/
@@ -49,7 +48,6 @@ Pas de framework, pas de bundler — vanilla HTML/CSS/JS et Python stdlib (+ `pd
 │   └── import.py                       # Pipeline d'import unifié (HTML + PDF)
 ├── infiles/                            # Staging d'import temporaire (.gitignore)
 └── .github/
-    ├── workflows/build-manifest.yml
     └── scripts/generate_manifest.py
 ```
 
@@ -195,29 +193,6 @@ Les définitions de thèmes sont partagées via `themes.js` entre `index.html` e
 2. Source : **Deploy from a branch**
 3. Branche : `main`, dossier : `/ (root)`
 4. Le site sera accessible à `https://<user>.github.io/Curax/`
-
-## Setup GitHub Action
-
-```mermaid
-sequenceDiagram
-    participant Dev
-    participant GitHub
-    participant Action
-    participant Pages
-
-    Dev->>GitHub: git push (articles/** ou papers/**)
-    GitHub->>Action: Déclenche build-manifest.yml
-    Action->>Action: generate_manifest.py
-    Action->>GitHub: Commit manifest.json
-    GitHub->>Pages: Deploy
-```
-
-L'Action est configurée dans `.github/workflows/build-manifest.yml` et nécessite les **permissions d'écriture** :
-
-1. **Settings > Actions > General**
-2. **Workflow permissions** : cochez **Read and write permissions**
-
-L'Action se déclenche à chaque push modifiant `articles/**` ou `papers/**`. Lancement manuel possible via **Actions > Build Manifest > Run workflow**.
 
 ## Développement local
 
