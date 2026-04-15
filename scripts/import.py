@@ -111,10 +111,10 @@ STYLE SPÉCIFIQUE VULGARISATION :
 # Claude CLI helper
 # ---------------------------------------------------------------------------
 
-def call_claude(prompt, json_schema=None, timeout=120):
+def call_claude(prompt, json_schema=None, timeout=120, model="opus"):
     """Appelle Claude CLI en mode print, retourne le JSON parse."""
     cmd = [shutil.which("claude") or "claude", "-p",
-           "--output-format", "json", "--model", "opus"]
+           "--output-format", "json", "--model", model]
     if json_schema:
         cmd += ["--json-schema", json.dumps(json_schema)]
     # Pass prompt via stdin to avoid Windows command-line length limit (32k chars)
@@ -130,12 +130,12 @@ def call_claude(prompt, json_schema=None, timeout=120):
     return json.loads(raw) if json_schema else raw
 
 
-def call_claude_with_retry(prompt, json_schema=None, max_retries=2, timeout=120):
+def call_claude_with_retry(prompt, json_schema=None, max_retries=2, timeout=120, model="opus"):
     """Appelle Claude CLI avec retry et backoff exponentiel."""
     last_error = None
     for attempt in range(max_retries + 1):
         try:
-            return call_claude(prompt, json_schema, timeout=timeout)
+            return call_claude(prompt, json_schema, timeout=timeout, model=model)
         except Exception as e:
             last_error = e
             if attempt < max_retries:
@@ -186,6 +186,21 @@ ARTICLE_SCHEMA = {
     },
     "required": ["domain", "tags", "quality_score", "quality_note", "title", "description"]
 }
+
+KEYWORDS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "keywords": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 10,
+            "maxItems": 20
+        }
+    },
+    "required": ["keywords"]
+}
+
+KEYWORDS_MODEL = "haiku"
 
 # ---------------------------------------------------------------------------
 # JSON schemas pour Claude — Publications PDF
@@ -413,6 +428,26 @@ def extract_pdf_text(pdf_path):
             text_parts.append(page_text)
     doc.close()
     return '\n\n'.join(text_parts)
+
+
+def extract_pdf_abstract(pdf_path, max_pages=2, max_chars=3000):
+    """Extrait les premières pages d'un PDF, tronqué. Couvre abstract + intro.
+
+    Utilisé pour l'extraction de mots-clés : on n'a pas besoin du texte complet.
+    """
+    text_parts = []
+    doc = fitz.open(pdf_path)
+    try:
+        for i, page in enumerate(doc):
+            if i >= max_pages:
+                break
+            page_text = page.get_text()
+            if page_text:
+                text_parts.append(page_text)
+    finally:
+        doc.close()
+    text = '\n\n'.join(text_parts)
+    return text[:max_chars]
 
 
 def extract_pdf_doi(text):
@@ -690,6 +725,54 @@ Ta tache : analyse cet article et produis :
 - description : description en 1-2 phrases du contenu
 
 Reponds en JSON."""
+
+
+def build_keywords_prompt(title, text_excerpt, existing_tags):
+    """Construit le prompt pour extraire des mots-clés cherchables."""
+    tags_str = ', '.join(existing_tags) if existing_tags else "(aucun)"
+    excerpt = text_excerpt[:4000]
+    return f"""Extrait 10-20 mots-clés cherchables pour ce contenu.
+
+Contraintes :
+- Français principal, mais préserve les anglicismes techniques (DSPy, MoE, RAG, LoRA, etc.)
+- Singulier, minuscules, sans ponctuation ni accents superflus
+- Couvre : outils, techniques, concepts, personnes, architectures, modèles, bibliothèques, entreprises mentionnés
+- NE DUPLIQUE PAS ces tags déjà assignés : {tags_str}
+- Priorise les termes qu'un lecteur taperait dans une barre de recherche pour retrouver ce contenu
+- Ne fabrique pas de mots-clés absents du texte — reste fidèle au contenu
+
+Titre : {title}
+
+Extrait :
+{excerpt}
+
+Réponds en JSON avec une clé "keywords" contenant un tableau de 10 à 20 mots-clés."""
+
+
+def call_keywords_for_item(title, text_excerpt, existing_tags):
+    """Appelle Claude Haiku pour extraire les mots-clés. Retourne [] si échec."""
+    try:
+        result = call_claude_with_retry(
+            build_keywords_prompt(title, text_excerpt, existing_tags),
+            KEYWORDS_SCHEMA,
+            timeout=60,
+            model=KEYWORDS_MODEL,
+        )
+        kw = result.get("keywords", []) if isinstance(result, dict) else []
+        # Normalisation : lowercase, strip, dedup, filter empties
+        seen = set()
+        cleaned = []
+        for k in kw:
+            if not isinstance(k, str):
+                continue
+            norm = k.strip().lower()
+            if norm and norm not in seen:
+                seen.add(norm)
+                cleaned.append(norm)
+        return cleaned
+    except Exception as e:
+        print(f"  ERREUR keywords: {e}")
+        return []
 
 
 def build_reclassify_taxonomy_prompt(catalog):
@@ -1091,6 +1174,7 @@ def do_import(analyses, file_contents, catalog):
         catalog["articles"][article_key] = {
             "domain": domain,
             "tags": info.get('tags', []),
+            "keywords": info.get('keywords', []),
             "quality_score": info['quality_score'],
             "quality_note": info['quality_note'],
         }
@@ -1213,6 +1297,7 @@ def do_import_papers(paper_analyses, papers_catalog):
             "title": info['title'],
             "description": info.get('description', ''),
             "tags": info.get('tags', []),
+            "keywords": info.get('keywords', []),
             "quality_score": info['quality_score'],
             "quality_note": info['quality_note'],
             "authors": info.get('authors', []),
@@ -1692,6 +1777,30 @@ def cmd_import(args):
                         info['slug'] = title_slug
                     print(f"  [{done_count}/{total_import}] {info['filename']} -> {domain} ({result['quality_score']}/10) [{', '.join(result['tags'])}]")
 
+            if not args.no_keywords:
+                print(f"\n4b. Extraction de mots-cles ({len(analyses)} articles, {KEYWORDS_MODEL})...")
+
+                def _extract_article_kw(info):
+                    kw = call_keywords_for_item(
+                        info.get('title', ''),
+                        info['text'],
+                        info.get('tags', []),
+                    )
+                    return (info, kw)
+
+                kw_done = 0
+                with ThreadPoolExecutor(max_workers=args.workers) as executor:
+                    futures = {executor.submit(_extract_article_kw, info): info for info in analyses}
+                    for future in as_completed(futures):
+                        kw_done += 1
+                        info, kw = future.result()
+                        info['keywords'] = kw
+                        preview = ', '.join(kw[:5]) + ('...' if len(kw) > 5 else '')
+                        print(f"  [{kw_done}/{total_import}] {info['filename']} -> {len(kw)} mots-cles ({preview})")
+            else:
+                for info in analyses:
+                    info['keywords'] = []
+
             print(f"\n5. Plan d'import ({len(analyses)} articles) :\n")
             print(f"  {'Domaine':<20} {'Score':>6}  {'Tags':<30} {'Titre'}")
             print(f"  {'-'*20} {'-'*6}  {'-'*30} {'-'*40}")
@@ -1840,6 +1949,35 @@ def cmd_import(args):
 
                         paper_analyses.append(info)
 
+                if not args.no_keywords and paper_analyses:
+                    print(f"\n4b. Extraction de mots-cles ({len(paper_analyses)} publications, {KEYWORDS_MODEL})...")
+
+                    def _extract_paper_kw(info):
+                        try:
+                            abstract = extract_pdf_abstract(info['filepath'])
+                        except Exception as e:
+                            print(f"  ERREUR extraction abstract {info['filename']}: {e}")
+                            abstract = info['text'][:3000]
+                        kw = call_keywords_for_item(
+                            info.get('title', ''),
+                            abstract,
+                            info.get('tags', []),
+                        )
+                        return (info, kw)
+
+                    kw_done = 0
+                    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+                        futures = {executor.submit(_extract_paper_kw, info): info for info in paper_analyses}
+                        for future in as_completed(futures):
+                            kw_done += 1
+                            info, kw = future.result()
+                            info['keywords'] = kw
+                            preview = ', '.join(kw[:5]) + ('...' if len(kw) > 5 else '')
+                            print(f"  [{kw_done}/{len(paper_analyses)}] {info['filename']} -> {len(kw)} mots-cles ({preview})")
+                else:
+                    for info in paper_analyses:
+                        info['keywords'] = []
+
                 # Preview
                 print(f"\n5. Plan d'import ({len(paper_analyses)} publications) :\n")
                 print(f"  {'Domaine':<20} {'Score':>6}  {'Auteurs':<25} {'Titre'}")
@@ -1901,6 +2039,8 @@ def main():
                         help="regenerer les LCA et vulgarisations de toutes les publications existantes")
     parser.add_argument('--workers', type=int, default=3,
                         help="nombre de workers paralleles pour le scoring (defaut: 3)")
+    parser.add_argument('--no-keywords', action='store_true',
+                        help="desactiver l'extraction de mots-cles cherchables (activee par defaut, via Haiku)")
     args = parser.parse_args()
 
     if args.reclassify:

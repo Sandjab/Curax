@@ -96,6 +96,7 @@ def build_manifest_from_catalog(catalog_path: Path) -> dict:
                 "quality_score": meta.get("quality_score", 0),
                 "quality_note": meta.get("quality_note", ""),
                 "tags": meta.get("tags", []),
+                "keywords": meta.get("keywords", []),
             }
             articles.append(article)
 
@@ -157,6 +158,7 @@ def build_papers_manifest(papers_catalog_path: Path) -> dict | None:
                 "quality_score": meta.get("quality_score", 0),
                 "quality_note": meta.get("quality_note", ""),
                 "tags": meta.get("tags", []),
+                "keywords": meta.get("keywords", []),
                 "authors": meta.get("authors", []),
                 "year": meta.get("year", 0),
                 "journal": meta.get("journal", ""),
