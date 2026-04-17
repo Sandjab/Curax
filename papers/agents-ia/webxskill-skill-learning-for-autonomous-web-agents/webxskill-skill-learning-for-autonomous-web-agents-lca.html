@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WEBXSKILL: Skill Learning for Autonomous Web Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>WEBXSKILL: Skill Learning for Autonomous Web Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les agents web pilotés par LLM échouent sur les workflows longs parce qu'ils rejouent la planification complète à chaque tâche récurrente. Deux familles de solutions coexistent. Les <strong>skills textuels</strong> (AWM, StepP, ICAL) fournissent des instructions en langage naturel mais ne s'exécutent pas directement : l'agent doit re-grounder chaque étape. Les <strong>skills code</strong> (SkillWeaver, ASI, WALT) sont exécutables mais opaques : aucune visibilité pas-à-pas, donc aucune récupération d'erreur fine.</p>
+<p>WEBXSKILL propose un format hybride. Chaque skill contient à la fois un programme d'actions paramétré (click, input, scroll) et un guidage en langage naturel par étape. Le framework expose deux modes : <strong>grounded</strong> (le runtime exécute automatiquement la séquence) et <strong>guided</strong> (l'agent suit les instructions avec ses actions natives). Le positionnement est clair et le gap identifié dans la littérature est réel.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline comprend trois étapes. L'<strong>extraction</strong> exploite des trajectoires synthétiques générées par SynthAgent (2 500 tâches pour WebArena, 600 pour WebVoyager) plutôt que des données de test — choix délicat qui évite le risque de fuite d'information reproché à ASI. Un LLM identifie les sous-séquences réutilisables, paramètre les valeurs concrètes et annote chaque étape.</p>
+<p>L'<strong>organisation</strong> indexe les skills dans un graphe structuré par patterns d'URL généralisés (ex: <code>shopping/catalogsearch/*</code>). Le choix de l'URL comme clé plutôt que le DOM ou le contenu est défendable : stable, peu bruité, efficace à matcher. La <strong>curation</strong> combine déduplication à trois niveaux (exact, Jaccard sur types d'actions, similarité d'embeddings text-embedding-3-small) et validation d'exécution sur environnement de test.</p>
+<p>L'évaluation porte sur WebArena (154 tâches, 5 sites auto-hébergés) et WebVoyager (11 sites live). Deux backbones : GPT-5 et Qwen-3.5-122B-A10B-GPTQ-Int4. Baselines : Vanilla ReAct, MAP (multi-action prediction), SkillWeaver, WALT. Métrique : task success rate évalué par GPT-4.1. Budget : 30 pas.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur WebArena avec GPT-5, le mode grounded atteint 69,5 % vs 59,7 % pour Vanilla (+9,8 points) et 42,9 % pour WALT. Sur WebVoyager, grounded atteint 86,1 % vs 71,9 % Vanilla (+14,2 points). Les gains sont particulièrement marqués sur BBC News, ESPN et Wolfram Alpha.</p>
+<p>Résultat intéressant : le mode optimal dépend du modèle. GPT-5 performe légèrement mieux en grounded (69,5 vs 68,8). Qwen, modèle plus faible, tire un bénéfice net du mode guided (53,9 vs 48,7) car il peine à récupérer des erreurs d'exécution opaques. L'ablation le confirme : sur Qwen, le mode mix (choix libre entre grounded et guided) s'effondre à 42,2, signe que la complexité décisionnelle supplémentaire coûte cher aux modèles faibles.</p>
+<p>La transférabilité est démontrée : skills extraits de WebArena uniquement, déployés en mode guided sur WebVoyager, atteignent 85,1 % — meilleur que toutes les baselines. Le mode guided devient donc un outil pratique pour les environnements non vus.</p>
+<p>L'ablation isole le poids des composants. Retirer la validation des skills coûte 14,3 points (le plus gros impact). Retirer le skill graph coûte 10,4 points. Retirer le guidage pas-à-pas en mode grounded coûte 9,1 points — résultat contre-intuitif : même quand l'exécution est automatique, le guidage en langage naturel aide l'agent à <em>choisir</em> le bon skill.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'analyse d'échecs mérite attention : 38 % des échecs viennent du raisonnement post-skill, 36 % de skills disponibles mais non invoqués, 13 % de mauvais choix de skill et seulement 9 % d'exécution de skill cassée. Le bottleneck résiduel est donc l'agent lui-même, pas le framework. Les auteurs reconnaissent honnêtement ce point.</p>
+<p>Plusieurs faiblesses méthodologiques. La métrique de succès repose entièrement sur GPT-4.1 comme juge, sans validation humaine systématique — biais LLM-as-judge non discuté. L'échantillon de 154 tâches WebArena reste modeste ; WebVoyager n'a que 11 sites après exclusion de 4 sites "instables". Les comparaisons avec SkillWeaver et WALT sur WebVoyager sont esquivées sous prétexte que leurs méthodes d'acquisition ne sont pas faisables en live — argument défendable mais qui affaiblit la comparaison.</p>
+<p>L'ablation avec skills de test-set (variant oracle) reste 1,3 points au-dessus de la version production. L'écart est faible mais suggère que l'extraction depuis trajectoires synthétiques laisse encore de la marge. La couverture de CMS (52 % de succès d'exécution) révèle une fragilité sur les interfaces admin complexes à cause des overlays et du shadow DOM.</p>
+<p>Le choix de quantiser Qwen en GPTQ-Int4 par manque de GPU brouille la comparaison de modèles : on mesure un agent quantisé, pas le modèle natif.</p>
+
+<h2>Reproductibilité</h2>
+<p>Code publié sur <code>github.com/aiming-lab/WebXSkill</code>. WebArena et WebVoyager sont publics. Les prompts d'extraction (Tables 7-8), le format JSON des skills (Table 9), les prompts de déploiement grounded et guided (Tables 10-13) sont fournis en annexe. Les trajectoires synthétiques proviennent de SynthAgent (2 500 + 600 tâches), référencé mais non inclus directement. La reproductibilité dépend de l'accès à GPT-5 (API payante) et de la disponibilité de Qwen-3.5-122B-A10B, modèle mentionné mais dont la référence Qwen blog (février 2026) correspond à une date future depuis la rédaction — incohérence temporelle à vérifier.</p>
+
+<h2>Impact et applications</h2>
+<p>La contribution centrale — skills hybrides action + guidance — est pragmatique et s'intègre bien aux frameworks existants (browser-use). Le résultat de transférabilité guided (skills WebArena → WebVoyager à 85,1 %) a une valeur pratique réelle pour le déploiement d'agents sur sites non vus. Le skill graph URL-based est une idée simple et efficace, transposable à d'autres domaines d'interaction structurée.</p>
+<p>L'observation que le choix de mode doit suivre la capacité du modèle (grounded pour modèles forts, guided pour faibles) apporte une heuristique d'ingénierie utile. Le fait que WEBXSKILL + skills SkillWeaver/WALT redéployés dans leur framework surpasse les implémentations originales suggère que le framework de déploiement compte autant que la méthode d'extraction.</p>
+<p>Limites d'application : benchmarks contrôlés, pas de validation sur sites adversariaux, pas d'analyse sécurité d'exécution de code auto-généré. L'ethics statement le mentionne mais reste défensif.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le tableau 1 positionne clairement WEBXSKILL sur quatre axes (exécutabilité, guidage, acquisition, contexte) comme premier à cocher les quatre cases. La filiation avec AWM (workflow memory) et SkillWeaver (extraction de skills par exploration) est explicite. L'acquisition via trajectoires synthétiques les distingue d'ASI (test-set, fuite potentielle) et de SkillWeaver/WALT (exploration autonome coûteuse).</p>
+<p>La parenté avec les travaux récents sur les agents computer-use (CoAct, UltraCUA) n'est pas approfondie. Le lien avec les travaux sur la mémoire procédurale (Mem0, PlugMem) reste superficiel. Le papier s'inscrit dans une vague 2024-2026 de frameworks d'agents web avec réutilisation de connaissances et apporte une contribution méthodologique identifiée plutôt qu'une rupture.</p>
+
+<h2>Synthèse des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Grounding gap bien identifié et défendu par comparaison littérature</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Deux benchmarks, ablation solide, comparaisons multi-baselines</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>154 tâches WebArena, 11 sites WebVoyager — standard mais modeste</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Success rate jugé par GPT-4.1 sans validation humaine systématique</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Comparaisons équitables reconstruites mais quantization de Qwen non contrôlée</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, prompts détaillés, benchmarks ouverts, dépendance API GPT-5</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Analyse d'échecs granulaire, reconnaissance des bottlenecks post-skill</td></tr>
+<tr><td>Impact / nouveauté</td><td>3</td><td>Contribution incrémentale solide, pas de rupture conceptuelle</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3,5/5.</strong> Papier d'ingénierie sérieux avec une idée simple et bien exécutée. L'évaluation est honnête et l'analyse d'échecs dépasse la moyenne du domaine. Les faiblesses principales tiennent au jury LLM non validé, à la taille modérée des benchmarks et au caractère incrémental de la contribution par rapport à SkillWeaver et WALT.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlphaEval: Evaluating Agents in Production — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AlphaEval: Evaluating Agents in Production</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>AlphaEval attaque une faille structurelle des benchmarks d'agents IA : leur construction rétrospective à partir d'artefacts déjà résolus (issues GitHub closes, sessions web archivées) avec des spécifications explicites et des métriques déterministes. Cette configuration diverge radicalement du déploiement réel, où 80 % des praticiens travaillent en production ou en pilote selon l'enquête Pan et al. 2025 citée par les auteurs. Le sondage interne des auteurs sur 27 entreprises IA chiffre le décalage : 63 % déclarent une faible confiance dans l'impact des mises à jour de modèles, 25,9 % n'ont aucun critère d'évaluation explicite, et 70,4 % délèguent le test aux développeurs comme tâche annexe.</p>
+<p>Le papier propose un renversement méthodologique : partir des exigences de production authentiques pour construire les tâches d'évaluation, plutôt que l'inverse. Trois axes de divergence sont ciblés — sous-spécification des tâches, subjectivité du jugement, évolution continue des critères — et matérialisés par 94 tâches issues de 7 entreprises, couvrant 6 domaines O*NET (Ressources humaines, Finance, Achats, Génie logiciel, Santé, Recherche technologique).</p>
+
+<h2>Méthodologie</h2>
+<p>Le framework <em>requirement-to-benchmark</em> se découpe en quatre étapes : engagement partenaire, élicitation des exigences sur environ un mois par entreprise, formalisation standardisée (query.md, task.yaml, rubric.py, files/) et validation itérative en 3–4 cycles par partenaire. Chaque tâche compose au moins deux paradigmes d'évaluation (moyenne 2,8), sélectionnés parmi Reference Answer Verification, Formal Logic Verification, Rubric-based Evaluation et Execution-based Verification, avec LLM-as-a-Judge (Claude Opus 4.6) en méthode transversale.</p>
+<p>L'évaluation empirique couvre 14 configurations sur les 24 combinaisons possibles (6 modèles × 4 scaffolds), les choix étant justifiés par l'adoption réelle et le coût d'exécution — chaque run Claude Code + Opus demande 46 tours et 14 minutes par tâche en moyenne. L'infrastructure repose sur des conteneurs Docker avec versions épinglées (Claude Code 2.1.70, Codex 0.80/0.111, Copilot 1.0.10, Cursor 2026.03.11), garantissant une trace complète des appels d'outils et des artefacts.</p>
+<p>Le scoring agrège des rubriques produisant s ∈ [0, 1], remis à l'échelle 0–100. Les scores de domaine sont des moyennes arithmétiques non pondérées, et le score global moyenne les 6 domaines — choix défendable pour donner le même poids à chaque axe mais qui masque l'hétérogénéité des tâches par domaine (de 11 à 23).</p>
+
+<h2>Résultats principaux</h2>
+<p>La meilleure configuration, Claude Code + Opus 4.6, atteint 64,41/100 en moyenne — un plafond qui matérialise le fossé recherche-production. Le même modèle Opus 4.6 passe de 64,41 via Claude Code à 53,45 via Codex, soit 11 points d'écart ; GPT-5.2 varie de 39,47 via Claude Code à 54,91 via GitHub Copilot, 15 points d'écart. Le scaffold compte donc autant que le modèle, conclusion opérationnelle forte que la littérature <em>model-centric</em> ne peut pas capturer.</p>
+<p>La variance inter-domaines est brutale : Procurement & Operations va de 30,91 à 88,09 selon la configuration, tandis que les RH plafonnent à 38,91 pour tous les agents. Les classements agrégés induisent en erreur — GLM-5 obtient 66,43 en Achats mais 52,46 en Génie logiciel. L'annotation économique traduit cela en 110–165 K$ de valeur professionnelle livrée pour la meilleure config contre 70–105 K$ pour la pire, écart de 40–60 K$ sur les mêmes 94 tâches.</p>
+<p>La fiabilité statistique repose sur trois runs répétés de la meilleure config (IC 95 % ±1,83) et une méta-évaluation sur 1 000 jugements de rubriques : κ de Cohen entre 0,69 et 0,78, κ de Fleiss à 0,72. Les auteurs documentent l'asymétrie attendue — l'évaluateur automatique s'aligne mieux avec l'annotateur indulgent (κ = 0,780) qu'avec le strict (κ = 0,697), signature du biais de self-preference.</p>
+
+<h2>Discussion et limites</h2>
+<p>La taxonomie des six modes d'échec (dépendances en cascade, effondrement du jugement subjectif, défaillances de récupération d'information, incohérence inter-sections, mauvaise interprétation des contraintes, non-conformité de format) constitue l'apport qualitatif le plus exploitable. L'exemple d'Opus 4.6 substituant des données Series D obsolètes à un financement série F de Harvey AI — avec tous les chiffres erronés et aucun hedging — illustre le risque production mieux que n'importe quel score agrégé.</p>
+<p>Plusieurs limites sont sérieuses. Sept partenaires et six domaines O*NET sur les 1 016 professions américaines recensées : la généralisation est assumée comme partielle. Le recours à Claude Opus 4.6 comme juge pour évaluer Claude Opus 4.6 crée un conflit documenté par Panickssery et al. 2024, que les auteurs reconnaissent mais ne neutralisent pas (pas de juge alternatif cross-validant les classements). La méta-évaluation porte sur 20 tâches LLM-as-a-Judge seulement, pas sur l'ensemble des paradigmes. Les 14 configurations sur 24 laissent des zones mortes (Gemini 3 Pro × Codex, Kimi K2.5 × Cursor) où les conclusions sur l'interaction modèle–scaffold restent indirectes.</p>
+<p>La taille d'échantillon par domaine reste limitée (11 à 23 tâches) : les IC observés sur P&O (±4,72) suggèrent qu'un domaine de 11 tâches ne permet pas de discriminer finement deux configurations proches. Enfin, l'estimation économique dépend d'un multiplicateur de bénéfices (1,3× US, 1,45× CN) et d'un recalage expert par domaine allant de 0,33 à 1,54 — une sensibilité que les auteurs chiffrent à ±9 % mais qui pèse sur les comparaisons valeur vs. score.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le framework d'évaluation est publié sur GitHub (GAIR-NLP/AlphaEval), avec versions Docker et CLI épinglées. Les traces d'exécution complètes sont enregistrées en JSON. La faiblesse porte sur les données partenaires : les contrats de confidentialité limitent la publication intégrale des spécifications et des ground truths métier — contrainte inévitable du choix d'ancrage production, mais qui empêche un tiers de rejouer exactement les 94 tâches sans re-négociation. Les auteurs ouvrent le pipeline de construction pour que d'autres organisations instancient leur propre benchmark, ce qui remplace partiellement la reproductibilité stricte par une reproductibilité procédurale.</p>
+
+<h2>Impact et applications</h2>
+<p>Pour les équipes qui déploient des agents, AlphaEval apporte trois outils directement exploitables : une grille d'attribution de domaines O*NET pour cadrer les cas d'usage, un format de package de tâche standardisé (query.md / task.yaml / rubric.py) réutilisable immédiatement, et une démonstration chiffrée qu'un choix de scaffold mal aligné coûte 40–60 K$ de valeur sur un portefeuille de 94 tâches. Pour les développeurs de modèles, les six modes d'échec fournissent une roadmap de régression invisible aux benchmarks de coding pur — en particulier la <em>completion bias</em> en procurement (fabriquer une solution plutôt que déclarer l'infaisabilité) et le biais d'information positive en recherche technologique (absence systématique de couverture des échecs).</p>
+<p>L'ancrage économique (2 420 heures professionnelles, 154–231 K$ sur l'ensemble) transforme le débat d'« à quel point le modèle est bon » à « combien de valeur l'agent délivre », déplacement qui correspond aux attentes des décideurs achats que la littérature benchmark ignorait jusqu'ici.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le tableau comparatif sur 90+ benchmarks est explicite : AlphaEval est le premier à cocher simultanément les sept dimensions (Production, Multi-Modal, Underspec., Diverse Eval, Expert Val., Dynamic, Cross-Domain). SWE-Lancer partageait l'ancrage production mais restait mono-domaine code ; xbench couvrait recrutement et marketing mais sans sous-spécification ni évaluation diversifiée. L'article s'inscrit dans le courant Wang et al. 2026 (cartographie O*NET de 43 benchmarks) en opérationnalisant ses principes — couverture, réalisme, granularité — sur des tâches payantes réelles plutôt que des tâches curées. Le positionnement est donc moins « nouveau benchmark de plus » que « infrastructure méthodologique pour que la communauté construise ses propres benchmarks production ».</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td><strong>Question de recherche</strong></td><td>5</td><td>Problème production bien posé, quantifié par une enquête de 27 entreprises, positionné contre 90+ benchmarks existants.</td></tr>
+<tr><td><strong>Design expérimental</strong></td><td>4</td><td>Framework 4-étapes solide et auditable, mais le choix de 14 configs sur 24 limite les comparaisons croisées strictes.</td></tr>
+<tr><td><strong>Taille d'échantillon</strong></td><td>3</td><td>94 tâches au total, 11 à 23 par domaine — suffisant pour tendances, insuffisant pour comparaisons fines à l'intérieur d'un domaine.</td></tr>
+<tr><td><strong>Qualité des métriques</strong></td><td>4</td><td>Diversité des paradigmes documentée (moyenne 2,8 par tâche), méta-évaluation κ = 0,72, mais dépendance forte au LLM-judge.</td></tr>
+<tr><td><strong>Contrôle des biais</strong></td><td>3</td><td>Self-preference reconnu (κ plus élevé avec annotateur indulgent) mais non neutralisé par juge alternatif ; pas de blinding.</td></tr>
+<tr><td><strong>Reproductibilité</strong></td><td>4</td><td>Code ouvert, versions Docker épinglées, traces JSON ; données partenaires confidentielles par construction.</td></tr>
+<tr><td><strong>Transparence des limites</strong></td><td>5</td><td>Limitations explicites (snapshot unique, 4 scaffolds, 7 entreprises), analyse de sensibilité économique quantifiée.</td></tr>
+<tr><td><strong>Impact et nouveauté</strong></td><td>5</td><td>Premier benchmark cochant les 7 dimensions production, taxonomie des 6 failure modes exploitable immédiatement.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 4,0/5</strong> — contribution méthodologique majeure au champ de l'évaluation d'agents en production, tempérée par un échantillon partenaires restreint et un dispositif d'évaluation qui reste partiellement auto-référentiel sur la branche LLM-as-a-Judge.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

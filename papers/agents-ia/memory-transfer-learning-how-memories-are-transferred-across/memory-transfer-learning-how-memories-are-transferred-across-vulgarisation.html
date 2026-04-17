@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Transfer Learning: How Memories are Transferred Across Domains in Coding Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Memory Transfer Learning: How Memories are Transferred Across Domains in Coding Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <article>
+<h2>Quand les agents de code apprennent à partager leurs souvenirs</h2>
+
+<p>Un agent de code qui résout un bug Django devrait-il pouvoir puiser dans ses expériences de compétitions de programmation ? Jusqu'ici, la réponse par défaut était non. Les agents mémorisent leurs succès et leurs échecs, mais chaque domaine reste cloisonné : une mémoire pour SWE-Bench, une autre pour MLGym, une troisième pour LiveCodeBench. Une équipe de KAIST, NYU et DeepAuto.ai vient de démontrer que ce cloisonnement est un gaspillage. En mutualisant les mémoires à travers six benchmarks hétérogènes, ils obtiennent un gain moyen de 3,7 % — et, plus intéressant encore, ils identifient précisément <em>ce qui</em> se transfère et pourquoi.</p>
+
+<p>L'étude, intitulée <strong>Memory Transfer Learning</strong>, bouscule une hypothèse implicite du domaine : que l'expérience acquise sur un type de tâche serait trop spécifique pour servir ailleurs. Les résultats racontent une autre histoire. Ce qui voyage bien entre domaines, ce ne sont pas les bouts de code ni les algorithmes particuliers. Ce sont les réflexes du métier : vérifier avant de modifier, valider avec un test jetable, se méfier des raccourcis. Le savoir-faire plutôt que le savoir.</p>
+
+<h2>Le problème : des mémoires qui s'ignorent</h2>
+
+<p>Les agents de code modernes fonctionnent en boucle. Ils tentent une tâche, observent le résultat, et stockent l'expérience dans une mémoire qui sera réinjectée lors de tâches similaires. Le principe s'appelle auto-évolution : pas besoin de réentraîner le modèle, il s'améliore en capitalisant sur ses propres essais. C'est séduisant sur le papier, et ça fonctionne — à condition que la nouvelle tâche ressemble suffisamment à une ancienne.</p>
+
+<p>Le hic, c'est que la plupart des systèmes actuels ne vont puiser que dans les souvenirs du même benchmark. Un agent qui a résolu cent exercices de LiveCodeBench n'utilisera pas ces expériences quand on lui demande de corriger un bug dans un repository Django. Pourtant, les deux tâches partagent énormément : le même shell Linux, le même Python, les mêmes bibliothèques, les mêmes pièges d'encodage, la même nécessité de tester avant de soumettre. En refusant de traverser les frontières entre domaines, on jette la moitié de l'expérience acquise.</p>
+
+<p>Les auteurs posent trois questions frontales. La mémoire d'un domaine peut-elle vraiment aider dans un autre ? Si oui, qu'est-ce qui se transfère exactement ? Et comment formater cette mémoire pour maximiser le transfert ? Leur réponse tient en une phrase : l'abstraction fait tout.</p>
+
+<h2>La méthode : quatre façons de se souvenir</h2>
+
+<p>Pour comparer les formats de mémoire, les chercheurs ont généré la même expérience sous quatre représentations différentes, du plus concret au plus abstrait.</p>
+
+<p>La <strong>Trajectoire</strong> conserve tout. Chaque commande bash tapée par l'agent, chaque sortie du terminal, dans l'ordre. C'est le journal brut de l'exécution. Utile pour reproduire, mais lourd et saturé de détails spécifiques à la tâche d'origine.</p>
+
+<p>Le <strong>Workflow</strong> est un résumé opérationnel. On extrait de la trajectoire les étapes qui comptent vraiment — celles qui ont fait basculer le résultat — et on les organise autour d'un objectif clair. Une recette abrégée.</p>
+
+<p>Le <strong>Résumé</strong> raconte l'expérience en prose. Un paragraphe qui décrit l'environnement, les actions menées, le résultat obtenu, et surtout une analyse du <em>pourquoi</em> ça a marché ou échoué. On passe du quoi au pourquoi.</p>
+
+<p>L'<strong>Insight</strong> pousse l'abstraction plus loin. Titre, description d'une phrase, contenu en trois lignes maximum. La consigne donnée au modèle qui génère ces insights est explicite : ne mentionner aucun fichier spécifique, aucun détail particulier, produire une leçon généralisable. On distille l'expérience jusqu'à obtenir un principe.</p>
+
+<p>Pour évaluer le transfert, les auteurs ont constitué un pot commun : les mémoires de cinq benchmarks servent à aider le sixième. Quand on teste l'agent sur SWE-Bench, il pioche uniquement dans les mémoires issues de LiveCodeBench, d'Aider, de MLGym, de TerminalBench et de ReplicationBench. Aucune contamination, pas de triche. Pour chaque nouvelle tâche, on récupère les trois souvenirs les plus proches par similarité cosinus, et on les injecte dans le prompt système de l'agent.</p>
+
+<p>Une analogie simple : imaginez un développeur qui change de mission. Il peut ramener son carnet de code précédent (Trajectoire), ou la liste des étapes clés qui ont marché (Workflow), ou une rétrospective détaillée (Résumé), ou quelques principes gravés dans sa tête (Insight). Lequel l'aidera le plus dans un contexte totalement nouveau ? L'intuition suggère les principes. Les mesures confirment.</p>
+
+<h2>Résultats : l'abstraction l'emporte</h2>
+
+<p>Sur les six benchmarks testés avec GPT-5-mini, le format Insight pulvérise les autres. Gain moyen de 3,7 % en Pass@3, avec des pics à +8,3 % sur MLGym-Bench et +7,8 % sur ReplicationBench. Le format Trajectoire, lui, produit parfois des régressions — blindly suivre une commande spécifique à une autre tâche peut égarer l'agent. Le classement est sans appel : Insight > Résumé > Workflow > Trajectoire. Plus on abstrait, mieux ça transfère.</p>
+
+<p>L'effet se reproduit sur d'autres modèles. DeepSeek V3.2 gagne 2,6 %, Qwen3-Coder gagne 1,8 %. Le mécanisme n'est pas propre à GPT-5-mini. Mieux : les mémoires générées par un modèle fonctionnent sur un autre. Un agent Qwen peut bénéficier d'insights produits par GPT-5-mini, même si l'effet reste inférieur aux mémoires auto-générées. Le savoir-faire encodé dans ces insights n'est pas lié à la manière dont un modèle particulier pense.</p>
+
+<p>Un chiffre frappe dans la comparaison avec les approches concurrentes. AgentKB, une méthode récente, utilise une mémoire de 5 899 entrées. ReasoningBank en utilise 97. Memory Transfer Learning en utilise 431 et bat les deux. Dix fois moins de mémoires qu'AgentKB, pour une meilleure performance. La taille brute ne fait pas tout — la qualité du format compte davantage.</p>
+
+<p>L'analyse qualitative révèle ce qui se transfère réellement. Les auteurs ont demandé à GPT-5 de catégoriser les cas où l'agent échouait en zéro-shot mais réussissait avec MTL. Le résultat est net : 85 % des gains viennent de ce qu'ils appellent du <em>méta-savoir</em>. Discipline de workflow itératif (inspecter, modifier, vérifier), respect des contraintes d'interface, validation pilotée par les tests, prudence face aux refactorings agressifs, robustesse des entrées. Seulement 5,5 % des gains proviennent du transfert direct de stratégies algorithmiques. Autrement dit, l'agent apprend à mieux se comporter, pas à mieux coder.</p>
+
+<p>Un cas illustre bien cette dynamique. Sur une tâche SWE-Bench, l'agent zéro-shot échoue en tentant une correction frontale d'une erreur Django. Avec MTL, il récupère un insight venu de LiveCodeBench qui lui conseille d'écrire un petit test Python inline via un heredoc pour valider la correction avant de la soumettre. L'insight n'a rien à voir avec Django, rien à voir avec le bug précis. Il encode une habitude de travail. L'agent l'applique, construit son propre test, vérifie, soumet, réussit.</p>
+
+<h2>Quand le transfert tourne mal</h2>
+
+<p>Tout n'est pas rose. Memory Transfer Learning peut aussi dégrader la performance, et les auteurs passent un temps honorable à disséquer les échecs. Trois causes principales émergent.</p>
+
+<p>L'<strong>ancrage trompeur</strong> intervient quand une mémoire superficiellement similaire — même vocabulaire, même type de fichier — impose des hypothèses qui ne s'appliquent pas. L'agent détourne son raisonnement vers des contraintes imaginaires. Un exemple édifiant : une mémoire Workflow générée sur une tâche en R, avec ses routines d'écriture de fichiers spécifiques, transférée sur une tâche en C++. L'agent reproduit mécaniquement le pattern R dans un environnement C++. Catastrophe syntaxique garantie.</p>
+
+<p>La <strong>fausse confiance de validation</strong> apparaît quand l'agent reproduit des vérifications superficielles au lieu d'examiner les critères formels de la tâche. Il croit avoir validé, il n'a rien validé.</p>
+
+<p>Le <strong>transfert indiscriminé de bonnes pratiques</strong> se produit quand un pattern efficace ailleurs devient une rigidité procédurale ici. L'agent applique une recette parce qu'elle lui est familière, et passe à côté des spécificités de la nouvelle tâche.</p>
+
+<p>Ces échecs éclairent le plafond actuel de l'approche. Le problème n'est pas la mémoire elle-même, mais la façon de la récupérer et de l'adapter. Les auteurs ont testé des méthodes de retrieval avancées — reranking par LLM, réécriture adaptative des mémoires — et elles sous-performent toutes le simple embedding cosinus. Les techniques classiques de retrieval, conçues pour des contextes statiques, ne se transposent pas bien aux agents multi-étapes dynamiques.</p>
+
+<h2>Implications pratiques : repenser la mémoire des agents</h2>
+
+<p>Pour quiconque construit des agents de code en production, cette étude envoie trois messages concrets.</p>
+
+<p>Premier message : arrêtez de compartimenter les mémoires par domaine. Si vous opérez un agent qui traite à la fois du debugging, de la génération de code, des tâches de data science, faites un pot commun. Vous avez plus à gagner qu'à perdre, à condition de bien formater.</p>
+
+<p>Deuxième message : stockez des insights, pas des traces. La tentation naturelle, quand on conçoit un système de mémoire, est de tout garder — c'est bon marché, c'est exhaustif, ça paraît sûr. Mais une mémoire riche en détails bruts peut activement nuire. Mieux vaut un post-traitement qui demande au modèle de distiller chaque expérience en un principe court et généralisable. Le coût de génération est ponctuel, le bénéfice est permanent.</p>
+
+<p>Troisième message : la mémoire scale avec la diversité. Les expériences de passage à l'échelle montrent que les gains augmentent avec la taille du pool ET avec le nombre de domaines sources. Un pool de 400 insights issus de neuf domaines bat un pool de 400 insights issus d'un seul domaine. La diversité est un multiplicateur, pas un bruit.</p>
+
+<p>Pour les équipes qui déploient des assistants de code internes, l'implication est directe. Un agent qui assiste des développeurs sur du code métier peut tirer profit d'expériences venues de DevOps, de tests d'infrastructure, d'analyses de données — même si aucune de ces tâches ne ressemble au cas d'usage principal. Les réflexes de validation, les guardrails face aux contraintes d'environnement, la discipline d'édition minimale se transfèrent. Il suffit de les encoder correctement.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>L'étude laisse plusieurs chantiers ouverts, et certains sont stratégiques pour la suite.</p>
+
+<p>Le premier concerne le retrieval. Les méthodes actuelles, basées sur la similarité d'embedding, sont simples mais myopes. Elles récupèrent ce qui ressemble lexicalement à la tâche, pas ce qui aidera à la résoudre. Imaginez un moteur de recherche qui vous renverrait uniquement les pages contenant les mêmes mots que votre requête, sans tenir compte de leur utilité. On sait que c'est sous-optimal — mais dans un contexte multi-étapes où les besoins évoluent au fil de l'exécution, aucune alternative n'a encore démontré sa supériorité. Les auteurs suggèrent des pistes : routing par domaine, retrieval pas-à-pas, réécriture contextuelle. Aucune n'est mûre.</p>
+
+<p>Le second chantier porte sur l'adaptation. Même avec la bonne mémoire récupérée, l'agent peut l'appliquer mal. Les cas d'échec en C++ à partir d'un workflow R montrent qu'il manque une étape de traduction contextuelle. Comment apprendre à un agent à extraire le principe d'un exemple, sans copier ses détails ? C'est une question ancienne dans l'apprentissage par analogie, mais elle prend un relief nouveau quand le coût d'une mauvaise analogie est un échec de build en production.</p>
+
+<p>Le troisième point concerne le transfert inter-modèles. Les résultats montrent qu'il fonctionne, mais moins bien que les mémoires auto-générées. Cela suggère que les mémoires encodent des biais propres au modèle qui les produit — préférences de style, tournures de raisonnement, familiarités avec certains outils. Identifier ces biais et les neutraliser permettrait de construire des bibliothèques de mémoires vraiment partageables entre équipes utilisant des modèles différents. Un rêve d'interopérabilité qui reste à concrétiser.</p>
+
+<p>Dernière piste : l'évolution continue. L'étude travaille sur un pool figé. Dans la vraie vie, un agent produit de nouvelles mémoires en permanence, et certaines anciennes deviennent obsolètes ou contradictoires. Gérer ce flux — oublier intelligemment, consolider, détecter les conflits — reste un problème ouvert. Les auteurs citent des travaux récents comme MemEvolve qui s'y attaquent, mais le terrain est neuf.</p>
+
+<p>Reste une observation qui mérite d'être méditée. Les gains les plus forts se produisent sur les benchmarks les plus difficiles — MLGym et ReplicationBench, où le zéro-shot plafonne respectivement à 58 % et 11 %. Sur les tâches plus simples comme LiveCodeBench, où l'agent réussit déjà 91 % des cas, le transfert n'apporte que 2 points. La mémoire, semble-t-il, aide surtout là où le modèle seul bute. C'est cohérent avec l'idée qu'elle transmet du méta-savoir : quand une tâche est à portée de la capacité brute du modèle, aucune expérience externe n'est nécessaire ; quand elle dépasse ce plafond, le savoir-faire accumulé fait la différence. Ce pattern mérite d'être confirmé à plus grande échelle, mais il suggère une règle de conception : investir dans la mémoire là où les modèles peinent, pas là où ils excellent déjà.</p>
+</article>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Cognitive Companion: A Lightweight Parallel Monitoring Architecture for Detecting and Recovering from Reasoning Degradation in LLM Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Cognitive Companion: A Lightweight Parallel Monitoring Architecture for Detecting and Recovering from Reasoning Degradation in LLM Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA tourne en rond, qui s'en rend compte ?</h2>
+
+<p>Sur les tâches de raisonnement complexes, les agents LLM tombent dans une boucle répétitive environ une fois sur trois. Le modèle continue à générer du texte, consomme des tokens, paraît travailler — mais il revisite la même idée sous des formulations différentes, sans jamais avancer. Rafflesia Khan et Nafiul Islam Khan ont publié en avril 2026 une étude de faisabilité qui propose une solution étonnante : un observateur qui surveille l'agent <em>depuis l'intérieur même du modèle</em>, sans coût de calcul supplémentaire.</p>
+
+<p>Leur papier, intitulé <em>The Cognitive Companion</em>, ne prétend pas révolutionner le domaine. Les auteurs assument le statut d'étude préliminaire, avec un dataset de 35 exemples et une évaluation sur un seul modèle principal. Mais le résultat technique — détecter une dégradation cognitive à partir des états cachés d'un transformer, en parallèle d'une inférence qui aurait eu lieu de toute façon — mérite qu'on s'y attarde.</p>
+
+<h2>Le problème : des agents qui échouent en silence</h2>
+
+<p>Les agents LLM déployés sur des tâches multi-étapes présentent trois modes d'échec caractéristiques. Le premier, le <strong>looping</strong>, consiste à revisiter les mêmes arguments avec des mots légèrement différents. Le second, le <strong>drift</strong> (dérive), éloigne progressivement le raisonnement de la question posée. Le troisième, l'état <strong>stuck</strong> (bloqué), se manifeste par des réponses qui raccourcissent et des expressions croissantes d'incertitude.</p>
+
+<p>Ces échecs sont coûteux. Un agent qui boucle consomme du compute inutilement, pollue sa propre fenêtre de contexte, et peut tromper un opérateur humain qui suppose qu'une génération active signifie un travail productif. Pipis et ses collègues ont montré que les modèles distillés de petite taille (1,5 milliard de paramètres) entrent dans ces états répétitifs sur environ 30% des tâches de raisonnement difficiles.</p>
+
+<p>Les solutions existantes ont chacune leurs limites. Couper brutalement après N étapes sacrifie du raisonnement productif. Faire juger la progression par un second LLM à chaque étape ajoute 10 à 15% de coût d'inférence. Les pénalités de répétition au niveau token travaillent sur le vocabulaire, pas sur le sens — un agent peut varier ses mots tout en tournant en rond conceptuellement.</p>
+
+<p>Les frameworks de production comme LangGraph, AutoGen ou OpenHands s'appuient tous sur des heuristiques : compteur d'itérations, patterns textuels, règles manuelles. Aucun n'utilise les représentations internes du modèle pour détecter une stagnation sémantique.</p>
+
+<h2>La méthode : un compagnon qui écoute sans parler</h2>
+
+<p>Les auteurs proposent une architecture inspirée du compagnonnage cognitif humain. L'image est celle d'un collègue qui reste silencieux tant que vous progressez, mais qui intervient brièvement quand vous tournez manifestement en rond. L'agent principal reste architecturalement inchangé et ne sait pas qu'il est observé.</p>
+
+<p>Deux implémentations coexistent. La première, le <strong>LLM Companion</strong>, utilise le même modèle pour s'auto-évaluer toutes les deux étapes : il reçoit l'historique récent et produit un diagnostic structuré (ON_TRACK, LOOPING, DRIFTING, STUCK). Cette approche fonctionne mais coûte environ 11% de compute supplémentaire — proche du coût LLM-as-judge classique.</p>
+
+<p>La deuxième implémentation est l'innovation centrale du papier : le <strong>Probe Companion</strong>. L'idée repose sur une hypothèse empruntée aux travaux sur la détection d'hallucinations, l'asymétrie de capacité sémantique. <em>Évaluer</em> un raisonnement demande moins de capacité cognitive que de le <em>générer</em>. Autrement formulé — les états cachés du modèle encodent déjà une information riche sur la qualité du raisonnement, même quand la sortie textuelle ne l'articule pas explicitement.</p>
+
+<blockquote>L'agent, pendant qu'il génère sa réponse, produit à chaque couche du transformer des vecteurs internes. Ces vecteurs contiennent déjà, selon l'hypothèse, un signal détectable sur l'état cognitif courant.</blockquote>
+
+<p>Concrètement, les chercheurs extraient les états cachés de la couche 28 de Gemma 4 E4B (sur 42 couches au total), font une moyenne sur les 10 derniers tokens générés, et entraînent un simple classifieur de régression logistique pour distinguer deux états : raisonnement sain ou dégradé. Le classifieur pèse quelques kilooctets, et son inférence se résume à une multiplication matricielle.</p>
+
+<p>Le point décisif : cette extraction ne demande aucun appel supplémentaire au modèle. Les états cachés sont déjà calculés pendant la génération normale — il suffit d'activer un drapeau <code>output_hidden_states=True</code> pour y accéder. Le coût d'inférence mesuré est nul.</p>
+
+<p>Quand le probe détecte une dégradation (probabilité supérieure à 0,55), le système injecte silencieusement un message de guidage dans le contexte de l'agent à l'étape suivante, en mode "whisper" — comme un souffleur au théâtre. L'agent lit, intègre, et reprend son raisonnement.</p>
+
+<h2>Résultats : impressionnant, mais avec des astérisques</h2>
+
+<p>Les auteurs ont mené trois batches d'expériences. Le premier, sur le paradoxe du menteur, a validé le principe avec le LLM Companion : la répétition mesurée par similarité Jaccard entre étapes consécutives chute de 52%, le score de qualité monte de 8,8 à 9,3 sur 10, et une seule intervention suffit.</p>
+
+<p>Le deuxième batch, plus ambitieux, compare baseline, LLM Companion et Probe Companion sur six tâches classées en trois catégories : <strong>loop-prone</strong> (problèmes philosophiques sans résolution unique), <strong>drift-prone</strong> (questions ouvertes comme la conscience ou le design de startup), et <strong>structured</strong> (choix de base de données, conception d'algorithme).</p>
+
+<p>Le Probe Companion obtient une taille d'effet moyenne (Cohen's d) de +0,471 avec 0% de surcoût, contre +0,047 pour le LLM Companion à 11% de surcoût. Le probe entraîné sur la couche 28 atteint une AUROC en validation croisée de 0,840 sur le petit dataset de 35 exemples — une performance respectable pour détecter un état cognitif depuis des vecteurs internes.</p>
+
+<p>Mais le résultat le plus intéressant n'était pas attendu. L'effet du compagnon dépend fortement du type de tâche :</p>
+
+<ul>
+<li>Sur les tâches <strong>loop-prone</strong>, le Probe gagne nettement (d = +0,61 en moyenne)</li>
+<li>Sur les tâches <strong>drift-prone</strong>, bénéfice modeste mais positif (d = +0,44)</li>
+<li>Sur les tâches <strong>structurées</strong>, effet neutre ou négatif — la baseline gagne</li>
+</ul>
+
+<p>Pour la conception d'algorithme, par exemple, la tâche a déjà une structure interne (diviser le problème, identifier les cas de base, écrire le code). L'intervention d'un compagnon crée du bruit plutôt qu'elle n'aide. La découverte retourne la question initiale : le bon cadre n'est pas "faut-il un compagnon ?" mais "quand un compagnon aide-t-il ?".</p>
+
+<p>Le troisième batch teste la même approche sur des modèles plus petits, Qwen 2.5 1.5B et Llama 3.2 1B. Les interventions se déclenchent correctement, mais le score de qualité n'augmente pas. Les auteurs en tirent une hypothèse prudente : en dessous de 3 milliards de paramètres, les modèles comprennent peut-être les messages de guidage sans être capables d'agir dessus. Une limite d'échelle pour l'utilité du compagnon, qui mériterait confirmation sur des modèles de 3B spécifiquement.</p>
+
+<h2>Pourquoi ça compte : le monitoring devient gratuit</h2>
+
+<p>Le coût cognitif moyen d'un agent LLM est aujourd'hui un obstacle sérieux au déploiement à grande échelle. Chaque appel supplémentaire pour juger, valider, surveiller se paye en latence et en facture. Un monitoring à 0% de surcoût change le calcul économique : tant qu'on ne change pas fondamentalement l'inférence, autant détecter les dégradations.</p>
+
+<p>La deuxième implication, plus contre-intuitive, concerne le déploiement <strong>sélectif</strong>. Les résultats suggèrent qu'un routeur de tâches, classifiant une requête comme loop-prone, drift-prone ou structurée, pourrait activer le compagnon uniquement où il aide. Les architectures de production pourraient intégrer cette logique sans toucher au modèle primaire — un middleware qui observe les états cachés, classifie la tâche, et décide d'injecter ou non du guidage.</p>
+
+<p>Le troisième point touche la <strong>transparence méthodologique</strong>. Les auteurs documentent leurs propres limites avec une honnêteté rare : NaN en AUROC sur l'un des runs à cause d'un dataset trop déséquilibré, évaluation partiellement auto-référentielle (le même modèle génère et juge), training set qui chevauche avec l'évaluation. Ils publient les chiffres qui ne marchent pas à côté de ceux qui marchent. Cette posture tranche avec les prépublications typiques qui enterrent les faiblesses dans des annexes.</p>
+
+<p>Enfin, il faut mentionner un phénomène que les auteurs nomment <em>presence effect</em>. Dans plusieurs conditions expérimentales, le compagnon a déclenché zéro intervention, mais la qualité finale a quand même bougé par rapport à la baseline. Trois explications candidates : biais d'observation dans l'auto-évaluation, variance stochastique du sampling, ou priming latent du simple fait d'initialiser le système de monitoring. Aucune n'est démontrée. Le signalement d'un effet non expliqué, plutôt que son enfouissement, est un choix méthodologique sain.</p>
+
+<h2>Pour aller plus loin : les questions ouvertes</h2>
+
+<p>Le premier chantier concerne la robustesse statistique. Un probe entraîné sur 35 exemples, avec une classe minoritaire à 28%, ne peut pas fonder des décisions de production. Les auteurs visent 200 exemples par classe comme seuil minimum, via des tâches plus dures ou des séquences de raisonnement plus longues. Sans ce volume, l'AUROC de 0,840 reste une indication, pas une preuve.
+
+</p>
+
+<p>La généralisation entre modèles est le deuxième verrou. La couche 28 de Gemma 4 E4B est optimale pour cette architecture précise. Rien ne garantit qu'une couche équivalente existe chez Llama, Qwen ou Claude, ni que les features apprises transfèrent. Un probe universel supposerait soit un entraînement par modèle, soit une démonstration empirique que certaines couches jouent un rôle fonctionnel cohérent à travers les familles de transformers — conjecture plausible mais non établie.</p>
+
+<p>Le troisième axe touche à la validation hors domaine. L'étude actuelle entraîne le probe sur un sous-ensemble du bench d'évaluation. Les résultats démontrent donc une preuve de concept <em>in-domain</em>, pas une capacité à reconnaître une dégradation sur des tâches jamais vues. Un vrai test demanderait des splits train/test stricts entre familles de tâches, avec évaluation sur des domaines inédits comme la génération de code ou l'utilisation d'outils.</p>
+
+<p>Reste la question du juge externe. Pour l'instant, la qualité des réponses est évaluée par le modèle lui-même, ce qui crée une circularité évidente. Un juge externe (un modèle d'une autre famille, ou un annotateur humain) est nécessaire pour confirmer que les améliorations mesurées correspondent à des améliorations perçues.</p>
+
+<p>Une piste intéressante mais non explorée dans le papier : combiner le probe avec un routeur de tâches appris. Si le classifieur de tâche (loop-prone vs structured) peut lui aussi s'entraîner sur des états cachés du prompt initial, on obtiendrait un système entièrement <em>in-forward-pass</em>, où la décision d'activer le compagnon et la détection de dégradation partagent la même infrastructure gratuite. Ce serait le prolongement naturel de l'idée centrale du papier : tout ce dont l'agent a besoin est déjà calculé, il suffit d'aller le chercher.</p>
+
+<p>L'étude de Khan et Khan n'est pas une validation définitive. Les auteurs le disent eux-mêmes, dataset trop petit, modèle trop unique, évaluation trop auto-référentielle. Mais elle pose un cadre architectural cohérent — trois composants, trois modes d'intervention, quatre états cognitifs — et démontre qu'un signal exploitable existe dans les couches intermédiaires des transformers pour distinguer raisonnement productif et dégradation. Pour un domaine où le coût de l'observabilité a freiné bien des déploiements, c'est un point de départ qui mérite d'être creusé sérieusement.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

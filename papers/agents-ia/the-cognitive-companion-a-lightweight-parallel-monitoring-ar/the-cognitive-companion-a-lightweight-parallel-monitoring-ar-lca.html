@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Cognitive Companion: A Lightweight Parallel Monitoring Architecture for Detecting and Recovering from Reasoning Degradation in LLM Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Cognitive Companion: A Lightweight Parallel Monitoring Architecture for Detecting and Recovering from Reasoning Degradation in LLM Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les agents LLM sur des tâches multi-étapes entrent fréquemment dans des états dégradés : boucles sémantiques, dérive thématique, blocage. Pipis et al. rapportent un taux d'environ 30% sur des tâches difficiles pour des modèles de 1,5 milliard de paramètres. Les solutions existantes souffrent de défauts bien identifiés : les limites dures tuent le raisonnement productif, le LLM-as-judge ajoute 10-15% d'overhead par étape, les pénalités lexicales ignorent la dimension sémantique.</p>
+<p>Khan et Khan proposent une architecture parallèle inspirée du « compagnon cognitif » humain : un observateur silencieux qui n'intervient qu'en cas de dégradation détectée. Deux variantes sont évaluées : un Companion basé LLM (inférence secondaire périodique) et un Companion à base de probes linéaires entraînées sur les états cachés du modèle primaire — approche revendiquée à coût d'inférence nul.</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole s'articule en trois batchs expérimentaux. E1 valide la faisabilité du LLM Companion sur une tâche unique (Liar Paradox) avec Gemma 4 E4B. E2 étend à six tâches réparties en trois catégories (loop-prone, drift-prone, structured) avec trois conditions (baseline, LLM, Probe) et trois runs par condition. E3 explore la borne de scale sur Qwen 2.5 1.5B et Llama 3.2 1B.</p>
+<p>Le Probe Companion repose sur une régression logistique binaire entraînée sur les états cachés mean-pooled de la couche 28 (choisie parmi {20, 28, 34, 40} par AUROC en validation croisée). Les labels d'entraînement sont produits par le LLM Companion lui-même, collapsing LOOPING/DRIFTING/STUCK en une classe DEGRADED unique. Le seuil d'intervention est fixé à 0,55.</p>
+<p>L'évaluation combine similarité Jaccard entre étapes consécutives (mesure lexicale, choisie pour son indépendance au modèle) et un score qualité style MT-Bench sur trois axes (Relevance, Progress, Coherence). E3 utilise un proxy qualité plus simple basé sur la longueur.</p>
+
+<h2>Résultats principaux</h2>
+<p>E1 : le LLM Companion réduit la répétition moyenne de 52% (0,367 → 0,176) et augmente le score juge de 8,8 à 9,3, avec 10,2% d'overhead et une seule intervention déclenchée. Deux sessions seulement.</p>
+<p>E2 : effet moyen du Probe Companion à d=+0,471 (écart-type 0,893) contre d=+0,047 pour le LLM Companion, à overhead mesuré nul. La baseline gagne sur 3 tâches sur 6. Le pattern le plus marquant : les gains se concentrent sur les tâches loop-prone (Liar Paradox d=+2,04) et drift-prone (Consciousness d=+0,87), tandis que les effets sont neutres ou négatifs sur les tâches structurées (DB Decision d=-0,82 pour le LLM).</p>
+<p>E3 : aucune amélioration du proxy qualité sur les modèles 1B-1,5B malgré le déclenchement d'interventions, suggérant une borne de scale entre 1,5B et 4,5B.</p>
+<p>La sélection de couche donne AUROC=0,840 en CV pour la couche 28, mais uniquement sur 35 exemples. Le run v5 n'a produit que 3 exemples DEGRADED (9,4%), rendant l'AUROC CV indéfinie.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les faiblesses méthodologiques sont sévères et les auteurs ne les cachent pas. Le dataset probe de 35 exemples avec 10 cas positifs ne permet aucun claim de généralisation robuste. L'évaluation v5 est in-domain : le probe est entraîné sur un sous-ensemble des tâches d'évaluation, donc les gains rapportés ne mesurent pas le transfert hors-distribution. Le juge qualité pour E1/E2 est le modèle primaire lui-même, créant un biais circulaire documenté mais non corrigé. E3 utilise un proxy qualité différent de E1/E2, ce qui interdit toute comparaison cross-batch quantitative.</p>
+<p>Le « presence effect » — amélioration observée même sans intervention déclenchée — est présenté comme une hypothèse à explorer, pas comme un résultat. Les auteurs identifient trois explications concurrentes (biais observateur, variance stochastique, priming latent) sans les départager. L'écart-type de 0,893 sur 6 tâches × 3 runs limite la confiance dans la moyenne +0,471.</p>
+<p>Aucun test de significativité statistique n'est rapporté. Les interventions « tirent » parfois zéro fois tout en obtenant des scores supérieurs au baseline, ce qui questionne l'attribution causale.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les hyperparamètres sont intégralement disclosés : températures, top_p/top_k, random_state=42, max_iter=1000, seuil 0,55, fenêtre w=10, watch_every=2. Le code et les données sont annoncés publics mais non encore disponibles au moment du dépôt. L'absence de splits train/validation/test propres par famille de tâches et la taille du dataset probe compliqueraient toute tentative de réplication indépendante.</p>
+<p>Le modèle cible (Gemma 4 E4B) et les modèles exploratoires (Qwen 2.5 1.5B, Llama 3.2 1B) sont identifiés par leurs slugs HuggingFace, ce qui est positif. L'évaluation reste néanmoins difficile à reproduire sans les notebooks originaux v4 et v5 référencés mais non liés.</p>
+
+<h2>Impact et applications</h2>
+<p>L'idée centrale — extraire gratuitement un signal de dégradation depuis les états cachés déjà calculés lors du forward pass — est architecturalement élégante. Si elle se vérifiait à plus grande échelle, elle transformerait la question du monitoring d'agents : les frameworks actuels (LangGraph, AutoGen, OpenHands) reposent sur des heuristiques rule-based ou des comptages d'itérations.</p>
+<p>La découverte empirique de la dépendance au type de tâche est plus immédiatement exploitable que le probe lui-même. Elle suggère un routing architectural conditionnel : activer le companion uniquement sur les tâches à risque de boucle ou de dérive. Cette piste est plus solide qu'un déploiement universel et reste valable indépendamment du succès du probe.</p>
+<p>La borne de scale plausible autour de 3B paramètres est utile pour la communauté open-source : les modèles 1B-1,5B semblent incapables d'agir sur une guidance externe, même quand l'intervention fonctionne.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier s'inscrit dans la lignée des travaux de probing d'activations (Alain & Bengio 2017, Burns et al. 2023, Li et al. 2023) en les étendant à la détection de dégradation sémantique multi-étapes. L'Hypothèse d'Asymétrie de Capacité Sémantique (INSPECTOR, Chen et al. 2026) — évaluer un raisonnement demande moins de capacité que le générer — fournit la justification théorique.</p>
+<p>La différenciation par rapport à SpecRA (analyse spectrale de tokens) et ERGO (entropie) est claire : ces approches opèrent au niveau token ou distribution, le Cognitive Companion vise le niveau sémantique via représentations internes. Par rapport aux StuckDetector d'OpenHands (5 patterns rule-based), le positionnement est crédible : les heuristiques lexicales ne capturent pas les boucles sémantiques à vocabulaire varié.</p>
+<p>Le lien avec les limites de self-correction dans les petits modèles (Huang et al. 2024) est pertinent : le Companion contourne le problème par correction externe plutôt que par auto-évaluation. Ce cadrage est plus robuste que les approches fine-tuning type STaSC.</p>
+
+<h2>Synthèse des scores de robustesse</h2>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>4</td><td>Trois questions bien formulées (détection zéro-overhead, dépendance au type de tâche, borne de scale), pertinentes pour le déploiement d'agents.</td></tr>
+<tr><td>Design expérimental</td><td>2</td><td>Trois batchs progressifs mais couverture étroite : un seul modèle principal, métriques inconsistantes entre E2 et E3, probe entraîné in-domain.</td></tr>
+<tr><td>Taille d'échantillon</td><td>1</td><td>35 exemples labellisés pour le probe, 3 runs par condition, 6 tâches. Le run v5 ne contient que 3 cas DEGRADED, rendant l'AUROC CV indéfinie.</td></tr>
+<tr><td>Qualité des métriques</td><td>2</td><td>Jaccard est défendable comme borne inférieure lexicale, mais le score qualité est auto-référentiel. Pas de test de significativité. Métrique qualité différente entre E2 et E3.</td></tr>
+<tr><td>Contrôle des biais</td><td>1</td><td>Juge auto-référentiel (modèle primaire = juge qualité), probe entraîné sur labels produits par le LLM Companion, évaluation in-domain. Biais documentés mais non corrigés.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Hyperparamètres disclosés, modèles identifiés. Code et données annoncés mais pas encore disponibles. Notebooks référencés sans lien.</td></tr>
+<tr><td>Transparence des limites</td><td>5</td><td>Les limites sont listées en Table 3, discutées dans la Section 5.6 (Threats to Validity), rappelées dans la conclusion. L'AUROC NaN de v5 est explicitement rapporté.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Probing zéro-overhead sur états cachés pour détecter la dégradation sémantique est une idée architecturale intéressante. Découverte de la dépendance au type de tâche exploitable immédiatement. Évidence empirique trop mince pour valider l'innovation.</td></tr>
+</table>
+
+<p>Le papier assume sa nature de feasibility study et la tient : il motive une piste de recherche sans prétendre la valider. La transparence compense partiellement la fragilité empirique. Pour transformer cette base en preuve opérationnelle, il faudra un dataset probe à 200+ exemples par classe, un juge externe, des splits train/test propres par famille de tâches, et une validation cross-modèles. Les auteurs détaillent exactement ce roadmap en Section 8.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

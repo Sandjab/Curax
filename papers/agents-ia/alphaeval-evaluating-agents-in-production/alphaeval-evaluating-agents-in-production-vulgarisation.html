@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlphaEval: Evaluating Agents in Production — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AlphaEval: Evaluating Agents in Production</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>64,41 sur 100. C'est le meilleur score obtenu par un agent IA commercial confronté à des tâches réelles d'entreprise. La configuration gagnante ? Claude Code piloté par Claude Opus 4.6. Tous les autres font moins bien. Certains s'effondrent à 39.</p>
+
+<p>Ce chiffre vient d'AlphaEval, un benchmark publié en avril 2026 par une équipe de SII-GAIR et MiraclePlus. Contrairement aux évaluations habituelles qui mesurent la capacité des modèles à résoudre des tickets GitHub archivés ou à naviguer des sites web synthétiques, AlphaEval pose une question différente : <strong>les agents IA délivrent-ils vraiment de la valeur sur les tâches que les entreprises paient pour faire résoudre ?</strong></p>
+
+<p>La réponse est inconfortable. Entre ce que les benchmarks académiques mesurent et ce que la production exige, il existe un écart que l'industrie a longtemps sous-estimé. AlphaEval le quantifie pour la première fois.</p>
+
+<h2>Le problème : un angle mort dans l'évaluation des agents</h2>
+
+<p>Quand une équipe de recherche publie un benchmark pour agents IA, le processus suit toujours le même chemin. On sélectionne un corpus d'artefacts déjà finalisés — des issues GitHub résolues, des sessions web archivées, des problèmes mathématiques standardisés. On ajoute des métriques automatiques, de préférence binaires. On obtient un benchmark reproductible, propre, comparable.</p>
+
+<p>Le problème ? Ce processus élimine tout ce qui rend le travail réel difficile.</p>
+
+<p>Les auteurs d'AlphaEval ont sondé 27 entreprises déployant des agents IA en production. Les résultats font mal : 63 % des entreprises n'ont aucune confiance dans le fait qu'une mise à jour de modèle améliore leur produit. 25,9 % n'ont même pas de critère d'évaluation explicite. 70,4 % s'appuient sur des développeurs qui testent en marge de leur travail principal.</p>
+
+<p>Trois écarts structurels expliquent cette situation :</p>
+
+<p>D'abord, la <strong>sous-spécification des tâches</strong>. Les benchmarks académiques fournissent des consignes explicites. En production, une partenaire clinique a décrit sa tâche comme "convertir des documents Word en JSON". Les réunions ont révélé une chaîne de raisonnement à quatre niveaux : identification des phases temporelles, extraction des règles de déclenchement, mappage des champs de formulaire, validation des contraintes. Rien de tout cela n'était écrit.</p>
+
+<p>Ensuite, la <strong>subjectivité du jugement</strong>. Un benchmark classique évalue avec une métrique unique : correcte ou incorrecte, F1 au-dessus ou en dessous d'un seuil. En production, un expert métier juge la qualité sur plusieurs dimensions simultanées, dont certaines ne peuvent être verbalisées précisément.</p>
+
+<p>Enfin, l'<strong>évolution continue</strong>. Un benchmark de recherche se fige à la publication. Les critères de qualité en production bougent au fil des mois, parfois des semaines, à mesure que les capacités des modèles progressent et que les attentes des clients grimpent.</p>
+
+<h2>La méthode : inverser la chaîne de construction</h2>
+
+<p>L'équipe d'AlphaEval a renversé la logique habituelle. Plutôt que de partir d'artefacts et d'en déduire des critères, ils partent des vrais besoins de vraies entreprises et les transforment en évaluations exécutables. Ce framework en quatre étapes est peut-être la contribution la plus durable de l'article.</p>
+
+<p><strong>Étape 1 : engagement des partenaires.</strong> Sept entreprises acceptent de partager des tâches authentiques couvrant six domaines professionnels de la taxonomie O*NET du département du Travail américain : ressources humaines, finance et investissement, achats et opérations, génie logiciel, santé et sciences du vivant, recherche technologique. Chaque entreprise gagne réellement de l'argent grâce à des agents IA sur ces tâches.</p>
+
+<p><strong>Étape 2 : élicitation des exigences.</strong> Environ un mois d'échanges par entreprise, mêlant visioconférences et visites sur site. Trois phases : découverte du workflow réel (souvent plus complexe que la description initiale), négociation du périmètre (quel segment isoler sans perdre le sens métier), co-construction de la vérité terrain. Dans le cas du recrutement, ils utilisent les vraies décisions d'entretien passées plutôt que des classements générés par IA.</p>
+
+<p><strong>Étape 3 : formalisation.</strong> Chaque tâche devient un package standardisé : un fichier <code>query.md</code> qui préserve l'ambiguïté originale, un <code>task.yaml</code> avec les métadonnées, un dossier <code>files/</code> contenant les documents réels (PDF, Excel, images, YAML), et un script <code>rubric.py</code> combinant plusieurs paradigmes d'évaluation.</p>
+
+<p><strong>Étape 4 : validation itérative.</strong> Trois à quatre cycles de raffinement par entreprise, pendant lesquels les critères évoluent à mesure que les agents s'améliorent. Quand un modèle atteint un seuil, les partenaires relèvent souvent la barre.</p>
+
+<p>Le résultat final : 94 tâches, 2 420 heures de travail professionnel équivalent, une valeur estimée entre 154 000 et 231 000 dollars de main-d'œuvre qualifiée. Tout cela exécutable dans des conteneurs Docker avec des versions figées des agents.</p>
+
+<h2>Résultats : le classement, et surtout ce qu'il cache</h2>
+
+<p>Quatorze configurations évaluées combinent six modèles de pointe (Claude Opus 4.6, GPT-5.2, Gemini 3 Pro, Kimi K2.5, GLM-5, MiniMax M2.5) et quatre produits agentiques (Claude Code, Codex, GitHub Copilot, Cursor).</p>
+
+<p>Le score global le plus haut est 64,41 pour Claude Code + Opus 4.6. Le plus bas est 39,47 pour Claude Code + GPT-5.2. Entre les deux, un peloton serré entre 40 et 55. Aucune configuration ne dépasse les deux tiers des points disponibles.</p>
+
+<p>La découverte la plus troublante concerne l'impact du <em>scaffold</em>, c'est-à-dire de l'enveloppe applicative qui encadre le modèle. Le même Claude Opus 4.6 obtient 64,41 via Claude Code mais seulement 53,45 via Codex — un écart de 11 points. GPT-5.2 fait 39,47 via Claude Code et 54,91 via GitHub Copilot, soit 15 points de spread pour le même modèle. Le choix du produit agentique compte autant que le choix du modèle sous-jacent.</p>
+
+<p>Les variations par domaine sont encore plus spectaculaires. Les scores en achats vont de 30,91 à 88,09 selon la configuration. Les scores en ressources humaines ne dépassent jamais 38,91, quelle que soit la combinaison. Un classement agrégé trompe l'acheteur : GLM-5 brille à 66,43 en achats mais chute à 52,46 en génie logiciel.</p>
+
+<h3>Les six modes d'échec que les benchmarks de code ne voient pas</h3>
+
+<p>L'analyse qualitative des échecs révèle des défaillances cognitives invisibles aux évaluations classiques.</p>
+
+<p><strong>Défaillance par cascade.</strong> En santé, mal identifier le Jour 1 d'un essai clinique propage l'erreur à toutes les fenêtres de visite suivantes. En finance, se tromper de secteur d'activité fausse ensuite la taille de marché, le choix des comparables, l'analyse concurrentielle. Une erreur au niveau d'une ancre contamine tout le raisonnement aval.</p>
+
+<p><strong>Effondrement du jugement subjectif.</strong> Les agents extraient correctement les qualifications factuelles d'un CV mais échouent à inférer des compétences douces. Les tâches RH quantifiables scorent deux à trois fois plus haut que celles demandant un jugement holistique.</p>
+
+<p><strong>Défaillances de récupération d'information.</strong> Cinq sous-types identifiés sur les tâches de recherche technologique : hallucination factuelle via données d'entraînement périmées (30 %), récupération imprécise (35 %), stratégies de recherche rigides (15 %), confusion d'attribution (10 %), biais pro-positif (10 %). Exemple parlant : Claude Opus 4.6 sur Harvey AI. La tâche demande les chiffres du tour de financement F. Le modèle rapporte confidemment des chiffres du tour D — montant faux d'un facteur 1,9, valorisation fausse d'un facteur 2,7, 74 000 utilisateurs juristes absents du rapport.</p>
+
+<p><strong>Incohérence transversale.</strong> Les agents produisent des rapports longs où chaque paragraphe paraît plausible isolément, mais où la taille de marché passe de 50 milliards de dollars en page 3 à 80 milliards en page 7. Aucun mécanisme de cohérence globale ne fonctionne sur les livrables étendus.</p>
+
+<p><strong>Mauvaise interprétation des contraintes.</strong> En achats, les agents optimisent l'objectif explicite en violant silencieusement des contraintes implicites. Face à un problème sans solution faisable, la majorité fabrique une "meilleure tentative" plutôt que de déclarer l'infaisabilité. Ce biais de complétion est dangereux quand l'entreprise passe à l'action sur la recommandation.</p>
+
+<p><strong>Non-conformité de format.</strong> Mode le plus spécifique à la production : une analyse substantiellement correcte obtient un score médiocre parce que le format de sortie est incompatible avec la chaîne de traitement avale.</p>
+
+<h2>Implications pratiques : choisir un agent devient un calcul économique</h2>
+
+<p>Le tableau économique change la façon dont les entreprises devraient penser leur stack agentique.</p>
+
+<p>La meilleure configuration livre entre 110 000 et 165 000 dollars de valeur de travail professionnel sur les 94 tâches. La pire livre entre 70 000 et 105 000. L'écart atteint 40 000 à 60 000 dollars — pour le même périmètre de travail.</p>
+
+<p>Trois implications directes pour les équipes qui déploient :</p>
+
+<p>Premièrement, le classement par score moyen ment. Codex + Opus 4.6 affiche 53,45 en moyenne, devant Claude Code + Gemini 3 Pro à 50,78. Pourtant Gemini 3 Pro livre plus de valeur économique, parce qu'il performe mieux sur les domaines à forte valeur (génie logiciel, finance). Une entreprise dont le portefeuille de tâches penche fortement vers la finance devrait pondérer ce domaine dans sa décision, pas s'appuyer sur la moyenne globale.</p>
+
+<p>Deuxièmement, la stratégie multi-agent devient rationnelle. Aucune configuration ne domine partout. Router les tâches financières vers Claude Code + Opus, les tâches d'achats vers Copilot + Opus, les tâches de recherche vers une troisième combinaison — cela maximise la valeur récupérée. Le routage devient un problème d'optimisation comme un autre.</p>
+
+<p>Troisièmement, les licences d'agents peuvent se comparer directement à la valeur différentielle qu'elles apportent. Si passer d'une configuration à une autre ajoute 40 000 dollars de valeur livrée, la prime de licence doit rester sous ce seuil.</p>
+
+<p>Pour les fournisseurs de modèles, AlphaEval dessine un agenda d'amélioration clair. Résoudre les cascades d'erreurs. Apprendre à déclarer l'infaisabilité plutôt que fabriquer. Maintenir la cohérence sur les livrables longs. Détecter les signaux faibles d'échec dans les sources publiques — aucun modèle n'a signalé la vente en détresse de Robin AI malgré son importance dans le paysage des agents juridiques.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>AlphaEval ouvre plusieurs chantiers que l'article lui-même laisse ouverts.</p>
+
+<p>La couverture reste partielle. Six domaines O*NET sur plusieurs centaines. Le juridique, l'éducation, les industries créatives ne sont pas représentés. Les auteurs livrent le framework de construction en open source pour que d'autres organisations construisent leurs propres benchmarks verticalisés. L'idée sous-jacente : un benchmark unique et universel n'existera pas, mais une méthode commune de construction peut exister.</p>
+
+<p>La temporalité est un angle mort. L'évaluation est une photographie. Comment suivre l'évolution conjointe des capacités agentiques et des standards de qualité des partenaires ? La question reste ouverte, et elle est probablement la plus difficile à résoudre proprement.</p>
+
+<p>L'estimation économique repose sur des hypothèses de marché américain et chinois. Transposer cela aux marchés européens ou à des secteurs régulés très spécifiques demandera du travail. L'analyse de sensibilité des auteurs montre que la hiérarchie entre domaines reste stable, mais les montants absolus bougent.</p>
+
+<p>Enfin, quatorze configurations sur vingt-quatre possibles, et aucun agent open-source ou framework custom. Les chaînes d'entreprise construites sur LangGraph, DSPy ou des orchestrateurs maison ne sont pas évaluées. Or c'est souvent là que les équipes matures construisent leur avantage.</p>
+
+<p>La leçon durable d'AlphaEval n'est pas le classement actuel des modèles. Ce classement évoluera au prochain cycle de mise à jour. La leçon tient en une idée : <strong>ce qu'on mesure détermine ce qu'on optimise</strong>. Tant que la communauté mesure les agents sur des tickets GitHub résolus et des sessions web archivées, elle optimise des compétences qui ne correspondent qu'imparfaitement à ce que les entreprises paient. Ce décalage a un coût. Il se compte désormais en dollars.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
