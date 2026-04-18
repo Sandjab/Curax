@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>In-Place Test-Time Training — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>In-Place Test-Time Training</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Un modèle de langage déployé en production fonctionne comme un étudiant qui aurait révisé pendant des mois, puis se retrouverait en examen avec interdiction de prendre des notes. Les poids du réseau sont figés une fois l'entraînement terminé. Chaque nouvelle requête ne peut les modifier — le modèle doit se contenter de ce qu'il a appris avant d'être mis en service.</p>
+
+<p>Cette rigidité coûte cher sur les tâches à contexte long. Analyser un livre entier, raisonner sur un dépôt de code de 100 000 lignes, suivre une conversation qui s'étire sur des milliers de tours : le modèle doit tout stocker dans sa fenêtre de contexte, limitée par le coût quadratique de l'attention. Une équipe de ByteDance Seed et de l'Université de Pékin, menée par Guhao Feng et Shengjie Luo, propose une alternative élégante : laisser le modèle modifier certains de ses propres poids à la volée, pendant l'inférence. Leur méthode, baptisée <strong>In-Place Test-Time Training</strong>, transforme les blocs MLP déjà présents dans tout Transformer en mémoire dynamique, sans toucher à l'architecture.</p>
+
+<h2>Le problème : l'angle mort du paradigme "train then deploy"</h2>
+
+<p>Pour comprendre l'enjeu, il faut saisir ce qu'un LLM perd quand on gèle ses poids. L'entraînement condense des milliards de documents en paramètres figés. Ces paramètres savent tout du monde tel qu'il apparaît dans les données d'entraînement, mais ignorent tout de la session en cours. Si on demande au modèle de lire un rapport technique de 200 pages et de raisonner dessus, il doit garder l'intégralité en contexte — chaque nouveau token relit tous les précédents via l'attention. Cela fonctionne jusqu'à ce que la facture calcul devienne intenable.</p>
+
+<p>Le Test-Time Training (TTT) a émergé comme réponse possible. L'idée : désigner un petit sous-ensemble des paramètres, les <em>fast weights</em>, et les mettre à jour pendant l'inférence. Ces poids rapides jouent le rôle d'une mémoire compressée. Au lieu de tout relire à chaque pas, le modèle internalise l'information du contexte directement dans ses paramètres. Un peu comme si l'étudiant avait le droit, pendant l'examen, d'écrire quelques notes dans les marges de son manuel — et que ces notes modifiaient sa façon de lire les pages suivantes.</p>
+
+<p>Trois obstacles bloquaient l'adoption du TTT par les gros LLM. D'abord, les travaux antérieurs proposaient des couches spéciales, distinctes des blocs Transformer habituels. Intégrer ces couches dans un modèle pré-entraîné demandait de tout ré-entraîner depuis zéro — inenvisageable pour des modèles à plusieurs milliards de paramètres. Ensuite, la mise à jour classique se fait token par token, ce qui tue le parallélisme des GPU modernes. Enfin, l'objectif d'apprentissage utilisé — reconstruire le token courant — n'a pas de rapport direct avec ce que fait vraiment un LLM : prédire le token suivant.</p>
+
+<h2>La méthode vulgarisée : recycler les MLP plutôt qu'ajouter une couche</h2>
+
+<p>L'idée centrale tient en une phrase : <strong>plutôt que d'ajouter un composant, on reconfigure un composant existant</strong>. Dans un bloc Transformer, le MLP (Multi-Layer Perceptron) représente environ les deux tiers des paramètres. Il fonctionne comme une mémoire clé-valeur massive, stockant une grande partie des connaissances acquises pendant l'entraînement. Feng et ses collègues observent qu'une partie spécifique de ce MLP, la matrice de projection finale notée <em>Wdown</em>, peut jouer un double rôle : rester gelée pour conserver le savoir général, <em>et</em> être modifiée localement pour absorber le contexte courant.</p>
+
+<p>L'astuce ressemble à celle d'un pianiste qui utiliserait les mêmes touches pour jouer Bach et improviser du jazz : pas besoin d'un second clavier, l'instrument suffit, à condition de changer la manière dont on l'utilise. Concrètement, pendant l'inférence, <em>Wdown</em> reçoit de petites corrections calculées à partir du contexte. Quand une nouvelle session commence, ces corrections sont réinitialisées — le modèle repart de ses poids d'origine.</p>
+
+<h3>Mise à jour par blocs : parallélisme retrouvé</h3>
+
+<p>Le second verrou — l'inefficacité des mises à jour token par token — est levé par un mécanisme de mise à jour par blocs. Plutôt que de modifier les poids après chaque nouveau token, le modèle traite des paquets de 512 ou 1024 tokens d'un coup. Pour chaque paquet, il applique les poids rapides courants, puis les met à jour avec les informations du paquet avant de passer au suivant.</p>
+
+<p>Cette approche cohabite avec l'attention classique. Dans les travaux précédents, le TTT <em>remplaçait</em> l'attention, ce qui forçait à utiliser de petits blocs pour préserver la précision. Ici, l'attention continue de faire son travail habituel, et le TTT opère en complément à l'intérieur des MLP. Les deux mécanismes se répartissent la tâche : l'attention gère le mélange fin entre tokens, les poids rapides accumulent une trace du contexte long. Le modèle peut donc utiliser de gros blocs sans perte de qualité, ce qui sature pleinement les accélérateurs.</p>
+
+<h3>Un objectif aligné sur la prédiction du token suivant</h3>
+
+<p>Le troisième apport est théorique et pratique à la fois. Les méthodes TTT antérieures entraînaient les poids rapides à <em>reconstruire</em> le token courant : associer une clé à sa valeur, les deux dérivées du même token. Feng et ses collègues montrent que cet objectif est mal calibré pour un LLM autorégressif, dont le seul travail est de prédire le token suivant.</p>
+
+<p>Leur solution : fabriquer la cible en regardant légèrement <em>devant</em>, via une convolution 1D sur les embeddings. Les poids rapides apprennent ainsi à stocker non pas « quel était le dernier token », mais « quelle information du contexte aide à prédire le prochain ». La démonstration théorique, menée dans le cadre canonique des <em>induction heads</em>, établit que cette cible aligne les logits de sortie : après une mise à jour, la probabilité du bon token suivant augmente de manière garantie, tandis que celle des autres tokens reste quasi inchangée. La reconstruction classique, elle, n'offre aucune garantie de ce type.</p>
+
+<h2>Résultats clés : gains robustes sur le long contexte</h2>
+
+<p>L'équipe teste In-Place TTT dans deux régimes. D'abord comme <em>drop-in</em> sur Qwen3-4B-Base, un modèle pré-entraîné de 4 milliards de paramètres. Après un entraînement continu relativement court (environ 35 milliards de tokens au total), le modèle équipé du mécanisme dépasse sa version baseline sur le benchmark RULER, qui mesure l'exploitation effective du contexte.</p>
+
+<p>Les écarts grandissent avec la longueur de contexte. À 4k et 8k tokens, les deux modèles font jeu égal (autour de 96 %). À 64k, le baseline tombe à 74,3 % contre 78,7 % pour la version In-Place TTT. À 128k, l'écart passe à 2,2 points (74,8 contre 77,0). Et à 256k — au-delà de la longueur d'entraînement, ce qui mesure la capacité d'extrapolation — la version TTT atteint 43,9 % contre 41,7 %.</p>
+
+<p>Le même protocole appliqué à LLaMA-3.1-8B et Qwen3-14B-Base donne des résultats équivalents : +2,1 points à 64k pour le premier, +2,7 points pour le second. La méthode fonctionne à différentes échelles et se cumule avec les techniques existantes d'extension de contexte comme YaRN.</p>
+
+<p>Quand les chercheurs pré-entraînent des modèles depuis zéro, le tableau est encore plus net. Face à des concurrents sérieux — Sliding Window Attention, Gated Linear Attention, DeltaNet, LaCT — In-Place TTT obtient la perplexité la plus basse sur toutes les longueurs testées, de 2k à 32k. Sur les modèles 4B entraînés à partir de zéro, le score RULER à 16k passe de 6,58 à 19,99 pour un Transformer à attention complète, et de 9,91 à 26,80 pour une variante à fenêtre glissante. Ce sont des sauts substantiels, pas des améliorations cosmétiques.</p>
+
+<p>Les ablations confirment chaque choix de design. La taille de l'état mémoire compte : multiplier par quatre le nombre de couches équipées améliore encore les scores. La taille des blocs suit une courbe en cloche, avec un optimum entre 512 et 1024. Et la cible alignée sur la prédiction du token suivant (convolution plus projection) est indispensable : sans la convolution, les performances en long contexte s'effondrent ; sans la projection, c'est le court contexte qui souffre.</p>
+
+<p>Côté coût, les mesures d'efficacité montrent un surcoût négligeable sur le prefill throughput et la mémoire crête, y compris à 128k de contexte. La méthode tient sa promesse d'être <em>drop-in</em> au sens strict : on l'ajoute, on paie un supplément marginal, on récupère de la qualité.</p>
+
+<h2>Implications pratiques : vers des modèles qui apprennent en continu</h2>
+
+<p>Pour une équipe qui déploie des LLM en production, trois conséquences concrètes émergent.</p>
+
+<p>La première concerne l'extension de contexte. Jusqu'à présent, supporter des contextes très longs imposait soit des techniques d'approximation de l'attention (avec perte de qualité), soit un ré-entraînement massif sur des séquences longues. In-Place TTT trace une voie intermédiaire : un entraînement continu modeste, sans changement d'architecture, pour des gains qui croissent avec la longueur. Une boîte qui travaille sur des documents longs — analyse juridique, audit de code, synthèse de dossiers médicaux — a tout intérêt à regarder la méthode de près.</p>
+
+<p>La deuxième conséquence touche à la continuité de l'apprentissage. Un modèle qui peut modifier ses poids à la volée commence à ressembler à un apprenant authentique : il intègre l'information de la session en cours dans sa mécanique interne, pas juste dans un tampon externe. Les applications agentiques, où un LLM exécute des tâches longues qui nécessitent de retenir des apprentissages au fil des étapes, gagneraient à disposer de cette capacité. La vision annoncée par David Silver et Richard Sutton d'une « ère de l'expérience », où les modèles apprendraient depuis des flux continus, devient un peu moins lointaine.</p>
+
+<p>La troisième conséquence, plus discrète, concerne la réutilisation des poids pré-entraînés. Le coût de pré-entraîner un LLM de plusieurs milliards de paramètres se chiffre en millions de dollars. Toute technique qui propose une amélioration architecturale impliquant un ré-entraînement complet se heurte à ce mur économique. Un mécanisme drop-in qui exploite les blocs déjà présents contourne le problème. C'est la différence entre refondre une voiture et lui ajouter un accessoire qui tire parti de ses composants existants.</p>
+
+<h2>Pour aller plus loin : les questions ouvertes</h2>
+
+<p>Plusieurs pistes restent à creuser. Les auteurs eux-mêmes notent que leur objectif d'apprentissage et leur règle de descente de gradient sont les plus simples possibles. Toute la littérature TTT sur les optimiseurs sophistiqués — momentum, Adam adapté au test-time, objectifs auto-supervisés plus fins — pourrait se greffer sur In-Place TTT sans incompatibilité fondamentale. Quelles combinaisons donneraient les meilleurs gains ? La question reste ouverte.</p>
+
+<p>L'intégration avec les architectures à attention linéaire (Gated Linear Attention, Mamba, DeltaNet) est une autre piste explicitement mentionnée. Ces architectures ont elles aussi des MLP, donc le mécanisme s'y appliquerait. Reste à vérifier si la complémentarité entre attention et poids rapides, qui fonctionne si bien avec l'attention classique, se maintient dans ces variantes.</p>
+
+<p>La stabilité numérique sur de très longues séquences mérite attention. Les auteurs utilisent un clipping de la norme Frobenius des mises à jour pour éviter que les corrections accumulées ne dérivent. Ce type de garde-fou fonctionne en pratique, mais une analyse théorique des dynamiques à très long horizon serait utile avant de parler de vrai apprentissage continu.</p>
+
+<p>Enfin, la limite la plus profonde reste celle du cadre expérimental. Les benchmarks long-contexte comme RULER mesurent la capacité à retrouver de l'information dans un document ; ils ne mesurent pas vraiment la capacité à <em>apprendre quelque chose de nouveau</em> pendant une session. Un modèle qui internaliserait réellement des connaissances pendant l'inférence pourrait, par exemple, comprendre une API qu'il n'a jamais vue en entraînement et l'utiliser correctement sur des tâches ultérieures de la même conversation. In-Place TTT jette une base technique solide dans cette direction — la prochaine étape consisterait à concevoir des évaluations qui mesurent ce que ces modèles savent faire après la session, pas seulement pendant.</p>
+
+<p>Le code est publié sur GitHub (ByteDance-Seed/In-Place-TTT). Pour qui travaille sur des modèles de langage long-contexte ou sur des agents à mémoire persistante, le papier vaut une lecture attentive : ce n'est pas une révolution fracassante, c'est un recâblage soigneux qui débloque quelque chose de concret.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

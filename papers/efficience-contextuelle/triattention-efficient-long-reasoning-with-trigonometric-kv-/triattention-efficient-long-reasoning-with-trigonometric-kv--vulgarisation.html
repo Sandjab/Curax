@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriAttention: Efficient Long Reasoning with Trigonometric KV Compression — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>TriAttention: Efficient Long Reasoning with Trigonometric KV Compression</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un modèle qui raisonne sature la mémoire</h2>
+
+<p>Un GPU RTX 4090 avec 24 Go de VRAM, un modèle Qwen3-32B quantisé, un agent qui doit lire six documents Markdown pour rédiger un rapport hebdomadaire. Verdict avec l'attention classique : <em>out of memory</em> au bout de quelques tours de conversation. Le modèle tient en mémoire, mais son cache de raisonnement déborde et la session s'effondre avant la fin de la tâche.</p>
+
+<p>C'est précisément ce goulot d'étranglement que l'équipe du MIT, de NVIDIA et de l'Université du Zhejiang attaque dans <strong>TriAttention</strong>, publié en avril 2026. Leur proposition : compresser dix fois le cache mémoire des LLM qui raisonnent longtemps, sans perdre en précision. La méthode repose sur une observation mathématique étonnamment simple, que plusieurs équipes avaient sous les yeux sans l'exploiter.</p>
+
+<h2>Le coût caché du raisonnement long</h2>
+
+<p>Les modèles qui raisonnent, comme DeepSeek-R1 ou les dérivés de GPT-OSS, produisent des chaînes de pensée de dizaines de milliers de tokens avant de répondre. Chaque token généré s'ajoute à ce qu'on appelle le <strong>KV cache</strong> : une mémoire de travail qui stocke les clés (K) et les valeurs (V) de tous les tokens précédents, pour que le modèle puisse y faire attention au prochain tour.</p>
+
+<p>Cette mémoire grossit linéairement avec la longueur du raisonnement. À 32 000 tokens, elle peut représenter plusieurs dizaines de gigaoctets selon le modèle. Sur une carte consommateur, on touche le plafond bien avant que le raisonnement ne se termine.</p>
+
+<p>La solution intuitive existe depuis longtemps : ne garder en cache que les tokens importants et évincer les autres. Le problème, c'est de savoir <em>lesquels</em> sont importants. Les méthodes existantes — SnapKV, H2O, R-KV, LazyEviction — regardent les scores d'attention des requêtes récentes : si un token a reçu beaucoup d'attention ces derniers temps, on le garde.</p>
+
+<p>Ça marche mal. Très mal, en réalité, sur les tâches de raisonnement. R-KV, qui était l'état de l'art, tombe à 17,5 % de précision sur AIME25 là où l'attention complète atteint 40,8 %. Pourquoi cet écart ?</p>
+
+<h3>Le piège du RoPE</h3>
+
+<p>Les LLM modernes utilisent une technique d'encodage positionnel appelée <strong>RoPE</strong> (Rotary Position Embedding). Concrètement, RoPE fait tourner les vecteurs Q et K dans l'espace en fonction de leur position dans la séquence. Token n°1 : rotation de tant de degrés. Token n°10 000 : rotation d'un tout autre angle.</p>
+
+<p>Cette rotation a une conséquence pernicieuse pour la compression de cache. Les requêtes anciennes et les requêtes récentes n'ont plus du tout la même orientation géométrique. Du coup, les scores d'attention mesurés avec les requêtes récentes ne représentent qu'une fenêtre d'observation minuscule — environ 25 requêtes, d'après les travaux antérieurs. Au-delà, la corrélation s'effondre.</p>
+
+<p>Conséquence directe : un token qui paraît sans importance dans cette petite fenêtre peut être évincé définitivement, alors qu'il serait redevenu crucial 5 000 tokens plus tard. Pour une chaîne de raisonnement qui doit remonter son fil, c'est la catastrophe.</p>
+
+<h2>Regarder avant la rotation plutôt qu'après</h2>
+
+<p>L'idée-force de TriAttention tient en une phrase : et si on regardait les vecteurs Q et K <em>avant</em> que RoPE ne les fasse tourner ?</p>
+
+<p>Les auteurs observent alors un phénomène qu'ils appellent <strong>concentration Q/K</strong>. Dans l'espace pré-RoPE, pour la grande majorité des têtes d'attention d'un modèle, les vecteurs Q et K se groupent autour d'un centre fixe non nul. Et ce centre reste stable à travers les positions, à travers les contextes, à travers les domaines d'application. Sur Qwen3-8B, environ 85 % des têtes ont une concentration supérieure à 0,95 sur une échelle de 0 à 1. Autant dire qu'elles sont quasiment figées.</p>
+
+<p>Une analogie aide à saisir l'intuition. Imaginez un stade où chaque spectateur regarde le match. Après RoPE, on demande à chacun de tourner la tête d'un angle différent selon sa place dans les gradins : la foule paraît désordonnée. Avant RoPE, tout le monde regarde dans la même direction — le terrain. Cette orientation partagée, c'est le centre. Et elle ne dépend ni du match du jour ni du numéro de siège.</p>
+
+<h3>Des séries trigonométriques pour prédire l'attention</h3>
+
+<p>Une fois ces centres identifiés, les auteurs montrent qu'on peut <em>prédire</em> quels tokens recevront beaucoup d'attention, en fonction uniquement de leur distance par rapport à la requête future. La démonstration mathématique passe par une série trigonométrique dont les coefficients sont entièrement déterminés par les centres Q et K.</p>
+
+<p>Le résultat pratique est frappant. Pour chaque tête d'attention, la courbe attention-en-fonction-de-la-distance a des pics à des distances bien précises. Certaines têtes préfèrent les tokens proches (attention locale), d'autres les tokens éloignés (attention distante, typique des <em>retrieval heads</em>), d'autres encore ont un profil plus complexe. Tout cela est prévisible hors ligne, avec des données de calibration génériques.</p>
+
+<p>Les auteurs vérifient la qualité de la prédiction avec une corrélation de Pearson entre attention prédite et attention réelle. Sur la première tête du premier layer — choisie sans cherry-picking — ils obtiennent 0,72. Sur l'ensemble des 1152 têtes de Qwen3-8B, la moyenne dépasse 0,5, avec une distribution qui pique entre 0,6 et 0,9.</p>
+
+<h3>Deux signaux, un score</h3>
+
+<p>TriAttention combine deux composantes pour scorer chaque clé en cache. La première est le <strong>score trigonométrique</strong> : l'attention prédite à partir du centre Q et de la distance. La seconde est un <strong>score de norme</strong> : la magnitude du vecteur Q moyen pondérée par la norme de la clé. Ce deuxième signal capture ce que la première ignore, parce que même à bonne distance un token de faible norme contribue peu.</p>
+
+<p>Le poids entre les deux s'ajuste automatiquement grâce à un indicateur de concentration appelé Mean Resultant Length. Quand une tête est très concentrée, la série trigonométrique domine. Quand elle l'est moins, la norme reprend la main. Pas d'hyperparamètre à régler à la main, le modèle calibre tout hors ligne sur un petit jeu de données.</p>
+
+<p>Pour alléger le coût, les auteurs ne rescorent pas à chaque token généré. Ils déclenchent un élagage tous les 128 tokens : si le cache dépasse le budget fixé, on garde les meilleurs, on jette les autres, on continue.</p>
+
+<h2>Les chiffres qui comptent</h2>
+
+<p>Sur AIME25, un benchmark de mathématiques de compétition, TriAttention égale l'attention complète (40,8 %) tout en divisant la mémoire du cache par 10,7 ou en multipliant le débit par 2,5. Dans les mêmes conditions, R-KV plafonne à 17,5 %.</p>
+
+<p>Sur MATH 500, avec un budget de seulement 1024 tokens sur 32 000 — soit 3,1 % du cache original — TriAttention atteint 68,4 % là où l'attention complète fait 69,6 %. L'écart est dans la marge de bruit.</p>
+
+<p>Sur le benchmark de récursivité profonde conçu par les auteurs, qui simule une recherche DFS et stresse la mémoire par design, TriAttention suit l'attention complète jusqu'à une profondeur de 16. R-KV chute brutalement de 61 % à 31 % entre les profondeurs 14 et 16. Cette cassure nette signale que R-KV évince des états intermédiaires critiques, et que le raisonnement perd son fil dès que la pression mémoire devient sérieuse.</p>
+
+<p>Dans un scénario de déploiement réel — l'agent OpenClaw sur une RTX 4090 avec Qwen3-32B quantisé INT4 — l'attention complète saturait la carte avant que l'agent ne termine son rapport. TriAttention tient dans le budget mémoire tout au long de la session. Ce n'est plus une optimisation marginale, c'est la différence entre <em>ça tourne</em> et <em>ça ne tourne pas</em>.</p>
+
+<h3>La calibration tient la route</h3>
+
+<p>Une inquiétude légitime concerne la calibration : si les statistiques Q/K sont apprises sur un jeu de données, elles pourraient sur-apprendre à ce domaine. Les auteurs testent cette hypothèse en calibrant sur du code et en évaluant sur du raisonnement mathématique. L'accuracy reste comparable. Ils poussent le test plus loin avec du HTML de la page d'accueil Google comme donnée de calibration « de faible qualité » : 46,2 % sur AIME24, contre 46,7 % avec des conversations ShareGPT de qualité.</p>
+
+<p>La concentration Q/K est une propriété intrinsèque du modèle, pas du domaine. Les centres sont figés pendant le pré-entraînement et restent stables. Ce constat simplifie le déploiement : une seule calibration suffit par modèle, peu importe la tâche cible.</p>
+
+<h2>Ce que cela change pour l'industrie</h2>
+
+<p>Le premier impact est économique. Multiplier le débit par 2,5 à accuracy égale, c'est 2,5 fois moins de GPU pour servir le même trafic. Sur un cluster d'inférence qui coûte des millions de dollars par an, le calcul est vite fait.</p>
+
+<p>Le deuxième impact est plus stratégique : la démocratisation du raisonnement long. Les modèles de type o1 ou DeepSeek-R1 produisent des réponses longues parce que la chaîne de pensée en cours de génération est leur mémoire de travail. Sans compression efficace du KV cache, ces modèles ne tournent que sur des GPU datacenter haut de gamme. Avec TriAttention, la même tâche tient sur une carte consommateur.</p>
+
+<p>Le troisième impact concerne les agents. Un agent qui lit plusieurs documents, planifie, exécute des outils, itère — tout cela gonfle le contexte très vite. Le goulot mémoire limite aujourd'hui la profondeur et la durée de ces agents. Réduire le cache d'un facteur 10 ouvre mécaniquement des cas d'usage plus ambitieux : sessions plus longues, plus de tours, plus de documents par tour.</p>
+
+<p>Le quatrième impact, moins commenté, touche à l'interprétabilité. TriAttention exploite une propriété que les auteurs qualifient de <em>model-intrinsic</em> : les centres Q/K encodent en dur les préférences de distance de chaque tête. On y voit une piste pour comprendre ce que font individuellement les têtes d'attention — certaines pour le local, d'autres pour la récupération, d'autres pour les <em>attention sinks</em>. Les centres deviennent une carte d'identité lisible.</p>
+
+<h2>Questions ouvertes et pistes futures</h2>
+
+<p>Plusieurs limites restent à traiter. La première est l'implémentation matérielle. TriAttention est aujourd'hui une méthode de scoring, pas un kernel. Un kernel GPU dédié, conçu pour fusionner le calcul de la série trigonométrique avec l'élagage, pourrait encore gagner en latence. Les auteurs annoncent ce chantier comme prioritaire.</p>
+
+<p>La deuxième concerne les têtes faiblement concentrées. Une minorité de têtes ont un score MRL plus bas, où le signal trigonométrique devient moins fiable. Le score de norme prend le relais, mais ces têtes restent le maillon faible. Une étude plus fine par type de tête — attention sink, retrieval head, induction head — pourrait débloquer du gain supplémentaire.</p>
+
+<p>La troisième touche à la généralisation au-delà des mathématiques. Les évaluations complémentaires sur LongBench (16 sous-tâches, moyenne de 48,1) et RULER (66,1) indiquent que l'approche tient dans des domaines variés : QA, résumé, récupération, code. Mais la validation sur des tâches agentiques longues, avec outils et plusieurs tours, reste à approfondir. La démo OpenClaw est un teaser, pas une évaluation systématique.</p>
+
+<p>La quatrième, plus théorique : la concentration Q/K émerge-t-elle naturellement pendant le pré-entraînement, ou pourrait-on la renforcer par un objectif explicite ? Un modèle entraîné pour maximiser la concentration Q/K serait peut-être plus facile à compresser encore, ou plus facile à interpréter. Cette piste n'est pas explorée dans l'article.</p>
+
+<p>Enfin, la cinquième question dépasse TriAttention : quel est le vrai plafond de compression du KV cache sans perte ? Les auteurs atteignent 10,7× avec marge. H2O, R-KV, LazyEviction plafonnent bien plus bas. Jusqu'où peut-on pousser avant qu'une propriété fondamentale du raisonnement ne se casse ? La réponse déterminera si les LLM de demain tournent sur des téléphones, ou s'ils resteront confinés aux datacenters.</p>
+
+<p>TriAttention ne tranche pas cette question, mais il pose un jalon solide. Le code est public sur GitHub, ce qui permet à d'autres équipes de reprendre le flambeau. Et la leçon méthodologique est claire : regarder la bonne variable — ici, les vecteurs avant rotation — change tout. Parfois, la meilleure optimisation n'ajoute rien au modèle. Elle lui retire un aveuglement qu'on n'avait pas su nommer.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

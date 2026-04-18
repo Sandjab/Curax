@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dive into Claude Code: The Design Space of Today's and Future AI Agent Systems — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Dive into Claude Code: The Design Space of Today's and Future AI Agent Systems</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Claude Code est un agent de codage autonome commercialisé par Anthropic qui exécute des commandes shell, édite des fichiers et invoque des services externes. Son architecture n'est pas documentée publiquement au-delà de la documentation utilisateur. Les auteurs du VILA Lab (MBZUAI) exploitent la disponibilité publique du code TypeScript décompilé (version 2.1.88) pour reconstituer les décisions d'ingénierie du produit.</p>
+<p>La question de recherche est claire : quelles réponses concrètes Claude Code apporte-t-il aux questions récurrentes que tout agent de codage doit résoudre (sécurité, gestion de contexte, extensibilité, délégation, persistance) ? Un second axe compare ces réponses à celles d'OpenClaw, une passerelle multi-canal open source, pour tester si le contexte de déploiement conditionne les choix architecturaux. L'ambition est explicitement cartographique : l'étude vise à informer la conception d'agents futurs plutôt qu'à valider empiriquement des hypothèses.</p>
+
+<h2>Méthodologie</h2>
+<p>L'approche est une analyse au niveau du code source, complétée par la documentation officielle d'Anthropic et quelques analyses communautaires. Les auteurs identifient cinq valeurs motrices (autorité décisionnelle humaine, sûreté, exécution fiable, amplification des capacités, adaptabilité contextuelle), treize principes de conception, sept composants fonctionnels et une décomposition en cinq couches. Chaque affirmation est tracée vers un fichier source précis (<code>query.ts</code>, <code>permissions.ts</code>, <code>tools.ts</code>, etc.).</p>
+<p>Le protocole présente deux faiblesses structurelles. Premièrement, la méthode est mono-source : les auteurs lisent du code sans entretiens avec les ingénieurs d'Anthropic, sans accès aux discussions de conception, sans commits annotés. Les intentions inférées sont des reconstructions plausibles, non des motivations vérifiées. Deuxièmement, la comparaison avec OpenClaw est choisie opportunément : rien ne justifie qu'OpenClaw soit représentatif des alternatives au-delà de sa disponibilité et de son ouverture. D'autres agents de production (Cursor Agent, Devin, OpenHands) auraient fourni des points de comparaison plus directs mais sont seulement mentionnés en passant.</p>
+
+<h2>Résultats principaux</h2>
+<p>Le cœur du système est une boucle <code>while-true</code> (<code>queryLoop()</code>) de moins de 2 % du code ; les 98 % restants sont l'infrastructure opérationnelle qui l'entoure. Cette proportion, citée d'analyses communautaires, soutient la thèse centrale : Claude Code investit dans le harnais plutôt que dans le scaffolding de raisonnement.</p>
+<p>Le système de permissions empile sept couches indépendantes (préfiltrage d'outils, règles deny-first, modes de permission, classifieur ML auto-mode, sandboxing shell, non-restauration au resume, hooks PreToolUse). La logique est deny-first : une règle de refus supplante toute règle d'autorisation, et les actions non reconnues escaladent vers l'utilisateur. Le classifieur ML auto-mode répond à un constat comportemental documenté : 93 % des prompts de permission sont approuvés par les utilisateurs, ce qui rend l'approbation interactive peu fiable comme garde-fou unique.</p>
+<p>La gestion du contexte repose sur une pipeline de compaction à cinq étages (budget reduction, snip, microcompact, context collapse, auto-compact), appliquée séquentiellement par ordre de coût croissant. L'architecture d'extensibilité segmente quatre mécanismes à coûts de contexte gradués : hooks (coût nul), skills (faible), plugins (variable), MCP (élevé).</p>
+<p>Les sous-agents sont délégués via <code>AgentTool</code> et retournent uniquement un résumé textuel, jamais leur transcript complet. Les transcripts sidechain préservent l'audit sans gonfler le contexte parent. Le coût est substantiel : les équipes d'agents consomment environ 7× les tokens d'une session standard.</p>
+<p>La comparaison avec OpenClaw révèle des divergences structurantes : évaluation per-action contre contrôle d'accès périmétrique, boucle CLI unique contre runtime embarqué dans un plan de contrôle, extensions de fenêtre de contexte contre enregistrement de capacités au niveau passerelle.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'étude reconnaît ses propres angles morts : elle n'est pas une évaluation empirique des choix de conception. Aucune mesure n'établit que la pipeline à cinq étages est meilleure qu'une troncature simple, ni que les sept couches de permission préviennent effectivement les incidents de sécurité. Les affirmations sur la supériorité architecturale restent argumentatives.</p>
+<p>Le biais de source est problématique. Les auteurs s'appuient sur le code décompilé et la documentation publique d'Anthropic. Or, les commentaires de code sont eux-mêmes produits par Anthropic et peuvent refléter la rationalisation post-hoc plutôt que les décisions initiales. L'étude cite une source (Cherny et Wu, 2025) qui est Anthropic. Le risque de présenter les choix comme cohérents alors qu'ils pourraient résulter d'accrétion organique est réel.</p>
+<p>La section évaluative sur la "préservation de la capacité humaine à long terme" reste spéculative. Les auteurs s'appuient sur une étude de 132 ingénieurs (Huang et al., 2025) et un résultat de Shen et Tamkin (2026) montrant 17 % de score inférieur aux tests de compréhension en conditions assistées par IA. Le lien entre ces observations et les choix architecturaux spécifiques de Claude Code n'est pas démontré ; c'est une préoccupation greffée sur l'analyse plutôt qu'un résultat de celle-ci.</p>
+<p>La version 2.1.88 analysée est un instantané. Claude Code évolue rapidement, et plusieurs éléments documentés sont derrière des feature flags (<code>HISTORY_SNIP</code>, <code>CACHED_MICROCOMPACT</code>, <code>CONTEXT_COLLAPSE</code>). L'obsolescence du document est inscrite dans son objet même.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les auteurs publient un dépôt GitHub (VILA-Lab/Dive-into-Claude-Code) et référencent des fichiers sources précis. La reproductibilité de l'analyse est bonne : un lecteur peut vérifier chaque affirmation en ouvrant le fichier cité. En revanche, la reproductibilité des conclusions qualitatives (par exemple "la minimalité du scaffolding est un avantage") est faible par nature.</p>
+<p>Le ratio 1,6 %/98,4 % AI-logic/infrastructure est repris d'une analyse communautaire sans méthodologie explicite de comptage. Cette métrique frappante mériterait une définition opératoire (ce qui compte comme logique de décision IA, ce qui compte comme infrastructure) que l'étude ne fournit pas.</p>
+
+<h2>Impact et applications</h2>
+<p>L'article comble un vide : il n'existait pas de documentation publique détaillée de l'architecture de Claude Code. Pour les ingénieurs construisant des agents de codage, le document sert de référence directe sur les décisions d'un système de production mature. Les treize principes tabulés (Table 1 de l'article) constituent un cadre utile pour structurer les discussions de conception.</p>
+<p>La comparaison avec OpenClaw, bien que discutable dans le choix du comparant, illustre un point méthodologique transférable : les mêmes questions de conception appellent des réponses différentes selon le modèle de déploiement (CLI éphémère contre démon persistant). Cette leçon s'applique directement aux équipes qui portent un agent d'un contexte à un autre.</p>
+<p>Les six directions ouvertes identifiées (écart observabilité-évaluation, persistance cross-session, évolution des frontières du harnais, scaling de l'horizon, gouvernance, préservation de la capacité humaine) donnent un agenda de recherche cohérent, même si certaines (gouvernance, préservation) débordent du périmètre technique de l'article.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article se situe à l'intersection du génie logiciel empirique et de la littérature émergente sur les systèmes agentiques. Il dialogue avec ReAct (Yao et al., 2022) pour le pattern de boucle, avec SWE-Agent et OpenHands (Yang et al., 2024 ; Wang et al., 2024b) pour les approches d'isolation par conteneur, avec Aider (Gauthier, 2024) pour l'approche rollback-par-git, et avec LangGraph (LangChain, 2024) pour les alternatives à scaffolding explicite.</p>
+<p>Le positionnement contre ces systèmes est cohérent mais parfois caricatural : Claude Code est présenté comme l'architecture minimale-mais-défendue-en-profondeur, les autres comme des variantes à trade-offs différents. L'étude manque d'un travail comparable qui appliquerait la même grille à Cursor ou Devin, ce qui permettrait de distinguer ce qui tient à Claude Code de ce qui tient aux agents de codage commerciaux en général.</p>
+<p>L'apport principal n'est pas théorique mais documentaire : produire, à partir de sources fermées rendues publiques accidentellement, une cartographie traçable qui survit à l'obfuscation du code. Ce type de rétro-ingénierie structurée pourrait devenir un genre à part entière dans l'étude des systèmes IA propriétaires.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Question cadrée, pertinente pour la communauté, originale par son objet.</td></tr>
+<tr><td>Design expérimental</td><td>2</td><td>Analyse qualitative mono-source sans protocole de validation empirique.</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>Un seul système analysé en profondeur, un comparant choisi opportunément.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Quelques chiffres précis (7 modes, 27 hooks) mais ratios clés non définis opératoirement.</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Biais de source majeur : lecture de code et documentation produits par la même entité.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Dépôt GitHub, références aux fichiers sources précises, affirmations vérifiables.</td></tr>
+<tr><td>Transparence sur les limites</td><td>3</td><td>Disclaimer présent, méthodologie documentée, mais biais de rationalisation post-hoc non adressé.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Première cartographie architecturale publique de Claude Code, utile comme référence d'ingénierie.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriAttention: Efficient Long Reasoning with Trigonometric KV Compression — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>TriAttention: Efficient Long Reasoning with Trigonometric KV Compression</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le raisonnement long produit des chaînes de pensée dépassant 32 000 tokens, saturant le cache KV et imposant un compromis inévitable entre budget mémoire et fidélité de la génération. Les méthodes existantes estiment l'importance des tokens à partir des scores d'attention calculés dans l'espace post-RoPE, mais cette approche souffre d'un défaut structurel : les requêtes tournent avec la position, ce qui réduit la fenêtre d'observation utile à environ 25 requêtes récentes. Des clés critiques pour des étapes de raisonnement ultérieures sont ainsi évincées prématurément.</p>
+<p>Les auteurs proposent de changer de référentiel : travailler dans l'espace pre-RoPE, où ils observent un phénomène qu'ils nomment <strong>concentration Q/K</strong> — les vecteurs Q et K se regroupent autour de centres non nuls fixes, stables à travers positions et contenus. Cette propriété intrinsèque devient la base d'un nouveau critère d'importance.</p>
+
+<h2>Méthodologie</h2>
+<p>La contribution repose sur trois blocs. D'abord, une caractérisation quantitative de la concentration via la Mean Resultant Length R = ‖E[q]‖/E[‖q‖], avec ∼90 % des têtes de Qwen3-8B affichant R > 0,95. Ensuite, un lien mathématique : lorsque Q/K sont concentrés, la formule d'attention RoPE se réduit à une série trigonométrique en distance Δ = pq − pk, ce qui rend la préférence de distance prédictible à partir des seuls centres. Enfin, le score d'importance TriAttention combine deux termes : S_trig (préférence de distance via la série trigonométrique) et S_norm (composante normique pondérée par 1−R_f pour compenser les têtes peu concentrées).</p>
+<p>Le pruning s'effectue par fenêtres de 128 tokens, avec agrégation max-normalisée sur les têtes de requêtes partageant une même tête KV en régime GQA. Les statistiques de calibration sont collectées hors ligne sur un corpus de taille variable (50k à 960k tokens).</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur AIME25 avec Qwen3-8B, TriAttention atteint 40,8 % (identique à Full Attention) avec un débit 2,5× supérieur ou une mémoire KV 10,7× plus faible. À budget mémoire égal (2048 tokens), la méthode double presque la précision de R-KV sur AIME25 (32,9 % contre 17,5 %) et AIME24 (42,1 % contre 25,4 %). Sur MATH 500, 1024 tokens de cache suffisent pour obtenir 68,4 % contre 69,6 % en Full Attention.</p>
+<p>Le benchmark Recursive State Query, construit spécifiquement pour stresser la rétention mémoire via simulation DFS, montre que TriAttention tient jusqu'à la profondeur 16, là où R-KV s'effondre à 31 % dès la profondeur 16. La validation sur trois architectures (Qwen3, Qwen2.5, Llama3) et l'extension à MLA (GLM-4.7-Flash, 96,6 % des têtes avec R > 0,95) renforcent la généralité du phénomène de concentration.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'observation de la concentration Q/K pre-RoPE est solide et expérimentalement documentée. Le passage à la série trigonométrique donne un cadre analytique plutôt qu'une heuristique, ce qui est rare dans la littérature KV cache. Les ablations sont sérieuses : suppression de S_trig (−23 points sur AIME24), suppression du poids (1−R_f), calibration cross-domaine, espacement géométrique vs linéaire des offsets futurs.</p>
+<p>Les faiblesses portent sur l'évaluation. AIME24 et AIME25 ne contiennent que 30 problèmes chacun, ce qui rend les écarts de quelques points sensibles au bruit (8 échantillonnages par problème atténuent mais n'éliminent pas ce problème). Le benchmark Recursive State Query est une contribution utile mais construit par les auteurs eux-mêmes, sans validation externe. La section Limitations est succincte et centrée sur l'optimisation kernel, sans discussion des cas d'échec observés aux profondeurs > 18. La comparaison avec H2O est limitée aux sous-tâches LongBench compatibles avec 48 GB de GPU, ce qui biaise potentiellement le panel.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est publié sur GitHub (WeianMao/triattention). Les hyperparamètres sont précisés (β = 128, D = {1, 2, 4, ..., 2¹⁶}, budget par défaut 2048). Les modèles utilisés sont publics (Qwen3-8B, DeepSeek-R1-Distill-Llama-8B, DeepSeek-R1-Distill-Qwen-7B, GPT-OSS-20B). Les benchmarks AIME et MATH 500 sont standards. La calibration repose sur des datasets publics (ShareGPT, LiveCodeBench). L'infrastructure matérielle est spécifiée (A100 80GB bf16, H100 pour GPT-OSS, RTX 4090 pour le déploiement OpenClaw). Certains détails du Recursive State Query benchmark restent à reconstruire depuis l'appendice.</p>
+
+<h2>Impact et applications</h2>
+<p>TriAttention répond à un goulot d'étranglement concret du raisonnement long en production. La démonstration sur RTX 4090 avec Qwen3-32B INT4 en agent multi-tour OpenClaw illustre un cas d'usage réel où Full Attention échoue par OOM. L'approche reste compatible avec FlashAttention-2/3 et GQA/MLA, ce qui facilite l'intégration dans les pipelines d'inférence existants. Les auteurs annoncent un kernel dédié comme piste d'optimisation matérielle.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans la lignée des méthodes attention-based (H2O, SnapKV, Scissorhands, R-KV, LazyEviction) et norm-based (VATP), mais rompt avec l'hypothèse commune que l'importance doit être estimée dans l'espace post-RoPE. La filiation avec ExpectedAttention (Devoto 2025) est partielle : les deux tentent de modéliser les requêtes futures, mais TriAttention exploite une structure géométrique intrinsèque plutôt qu'une distribution apprise. Le lien avec les travaux sur la structure de RoPE (Barbero 2025, Hong 2024, EliteKV) est explicite. La contribution principale est conceptuelle : la démonstration que la préférence de distance est prédictible sans observation, à partir des centres Q/K seuls.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+  <thead>
+    <tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Question de recherche</td><td>5</td><td>Problème clairement formulé, motivation technique solide, hypothèse structurelle originale.</td></tr>
+    <tr><td>Design expérimental</td><td>4</td><td>Quatre modèles, quatre benchmarks, ablations multiples, mais Recursive State Query non validé externement.</td></tr>
+    <tr><td>Taille d'échantillon</td><td>3</td><td>AIME24 et AIME25 limités à 30 problèmes chacun, MATH 500 plus robuste. 8 échantillonnages compensent partiellement.</td></tr>
+    <tr><td>Qualité des métriques</td><td>4</td><td>Pass rate, débit tokens/s, reconstruction correlation Pearson. Métriques standards et pertinentes.</td></tr>
+    <tr><td>Contrôle des biais</td><td>3</td><td>Ablations sérieuses, calibration cross-domaine testée, mais comparaisons restreintes sur H2O par contrainte matérielle.</td></tr>
+    <tr><td>Reproductibilité</td><td>4</td><td>Code public, hyperparamètres spécifiés, modèles et benchmarks publics. Quelques détails benchmark maison à reconstruire.</td></tr>
+    <tr><td>Transparence des limites</td><td>3</td><td>Section Limitations centrée sur l'ingénierie, peu d'analyse des régimes d'échec (profondeurs > 18).</td></tr>
+    <tr><td>Impact et nouveauté</td><td>4</td><td>Observation pre-RoPE originale, cadre mathématique propre, gains pratiques substantiels sur hardware grand public.</td></tr>
+  </tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

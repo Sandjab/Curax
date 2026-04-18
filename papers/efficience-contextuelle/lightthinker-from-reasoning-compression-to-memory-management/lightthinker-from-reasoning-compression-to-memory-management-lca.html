@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LightThinker++: From Reasoning Compression to Memory Management — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>LightThinker++: From Reasoning Compression to Memory Management</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le raisonnement « slow thinking » des LLM génère des traces de plus en plus longues, au point que le KV cache d'un Qwen-32B à 10 000 tokens occupe une mémoire comparable à celle du modèle lui-même. LightThinker++ attaque frontalement ce verrou en transformant le modèle lui-même en gestionnaire de sa propre mémoire de travail, par opposition aux approches d'éviction token-par-token (H2O, SepLLM) ou de compression statique (AnLLM).</p>
+<p>Deux paradigmes complémentaires sont proposés. LightThinker effectue une compression implicite par <em>gist tokens</em> avec masque d'attention dédié. LightThinker++ introduit trois primitives explicites — <strong>commit</strong>, <strong>expand</strong>, <strong>fold</strong> — qui laissent au modèle la décision d'archiver un segment de raisonnement en résumé sémantique ou de le restaurer en version brute lors d'un goulot logique.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline repose sur un SFT à partir de checkpoints DeepSeek-R1-Distill (Qwen2.5-7B et Llama3.1-8B pour le raisonnement, Qwen3-30B-A3B pour l'agentique). Les trajectoires d'apprentissage sont synthétisées par un modèle enseignant (DeepSeek-V3.2-Thinking) dans un environnement « environment-aware » qui applique réellement la compression pendant la génération, forçant l'enseignant à raisonner sous contrainte mémoire réelle.</p>
+<p>Un filtrage comportemental (<em>Behavioral Pruning</em>) impose trois contraintes : complétude du cycle mémoire, symétrie stricte entre <code>expand</code> et <code>fold</code>, et heuristiques anti-jitter (pas de commits consécutifs avec similarité LCS > 0,9, densités opérationnelles bornées). Sur le versant agentique, une orchestration multi-agents sépare l'agent d'interaction du gouverneur contextuel, ramenant 6 625 trajectoires vanilla à 3 677 trajectoires filtrées décomposées en 42 633 instances d'entraînement.</p>
+<p>L'évaluation introduit une métrique <strong>Dep</strong> (dépendance cumulée, aire sous la courbe contexte-longueur) complémentaire du Peak tokens, ce qui permet de distinguer la charge instantanée du coût cumulé sur la génération. Les configurations <em>Throughput</em> et <em>Budget</em> isolent deux régimes de service.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur GSM8K, MMLU, GPQA et BBH, LightThinker réduit le Peak de 70% et le Dep de 78% sur Qwen (ratio de compression 4,5×) au prix d'une perte de précision de 1%. LightThinker++ en configuration Budget gagne +2,42% de précision moyenne sur Qwen2.5-7B tout en réduisant Peak de 45% et Dep de 33,7%. Le gain le plus marquant est sur GPQA : +5,73 points avec 40,5% de mémoire en moins.</p>
+<p>Sur les tâches agentiques longues (xBench-DeepSearch, BrowseComp-ZH/EN), le Vanilla-Agent gonfle à 100k tokens en 60 tours ; LightThinker++ stabilise l'empreinte à 30–40k tokens au-delà de 80 tours. Le gain Pass@1 atteint +5,7 points sur xBench et surtout <strong>×3,08 sur le sous-ensemble hard01</strong> de xBench (6,8% → 20,9%), indiquant une robustesse particulière quand le Vanilla-Agent échoue par dérive de but ou saturation contextuelle.</p>
+<p>L'ablation confirme que la suppression de <code>expand</code> et <code>fold</code> fait chuter la précision de 60,1% à 53,6%, démontrant que la compression irréversible est le vrai facteur limitant et non la compression en soi.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'analyse la plus fine du papier (Section 4.4) reconnaît une limite intrinsèque à la compression implicite : quand les traces synthétisées sont sémantiquement denses (peak à 51 caractères par segment au lieu de 38), la perte d'un ancrage logique unique — un signe mathématique, une constante — devient irrécupérable faute de redondance. Cette honnêteté méthodologique justifie le passage au paradigme explicite mais révèle aussi que LightThinker seul est inadapté aux traces hard-logic.</p>
+<p>Le case study GSM8K (Figure 6) expose un échec concret : l'étape de compression écarte « 8000 » et produit une réponse finale fausse alors que le raisonnement intermédiaire était correct. Ce type d'erreur de compression numérique n'est ni rare ni résolu dans LightThinker.</p>
+<p>La dépendance à un modèle enseignant très puissant (DeepSeek-V3.2-Thinking) pour la synthèse pose question sur la portabilité. Rien ne garantit que des enseignants plus faibles produiraient des trajectoires exploitables après filtrage comportemental agressif. Le Behavioral Pruning retient 55,5% des trajectoires agentiques, ce qui suggère un filtre puissant mais aussi un coût élevé de génération.</p>
+<p>La comparaison avec TokenSkip dans la Table 5 mérite nuance : TokenSkip sert de baseline mais n'est pas réentraîné avec le même budget de données, ce qui biaise la comparaison en faveur des méthodes proposées. L'absence d'une baseline RL-based (comme Arora & Zanette ou les méthodes o1-style optimisées) laisse un angle mort.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est publié (github.com/zjunlp/LightThinker). Les datasets d'entraînement (BS17K, DeepScaleR) et d'évaluation (GSM8K, MMLU, GPQA, BBH, xBench, BrowseComp) sont publics. Les hyperparamètres clés — taille de cache |C|, stratégies de segmentation, ratios d'anti-jitter — sont explicités dans les annexes. Toutefois, les trajectoires synthétisées par DeepSeek-V3.2-Thinking ne sont pas accessibles, ce qui empêche une reproduction exacte du SFT. La génération des 42 633 instances d'entraînement agentique repose sur une orchestration multi-agents dont les prompts exacts ne sont pas intégralement documentés dans le corps du texte.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport réel réside moins dans la compression que dans la démonstration qu'un LLM peut apprendre à <em>gérer activement</em> son contexte via des primitives discrètes. Le décrochage mémoire-profondeur sur tâches agentiques (empreinte stable au-delà de 80 tours) ouvre la voie à des agents de recherche longue-horizon déployables sans explosion de coût, domaine où Claude, GPT-5 et DeepSeek dominaient jusqu'ici par leur capacité à encaisser 100k+ tokens.</p>
+<p>Les primitives commit/expand/fold rappellent les approches récentes de context-folding (AgentFold, MemAgent, ReSum) mais avec une formalisation plus rigoureuse et une intégration dans le SFT plutôt que dans des boucles RL complexes. Applications immédiates : agents DeepResearch, coding agents long-horizon, pipelines de raisonnement multi-étapes sous contrainte GPU.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>LightThinker++ se situe à l'intersection de trois lignes de recherche. Contre les méthodes d'éviction KV cache (H2O, SepLLM, StreamingLLM), il déplace la décision du niveau token au niveau comportemental. Contre les méthodes de génération réduite (TALE, TokenSkip, CoConut), il préserve la capacité de backtracking via <code>expand</code>. Face aux approches de context management récentes (MEM1, AgentFold, Context-Folding), il apporte une formalisation duale raw/summary et un cadre de filtrage comportemental explicite.</p>
+<p>Le positionnement face à DeepSeek-V3.2-Thinking (utilisé comme enseignant) est plus ambigu : LightThinker++ distille un comportement de gestion mémoire dans un modèle 30B-A3B, mais ne démontre pas que cette capacité serait émergente chez le modèle enseignant lui-même. La question de savoir si les primitives mémoire sont une capacité apprise par SFT ou une capacité latente révélée reste ouverte.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien identifié (coût quadratique du raisonnement long), motivation cognitive explicite.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Sept benchmarks, deux familles de modèles, deux configurations de service, ablations ciblées.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>4 datasets de raisonnement + 3 benchmarks agentiques ; 42k instances d'entraînement agentique. Sous-échantillonnage de MMLU et BBH non détaillé.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Introduction de Dep complémentaire de Peak ; Pass@1 et Pass@3 sur l'agentique. Acc mesurée par LLM-as-judge (gpt-5), avec biais potentiel non discuté.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Baselines variées mais TokenSkip non réentraîné équitablement. Pas de baseline RL forte. Comparaison sur hard01 définie post-hoc.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, datasets publics, hyperparamètres documentés. Trajectoires synthétisées non publiées, prompts d'orchestration partiels.</td></tr>
+<tr><td>Transparence des limites</td><td>3</td><td>Case study d'échec GSM8K assumé, section dédiée implicite vs explicite. Dépendance à l'enseignant peu discutée, coût de génération des données non chiffré.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Formalisation propre des primitives mémoire, résultats saillants sur hard01 (×3,08), décrochage mémoire-profondeur convaincant.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3,8/5.</strong> Contribution solide et bien exécutée, freinée par une dépendance forte à un enseignant propriétaire et par des comparaisons qui sous-estiment certaines baselines concurrentes.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

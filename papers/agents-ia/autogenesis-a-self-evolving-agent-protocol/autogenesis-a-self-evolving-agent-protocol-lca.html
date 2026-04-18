@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autogenesis: A Self-Evolving Agent Protocol — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Autogenesis: A Self-Evolving Agent Protocol</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les systèmes d'agents fondés sur les LLM tendent à figer prompts, outils et mémoire dans du code monolithique. Zhang propose un protocole — <strong>Autogenesis Protocol (AGP)</strong> — qui sépare strictement ce qui évolue (les ressources) de la manière dont l'évolution se produit (les opérateurs). La motivation est explicite : les protocoles existants comme MCP (Anthropic) et A2A (Google) standardisent la connectivité entre agents et outils, mais restent muets sur le cycle de vie, le versioning et la sûreté des mutations internes.</p>
+<p>L'article défend une thèse d'ingénierie : faire passer le développement d'agents auto-évolutifs d'un bricolage ad hoc à un niveau protocolaire, avec opérateurs typés et traçabilité versionnée.</p>
+
+<h2>Méthodologie</h2>
+<p>AGP repose sur deux couches. La <strong>Resource Substrate Protocol Layer (RSPL)</strong> modélise cinq types d'entités (prompt, agent, outil, environnement, mémoire) comme ressources passives enregistrées, avec descripteur d'implémentation, paramètres d'instanciation et représentations exportées pour les LLM. La <strong>Self-Evolution Protocol Layer (SEPL)</strong> définit cinq opérateurs atomiques (Reflect, Select, Improve, Evaluate, Commit) qui formalisent une boucle fermée d'optimisation.</p>
+<p>L'instanciation concrète, AGS, organise le système autour d'un bus de messages avec un orchestrateur qui produit un <code>plan.md</code> versionné et dispatche les sous-tâches à des sous-agents spécialisés (deep researcher, browser-use, deep analyzer, tool generator, reporter). Le papier décrit aussi comment TextGrad, GRPO et Reinforce++ se plient à la même algèbre d'opérateurs, avec pseudocodes détaillés en annexe.</p>
+<p>L'évaluation couvre quatre benchmarks : GPQA-Diamond (198 questions), AIME24 et AIME25 (30 problèmes chacun), GAIA Test (300 tâches) et un benchmark LeetCode maison (100 problèmes de test sur 5 langages). Cinq modèles sont comparés (gpt-4o, gpt-4.1, claude-sonnet-4.5, gemini-3-flash-preview, grok-4.1-fast). Le budget d'optimisation est fixé à 3 rounds de réflexion.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur GPQA/AIME, la stratégie combinée prompt + solution domine systématiquement. Les gains relatifs suivent une logique d'headroom : gpt-4.1 progresse de 71,4 % sur AIME24 (23,3 % → 40 %), gemini-3-flash-preview ne gagne que 12 % sur les mêmes benchmarks depuis 83 %. Sur GAIA, AGS atteint 89,04 % de moyenne et surpasse ToolOrchestra (87,38 %), avec un bond spectaculaire de 33,3 % sur le niveau 3. Sur LeetCode, l'évolution de la solution améliore le taux de succès de 10,1 % (Python3) à 26,7 % (Kotlin), avec des réductions substantielles du runtime en langages compilés (−46,4 % en C++).</p>
+<p>Les trajectoires intra-inférence (figure 2) montrent un écart croissant entre agent évolutif et baseline au fur et à mesure que les tâches s'accumulent, ce qui plaide pour un effet composé du mécanisme de réflexion.</p>
+
+<h2>Discussion et limites</h2>
+<p>Plusieurs faiblesses méthodologiques entament la portée des conclusions. D'abord, <strong>aucune ablation</strong> n'isole la contribution individuelle du RSPL, du SEPL ou de l'architecture Agent Bus — impossible donc de savoir si les gains viennent du protocole ou simplement du réflexion optimizer sous-jacent. Ensuite, la comparaison avec MCP/A2A dans l'annexe B.5 affirme une scalabilité en O(log n) pour Autogenesis contre O(n²) pour A2A sans la moindre justification analytique ou empirique.</p>
+<p>Les références présentent un problème sérieux : Hu 2025a et Hu 2025b pointent vers le même preprint arXiv:2501.03262 (Reinforce++), ce qui suggère une revue bibliographique bâclée. Le benchmark LeetCode maison, bien que motivé par le risque de contamination, reste non publié et non reproductible par des tiers.</p>
+<p>Le papier ne discute pas les coûts computationnels de la boucle d'évolution (nombre d'appels LLM par tâche, latence ajoutée), pourtant critique pour un système itératif à 3 rounds. Aucune mention des échecs de commit, de la fréquence de rollback, ou de la dérive du lineage sur des horizons longs.</p>
+
+<h2>Reproductibilité</h2>
+<p>Aucun lien vers un dépôt de code public n'apparaît dans le texte. Les prompts spécifiques utilisés par l'optimiseur de réflexion ne sont pas fournis. Les descripteurs d'implémentation (ηᵗ,ᵢ) et les schémas de contrat skills.md restent au stade de l'illustration conceptuelle. La reconstitution indépendante d'AGS exigerait une ingénierie substantielle sur la base des algorithmes 1 à 5, sans garantie de fidélité.</p>
+<p>Les tables 1 et 3 fournissent les valeurs absolues, ce qui permet au moins une comparaison numérique. Mais sans graines aléatoires ni intervalles de confiance, la variance des résultats sur 3 rounds de réflexion reste inconnue.</p>
+
+<h2>Impact et applications</h2>
+<p>La proposition protocolaire est conceptuellement solide et s'inscrit dans un mouvement plus large de standardisation des interfaces agentiques. Traiter prompts, outils et mémoire comme ressources versionnées avec cycle de vie explicite est une abstraction utile, déjà partiellement présente dans les systèmes de production matures (Claude Code, LangGraph). Le mérite d'AGP est de formaliser cette séparation au niveau protocolaire plutôt qu'au niveau application.</p>
+<p>Les applications immédiates concernent les systèmes multi-agents long-horizon : génération d'outils à la volée, raffinement itératif de prompts en production, traçabilité pour l'audit et la conformité. L'adoption dépendra de l'existence d'une implémentation de référence open source.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le cadrage face à MCP et A2A est pertinent : ces protocoles résolvent la connectivité, pas la mutation d'état. La parenté avec TextGrad (Yuksekgonul et al., 2025) est assumée et bien documentée — AGP se présente comme une surface d'exécution généraliste capable d'héberger TextGrad, GRPO et Reinforce++ comme instanciations de SEPL. Le tableau comparatif B.5, malgré ses approximations sur la scalabilité, résume honnêtement les complémentarités.</p>
+<p>Le papier s'inscrit dans la lignée des travaux sur les agents auto-évolutifs (Alita, AWorld, HALO, ToolOrchestra mentionnés dans la table GAIA). Sa contribution distinctive est l'ambition protocolaire — imposer une algèbre d'opérateurs plutôt qu'un framework applicatif — ce qui reste à valider par l'adoption communautaire.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problématique bien posée, découplage évolution/substrat pertinent.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Quatre benchmarks, mais aucune ablation des composants protocolaires.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Volumes raisonnables (198+60+300+100) mais budget de 3 rounds seulement.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Métriques multiples pour LeetCode ; absence d'intervalles de confiance.</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Sélection de problèmes récents pour LeetCode, mais pas de contrôle sur les effets modèle.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Pas de code public mentionné, prompts de réflexion non fournis.</td></tr>
+<tr><td>Transparence sur les limites</td><td>2</td><td>Effets de plafond évoqués, mais coûts et taux d'échec du commit passés sous silence.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Abstraction protocolaire bien positionnée face à MCP/A2A.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

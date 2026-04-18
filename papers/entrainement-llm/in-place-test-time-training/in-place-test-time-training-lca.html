@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>In-Place Test-Time Training — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>In-Place Test-Time Training</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les LLMs suivent un paradigme figé « entraîner puis déployer » : une fois déployés, leurs poids restent fixes, ce qui empêche toute adaptation aux tokens reçus en contexte. Le Test-Time Training (TTT) propose de contourner cette contrainte en mettant à jour un petit sous-ensemble de paramètres (fast weights) à l'inférence. Trois obstacles bloquent son adoption pour les LLMs modernes selon les auteurs : incompatibilité architecturale (TTT remplace typiquement l'attention, imposant un pré-entraînement depuis zéro), inefficacité des mises à jour séquentielles par token, et objectif de reconstruction générique mal aligné avec la prédiction autorégressive du token suivant.</p>
+<p>La proposition In-Place TTT traite ces trois barrières simultanément : repurposer la matrice de projection finale <em>W<sub>down</sub></em> des blocs MLP comme fast weights (zéro nouvelle couche), appliquer des mises à jour par chunks de taille 512-1024, et remplacer l'objectif de reconstruction par une cible convolutionnelle alignée sur le Next-Token Prediction.</p>
+
+<h2>Méthodologie</h2>
+<p>L'architecture modifie le MLP gaté standard en figeant <em>W<sub>up</sub></em> et <em>W<sub>gate</sub></em> comme poids lents, tandis que <em>W<sub>down</sub></em> reçoit des mises à jour de gradient par chunk. Pour chaque chunk, deux opérations séquentielles : application des poids courants aux activations intermédiaires, puis mise à jour via une étape de descente de gradient avec cible <em>V</em> dérivée d'une convolution 1D causale sur les embeddings de tokens, multipliée par une matrice de projection entraînable <em>W<sub>target</sub></em>.</p>
+<p>La fonction de perte retenue est la similarité de Frobenius négative, choisie pour sa simplicité et parce qu'elle permet une règle de mise à jour explicite : <em>W<sup>(i)</sup> = W<sup>(i-1)</sup> + η V<sup>⊤</sup><sub>[i]</sub> Z<sub>[i]</sub></em>. L'associativité de cette règle autorise un prefix sum pour paralléliser le contexte sans briser la causalité, avec remise à zéro aux frontières de document.</p>
+<p>Un théorème formalise l'avantage de la cible NTP-alignée : sous hypothèses d'orthogonalité approximative des embeddings et d'alignement clé-requête, la mise à jour augmente le logit du token correct d'au moins <em>λ · c²<sub>norm</sub> · c<sub>align</sub></em>, alors que la cible de reconstruction laisse ce logit quasi inchangé (borne en <em>λ · ε · c<sub>align</sub></em>).</p>
+<p>Trois familles d'expériences valident l'approche : entraînement continu de Qwen3-4B-Base, LLaMA-3.1-8B et Qwen3-14B-Base (~20B tokens en stage 1 à 32k, ~15B tokens en stage 2 à 128k pour Qwen3-4B) ; pré-entraînement depuis zéro à 500M/1.5B/4B sur 32k de contexte ; études d'ablation sur un modèle 1.7B.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur RULER avec Qwen3-4B-Base, In-Place TTT maintient une parité aux contextes courts puis creuse l'écart : +4.4 points à 64k (78.7 vs 74.3), +2.2 à 128k (77.0 vs 74.8), +2.2 à 256k (43.9 vs 41.7) en extrapolation. Le pattern se reproduit sur LLaMA-3.1-8B (+2.1 à 64k) et Qwen3-14B (+2.7 à 64k), y compris combiné avec YaRN pour l'extrapolation RoPE.</p>
+<p>En pré-entraînement depuis zéro à 500M et 1.5B, la perplexité sliding-window diminue continûment avec le contexte jusqu'à 32k, surpassant SWA, GLA, DeltaNet et LaCT. À 4B, les gains long-contexte sont marqués : RULER-16k passe de 6.58 à 19.99 avec Full Attention et RULER-8k de 9.91 à 26.80 avec SWA, sans dégradation sur les benchmarks de raisonnement (HellaSwag, ARC, MMLU, PIQA).</p>
+<p>Les ablations confirment les choix de design : taille d'état plus grande = meilleure performance ; taille de chunk 512-1024 optimale (grands chunks possibles grâce à l'action complémentaire de l'attention) ; les deux composants de la cible (Conv1D et projection) sont nécessaires, la convolution dominant sur long contexte et la projection sur court contexte. L'analyse d'efficacité montre un surcoût négligeable en throughput et mémoire par rapport aux baselines.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le positionnement « drop-in » est le véritable apport : contrairement à LaCT, Titans ou DeltaNet qui exigent un pré-entraînement depuis zéro, In-Place TTT se greffe sur des checkpoints existants avec un entraînement continu relativement bon marché (~35B tokens au total pour Qwen3-4B). L'initialisation près de zéro de Conv1D et <em>W<sub>target</sub></em> préserve le comportement pré-entraîné au démarrage.</p>
+<p>Plusieurs limites ne sont pas franchement discutées par les auteurs. Le mécanisme de clipping sur la norme de Frobenius (τ=1e-5) pour Qwen3-4B révèle une instabilité numérique non-triviale sur longues séquences, dont l'origine n'est pas analysée. La théorie repose sur un setting très simplifié (un seul bloc Transformer, induction head canonique) dont la généralisation aux cas multi-couches multi-têtes n'est pas établie. Le choix de la fonction de perte (simple similarité de Frobenius plutôt que MSE ou loss probabiliste) est justifié par la simplicité sans comparaison empirique.</p>
+<p>Les gains long-contexte sont impressionnants mais RULER reste un benchmark synthétique : aucune évaluation sur des tâches naturelles long-contexte (document QA réel, code repository-level en aval). Le chunk size optimal 512-1024 est empirique, sans critère théorique pour le prédire sur d'autres architectures.</p>
+
+<h2>Reproductibilité</h2>
+<p>Code disponible publiquement sur <code>github.com/ByteDance-Seed/In-Place-TTT</code>. Les hyperparamètres d'entraînement sont documentés de façon exhaustive : optimiseur AdamW, learning rate 5e-6 (continual) ou 3e-4 (from scratch), batch size et warmup explicités, taille de fenêtre SWA précisée, configurations architecturales complètes par scale. Les datasets de continual pretraining sont décrits qualitativement mais ne semblent pas publiés (mélange propriétaire ByteDance). Les checkpoints issus de l'entraînement continu ne sont pas mentionnés comme publiés. Le benchmark RULER et lm-evaluation-harness étant publics, la reproduction des évaluations est possible, mais la re-exécution de l'entraînement continu à 4B reste hors de portée sans 128 H800 et sans accès au corpus interne.</p>
+
+<h2>Impact et applications</h2>
+<p>Le caractère drop-in change l'économie du TTT : un laboratoire peut améliorer un LLM open-source long-contexte avec ~35B tokens d'entraînement continu plutôt que repartir d'un pré-entraînement full. L'orthogonalité revendiquée avec les architectures attention-efficaces (SSMs, linear attention, GLA) suggère une voie de combinaison intéressante, non testée dans l'article.</p>
+<p>Les applications immédiates visent le traitement de contextes évolutifs : documents longs, historique de conversation multi-tours, code repository. Le lien théorique établi avec les induction heads et le Multi-Token Prediction (cité de DeepSeek-V3) positionne la méthode comme extension naturelle des mécanismes de mémoire implicite des Transformers.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article se démarque explicitement de trois lignées. Face à LaCT (Zhang et al., 2025) et Titans (Behrouz et al.), qui utilisent TTT comme remplaçant d'attention, In-Place TTT se présente comme complément. Face aux architectures linéaires (GLA, DeltaNet, Mamba-2), qui compriment le contexte dans un état latent de taille fixe, elle offre une capacité plus grande via la matrice MLP entière. Face aux méthodes d'extension de contexte par RoPE (YaRN), elle est revendiquée comme orthogonale, les expériences sur LLaMA-3.1-8B et Qwen3-14B confirmant la compatibilité.</p>
+<p>La dérivation théorique via induction heads emprunte à Olsson et al. (2022) et Elhage et al. (2021). L'idée de traiter les MLP comme mémoire clé-valeur provient de Geva et al. (2020), ici étendue à une mémoire dynamique. Le résultat global constitue une consolidation pragmatique d'un ensemble d'idées connues, avec une ingénierie soignée (context parallelism natif, initialisation préservante) plutôt qu'une rupture conceptuelle.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien circonscrit (trois barrières explicites), pertinent pour le déploiement pratique de TTT.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trois régimes (drop-in, from-scratch, ablations) avec baselines compétitives et curriculum identique pour comparaison équitable.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>Expériences à échelle réaliste : jusqu'à 14B paramètres, 120B tokens, contextes jusqu'à 256k.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Benchmarks standards (RULER, HellaSwag, MMLU, PIQA) mais absence d'évaluations long-contexte naturelles au-delà du synthétique.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Comparaison équitable revendiquée mais pas de variance inter-seed, pas d'analyse statistique des écarts, un seul run rapporté.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, hyperparamètres détaillés ; dataset de continual pretraining propriétaire, checkpoints non publiés.</td></tr>
+<tr><td>Transparence des limites</td><td>3</td><td>Le clipping de norme et son seuil 1e-5 révèlent une instabilité passée sous silence ; limites discutées brièvement.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Repurposing MLP + objectif NTP-aligné avec preuve théorique ; ingénierie solide plus qu'innovation conceptuelle pure.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
