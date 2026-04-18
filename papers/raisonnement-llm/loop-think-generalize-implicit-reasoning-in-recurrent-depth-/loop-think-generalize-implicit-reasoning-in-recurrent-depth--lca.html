@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loop, Think, &amp; Generalize: Implicit Reasoning in Recurrent-Depth Transformers — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Loop, Think, &amp; Generalize: Implicit Reasoning in Recurrent-Depth Transformers</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le raisonnement implicite désigne la capacité d'un modèle à combiner plusieurs faits paramétriques en une seule passe avant, sans émettre de chaîne de pensée explicite. Les transformers standards y échouent souvent dès le 2-hop : un fait stocké dans les couches superficielles ne peut plus être mobilisé par les couches profondes, puisque les paramètres ne sont pas partagés entre couches. Kohli et collègues reprennent cette observation mécanistique pour tester une hypothèse architecturale simple : partager les poids entre itérations (recurrent-depth) devrait permettre d'accéder de manière plus flexible à la même connaissance à différentes profondeurs effectives.</p>
+<p>Deux défis sont formalisés sur un graphe de connaissances synthétique. La <strong>généralisation systématique</strong> évalue la composition de faits atomiques jamais combinés pendant l'entraînement. L'<strong>extrapolation en profondeur</strong> évalue la résolution de chaînes de k-hop dépassant la profondeur maximale vue à l'entraînement. Ces deux régimes sont out-of-distribution au sens strict.</p>
+
+<h2>Méthodologie</h2>
+<p>Le banc d'essai repose sur un graphe dirigé à 2000 entités et 200 relations (systématicité) ou 200 entités et 10 relations (extrapolation). Chaque relation est instanciée comme une permutation sur les entités, ce qui bloque les raccourcis de suffixe : sans cette contrainte, les auteurs montrent en Annexe H que des apparences de généralisation à 80 hops sont en réalité des mappings superficiels entre une fin de séquence de relations et la réponse.</p>
+<p>L'architecture est un bloc GPT-2 à L=4 couches, réutilisé R fois (R ∈ {1…8} ou dynamique). R=1 correspond au transformer vanilla. L'initialisation à zéro des projections de sortie (c_proj) stabilise le déroulé récurrent. Deux stratégies d'itération : fixe (même R pour tous les batchs) ou dynamique (R échantillonné via Poisson clippée).</p>
+<p>Pour l'extrapolation, un curriculum par seuil (95 % d'accuracy) introduit progressivement les k-hop de 2 jusqu'à K_max=40. L'analyse mécanistique mobilise le <em>logit lens</em> (projection des états cachés via la tête LM à chaque profondeur effective) et, en Annexe H, du patching d'activations causales.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur la généralisation systématique en 2-hop, le transformer vanilla (R=1) échoue complètement, tandis que R=2 suffit déjà pour obtenir une généralisation OOD non triviale. R=4 converge en 2 000 époques contre 7 000 pour R=2, y compris en temps réel.</p>
+<p>Le logit lens révèle un grokking en trois phases : mémorisation (prédiction du target sans décoder le bridge), généralisation in-distribution (bridge décodable puis target ID), puis généralisation systématique (target OOD correct). Le vanilla à 8 couches iso-FLOP décode le bridge sur OOD mais échoue au second hop, faute d'incitation à encoder les faits OOD en couches profondes.</p>
+<p>Pour l'extrapolation, la profondeur apprenable croît avec R : R=4 atteint 10-hop ID, R=8 atteint 16-hop, la récurrence dynamique atteint 22-hop. Scaler la récurrence à l'inférence débloque l'OOD uniquement quand R_train > 4. À données d'entraînement égales (jusqu'à 12-hop), R=8 fixe et R dynamique extrapolent tous deux à 19-hop ; la récurrence d'entraînement détermine donc la <em>portée</em> d'extrapolation, la stratégie dynamique exploite cette portée.</p>
+<p>Le phénomène de <strong>overthinking</strong> est caractérisé quantitativement via la marge logit : elle croît jusqu'à un pic puis décroît avec les itérations, et le pic lui-même diminue avec la complexité de la tâche. La récurrence dynamique résiste mieux à cette dégradation. Un critère d'arrêt adaptatif combinant divergence KL entre itérations successives et entropie de la sortie (H < 3.00) surpasse le critère KL seul de Geiping et al.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs assument un cadre volontairement restreint : vocabulaire dédié aux entités et relations, pas de variation de surface, pas de distracteurs, modèles jusqu'à 8 couches. Le transfert direct aux LLM à l'échelle n'est pas revendiqué. L'Annexe F montre d'ailleurs que l'agrandissement du modèle (L=4, 6, 8) et de la récurrence maximum d'entraînement (8, 12, 16) ne produit pas de tendance nette sur le ratio de généralisation.</p>
+<p>L'Annexe E documente une faiblesse sérieuse : avec l'initialisation gaussienne par défaut (sans zéro-init), les résultats sont instables d'un seed à l'autre. Seul R=7 montre clairement un scaling inference-time sur ce régime. L'Annexe G quantifie cette variabilité en répétant R=5 sur cinq seeds : trois seeds exhibent de l'overthinking, deux n'en exhibent pas, sans qu'une explication mécanistique soit proposée.</p>
+<p>L'échantillonnage est limité à deux seeds pour les expériences principales fixed-recurrence et trois pour le dynamique. Pour un travail dont la thèse centrale est architecturale, cette couverture reste frugale. La découverte par Annexe H que la version pré-permutation produisait une illusion de généralisation à 100-hop par raccourcis est honnêtement rapportée et motive l'ensemble du protocole corrigé.</p>
+<p>Les méthodes d'atténuation de l'overthinking proposées par Bansal et Geiping (injection d'entrée à chaque itération) sont testées et déclarées inefficaces sur ce setup, sans analyse plus poussée de ce qui diffère.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est disponible sur GitHub (OSU-NLP-Group/Loop-Think-Generalize). Les hyperparamètres sont détaillés : embedding 768, 12 têtes, AdamW à lr=10⁻⁴, weight decay 0.01, warmup linéaire 2000 pas, batch size 512 (systématicité) ou 128 (extrapolation), seuils ε_KL=0.01 et H_thresh=3.00. Le protocole de génération des graphes à permutations est décrit de manière exploitable en Annexe B.</p>
+<p>Les données sont synthétiques et régénérables à partir des spécifications. Les multiples seeds en annexes facilitent la reproduction comparative.</p>
+
+<h2>Impact et applications</h2>
+<p>Le résultat le plus solide est la démonstration mécanistique que la partage de poids entre itérations débloque la généralisation systématique 2-hop, là où le vanilla échoue absolument. Les trois phases de grokking observées affinent le tableau dressé par Wang et al. (2024a) en identifiant une transition supplémentaire mémorisation → ID → systématique.</p>
+<p>Le second résultat — extrapolation en profondeur via scaling d'itérations à l'inférence — apporte une brique utile au programme Huginn/Ouro de LLM récurrents latents, en quantifiant l'overthinking comme limite structurelle. Le critère d'arrêt KL+entropie est une contribution pratique directement réutilisable.</p>
+<p>La portée opérationnelle reste conditionnée à un transfert à l'échelle qui n'est pas démontré ici. Le setup entité/relation à vocabulaire dédié élimine exactement les difficultés qui font échouer les LLM sur le raisonnement implicite en langue naturelle (surface-form, distracteurs, reversal curse).</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article s'inscrit dans la lignée Universal Transformers (Dehghani 2019), ALBERT (Lan 2020), Looped Transformers (Yang 2024a, Fan 2025), Huginn (Geiping 2025) et Ouro (Zhu 2025). Par rapport à Fan et al. qui supposent un oracle sur le nombre d'itérations d'entraînement calé sur la complexité de l'échantillon, Kohli et al. assument explicitement l'absence d'oracle et étudient les régimes fixe vs dynamique — un positionnement plus réaliste.</p>
+<p>Par rapport à Wang et al. (2024a) qui concluent à l'impossibilité de la généralisation systématique pour les transformers vanilla, l'article étend le diagnostic en montrant que le problème est précisément résolu par le partage de poids. Par rapport à Yao et al. (2025), qui montrent que la profondeur apprenable croît linéairement en k pour les vanillas, le paper démontre un découplage : la récurrence permet d'augmenter la profondeur effective sans ajouter de paramètres.</p>
+<p>L'Annexe H est en tension avec Lu et al. (2025), qui concluaient à peu de preuves de raisonnement latent réel dans Huginn-3.5B. Les auteurs reconnaissent implicitement la possibilité de raccourcis en construisant leur graphe à permutations ; le lecteur reste libre de se demander si d'autres raccourcis subsistent à plus haut niveau.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Formulée avec précision ; deux défis distincts (systématicité, extrapolation) bien opérationnalisés.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Tâche synthétique contrôlée, comparaisons iso-FLOP, curriculum par seuil, contrainte de permutation anti-shortcut.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Deux seeds pour fixed-recurrence, trois pour dynamique ; cinq seeds uniquement pour le cas pathologique R=5. Couverture frugale.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Accuracy par hop, marge logit, logit lens, activation patching. Métriques adaptées et multiples.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Contrainte de permutation pour bloquer les raccourcis de suffixe (découverte critique honnêtement documentée).</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code GitHub public, hyperparamètres complets, données synthétiques régénérables.</td></tr>
+<tr><td>Transparence sur les limites</td><td>4</td><td>Section Limitations explicite, instabilité inter-seeds documentée, illusion de généralisation à 100-hop rapportée.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Démonstration mécanistique du trois-phases-grokking, critère d'arrêt KL+entropie, caractérisation quantitative de l'overthinking.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

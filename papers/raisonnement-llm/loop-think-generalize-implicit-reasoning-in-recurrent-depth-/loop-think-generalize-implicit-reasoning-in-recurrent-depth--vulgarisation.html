@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loop, Think, &amp; Generalize: Implicit Reasoning in Recurrent-Depth Transformers — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Loop, Think, &amp; Generalize: Implicit Reasoning in Recurrent-Depth Transformers</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Un transformeur standard, celui qui fait tourner GPT ou Claude, possède une architecture rigide : une pile fixe de couches traversée une seule fois par chaque token. Entraînez-le sur des raisonnements à 5 étapes, demandez-lui d'en enchaîner 10, et il échoue. Pire : donnez-lui deux faits qu'il connaît parfaitement — « le chanteur d'Imagine est John Lennon » et « l'épouse de John Lennon est Yoko Ono » — sans jamais les avoir vus combinés pendant l'entraînement, et il bute sur la question « qui est l'épouse du chanteur d'Imagine ? ».</p>
+
+<p>Cette limite n'est pas anecdotique. Elle touche au cœur de ce qu'on appelle le <strong>raisonnement implicite</strong> : la capacité à enchaîner plusieurs faits dans une seule passe du modèle, sans passer par une chaîne de pensée écrite en sortie. Une équipe de l'Ohio State University (Kohli, Parthasarathy, Sun, Yao) vient de publier une étude qui propose une solution architecturale élégante : faire tourner en boucle les mêmes couches du transformeur. Les résultats sont frappants et redessinent la façon dont on peut concevoir la profondeur de raisonnement d'un modèle de langage.</p>
+
+<h2>Le problème : pourquoi les transformeurs ne composent pas leurs connaissances</h2>
+
+<p>Les grands modèles de langage stockent une quantité massive de faits dans leurs paramètres. Travaux après travaux, on a montré que ces connaissances sont organisées <em>par couche</em> : les faits simples émergent dans les premières couches, les compositions plus complexes dans les couches profondes. Une conséquence directe : un fait stocké dans les couches superficielles reste inaccessible aux couches profondes, puisque les paramètres ne sont pas partagés entre niveaux.</p>
+
+<p>Les chercheurs identifient deux types de généralisation que les transformeurs classiques ratent presque systématiquement.</p>
+
+<p>La <strong>généralisation systématique</strong> consiste à combiner des connaissances qui n'ont jamais été composées entre elles pendant l'entraînement. Le modèle a vu le fait A dans un contexte, le fait B dans un autre, mais jamais la chaîne A→B. Des travaux antérieurs (Wang et al., 2024) montrent que les transformeurs vanilla échouent complètement sur ce scénario, même entraînés très longtemps.</p>
+
+<p>La <strong>extrapolation en profondeur</strong> est le second obstacle : un modèle entraîné sur des raisonnements jusqu'à 5 sauts arrive-t-il à en enchaîner 10 ? Non, là encore. Sa capacité de raisonnement est physiquement bornée par le nombre de couches, et aucune magie d'apprentissage ne lui permet de dépasser cette frontière architecturale.</p>
+
+<p>Ces deux limites ont une implication lourde pour le déploiement des LLM : toute tâche réelle exige de composer des connaissances de façon novatrice, souvent à une profondeur imprévisible. Demander à un modèle d'anticiper à l'entraînement toutes les chaînes de raisonnement possibles est économiquement intenable.</p>
+
+<h2>La méthode vulgarisée : faire tourner les couches en boucle</h2>
+
+<p>L'idée centrale tient en une phrase : plutôt qu'empiler 32 couches distinctes, on empile 4 couches et on les fait traverser 8 fois par le signal. Les paramètres sont partagés d'une itération à l'autre. On parle de <strong>recurrent-depth transformer</strong> ou transformeur bouclé.</p>
+
+<p>L'analogie la plus juste est celle d'un cuisinier qui réduit une sauce. Un transformeur vanilla, c'est une ligne de production où chaque poste ajoute un ingrédient différent : une fois la sauce sortie du poste 32, on ne peut plus y toucher. Un transformeur bouclé, c'est le même cuisinier qui repasse plusieurs fois la sauce sur son feu, en goûtant à chaque passage. Il peut décider de la laisser mijoter plus longtemps si elle n'est pas prête. Les mêmes couches — la même casserole, le même feu — traitent les données de façon itérative, et la profondeur effective du calcul devient un paramètre ajustable à l'inférence.</p>
+
+<p>Techniquement, l'équipe utilise un bloc GPT-2 classique de 4 couches, répété R fois. Deux stratégies d'entraînement sont comparées. Avec la <strong>récurrence fixe</strong>, R est constant pour toutes les instances d'entraînement. Avec la <strong>récurrence dynamique</strong>, R est tiré aléatoirement à chaque batch selon une distribution de Poisson, bornée entre un minimum et un maximum. Cette seconde stratégie force le modèle à apprendre à raisonner avec un budget de calcul variable, ce qui se révélera décisif.</p>
+
+<p>Un détail technique mérite d'être nommé : les matrices de projection de sortie des blocs d'attention et des feed-forward sont <strong>initialisées à zéro</strong>. Chaque bloc récurrent démarre donc comme une identité parfaite. Sans cette astuce, empiler 8 itérations d'un bloc partagé aboutit à une explosion numérique et à un entraînement instable. L'annexe E du papier montre qu'avec une initialisation gaussienne classique, les résultats deviennent erratiques selon la graine aléatoire.</p>
+
+<p>Les expériences sont conduites sur des graphes de connaissances synthétiques. Les entités et relations sont des tokens dédiés, le modèle est entraîné <em>from scratch</em>. Ce choix est délibéré : il évite les biais de pré-entraînement massif et permet d'isoler chirurgicalement les effets architecturaux. Les auteurs reconnaissent la limite — on ne peut pas extrapoler directement à un LLM de frontière — mais gagnent en clarté causale.</p>
+
+<h2>Résultats clés</h2>
+
+<h3>La généralisation systématique émerge en trois phases</h3>
+
+<p>Premier résultat spectaculaire : un transformeur bouclé à 4 couches avec R=2 (soit 8 couches effectives) atteint une bonne précision sur les compositions jamais vues à l'entraînement. Le transformeur vanilla de 4 couches, lui, reste à 0%. Le vanilla de 8 couches, à profondeur effective équivalente, échoue aussi. Le partage de poids est donc le facteur causal, pas la profondeur brute.</p>
+
+<p>Plus frappant encore, l'apprentissage suit une dynamique en trois étapes qu'on reconnaît comme une forme de <em>grokking</em>. Pendant la phase 1, le modèle mémorise le jeu d'entraînement et rien d'autre. En phase 2, après des milliers d'époques supplémentaires, la généralisation en distribution (des exemples similaires à ceux vus) apparaît brutalement. En phase 3, et seulement là, la généralisation systématique se débloque — avec un décalage typique de deux ordres de grandeur entre la fin de la mémorisation (≈100 époques) et le déblocage de la composition inédite (≈10 000 époques).</p>
+
+<p>L'analyse au <em>logit lens</em>, qui projette les états cachés intermédiaires dans le vocabulaire de sortie pour voir « ce que le modèle pense » à chaque profondeur, révèle le mécanisme. En phase 1, le modèle prédit parfois la bonne réponse sans passer par l'entité-pont intermédiaire : il mémorise. En phase 2, il décode correctement l'entité-pont mais uniquement sur les exemples en distribution. En phase 3, l'entité-pont devient récupérable même pour les exemples OOD, et le modèle enchaîne proprement les deux sauts.</p>
+
+<h3>L'extrapolation en profondeur devient possible</h3>
+
+<p>Second résultat, sans doute le plus pratique. Un modèle entraîné avec récurrence dynamique jusqu'à 22 sauts arrive à résoudre, à l'inférence, des problèmes allant jusqu'à <strong>38 sauts</strong> — simplement en augmentant le nombre d'itérations au moment de la prédiction. On achète de la profondeur de raisonnement avec du temps de calcul, sans réentraîner le modèle.</p>
+
+<p>La comparaison chiffrée entre stratégies est éclairante. À données d'entraînement identiques (jusqu'à 12 sauts), un modèle à récurrence fixe R=6 extrapole jusqu'à 14 sauts, R=8 atteint 19 sauts, et la récurrence dynamique égale R=8 dans cette configuration — mais quand on la laisse s'entraîner sur des données plus complexes, elle surpasse largement tous les autres. Le nombre maximal d'itérations à l'entraînement détermine la <em>portée</em> d'extrapolation ; la récurrence dynamique <em>exploite</em> cette portée bien mieux que la récurrence fixe.</p>
+
+<h3>La transition rapide après un long apprentissage</h3>
+
+<p>Un phénomène contre-intuitif émerge dans la courbe d'apprentissage. Le modèle galère pendant 1,3 million de pas de gradient pour apprendre les premiers 4 sauts. Puis, d'un coup, il généralise jusqu'à 19 sauts en très peu d'étapes supplémentaires. Au-delà, chaque nouveau saut se débloque en quelques milliers de pas. L'interprétation des auteurs : la difficulté n'est pas d'apprendre un raisonnement profond en soi, mais de découvrir la règle compositionnelle sous-jacente. Une fois la règle internalisée, l'appliquer récursivement devient presque gratuit.</p>
+
+<h3>Le piège du sur-raisonnement</h3>
+
+<p>Tout n'est pas rose. Quand on pousse trop loin le nombre d'itérations à l'inférence, les performances s'effondrent. Ce phénomène, baptisé <em>overthinking</em>, se mesure via la marge logit (écart entre la bonne réponse et son concurrent le plus proche) : la marge grimpe jusqu'à un pic, puis décroît à mesure qu'on ajoute des itérations. Les modèles dynamiques résistent mieux — leur marge décline plus lentement — mais aucun n'est immunisé.</p>
+
+<p>Pour gérer ce risque, les auteurs proposent un critère d'arrêt adaptatif. Les travaux antérieurs (Geiping et al., 2025) arrêtent la récurrence quand la distribution de sortie cesse de changer (divergence KL faible). Problème : la distribution peut se stabiliser alors que le modèle reste incertain. Les auteurs ajoutent une condition d'entropie : on arrête uniquement si la distribution est stable <em>et</em> confiante. Résultat, l'allocation du calcul suit bien mieux la complexité réelle de l'entrée, et la performance s'améliore sur toute la plage de difficultés.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Pour qui conçoit des systèmes LLM, ce travail propose une bascule conceptuelle. Jusqu'ici, on pense la capacité de raisonnement d'un modèle comme un paramètre figé à l'entraînement : profondeur fixe, coût fixe par token. La récurrence en profondeur transforme ce paramètre en un <em>curseur</em> ajustable à l'inférence. Un même modèle répond vite et peu profond sur une question simple, et alloue plus de cycles sur une question qui en demande.</p>
+
+<p>Cette idée résonne avec les modèles de raisonnement commerciaux (o1, DeepSeek-R1, Claude Sonnet pensant) qui, eux, mettent la capacité de raisonnement supplémentaire dans la longueur de la chaîne de pensée textuelle. L'approche bouclée est <em>orthogonale</em> : elle offre la même plasticité de calcul, mais en espace latent, sans générer des milliers de tokens intermédiaires. Gain potentiel : moins de tokens de sortie à facturer, une latence plus contrôlable, et un raisonnement qui n'a pas à être verbalisable en langage naturel.</p>
+
+<p>Deux modèles de production explorent déjà cette voie. <em>Huginn-3.5B</em> (Geiping et al., 2025) et <em>Ouro</em> (Zhu et al., 2025) appliquent la récurrence en profondeur à l'échelle des LLM. Les résultats de Kohli et collègues suggèrent des leviers concrets pour leur entraînement : préférer la récurrence dynamique à la récurrence fixe, soigner l'initialisation des projections de sortie, intégrer un critère d'arrêt à double condition plutôt qu'une simple KL.</p>
+
+<p>Pour les entreprises qui entraînent des modèles spécialisés sur des bases de connaissances internes — graphes métier, ontologies réglementaires, arborescences de produits — l'enjeu est direct. Un modèle de taille modeste mais bouclé peut rivaliser avec un modèle vanilla plus gros sur les tâches de composition, à budget d'entraînement moindre. L'inférence devient plus coûteuse en temps, mais le coût mémoire reste identique.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs zones d'ombre subsistent. Le cadre expérimental reste délibérément synthétique : vocabulaire limité aux tokens d'entités et de relations, tâches de multi-hop propres, pas de bruit ni de distracteurs. Rien ne garantit que le trois-phases de grokking observé ici se reproduit à l'échelle du web scrapé, où la distribution des données est infiniment plus hétérogène.</p>
+
+<p>L'annexe H du papier contient un avertissement salutaire. Dans une première version du dataset, les auteurs ont observé ce qu'ils croyaient être une extrapolation à 80 sauts — résultat mirifique. Une analyse par <em>activation patching</em> a révélé que le modèle trichait : il lisait uniquement le suffixe court de la séquence de relations, suffisant pour déterminer la réponse finale dans ce graphe. La véritable composition multi-saut n'avait jamais lieu. Ils ont alors reconstruit le jeu en imposant que chaque relation soit une permutation sur les entités, empêchant tout raccourci. Leçon : les benchmarks de raisonnement implicite sont terriblement faciles à contourner par des shortcuts statistiques, et sans analyse causale des activations on peut se mentir à grande échelle.</p>
+
+<p>Les questions ouvertes se bousculent. Le sur-raisonnement est-il un artefact d'un entraînement trop court, ou une limite fondamentale du partage de poids ? La récurrence peut-elle se marier avec les mécanismes d'attention sparse pour traiter de très longs contextes ? Comment interpréter les états latents intermédiaires — Lu et al. (2025) ont montré que les représentations dans Huginn ne se lisent pas comme une chaîne de pensée explicite, ce qui complique l'audit et la sécurité.</p>
+
+<p>Un aspect plus philosophique mérite une pause. Si un même modèle peut raisonner à profondeur variable selon le problème, la frontière entre « savoir » et « calculer » devient floue. Le fait que Yoko Ono est l'épouse de John Lennon est-il une connaissance stockée, ou le produit d'un calcul qui se répète jusqu'à converger ? La récurrence en profondeur rapproche les LLM d'une architecture où le raisonnement n'est plus une séquence distincte du stockage, mais la dynamique même qui fait émerger les faits à partir des paramètres. Ce qui, au passage, rappelle furieusement le cerveau — même si l'analogie s'arrête vite.</p>
+
+<p>Le papier est disponible sur arXiv (2604.07822) et le code est publié sur GitHub par le groupe OSU-NLP. Pour une équipe qui prototype un système de raisonnement sur graphe de connaissances, c'est une lecture qui mérite un créneau de deux heures et une implémentation jouet d'un après-midi.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

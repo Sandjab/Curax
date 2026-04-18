@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Towards System 2 Reasoning in LLMs: Learning How to Think With Meta Chain-of-Thought — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Towards System 2 Reasoning in LLMs: Learning How to Think With Meta Chain-of-Thought</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand GPT-4 bute sur un calcul que n'importe quel lycéen saurait faire</h2>
+
+<p>Demandez à GPT-4o d'évaluer l'expression <em>(x² − 1)(x + 1) / (x³ − x) − 1/x</em> au point x = π. La réponse correcte tient en un mot : 1. L'expression se simplifie entièrement, indépendamment de la valeur de x. Pourtant, même les modèles frontière échouent systématiquement sur cette question triviale.</p>
+
+<p>Cet échec n'est pas anecdotique. Il pointe une limite fondamentale des grands modèles de langage actuels, et c'est précisément ce que les chercheurs de Stanford, Berkeley et SynthLabs tentent de dépasser avec un cadre théorique baptisé <strong>Meta Chain-of-Thought</strong> (Meta-CoT). Leur papier propose une feuille de route pour faire passer les LLM d'un raisonnement réflexe à un véritable raisonnement délibéré — ce que Kahneman appellerait le passage du Système 1 au Système 2.</p>
+
+<h2>Le problème : la pensée humaine n'est pas linéaire, les LLM si</h2>
+
+<p>Le principe de base des LLM tient en trois mots : prédire le prochain token. Un modèle apprend à produire la suite la plus probable d'une séquence, mot après mot, de gauche à droite. Cette approche fonctionne remarquablement bien pour des problèmes simples — calcul basique, grammaire, récitation de faits.</p>
+
+<p>Le Chain-of-Thought a apporté un premier saut qualitatif. En demandant au modèle de « réfléchir étape par étape », on lui alloue davantage de compute pour arriver à la réponse. Les performances explosent sur les problèmes de difficulté modérée.</p>
+
+<p>Mais un obstacle demeure sur les problèmes vraiment difficiles. Prenez le problème du moulin à vent de l'Olympiade Internationale de Mathématiques 2011 : sur plus de 600 participants, seule une poignée a trouvé la solution. Ceux qui ont réussi n'ont pas produit un raisonnement linéaire. Ils ont tâtonné, exploré géométriquement, abandonné des pistes, reformulé leur approche, avant d'écrire une preuve finale de quelques phrases.</p>
+
+<p>Voilà le cœur du diagnostic posé par les auteurs. Les manuels, les cours, les corrigés disponibles sur internet montrent des solutions finales élégantes. Jamais le processus bordélique qui y mène. Le modèle entraîné sur ces textes apprend à mimer le résultat, pas la démarche. Pour des problèmes complexes, la vraie distribution génératrice de la solution n'est pas auto-régressive. Elle passe par des pensées latentes, des allers-retours, des impasses explorées puis rejetées.</p>
+
+<blockquote>Les données de raisonnement présentes dans les corpus de pré-entraînement ne représentent pas le véritable processus de génération pour les problèmes complexes, qui est le produit d'un raisonnement latent étendu, souvent non linéaire.</blockquote>
+
+<p>Un CoT classique essaie de combler ce vide en ajoutant des étapes, mais reste prisonnier de la linéarité gauche-droite. Pour écrire la solution du problème du moulin, il faut déjà en connaître l'approche globale. C'est une régression infinie qu'aucune chaîne de pensée plate ne peut résoudre.</p>
+
+<h2>Meta-CoT : rendre visible le processus invisible</h2>
+
+<p>L'idée centrale tient dans une analogie simple. Le CoT, c'est la rédaction finale d'un devoir de maths. Le Meta-CoT, c'est le brouillon avec les ratures, les flèches, les « et si je prenais cette piste ? », les « non ça marche pas, je reviens en arrière ».</p>
+
+<p>Concrètement, Meta-CoT modélise explicitement les pensées latentes — exploration, vérification, retour en arrière — que le texte final n'exhibe jamais. Les chercheurs identifient la recherche (search) comme le bloc fondamental de ce processus. Deux algorithmes classiques servent de référence :</p>
+
+<ul>
+  <li><strong>Monte Carlo Tree Search (MCTS)</strong> : celui qui a permis à AlphaGo de battre les meilleurs joueurs humains. Il équilibre exploration et exploitation en évaluant des branches par simulations.</li>
+  <li><strong>A*</strong> : l'algorithme de planification de chemin, qui avance en priorité sur les états les plus prometteurs selon une heuristique.</li>
+</ul>
+
+<p>Le pari des auteurs : si on entraîne un modèle à produire directement ces traces de recherche en sortie, token par token, il peut <em>internaliser</em> le processus. Au lieu d'exécuter un algorithme symbolique externe, le LLM déroule le raisonnement arborescent dans son flux de génération.</p>
+
+<p>Pour construire les données d'entraînement, on procède en deux temps. D'abord, on fait tourner MCTS ou A* sur des problèmes mathématiques avec un vérificateur qui sait dire si une solution est correcte. Ensuite, on « linéarise » l'arbre de recherche en une séquence textuelle — incluant les impasses, les retours, les changements de direction. Le modèle apprend à reproduire cette séquence.</p>
+
+<h3>L'indice o1 : quelque chose comme ça se passe déjà</h3>
+
+<p>OpenAI n'a pas publié les détails de l'entraînement d'o1, mais les traces de raisonnement observées ressemblent étrangement à des recherches arborescentes linéarisées. Les chercheurs ont analysé les sorties d'o1, DeepSeek-R1 et Gemini 2.0 Flash Thinking sur le même problème difficile de polynômes. Trois comportements reviennent systématiquement :</p>
+
+<ul>
+  <li>Des changements abrupts de raisonnement, sans continuité logique avec l'étape précédente.</li>
+  <li>Du <strong>backtracking sémantique</strong> : le modèle revient sur des points antérieurs, explore une autre piste.</li>
+  <li>De la répétition : les mêmes dérivations refaites plusieurs fois, parfois avec une formulation légèrement différente.</li>
+</ul>
+
+<p>Ces patterns sont cohérents avec ceux qu'on observerait si le modèle avait été entraîné sur des traces de recherche. DeepSeek-R1 ajoute des étapes d'auto-vérification. Gemini 2.0 semble plutôt adopter une stratégie de révisions successives — il tente une solution complète, abandonne, repart de zéro avec une autre approche.</p>
+
+<h2>Les chiffres qui disent tout</h2>
+
+<p>La différence de comportement entre o1 et les modèles classiques devient spectaculaire quand on regarde le nombre de tokens générés selon la difficulté.</p>
+
+<p>Sur les problèmes de niveau 1 (faciles), o1 produit à peu près autant de tokens qu'un humain — quelques centaines. Sur les problèmes de niveau 5 et 6 de la benchmark HARP (problèmes d'Olympiade de niveau lycée), o1 génère des <strong>ordres de grandeur plus de tokens</strong> que les autres modèles, et l'écart de performance se creuse avec la complexité. Les modèles classiques plafonnent à une longueur de raisonnement comparable à celle des corrigés humains. Ils ont appris à mimer les solutions finales, pas le processus sous-jacent.</p>
+
+<p>Une expérience éclaire la logique économique de la recherche interne. Les auteurs ont fine-tuné un Llama 3.1 8B sur le dataset Numina MATH. En évaluation greedy, le modèle atteint 40 % de précision sur MATH-500. Avec 64 tentatives indépendantes et un vérificateur oracle (pass@64), il monte à près de 85 %. L'écart générateur-vérificateur est énorme : le modèle <em>sait</em> produire la bonne réponse parmi ses tentatives, il ne sait juste pas laquelle choisir.</p>
+
+<p>C'est exactement l'espace qu'exploite la recherche interne. Au lieu de générer 64 solutions complètes en parallèle, puis d'en choisir une, le modèle peut explorer en arbre : élaguer les branches perdantes tôt, garder en contexte les tentatives déjà faites, éviter de refaire deux fois le même calcul. L'expérience sur la Tree-of-Thoughts (ToT) montre une efficacité 4 fois supérieure à l'échantillonnage parallèle sur le jeu de 24.</p>
+
+<h3>Le maillon vérification</h3>
+
+<p>Une chaîne de recherche ne vaut que ce que vaut son évaluateur. Les <strong>Process Reward Models</strong> (PRM) sont des modèles auxiliaires qui notent la qualité de chaque étape intermédiaire d'un raisonnement. Deux façons de les entraîner : avec des annotations humaines pas à pas (cher, difficile à scaler) ou en calculant automatiquement la probabilité que l'étape mène à une bonne réponse via des rollouts Monte Carlo (méthode amortie, scalable).</p>
+
+<p>Les expériences des auteurs montrent que la qualité du PRM s'améliore linéairement avec la quantité de données d'entraînement, et qu'un meilleur PRM permet une recherche plus efficace — même nombre de tokens, meilleure précision. Le PRM n'est pas un luxe. C'est ce qui permet de « couper » une piste avant d'avoir brûlé tout le budget d'inférence.</p>
+
+<h2>Pourquoi le RL change tout</h2>
+
+<p>Le fine-tuning supervisé sur des traces de recherche ne suffit pas. Il souffre d'un problème classique : la distribution d'entraînement (traces générées par un algorithme symbolique) diverge de la distribution d'inférence (traces générées par le modèle lui-même). Les auteurs reformulent le problème dans le cadre du <em>meta reinforcement learning</em>.</p>
+
+<p>L'idée est la suivante. Chaque nouveau problème est une tâche que le modèle doit apprendre à résoudre en explorant activement. On ne lui demande pas de maximiser la récompense sur chaque épisode individuel, mais d'optimiser sa stratégie d'exploration sur plusieurs tentatives, pour arriver à une bonne réponse sur la dernière.</p>
+
+<p>Sur des tâches de code, l'approche Reinforcement Learning with Execution Feedback (RLEF) illustre le principe. Le modèle écrit du code, reçoit le feedback du compilateur et des tests publics, corrige, retente. Sur un Llama 3.1 70B, RLEF fait passer les performances de 27,5 % à 40,1 % de précision sur les tests privés — un gain de 12 points qui ne vient ni du scaling du modèle, ni de données supplémentaires, juste d'un apprentissage meilleur à exploiter le feedback.</p>
+
+<p>Plus fondamentalement, les auteurs défendent l'idée qu'un modèle entraîné par RL à raisonner en contexte pourrait <strong>découvrir de nouveaux algorithmes de recherche</strong>. L'optimisation ne porte plus sur des sorties spécifiques, mais sur des algorithmes de résolution. Ce qui ouvrirait la porte à des stratégies de raisonnement inédites, potentiellement supérieures aux méthodes symboliques classiques comme MCTS.</p>
+
+<h2>Ce que ça change pour ceux qui construisent avec des LLM</h2>
+
+<p>Trois conséquences pratiques.</p>
+
+<p><strong>Le compute d'inférence devient un levier stratégique.</strong> Les lois d'échelle ne se limitent plus à la taille du modèle et à la quantité de données d'entraînement. Sur des problèmes complexes, allouer plus de tokens au raisonnement améliore les performances de façon log-linéaire. Un modèle plus petit avec plus de budget de raisonnement peut battre un modèle plus gros en zero-shot. C'est exactement ce qu'on observe entre o1 et GPT-4o sur les mathématiques olympiques.</p>
+
+<p><strong>Les domaines vérifiables s'ouvrent en premier.</strong> La recette Meta-CoT + RL exige un vérificateur fiable. Mathématiques formelles, code, certains problèmes de physique — tout ce qui a une vérité de terrain mécanisable. Pour les domaines ouverts (rédaction, analyse, design), la route est plus longue : il faut des vérificateurs appris, potentiellement aussi complexes que les générateurs.</p>
+
+<p><strong>Le pipeline d'entraînement se reconfigure.</strong> Les auteurs proposent une séquence concrète : pré-entraînement classique, puis instruction-tuning sur des traces de recherche linéarisées (issues de MCTS, A*, ou de modèles avancés), puis RL avec un PRM ou un vérificateur d'outcome. Le projet <strong>Big MATH</strong> qu'ils lancent vise à agréger plus d'un million de problèmes mathématiques vérifiables, avec filtrage qualité — un ordre de grandeur au-dessus des datasets publics actuels comme GSM8K ou MATH.</p>
+
+<h2>Ce qui reste ouvert</h2>
+
+<p>Plusieurs questions n'ont pas encore de réponse satisfaisante.</p>
+
+<p>L'<strong>écart du vérificateur</strong> d'abord. Sur des problèmes ouverts (preuves mathématiques sans réponse numérique, raisonnement scientifique), comment construire un juge fiable sans lui coller une charge cognitive équivalente à celle du générateur ? Les PRM appris aujourd'hui ont un plafond de performance, et on ne sait pas encore s'ils peuvent le percer par scaling.</p>
+
+<p>Les <strong>lois d'échelle</strong> ensuite. Pour le raisonnement et la recherche, on dispose de résultats fragmentaires : les travaux de Jones (2021) sur les jeux de plateau montrent un trade-off log-log entre compute d'entraînement et compute d'inférence. Est-ce que cette relation tient pour le langage ? À quelle pente ? Nul ne le sait encore avec certitude.</p>
+
+<p>La <strong>méta-recherche</strong> enfin. Si un modèle peut apprendre à exécuter MCTS en contexte, peut-il apprendre à choisir dynamiquement entre plusieurs stratégies de recherche selon le problème ? À inventer ses propres heuristiques ? C'est la promesse la plus spéculative du papier, celle qui fait passer la recherche en contexte du statut de gain d'efficacité à celui de véritable saut capacitaire.</p>
+
+<p>Une chose est sûre : la fenêtre 2024-2025 marque un pivot dans la façon dont les LLM abordent le raisonnement complexe. Les traces d'o1, R1 et leurs successeurs ne sont pas des chaînes de pensée plus longues. Ce sont des recherches arborescentes déguisées en texte. Comprendre ce changement de nature aide à calibrer ses attentes — et à voir où les prochains gains de performance viendront chercher leur compute.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

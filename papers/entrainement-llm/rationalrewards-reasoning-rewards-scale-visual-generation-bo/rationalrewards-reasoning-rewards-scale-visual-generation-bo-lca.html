@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RationalRewards: Reasoning Rewards Scale Visual Generation Both Training and Test Time — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>RationalRewards: Reasoning Rewards Scale Visual Generation Both Training and Test Time</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les modèles de récompense qui pilotent l'entraînement et l'évaluation des générateurs visuels compressent des jugements humains multidimensionnels — qualité perceptuelle, fidélité à l'instruction, plausibilité physique, rendu de texte — en un unique score sans justification. Cette compression expose le RL au reward hacking : les générateurs exploitent des corrélations superficielles sans améliorer réellement la qualité visuelle. La figure 3 illustre le phénomène sur Qwen-Image, où la récompense scalaire continue de croître tandis que les sorties se dégradent visiblement.</p>
+<p>Les auteurs posent une question nette : peut-on entraîner un reward model à produire un raisonnement explicite avant de scorer, et ce raisonnement peut-il servir à la fois de signal d'entraînement et d'optimiseur au moment de l'inférence ? La réponse proposée est RationalRewards, un reward model 8B qui génère une critique structurée sur quatre dimensions (text faithfulness, image faithfulness, physical/visual quality, text rendering) avant d'émettre des scores.</p>
+
+<h2>Méthodologie</h2>
+<p>Le cadre central, PARROT (Preference-Anchored Rationalization), traite les rationales comme variables latentes inférées à partir de données de préférences par paires. Les auteurs dérivent un ELBO dont les trois termes correspondent à un pipeline en trois phases — la correspondance théorie-pratique est explicite et représente l'apport formel principal du papier.</p>
+<p>La phase 1 prompte un enseignant (Qwen3-VL-32B-Instruct) avec le label de préférence comme indice (preference anchoring), réduisant la génération ouverte à une justification ciblée. La phase 2 applique un filtre de cohérence causale : l'enseignant est re-interrogé sans le label, et la paire <code>(x, y, z)</code> n'est conservée que si le rationale z seul permet de retrouver y. Environ 72 % des rationales passent ce filtre. La phase 3 distille par SFT le rationale sur un étudiant 8B sans accès au label (foresight).</p>
+<p>Une projection pointwise étend le cadre paire → score absolu : l'enseignant est re-requêté pour noter chaque image isolément en utilisant le rationale par paire validé comme indice. Cette extension dépasse strictement l'ELBO, ce que les auteurs reconnaissent et justifient partiellement en annexe B.2.</p>
+<p>Le RL aval utilise DiffusionNFT avec LoRA (rang 64), 16 A100-80GB, agrégation des scores par dimension via moyenne équipondérée. La boucle Generate-Critique-Refine (GCR) déclenche une re-génération si une dimension tombe sous le seuil fixe de 3.0, ajoutant ~0,4 s de surcoût VLM par image via vLLM.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur la prédiction de préférence, RationalRewards 8B atteint 64,2 % sur MMRB2 T2I et 80,1 % sur GenAI-Bench Edit, dépassant tous les reward models open-source et rivalisant avec Gemini-2.5-Pro. Le gain sur une baseline de distillation directe depuis le même enseignant (même volume de données) est de 6,8 points sur MMRB2 T2I et 17,3 points sur GenAI Edit, isolant l'apport de la rationalisation ancrée par rapport au simple accès à un enseignant plus gros.</p>
+<p>En RL, FLUX.1-dev passe de 60,97 à 70,34 sur UniGenBench++ avec RationalRewards, contre 62,55 avec MultiReward et 66,71 avec Qwen3-VL-32B utilisé comme juge direct. Le reward model 8B bat donc un juge générique 4× plus gros, confirmant que le calibrage par préférence apporte plus que la capacité brute.</p>
+<p>Le résultat le plus surprenant concerne le prompt tuning au test time : sur ImgEdit-Bench, PT fait passer Flux.1 Kontext de 3,52 à 4,01, au-dessus du RL seul (3,84). Sur Qwen-Image-Edit, la combinaison PT+RL atteint 4,43 (overall) et 8,33 (GEdit-EN), suggérant une complémentarité entre l'espace des paramètres et l'espace des prompts. Le coût comparé est frappant : ~0,4 s par image pour le PT contre ~384 GPU-heures pour le RL d'un modèle de base.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'argument théorique est solide : le lien entre ELBO et pipeline en trois phases n'est pas un habillage a posteriori, chaque terme pilote une opération concrète. La sensibilité du bound au KL avec la vraie postérieure est explicitement discutée (annexe B.1, éq. 9).</p>
+<p>Trois réserves méritent d'être formulées. D'abord, l'hypothèse des <em>capacités latentes sous-élicitées</em>, centrale pour expliquer pourquoi PT égale le RL, reste conjecturale : aucune validation au niveau des représentations (probing d'activations, décomposition des sorties) n'est fournie. Une explication alternative — le prompt raffiné apporte du contexte additionnel qui bénéficierait à tout modèle — n'est pas exclue.</p>
+<p>Ensuite, la projection pointwise s'appuie sur une hypothèse de principes d'évaluation partagés entre paire et score absolu, mais les modes d'échec potentiels listés (dérive de calibrage, dépendance au contexte de comparaison) ne sont pas quantifiés empiriquement. Les auteurs mentionnent des mitigations (rubriques détaillées, instruction d'indépendance au hint) sans mesurer leur efficacité.</p>
+<p>Enfin, la comparaison RL vs PT souffre d'un confondant structurel reconnu par les auteurs : le LoRA contraint la capacité de mise à jour et la distribution des prompts RL ne couvre pas nécessairement la distribution d'évaluation. Affirmer que PT « égale ou dépasse » le RL sans RL full-parameter affaiblit la portée du résultat.</p>
+<p>La baseline de distillation directe est bien construite mais ne couvre qu'un seul contrefactuel. Un ablation isolant spécifiquement le filtre de cohérence (phase 2) vs le preference anchoring (phase 1) manque. Les biais des annotateurs et les blind spots de l'enseignant sont listés mais pas audités.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code, les données et les modèles sont annoncés comme publiés (Project Page). Les hyperparamètres RL sont détaillés (tableau 11 : résolution 512, β=0,0001, group size 16, LoRA rank 64, seuil de filtrage 0,9/0,05). Les prompts complets des trois phases, du consistency check, de la projection pointwise et de la boucle GCR sont reproduits intégralement en annexe C, ce qui est inhabituellement généreux.</p>
+<p>Les rubriques de scoring (annexe D) fournissent les ancres textuelles pour chaque niveau 1-4 sur les quatre dimensions. Les benchmarks utilisés sont publics (MMRB2, GenAI-Bench, EditReward-Bench, UniGen, ImgEdit, GEdit, PICA). Le pipeline DiffusionNFT est repris d'un travail antérieur avec algorithme en pseudocode (algorithme 1).</p>
+<p>Point de friction : la seed d'entraînement n'est pas discutée, les résultats sont des points uniques sans intervalles de confiance, et la variance entre runs RL n'est pas rapportée alors que le RL diffusion est notoirement instable.</p>
+
+<h2>Impact et applications</h2>
+<p>Le papier propose une alternative crédible aux reward models scalaires pour la génération visuelle, avec un ratio performance/données favorable (10-20× moins de données que les baselines). L'idée que le même modèle serve à la fois de signal RL dense et d'optimiseur de prompts ouvre un axe de déploiement peu coûteux pour les générateurs frozen.</p>
+<p>Les cas d'usage secondaires démontrés (figure 8) — data filtering, visualisation de défauts régionaux via GroundingDINO+SAM — montrent que la granularité des critiques est exploitable au-delà du scoring. Pour les équipes sans budget RL, la boucle GCR offre un gain mesurable sans fine-tuning.</p>
+<p>Le résultat PT ≥ RL, s'il se confirme en conditions non-LoRA, a une implication pratique forte : la qualité des générateurs actuels pourrait être limitée par la qualité des prompts plus que par les poids du modèle, ce qui réoriente l'effort d'optimisation.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans la vague des reward models génératifs (Mahan et al. 2024, Guo et al. 2025, Chen et al. 2026) et étend explicitement STaR (Zelikman et al. 2022) au domaine visuel via l'ancrage préférentiel. Par rapport aux scalaires dominants (ImageReward, PickScore, EditReward, UnifiedReward), la rupture est l'émission d'un raisonnement explicite avant le score.</p>
+<p>Côté test-time, la comparaison la plus directe est PromptEnhancer (Wang et al. 2025g) : RationalRewards est post-hoc et réactif (observe la sortie avant de raffiner) là où PromptEnhancer réécrit en aveugle avant génération. Cette distinction post-hoc vs pré-hoc est conceptuellement propre et empiriquement différenciante (tableau 3).</p>
+<p>Par rapport aux approches multimodales CoT pour la génération (ReflectionFlow, Reason-Edit, T2I-R1), RationalRewards se distingue en ne touchant pas les poids du générateur et en étant applicable à tout modèle frozen. La contribution conceptuelle principale — formaliser les rationales comme latentes via ELBO à partir de préférences par paires — est nouvelle dans ce contexte spécifique.</p>
+
+<h2>Tableau récapitulatif de la robustesse</h2>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>5</td><td>Formulation nette et originale du double usage train-time/test-time d'un reward model avec raisonnement.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Ablations croisées scalar vs reasoning et generic vs preference-trained, baseline de distillation directe bien construite, mais ablation phase 1 vs phase 2 manquante.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>80K paires brutes, 57,6K après filtrage, plusieurs générateurs testés ; certains benchmarks petits (EditReward Bench : 133).</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Benchmarks publics et établis, rubriques détaillées en annexe, mais pas d'intervalles de confiance ni de variance multi-run.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Biais des annotateurs et blind spots de l'enseignant reconnus mais non audités ; comparaison RL vs PT biaisée par la contrainte LoRA admise par les auteurs.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code/données/modèles annoncés publics, prompts complets en annexe, hyperparamètres détaillés, pseudocode de l'algorithme RL fourni.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Section limites explicite couvrant dépendance à l'enseignant, biais, hypothèse des capacités latentes non validée, sensibilité du seuil non étudiée.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>SOTA open-source compétitif avec Gemini-2.5-Pro sur la prédiction de préférence, insight PT ≥ RL empiriquement substantiel, cadre ELBO transférable.</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

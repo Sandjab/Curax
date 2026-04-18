@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Towards System 2 Reasoning in LLMs: Learning How to Think With Meta Chain-of-Thought — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Towards System 2 Reasoning in LLMs: Learning How to Think With Meta Chain-of-Thought</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le raisonnement des LLM sur des problèmes mathématiques difficiles (niveaux HARP 4-5, Olympiades) reste très en-deçà de la performance humaine malgré l'usage de Chain-of-Thought (CoT). Les auteurs formulent une hypothèse précise : la CoT classique modélise bien la solution finale mais ignore le processus génératif réel, lui-même non auto-régressif, qui comprend exploration, retours en arrière et vérification. Ils nomment ce processus latent Meta Chain-of-Thought (Meta-CoT) et le rattachent au raisonnement System 2 de la théorie des processus duaux.</p>
+<p>L'article se veut à la fois théorique (formalisation Bayésienne du raisonnement comme variable latente, cadre POMDP / meta-RL) et programmatique : il propose un pipeline concret d'entraînement et un projet de corpus ("Big MATH", >1M problèmes vérifiables). Le timing est pertinent — publication quelques semaines après o1 et R1 — et la cible interprétative explicite : expliquer pourquoi ces modèles consomment davantage de tokens sur les problèmes difficiles.</p>
+
+<h2>Méthodologie</h2>
+<p>La contribution méthodologique se répartit en trois registres hétérogènes, ce qui constitue la principale faiblesse du papier.</p>
+<h3>Formalisation théorique</h3>
+<p>Les auteurs réécrivent la CoT classique comme marginalisation sur des étapes latentes et proposent une extension Meta-CoT où la distribution jointe (solution + étapes) est conditionnée à un processus de recherche latent. Le cadre MDP/POMDP est repris de la littérature standard (Ghosh et al. 2021) et l'objectif meta-RL s'appuie sur E-RL2 (Stadie et al. 2019). La formalisation reste au niveau conceptuel — aucun théorème original, aucune borne de complexité démontrée.</p>
+<h3>Expériences empiriques</h3>
+<p>Plusieurs mini-études sont juxtaposées sans design unifié : fine-tuning de LLaMa 3.1 8B sur Numina MATH avec mesure pass@k et majority voting, reproduction partielle de Stream-of-Search sur Countdown, génération de traces synthétiques MCTS et A* à partir de Gemini 1.5 Pro sur un problème unique de l'exemple OpenAI, PRM entraîné sur 97k trajectoires dérivées de PRM800K. Les tailles d'échantillon sont faibles (7 086 questions uniques pour le PRM, une seule question pour les arbres MCTS/A*) et les comparaisons manquent de contrôles appariés.</p>
+<h3>Analyse qualitative des traces o1/R1/QwQ/Gemini 2.0</h3>
+<p>Lecture en miroir des sorties publiques des modèles frontières sur un même problème, avec annotation manuelle de "backtracking" et "verification". Méthode entièrement subjective, sans grille de codage inter-annotateurs ni corpus de contrôle.</p>
+
+<h2>Résultats principaux</h2>
+<p>Les auteurs établissent plusieurs observations convergentes. Sur MATH, l'écart pass@1 vs pass@64 reste large (environ 40 % → 85 %) y compris après SFT intensif, ce qu'ils lisent comme la persistance d'un gap générateur-vérificateur. Les scaling laws inference-time observées sur Countdown et les jeux de plateau (Schultz et al. 2024) partagent la même forme fonctionnelle log-linéaire que celles rapportées par OpenAI pour o1 sur AIME — un rapprochement suggestif mais purement visuel.</p>
+<p>L'étude sur le backtracking auto-régressif réplique les résultats de Ye et al. 2024 (gain 78 % → 94 % sur math difficile avec 50 % d'étapes incorrectes insérées) et Zhang et al. 2024 sur Gemma 2B / LLaMa 3 8B pour la sécurité. Le PRM entraîné voit son MAE décroître avec la taille du corpus, et l'amélioration Best-of-N / beam search suit logiquement. Un résultat négatif honnête : le SFT sur le modèle RL-post-entraîné LLaMa 3.1 8B Instruct dégrade les performances, gain net de seulement 2 % après révision variable.</p>
+<p>L'analyse qualitative identifie trois patterns communs aux traces o1/R1/Gemini 2.0 : flux logique incohérent, backtracking sémantique, répétition. R1 et Gemini 2.0 ajoutent des étapes de vérification générative explicites, là où o1 semble procéder par branches abruptes proches d'une trace MCTS.</p>
+
+<h2>Discussion et limites</h2>
+<p>La thèse centrale — la CoT classique ne capture pas le processus génératif réel des problèmes durs — est défendable et alignée avec la littérature de complexité (Merrill &amp; Sabharwal 2023, Li et al. 2024). Le papier souffre néanmoins de plusieurs fragilités.</p>
+<p><strong>Hypothèses non testées présentées comme centrales.</strong> L'existence d'un "gap générateur-vérificateur persistant" à grande échelle repose sur des expériences à 8B paramètres et quelques centaines de milliers d'exemples. Les auteurs reconnaissent que sur GSM8k / frontière, ce gap disparaît. La généralisation à des domaines à forte incertitude épistémique est stipulée sans preuve.</p>
+<p><strong>Confusion analyse descriptive / inférence causale.</strong> L'affirmation que o1 "implémente full Meta-CoT en auto-régressif à l'inférence" est défendue par la lecture de quelques traces et des courbes de longueur de tokens. L'alternative — des CoT simplement plus longues produites par un entraînement RL standard — n'est pas formellement écartée.</p>
+<p><strong>Absence de baseline forte.</strong> Les gains attribués au backtracking ou aux traces linéarisées ne sont jamais comparés à un simple majority vote sur budget de tokens équivalent.</p>
+<p><strong>Échantillon des arbres synthétiques.</strong> Une seule question sert à illustrer MCTS et A*, à un coût déclaré de ~100 $ par arbre et 20 M tokens. Impossible de généraliser. Le choix de Gemini 1.5 comme générateur/vérificateur Monte Carlo introduit des biais non discutés (auto-évaluation par le même modèle que celui noté).</p>
+<p><strong>Limites admises par les auteurs.</strong> À leur crédit, plusieurs sections (3.1, 4.2.3, 6.1) reconnaissent le caractère préliminaire des expériences et listent les ablations manquantes (taille de modèle, quantité de données, compute d'inférence). La section 8.3 Open Research Questions est riche et honnête sur ce qui reste à démontrer.</p>
+
+<h2>Reproductibilité</h2>
+<p>Aucun code ni checkpoint n'accompagne la publication arXiv. Les datasets d'entraînement SFT reposent sur Numina MATH et PRM800K, tous deux publics. Les traces MCTS/A* sont reproduites en annexe E, mais le prompt exact, la température, les paramètres d'exploration et le seed ne sont pas tous spécifiés. Le projet "Big MATH" est annoncé mais non publié au moment de l'article. Le pipeline complet — instruction tuning + RL meta — n'est jamais exécuté de bout en bout sur un modèle final ; c'est une feuille de route.</p>
+
+<h2>Impact et applications</h2>
+<p>Le papier a rapidement servi de cadre de lecture pour la génération o1/R1/QwQ dans la communauté. Son apport réel tient moins aux résultats expérimentaux qu'à la mise en forme conceptuelle : séparation explicite CoT / Meta-CoT, cadre meta-RL pour le raisonnement long, identification des trois primitives (exploration, backtracking, vérification) qui structurent les traces des modèles frontières. Pour un praticien, l'objectif E-RL2 formalisé en équation 14 et le PRM scaling de la section 5 fournissent des recettes directement applicables. Le "Big MATH" project, s'il aboutit, constituerait une contribution d'infrastructure significative.</p>
+<p>Les applications immédiates incluent la génération de données synthétiques via search linéarisé (Meta-STaR, section 4.1.2), le choix de l'architecture d'entraînement pour modèles raisonneurs (SFT sur traces A* puis RL), et la conception de PRMs via rollouts Monte Carlo amortis.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le texte s'inscrit dans la lignée des travaux sur le search pour LLM (Tree-of-Thoughts, RAP, LATS, Stream-of-Search) en leur donnant un cadre génératif latent unifié. Il prolonge STaR (Zelikman et al. 2022) vers Meta-STaR, étend les PRM de Lightman et al. 2023 via l'estimation MC de Wang et al. 2024, et réinterprète les résultats de Jones 2021 sur AlphaZero comme loi d'échelle train/inference applicable aux LLM. L'originalité tient à la synthèse plutôt qu'à des résultats isolés — peu de travaux antérieurs articulent aussi explicitement complexité computationnelle, meta-RL et interprétation des modèles o1-like. Le parallèle avec la théorie duale System 1/2 reste analogique et n'apporte pas d'insight psychométrique nouveau.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+  <thead>
+    <tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Question de recherche</td><td>4</td><td>Problème clair et pertinent, mais large au point de diluer la testabilité.</td></tr>
+    <tr><td>Design expérimental</td><td>2</td><td>Juxtaposition de mini-études sans protocole unifié ni baselines contrôlées.</td></tr>
+    <tr><td>Taille d'échantillon</td><td>2</td><td>Expériences à 8B, une seule question pour les arbres MCTS/A*, 7 086 questions pour le PRM.</td></tr>
+    <tr><td>Qualité des métriques</td><td>3</td><td>Benchmarks standards (MATH, GSM8k, HARP, AIME) correctement mobilisés.</td></tr>
+    <tr><td>Contrôle des biais</td><td>2</td><td>Auto-évaluation Gemini 1.5, lecture qualitative subjective des traces o1/R1 sans codage inter-annotateurs.</td></tr>
+    <tr><td>Reproductibilité</td><td>2</td><td>Ni code ni checkpoints publiés, pipeline final non exécuté, "Big MATH" annoncé mais indisponible.</td></tr>
+    <tr><td>Transparence des limitations</td><td>4</td><td>Section Open Research Questions explicite, résultats négatifs rapportés honnêtement.</td></tr>
+    <tr><td>Impact et nouveauté</td><td>4</td><td>Cadre conceptuel influent post-o1, synthèse utile même sans résultat empirique majeur.</td></tr>
+  </tbody>
+</table>
+<p><strong>Note globale : 3,0 / 5.</strong> Papier de position solidement argumenté et bien positionné, dont la valeur tient à la clarification conceptuelle plus qu'à la démonstration empirique. À lire comme une carte du territoire plutôt que comme une étude confirmatoire.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
