@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attention to Mamba: A Recipe for Cross-Architecture Distillation — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Attention to Mamba: A Recipe for Cross-Architecture Distillation</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Une perplexité de 14,11 contre 13,86 pour le modèle original</h2>
+
+<p>Quand une équipe d'Apple et du MILA annonce qu'elle a réussi à transformer un modèle Transformer en architecture Mamba tout en conservant 99% de ses performances, le chiffre compte moins que la méthode. Les chercheurs ont utilisé seulement 2,7% du budget d'entraînement initial pour y parvenir. Pour un modèle Pythia-1B originellement entraîné sur 300 milliards de tokens, cela représente une économie colossale en ressources de calcul.</p>
+
+<p>Le papier « Attention to Mamba: A Recipe for Cross-Architecture Distillation » propose une recette en deux temps pour faire passer la connaissance d'un modèle quadratique (coûteux en mémoire) vers un modèle linéaire (rapide à l'inférence). L'enjeu dépasse la prouesse technique : si la méthode tient ses promesses, elle change l'économie du déploiement des grands modèles de langage.</p>
+
+<h2>Le problème : deux architectures qui ne parlent pas la même langue</h2>
+
+<p>Depuis 2017, l'architecture Transformer domine le traitement du langage. Son secret tient à un mécanisme appelé <strong>attention</strong>, qui permet à chaque mot d'une phrase de « regarder » tous les autres pour construire du sens. Cette capacité de mise en relation universelle explique la puissance de ChatGPT, Claude et des autres grands modèles.</p>
+
+<p>Le revers de la médaille : le coût de l'attention croît quadratiquement avec la longueur du texte. Doubler la taille de la séquence quadruple le temps de calcul et la mémoire nécessaire. Pour un prompt de 10 000 tokens, l'attention doit comparer chaque mot à chacun des 9 999 autres, soit près de 100 millions de comparaisons par couche.</p>
+
+<p>Face à ce mur, plusieurs architectures alternatives ont émergé. La plus prometteuse s'appelle <strong>Mamba</strong>, une famille de modèles à espace d'états (SSM) qui traite les séquences de façon linéaire. Là où Transformer regarde toute l'histoire à chaque étape, Mamba maintient une mémoire compressée qu'il met à jour au fil du texte. Résultat : inférence plus rapide, consommation mémoire réduite, débit supérieur en génération.</p>
+
+<p>Le hic ? Mamba reste moins performant que Transformer sur les tâches en aval, surtout aux grandes échelles. Et la communauté a investi des années de recherche et des millions de dollars de calcul dans les Transformers préentraînés. Jeter tout ça pour repartir de zéro avec Mamba serait économiquement et scientifiquement absurde.</p>
+
+<p>D'où l'idée : pourquoi ne pas <strong>distiller</strong> la connaissance d'un Transformer préentraîné vers un Mamba ? La distillation est une technique classique qui consiste à entraîner un modèle « élève » à imiter un modèle « professeur » plus gros ou plus coûteux. Sauf que les tentatives naïves de distillation entre Transformer et Mamba échouent lamentablement. La perplexité du modèle distillé dépasse souvent 100 — un signe clair que l'élève n'a rien compris au cours.</p>
+
+<h2>Les chercheurs ont choisi un détour plutôt qu'un saut</h2>
+
+<p>Les auteurs partent d'un diagnostic simple : Transformer et Mamba sont trop différents pour qu'une transmission directe fonctionne. C'est comme demander à quelqu'un qui ne parle que français de traduire du mandarin en arabe sans passage intermédiaire.</p>
+
+<p>Leur solution s'appuie sur une observation mathématique élégante. Il existe une architecture intermédiaire, l'<strong>attention linéaire</strong>, qui ressemble à de l'attention classique mais fonctionne sans l'opération « softmax » coûteuse. Surtout, l'attention linéaire peut s'interpréter comme un cas particulier d'espace d'états, donc comme une cousine proche de Mamba.</p>
+
+<p>D'où la recette en deux étapes :</p>
+
+<p><strong>Étape 1 — Du Transformer vers l'attention linéaire.</strong> Les chercheurs remplacent le mécanisme d'attention classique par une version linéarisée, baptisée Hedgehog. L'astuce mathématique s'appelle le <em>kernel trick</em> : au lieu de calculer directement la matrice d'attention (coûteuse), on décompose cette opération en un produit scalaire dans un espace de caractéristiques. Une analogie : plutôt que de mesurer la ressemblance entre deux visages en les superposant pixel par pixel, on les décrit chacun par une liste de traits (forme du nez, couleur des yeux, etc.) puis on compare les listes. Le résultat est proche, le coût divisé.</p>
+
+<p>Hedgehog ne se contente pas d'une approximation fixe. Il apprend la meilleure « fonction de traits » possible pour chaque couche du Transformer professeur, via un petit réseau de neurones. Cette étape entraîne uniquement cette fonction de traits — tout le reste du modèle (couches MLP, normalisations, embeddings) reste gelé.</p>
+
+<p><strong>Étape 2 — De l'attention linéaire vers Mamba.</strong> Une fois Hedgehog entraîné, les chercheurs reconnaissent un modèle qui peut servir de point de départ pour initialiser Mamba. Les paramètres appris à l'étape 1 (requêtes, clés, valeurs transformées par Hedgehog) se glissent dans les matrices correspondantes de Mamba. On active ensuite les ingrédients propres à Mamba : le masque causal apprenable, la convolution courte, la branche de gate. L'ensemble est réajusté par apprentissage classique (cross-entropy sur les prédictions).</p>
+
+<p>Le modèle hybride qui en résulte s'appelle <strong>HedgeMamba</strong>. Il combine la fonction de traits Hedgehog (héritée du Transformer professeur) avec les composants Mamba qui apportent l'expressivité supplémentaire.</p>
+
+<h3>Pourquoi cette initialisation change tout</h3>
+
+<p>L'intuition clé : au lieu de partir d'un Mamba aux poids aléatoires et d'essayer de lui faire imiter un Transformer, on part d'un Mamba dont les paramètres reflètent déjà approximativement le comportement du professeur. La distillation devient un ajustement fin plutôt qu'un apprentissage à partir de zéro.</p>
+
+<p>Cette idée résout le problème identifié dans les travaux précédents comme MOHAWK, qui utilisait une recette à trois étapes avec des objectifs distincts et des modules gelés à chaque phase. La méthode d'Apple est plus directe et plus économe en ressources.</p>
+
+<h2>Résultats clés : quand l'élève rattrape presque le maître</h2>
+
+<p>Le tableau principal du papier compare trois modèles sur Pythia-1B :</p>
+
+<ul>
+<li><strong>Pythia (professeur)</strong> : perplexité de 13,86</li>
+<li><strong>Hedgehog seul (baseline)</strong> : 14,89</li>
+<li><strong>HedgeMamba (méthode proposée)</strong> : 14,11</li>
+</ul>
+
+<p>L'écart entre HedgeMamba et le professeur ne dépasse pas 2% en perplexité. Sur les dix tâches en aval évaluées (raisonnement commun, compréhension de texte, QA), HedgeMamba surpasse systématiquement la baseline Hedgehog. Sur ARC-Easy, le score passe de 52,74% à 53,66%. Sur Lambada, de 30,60% à 32,31%. Sur BoolQ, de 54,80% à 55,20%.</p>
+
+<p>Plus impressionnant : une distillation naïve directe vers Mamba sans étape intermédiaire produit des perplexités supérieures à 100, confirmant l'échec documenté dans la littérature. Le détour par Hedgehog fait toute la différence.</p>
+
+<h3>L'allocation des tokens entre étapes révèle une surprise</h3>
+
+<p>Les chercheurs ont testé différentes répartitions du budget de 10 milliards de tokens entre les deux étapes. La sagesse populaire, héritée du papier Hedgehog original, suggérait un partage 50/50. Les résultats racontent une autre histoire :</p>
+
+<ul>
+<li>100% sur étape 1, 0% sur étape 2 : perplexité de 25,71 (catastrophe)</li>
+<li>50/50 : perplexité de 14,58</li>
+<li>10/90 : perplexité de 14,11 (optimum)</li>
+<li>0% sur étape 1, 100% sur étape 2 : perplexité de 17,08</li>
+</ul>
+
+<p>Le meilleur ratio alloue 90% du budget au fine-tuning final. Mais — et c'est le point contre-intuitif — supprimer complètement l'étape 1 dégrade sévèrement les résultats. Une petite dose d'initialisation Hedgehog (10% du budget, soit 1 milliard de tokens) suffit à débloquer des performances que 10 milliards de tokens de fine-tuning seul ne peuvent atteindre.</p>
+
+<p>Cette observation confirme la valeur de l'alignement architectural par initialisation : quelques minutes de calcul bien placées valent mieux que des heures de force brute.</p>
+
+<h3>L'étude d'ablation identifie l'ingrédient secret</h3>
+
+<p>En ajoutant progressivement les composants de Mamba à Hedgehog, les chercheurs isolent leurs contributions respectives. Ajouter le SSM apprenable n'améliore rien. Ajouter la convolution courte non plus. Mais ajouter la <strong>branche de gate</strong> fait chuter la perplexité de 14,89 à 14,58 et améliore notablement toutes les tâches en aval. Ce résultat rejoint d'autres travaux récents qui pointent l'importance du gating dans les mécanismes d'attention — un sujet qui méritera des études dédiées.</p>
+
+<h3>La méthode passe l'épreuve de l'échelle</h3>
+
+<p>Testée sur trois tailles de modèles (160M, 410M, 1B paramètres), la recette conserve ses avantages. Sur le modèle 160M, HedgeMamba atteint une perplexité de 26,84 contre 35,95 pour la baseline Hedgehog — un bond spectaculaire. Le gain se réduit à mesure que la taille augmente, mais HedgeMamba reste supérieur sur toutes les échelles testées.</p>
+
+<p>L'étude de scaling sur le budget de tokens montre que la perplexité continue de baisser à 10 milliards sans plateau visible. Plus on investit de tokens, meilleur est le résultat — une bonne nouvelle pour qui dispose du compute nécessaire.</p>
+
+<h2>Implications pratiques : économie de l'inférence et réutilisation du capital</h2>
+
+<p>Pour l'industrie, la promesse tient en trois points concrets.</p>
+
+<p><strong>Coût d'inférence réduit.</strong> Un modèle Mamba consomme moins de mémoire et génère les tokens plus vite qu'un Transformer équivalent, surtout sur de longues séquences. Pour les applications sensibles au coût (chatbots à fort trafic, analyse de documents longs, assistants de code traitant des bases entières), cela peut diviser les factures cloud par deux ou trois.</p>
+
+<p><strong>Réutilisation du capital existant.</strong> Les entreprises qui ont dépensé des millions pour entraîner des Transformers n'ont pas besoin de tout recommencer. 10 milliards de tokens de distillation représentent environ 2,7% du budget initial. À l'échelle de modèles préentraînés sur des trillions de tokens, cette proportion reste gérable même pour des équipes de taille modeste.</p>
+
+<p><strong>Accès à l'ère post-Transformer.</strong> La communauté open source dispose de centaines de Transformers préentraînés sur Hugging Face. Cette recette ouvre une voie pratique pour convertir tout ce patrimoine vers des architectures linéaires, sans attendre que Mamba rattrape Transformer en préentraînement direct.</p>
+
+<p>Attention toutefois aux limites. Les chercheurs n'ont testé que Pythia et OpenWebText. La généralisation à Llama, Mistral ou Qwen reste à démontrer. Le coût de distillation, bien que fraction du préentraînement, se chiffre quand même en dizaines de jours de calcul sur 8 GPU A100. Pour une startup avec un budget GPU limité, ce n'est pas anodin.</p>
+
+<h2>Pour aller plus loin : ce que le papier ouvre et ce qu'il laisse ouvert</h2>
+
+<p>Plusieurs questions restent non résolues. La méthode repose sur une similarité architecturale (MLP + mixer de séquence) entre Transformer et Mamba. Les Transformers modernes intègrent des composants plus sophistiqués — attention à fenêtre glissante, mixture of experts, attention multi-head groupée. Adapter la recette à ces variantes demandera du travail supplémentaire.</p>
+
+<p>La qualité du dataset de distillation reste sous-étudiée. Les auteurs ont utilisé OpenWebText, un corpus généraliste de 9 milliards de tokens. Utiliser un dataset de meilleure qualité, comme ceux produits par des filtrages modernes (Dolma, FineWeb), pourrait rapprocher encore l'élève du maître voire le dépasser sur certaines tâches.</p>
+
+<p>La comparaison avec MOHAWK, principale alternative concurrente, reste bloquée par des différences de backbone (Pythia vs Phi) et de dataset d'entraînement. Une étude comparative contrôlée aiderait la communauté à départager les approches.</p>
+
+<p>Enfin, le papier se concentre sur la préservation de performance. Il ne mesure pas les gains réels d'inférence en production : débit en tokens par seconde, latence de premier token, consommation mémoire en conditions réelles. Ces benchmarks applicatifs détermineront si l'effort de distillation vaut le retour sur investissement.</p>
+
+<p>Au-delà de ce papier précis, la recette illustre une tendance plus large : l'ingénierie de modèles fondamentaux devient moins une affaire de préentraînement from scratch et plus une affaire de transformation, adaptation et recyclage de modèles existants. Dans un monde où le coût du compute contraint les choix, les ponts entre architectures deviennent aussi précieux que les architectures elles-mêmes.</p>
+
+<p>La prochaine étape logique serait de combiner cette approche avec des techniques de quantification agressive (4 bits, voire moins) pour empiler les gains d'efficacité. Un Mamba distillé depuis un Transformer puis quantifié pourrait offrir un ratio performance/coût d'inférence radicalement différent de ce qu'on connaît aujourd'hui. Le papier d'Apple ne traite pas ce terrain, mais il fournit une base solide pour qui voudrait s'y aventurer.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

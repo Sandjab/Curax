@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attention to Mamba: A Recipe for Cross-Architecture Distillation — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Attention to Mamba: A Recipe for Cross-Architecture Distillation</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>La distillation directe d'un Transformer vers une architecture Mamba échoue systématiquement à préserver les performances du modèle enseignant, comme l'avaient documenté Wang et al. (2024) et Bick et al. (2024). Les auteurs attribuent cet échec à un défaut d'alignement architectural lors du transfert de connaissances entre deux paradigmes computationnels distincts. Leur proposition repose sur une recette en deux étapes qui exploite les parentés mathématiques entre Softmax Attention, Linear Attention et SSMs pour ponter ce fossé.</p>
+
+<p>L'enjeu pratique est concret. Les Transformers dominent l'écosystème NLP avec une quantité considérable de modèles préentraînés disponibles, mais leur coût quadratique en longueur de séquence reste un frein. Les SSMs comme Mamba offrent une complexité linéaire et une meilleure efficacité mémoire, mais reconstruire un corpus équivalent de modèles préentraînés serait prohibitif. D'où l'intérêt d'une procédure de distillation efficace.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline se décompose en deux étapes séquentielles. La première reprend Hedgehog (Zhang et al., 2024) : un feature map MLP apprend à reproduire l'effet du softmax via la décomposition de Mercer, transformant l'Attention quadratique en Linear Attention. Les poids MLP, keys, queries et values du Transformer enseignant sont gelés pendant cette phase, seul le feature map ϕ est entraîné par correspondance cosine avec les sorties de l'enseignant.</p>
+
+<p>La seconde étape, HedgeMamba, utilise les poids appris en stage 1 pour initialiser un mixer Mamba. La correspondance B↔K, C↔Q, X↔V est exploitée directement, avec Λ≡I comme point de départ. Les composants additionnels de Mamba (convolution courte, branche de porte, état Λ apprenable) sont initialisés à l'identité puis dégelés pendant le fine-tuning par cross-entropy. La normalisation des scores d'attention est préservée via un doublement du tenseur de valeurs.</p>
+
+<p>Le protocole d'évaluation repose sur Pythia-1B comme enseignant, OpenWebText comme corpus de distillation, et un budget total de 10B tokens (environ 2,7% du budget de préentraînement original de l'enseignant). Les métriques couvrent la perplexité upstream et 10 tâches downstream via lm-eval-harness.</p>
+
+<h2>Résultats principaux</h2>
+<p>Le modèle distillé atteint une perplexité de 14,11 contre 13,86 pour l'enseignant, soit un écart inférieur à 2%. La baseline Hedgehog seule plafonne à 14,89. Sur les tâches downstream, HedgeMamba domine systématiquement Hedgehog tout en se rapprochant de Pythia : 27,13 vs 26,45 vs 27,04 sur ARC-C, 41,87 vs 40,79 vs 47,16 sur HellaSwag.</p>
+
+<p>Les ablations confirment l'apport progressif des composants Mamba. La branche de porte produit le plus grand gain (PPL 14,58 vs 14,89), en cohérence avec les travaux récents de Qiu et al. (2025) sur l'utilité des gates dans les modules d'attention. L'analyse de sensibilité sur l'allocation du budget entre stages révèle un optimum à 10/90 : consacrer 90% des tokens au stage 2 est préférable au split 50/50 utilisé dans Hedgehog original. Les extrêmes 100/0 et 0/100 échouent tous deux, démontrant la complémentarité des deux phases.</p>
+
+<p>L'étude de scaling sur le budget de distillation (1B, 2B, 3B, 10B) montre que la perplexité n'a pas saturé à 10B. Le scaling sur la taille du modèle (160M, 410M, 1B) confirme que HedgeMamba surpasse systématiquement Hedgehog à toutes les échelles testées.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs reconnaissent trois limitations majeures. Un seul modèle enseignant évalué (Pythia) : l'extensibilité à Llama, Mistral ou GPT-NeoX reste une conjecture. Un seul corpus de distillation (OpenWebText) : l'effet de la qualité des données sur le transfert n'est pas isolé. La taille maximale étudiée est 1B, loin des modèles frontière de 70B+.</p>
+
+<p>Une faiblesse supplémentaire mérite attention. La comparaison avec MOHAWK reste qualitative uniquement, justifiée par des différences de backbone (Pythia vs Phi) et de corpus (OpenWebText vs C4). Ce choix est défendable mais empêche toute conclusion quantitative sur la supériorité réelle de la recette proposée. L'absence de comparaison chiffrée avec Mamba in the Llama (Wang et al., 2024) pose la même question.</p>
+
+<p>La limitation technique du selective scan CUDA de Mamba (plafond à 256 sur la dimension) force une sérialisation qui multiplie par 8 le temps d'entraînement à dimension 2048. Les auteurs recommandent d'utiliser le budget de tokens comme métrique de coût, ce qui est honnête mais masque partiellement le coût réel de reproduction (12 jours 9 heures sur un nœud 8×A100 pour la configuration de référence).</p>
+
+<h2>Reproductibilité</h2>
+<p>Les annexes fournissent le pseudocode PyTorch complet pour HedgeMambaLayer, HedgeMambaMixer et HedgehogProjection, ce qui facilite la réimplémentation. Les hyperparamètres d'entraînement sont détaillés : AdamW (β1=0,9, β2=0,95), warm-up linéaire, décroissance cosine à 0,1× peak LR, gradient clipping 1,0, weight decay 0,1. Les learning rates optimaux diffèrent fortement entre stages : 0,01 pour stage 1, 1e-5 pour stage 2.</p>
+
+<p>Aucun lien vers un dépôt de code public n'est mentionné dans le corps de l'article. Les modèles distillés ne sont pas annoncés comme publiquement disponibles. Cette opacité limite la reproductibilité effective, malgré la qualité du pseudocode. Le corpus OpenWebText et les poids Pythia sont eux librement accessibles via HuggingFace.</p>
+
+<h2>Impact et applications</h2>
+<p>La recette proposée s'adresse aux équipes souhaitant convertir des Transformers préentraînés vers des architectures SSM pour réduire les coûts d'inférence. Le cas d'usage typique : déploiement en production de modèles sur des contextes longs, où le coût quadratique de l'attention devient prohibitif. La préservation à 98% des performances downstream avec 2,7% du budget de préentraînement rend la proposition économiquement attractive.</p>
+
+<p>L'apport théorique principal est l'identification de l'alignement architectural via initialisation comme levier critique. Plutôt que d'empiler des objectifs d'entraînement complexes comme MOHAWK, les auteurs démontrent qu'une initialisation principielle suffit à débloquer la distillation. Ce résultat pourrait inspirer d'autres transferts inter-architectures, par exemple vers RWKV ou Hyena.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier se positionne précisément contre MOHAWK (Bick et al., 2024) qui utilise un pipeline en trois étapes avec objectifs distincts et modules gelés. La comparaison reste qualitative mais l'argument est clair : une recette plus simple, théoriquement fondée sur le théorème de Mercer et la correspondance Dao-Gu (2024) entre Mamba et Linear Attention, atteint des performances comparables.</p>
+
+<p>Les références à Hedgehog (Zhang et al., 2024) et LoLCATs (Zhang et al., 2025) situent la contribution dans une lignée de travaux sur l'apprentissage de feature maps pour linéariser l'attention. Le papier exploite Hedgehog comme brique mais dépasse son cadre en proposant un second stage propre à Mamba. L'absence de comparaison directe avec SUPRA (Mercat et al., 2024) et Scavenging Hyena (Ralambomihanta et al., 2024) est signalable mais peu préjudiciable vu les différences d'échelle.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien identifié, motivation claire, positionnement incrémental mais utile.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Ablations rigoureuses sur mixer, sensibilité sur allocation de tokens, scaling multi-échelles.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>10B tokens de distillation, trois échelles de modèle (160M/410M/1B), mais un seul enseignant.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>PPL et 10 tâches lm-eval-harness, standard error par bootstrap 100K itérations.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Pas de comparaison quantitative avec MOHAWK ni Mamba in the Llama.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Pseudocode complet fourni, hyperparamètres détaillés, mais pas de dépôt public annoncé.</td></tr>
+<tr><td>Transparence limitations</td><td>4</td><td>Limites exposées sans langue de bois, coût réel en GPU-jours communiqué.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Recette ingénieuse combinant briques existantes, impact pratique plus que théorique.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
