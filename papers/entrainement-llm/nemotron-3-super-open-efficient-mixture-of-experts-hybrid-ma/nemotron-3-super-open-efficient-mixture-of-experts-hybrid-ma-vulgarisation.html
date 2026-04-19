@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nemotron 3 Super: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Nemotron 3 Super: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un modèle de 120 milliards de paramètres tourne 7,5 fois plus vite que ses concurrents</h2>
+
+<p>NVIDIA vient de publier Nemotron 3 Super, un grand modèle de langage qui combine trois idées architecturales rarement réunies : une sparsité agressive via des experts (MoE), un squelette hybride Mamba-Transformer, et un entraînement direct en précision 4 bits. Résultat annoncé : jusqu'à 2,2 fois plus de tokens par seconde que GPT-OSS-120B, et 7,5 fois plus que Qwen3.5-122B, pour une qualité comparable sur les benchmarks publics.</p>
+
+<p>Le chiffre qui surprend n'est pas la taille brute. Avec 120 milliards de paramètres au total mais seulement 12 milliards actifs à chaque passage, Nemotron 3 Super appartient à une classe de modèles qu'on voit émerger depuis deux ans : gros en mémoire, léger en calcul. Ce qui change, cette fois, c'est la façon dont NVIDIA a attaqué tous les goulots d'étranglement en même temps — calcul, mémoire, bande passante, communication entre GPU — plutôt qu'un seul à la fois.</p>
+
+<h2>Le problème : l'inférence coûte plus cher que l'entraînement</h2>
+
+<p>Les grands modèles actuels ont un défaut que les benchmarks cachent mal. Une fois entraînés, ils passent l'essentiel de leur temps en production à déplacer des poids depuis la mémoire vidéo vers les unités de calcul. Cette opération triviale — lire les paramètres — devient le facteur limitant dès que le contexte s'allonge ou que les utilisateurs se multiplient. Un modèle peut afficher un score impeccable sur GPQA et rester économiquement impraticable à déployer.</p>
+
+<p>Les architectures Mixture-of-Experts (MoE) promettaient une réponse élégante. L'idée : plutôt qu'une seule grosse couche dense, on découpe chaque couche en centaines de petits "experts", et un routeur sélectionne à chaque token ceux qui vont effectivement travailler. Sur le papier, on obtient les bénéfices d'un modèle géant pour le coût d'un modèle moyen.</p>
+
+<p>En pratique, les MoE classiques souffrent de trois problèmes que les concepteurs ignoraient tant qu'on restait en laboratoire. D'abord la bande passante mémoire : chaque token actif doit charger les poids de ses experts, ce qui sature les bus GPU. Ensuite la communication : quand les experts sont répartis sur plusieurs machines, le routage devient un trafic all-to-all qui écrase les interconnexions. Enfin le cache d'attention, qui grossit linéairement avec la longueur du contexte et devient ingérable au-delà de 128k tokens.</p>
+
+<p>NVIDIA part d'un constat de bon sens : personne n'avait co-conçu l'architecture du modèle et la cible matérielle. Les équipes faisaient l'un, puis l'autre. D'où un gaspillage systémique qu'aucune optimisation logicielle ne rattrape.</p>
+
+<h2>La méthode vulgarisée : trois idées qui s'imbriquent</h2>
+
+<h3>LatentMoE : compresser avant de router</h3>
+
+<p>L'idée centrale ressemble à un tour de passe-passe dimensionnel. Dans un MoE standard, chaque token arrive avec un vecteur de 4096 dimensions, et chacun des 512 experts doit manipuler ce vecteur dans son intégralité. Les chercheurs de NVIDIA ont remarqué que cette dimension de travail était probablement excessive pour la plupart des experts, qui ne traitent qu'un sous-espace spécialisé du signal.</p>
+
+<p>Leur solution : avant d'envoyer le token aux experts, on le projette dans un espace plus petit — 1024 dimensions dans le cas de Nemotron 3 Super. Les experts travaillent dans cet espace latent compact, puis le résultat est re-projeté vers la dimension d'origine. On a divisé par quatre la taille des matrices d'experts et le volume des échanges réseau.</p>
+
+<p>Ce gain, les concepteurs ne l'ont pas empoché comme une simple économie. Ils l'ont réinvesti en multipliant par quatre le nombre d'experts et le nombre d'experts actifs par token. Le modèle reste aussi coûteux à faire tourner qu'un MoE classique, mais il dispose d'un espace combinatoire beaucoup plus riche pour se spécialiser. C'est un échange dimensionnel astucieux : on perd en largeur là où ça coûte cher (mémoire, réseau), on gagne en variété là où ça rapporte (qualité).</p>
+
+<h3>Mamba pour éviter l'explosion du cache d'attention</h3>
+
+<p>Les couches d'attention classiques ont un défaut connu : leur cache grandit avec la longueur du contexte. À un million de tokens, ce cache devient le principal consommateur de mémoire, bien devant les poids du modèle eux-mêmes. Mamba, une architecture alternative basée sur des espaces d'état, maintient un état interne de taille fixe quelle que soit la longueur de la séquence.</p>
+
+<p>Le piège, c'est que Mamba seul perd des capacités de raisonnement à longue portée que l'attention gère sans effort. NVIDIA adopte donc un compromis : sur les 88 couches du modèle, la majorité sont des blocs Mamba, et quelques couches d'attention sont disséminées comme des "ancres globales". Ces quelques points de vue panoramiques suffisent à préserver la cohérence, pendant que Mamba absorbe le gros du travail séquentiel.</p>
+
+<h3>NVFP4 : entraîner directement en 4 bits</h3>
+
+<p>Entraîner un modèle en basse précision est une discipline à part. Les gradients deviennent fragiles, les sous-flottements numériques se multiplient, et tout l'édifice peut diverger silencieusement. La plupart des laboratoires entraînent en BF16 (16 bits) puis compriment en 4 bits pour le déploiement.</p>
+
+<p>NVIDIA a tenu bon en entraînant <em>directement</em> en NVFP4, leur format maison à 4 bits avec facteurs d'échelle à deux niveaux. Sur 25 000 milliards de tokens. L'équipe a documenté les problèmes rencontrés : environ 7% des gradients de poids finissent à zéro par sous-flottement numérique, ce qui crée des motifs de magnitude dans certaines couches d'experts. Plutôt que de reculer, ils ont analysé les chaînes de propagation de ces zéros, gardé certaines couches critiques en BF16 (les 15% finaux, les projections QKV, les embeddings), et démontré que l'entraînement restait stable à cette échelle.</p>
+
+<h3>Multi-Token Prediction : deviner pour aller plus vite</h3>
+
+<p>La dernière pièce est un mécanisme de décodage spéculatif natif. Au lieu de prédire le prochain token puis le suivant un par un, le modèle est entraîné à prédire plusieurs tokens futurs à chaque position. Ces prédictions anticipées servent de brouillons que le modèle principal vérifie d'un seul coup. Quand elles sont correctes, on a sauté plusieurs étapes.</p>
+
+<p>L'astuce technique : NVIDIA utilise une seule tête de prédiction partagée pour tous les horizons, plutôt que N têtes indépendantes. Cette tête s'applique récursivement à ses propres sorties, ce qui la rend robuste aux dérives de distribution qui plombent habituellement le décodage spéculatif sur les longs brouillons.</p>
+
+<h2>Résultats clés : des chiffres à retenir</h2>
+
+<p>Sur la configuration 8k tokens en entrée / 64k en sortie, représentative des charges de raisonnement agentique modernes, Nemotron 3 Super délivre 2,2 fois plus de tokens par seconde par GPU que GPT-OSS-120B, et 7,5 fois plus que Qwen3.5-122B. L'écart avec Qwen s'explique par la combinaison Mamba + LatentMoE : Qwen reste en architecture dense-attention standard.</p>
+
+<p>Côté qualité, le modèle de base surclasse nettement ses concurrents directs (GLM-4.5-Air-Base, Ling-flash-Base-2.0) sur la plupart des benchmarks. MMLU à 86%, MMLU-Pro à 75,6%, MATH Level 5 à 70%, AIME 2024 à 53% en pass@32. Sur les capacités de très long contexte, RULER à 1 million de tokens affiche 71% — un score qui reste interprétable là où la plupart des concurrents abandonnent bien avant.</p>
+
+<p>Le modèle post-entraîné brille particulièrement sur les tâches agentiques, cible explicite de l'effort NVIDIA. SWE-Bench (résolution de tickets GitHub réels) à 60% avec le harnais OpenHands. Terminal Bench Core 2.0 à 31%. Tau-Bench V2 autour de 61% en moyenne sur les trois sous-domaines. Ces scores placent le modèle au niveau des meilleurs ouverts sur ces tâches, ce qui est notable pour un modèle si économe en calcul actif.</p>
+
+<p>Le chiffre qui résume l'exercice : pour une qualité équivalente à GPT-OSS-120B, Nemotron 3 Super facture environ la moitié du coût d'inférence. Pour un déploiement qui sert des millions de requêtes par jour, cela change la rentabilité du service.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>La première conséquence concerne directement les équipes qui déploient des LLM en production. Un modèle 2 fois plus rapide à qualité égale, c'est soit 2 fois moins de GPU, soit 2 fois plus d'utilisateurs pour la même flotte. Pour les charges agentiques où un agent peut consommer 50 000 tokens de sortie pour résoudre un ticket, cette économie devient substantielle à l'échelle.</p>
+
+<p>Deuxième conséquence, moins visible mais plus structurelle : NVIDIA valide qu'un entraînement complet en 4 bits est viable sur 25 000 milliards de tokens. Cela signifie que la prochaine génération de modèles peut être entraînée sur la même infrastructure avec un budget mémoire divisé par quatre — ou, à budget constant, devenir quatre fois plus grande. Le plafond d'entraînement se déplace.</p>
+
+<p>Troisième conséquence, la publication ouverte de l'ensemble. NVIDIA libère les checkpoints (base, post-entraîné, quantifié NVFP4 et FP8), les données de pré-entraînement spécialisées, les données d'entraînement post-training agentique, la recette complète, et même le modèle de récompense (Qwen3-Nemotron-235B-A22B-GenRM) utilisé pour le RLHF. L'équipe fournit la chaîne de bout en bout, pas juste le produit fini. Pour un laboratoire académique ou une startup, c'est un socle sur lequel construire sans repartir de zéro.</p>
+
+<p>Quatrième point, moins souvent discuté : l'infrastructure de RL asynchrone. Entraîner un modèle sur des tâches agentiques longues (résoudre un bug GitHub réel dans un conteneur Apptainer) demande une ingénierie distribuée qui ressemble plus à un système de production qu'à un cluster d'entraînement. NVIDIA documente les problèmes rencontrés à 1000 GPU — conflits de ports, race conditions TOCTOU, isolation mémoire sans Docker, blocklists de commandes pour empêcher les agents de tuer leurs propres processus d'entraînement. Ce retour d'expérience vaut autant que le modèle lui-même pour quiconque monte une infrastructure RL à grande échelle.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent suspendues. La première porte sur la généralité de LatentMoE. Les gains démontrés sur Nemotron 3 Super tiennent-ils à toutes les échelles, ou dépendent-ils d'un équilibre fin entre dimension latente, nombre d'experts et top-K ? Le rapport technique associé (Elango et al., 2026) devrait clarifier les limites du cadre, notamment ce que les auteurs appellent le "rang effectif" en dessous duquel la qualité s'effondre.</p>
+
+<p>Deuxième interrogation, l'avenir du NVFP4. Les auteurs reconnaissent que 7% des gradients de poids finissent à zéro à la fin de l'entraînement, et que ces zéros corrèlent avec des motifs de magnitude dans les couches d'experts. Ils ont testé un passage en MXFP8 juste avant l'annealing du learning rate : meilleure courbe de perte, mais aucun gain sur les tâches en aval. Cela suggère que les sous-flottements ne détériorent pas tant la qualité qu'ils le paraissent — mais on ignore comment ce phénomène se comporterait sur un entraînement de 100 000 milliards de tokens.</p>
+
+<p>Troisième piste, le compromis entre modes de raisonnement. Nemotron 3 Super propose trois modes (off, régulier, low-effort) contrôlables à l'inférence, plus un budget de tokens ajustable. Cette granularité commence à ressembler à un panneau de contrôle pour opérateurs qui veulent arbitrer en temps réel entre qualité et latence. Reste à voir si les utilisateurs finaux sauront exploiter ces leviers ou s'ils se contenteront des réglages par défaut — auquel cas la flexibilité aura coûté cher pour rien.</p>
+
+<p>Dernière question, plus politique qu'architecturale. NVIDIA publie ouvertement un modèle qui sert aussi de vitrine pour son matériel Blackwell (B200, B300) et ses formats propriétaires NVFP4/MXFP8. L'entreprise joue ici un double jeu : elle consolide l'écosystème open-source autour d'architectures qui exploitent au maximum ses propres GPU. Les concurrents matériels n'ont aucun intérêt à soutenir NVFP4. La bataille entre standards ouverts et formats verticalement intégrés mérite d'être suivie, parce qu'elle déterminera si les prochaines architectures de modèles resteront portables ou deviendront implicitement liées à une famille de puces.</p>
+
+<p>Au-delà de ces questions, Nemotron 3 Super marque un moment où la conception de modèles cesse de traiter le matériel comme une contrainte externe pour en faire un paramètre d'entrée. Les équipes qui continueront à optimiser uniquement la qualité des benchmarks sans réfléchir au coût d'inférence risquent de produire des modèles techniquement supérieurs mais économiquement inutilisables. Ceux qui, comme NVIDIA ici, font le chemin inverse — partir des goulots matériels pour remonter vers l'architecture — dessinent la génération suivante.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

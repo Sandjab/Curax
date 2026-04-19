@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM-Based Automated Diagnosis Of Integration Test Failures At Google — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>LLM-Based Automated Diagnosis Of Integration Test Failures At Google</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Une heure, parfois une journée entière, pour comprendre pourquoi un test a échoué</h2>
+
+<p>Chez Google, quand un développeur soumet du code pour revue, des tests d'intégration tournent automatiquement. Quand ces tests échouent, commence alors une partie de chasse au trésor pénible : 16 fichiers de logs en moyenne, 2 800 lignes à lire, des erreurs sans rapport avec le vrai problème, et des messages cryptiques produits par plusieurs serveurs qui communiquent entre eux. Une enquête interne menée auprès de 6 059 développeurs a classé ce problème parmi les cinq plaintes les plus fréquentes.</p>
+
+<p>Quatre chercheurs de Google — Celal Ziftci, Ray Liu, Spencer Greene et Livio Dalloro — ont publié à l'ICSE 2026 un article qui raconte comment ils ont branché Gemini 2.5 Flash sur ce flot de logs pour produire automatiquement un diagnostic lisible. L'outil s'appelle Auto-Diagnose. Déployé à l'échelle de Google, il a analysé plus de 52 000 tests différents et affiche une précision de 90 % sur un échantillon évalué à la main. Pas un prototype académique : un outil intégré au quotidien de dizaines de milliers d'ingénieurs.</p>
+
+<h2>Le problème : les logs d'intégration sont un cauchemar cognitif</h2>
+
+<p>Un test unitaire vérifie qu'une fonction isolée se comporte comme prévu. Quand il échoue, la cause est souvent locale et le message d'erreur parle directement. Un test d'intégration, lui, met en scène plusieurs serveurs qui s'appellent entre eux, avec leurs fichiers de configuration, leurs threads, leurs timeouts, leurs interdépendances. Chaque composant écrit ses propres logs dans ses propres fichiers, à ses propres niveaux de verbosité.</p>
+
+<p>Quand ça casse, le développeur voit d'abord le log du "test driver", qui orchestre l'ensemble. Et le test driver dit typiquement quelque chose d'inutile : <em>timeout en attendant que le composant X devienne opérationnel</em>. La vraie cause se cache dans le log du composant X, qui lui-même pointe peut-être vers un problème dans la configuration injectée par le composant Y. Le développeur ouvre un fichier, puis un autre, puis un troisième, tente de corréler les timestamps, élimine les messages d'erreur qui ne sont pas de vraies erreurs (un log au niveau ERROR mais récupéré quelques lignes plus bas, par exemple), et essaie de reconstituer le fil des événements.</p>
+
+<p>Les chercheurs ont mesuré la douleur : sur un sondage ciblé de 116 développeurs, la majorité rapporte passer plus d'une heure, parfois plus d'une journée, à diagnostiquer un échec d'intégration. Pour les tests unitaires, c'est l'affaire de quelques minutes. L'écart est énorme, et il a un coût réel en temps d'ingénierie perdu.</p>
+
+<h2>La méthode : donner tous les logs à un LLM avec des règles strictes</h2>
+
+<p>L'idée de base est simple : un LLM sait résumer du texte. Les logs, malgré leur volume, sont du texte. Alors pourquoi ne pas les lui donner et lui demander de faire le tri ?</p>
+
+<p>Mais le diable est dans les détails. Première décision : plutôt que d'afficher uniquement les logs du test driver (ce que voit un humain par défaut), Auto-Diagnose agrège <strong>tous</strong> les logs de tous les composants, les fusionne, les trie par horodatage, et passe l'ensemble au modèle. Cela représente en moyenne 110 000 tokens en entrée par diagnostic — plus gros qu'un roman court.</p>
+
+<p>Deuxième décision : le choix du modèle. Gemini 2.5 Flash, pas la version Pro. Le raisonnement des auteurs est pragmatique : Flash est rapide et peu coûteux, ce qui compte quand on analyse des centaines de milliers d'échecs. La tâche ne requiert pas de raisonnement abstrait profond mais du traitement massif de texte, ce que Flash fait bien. Paramètres : température 0.1 (réponses quasi déterministes, parce qu'un diagnostic qui change à chaque exécution serait ingérable) et top_p 0.8.</p>
+
+<p>Troisième décision, la plus intéressante : le prompt. Les auteurs ont itéré longuement sur un template qui impose au modèle un raisonnement en huit étapes explicites. L'une des règles les plus strictes du prompt est celle-ci : si les logs ne contiennent pas d'information sur le composant défaillant, le modèle <em>doit</em> dire qu'il n'a pas assez d'information, au lieu d'inventer une cause plausible. Les auteurs ont découvert qu'un LLM, laissé à lui-même, a tendance à halluciner un diagnostic cohérent même sans preuve suffisante. La solution : formaliser des "contraintes négatives" dans le prompt.</p>
+
+<p>Le modèle est instruit d'identifier d'abord les sections de logs pertinentes, puis de résumer les erreurs par composant, puis de formuler une conclusion — mais seulement s'il dispose des preuves nécessaires. Le résultat est produit dans un format structuré : une conclusion en langage naturel, la liste des étapes de l'investigation, et les lignes de logs les plus pertinentes avec leur fichier source, leur horodatage et leur site d'appel dans le code.</p>
+
+<h3>L'intégration dans le flux de travail</h3>
+
+<p>Un résultat technique, même excellent, ne sert à rien si personne ne l'utilise. Auto-Diagnose est branché directement dans Critique, le système de revue de code interne de Google. Quand un test échoue sur un changement soumis à revue, Auto-Diagnose s'exécute en arrière-plan et poste son diagnostic comme un commentaire structuré, à côté du signalement d'échec classique. Le développeur voit donc l'analyse sans action de sa part, au moment même où il est en train de traiter le problème.</p>
+
+<p>Le temps médian pour qu'un diagnostic apparaisse dans Critique est de 56 secondes. Le 90e percentile monte à 346 secondes (environ six minutes). Comparé à l'heure ou plus que met un humain à arriver à la même conclusion, le gain est spectaculaire — et le développeur ne change même pas de contexte.</p>
+
+<h2>Résultats : 90 % de précision, 5,8 % d'insatisfaction</h2>
+
+<p>L'évaluation s'est faite en deux temps. D'abord, trois experts de l'équipe d'infrastructure de test ont examiné manuellement 71 échecs réels issus de 39 équipes différentes. Sur ces 71 cas, Auto-Diagnose a correctement identifié la cause racine dans 64, soit 90,14 %. Les 7 échecs restants ne sont pas tous des erreurs du modèle : dans 4 cas, les logs du test driver n'avaient pas été correctement sauvegardés par l'infrastructure ; dans 3 cas, c'étaient les logs des composants qui manquaient. Des bugs d'infrastructure réels, découverts grâce au diagnostic LLM qui signalait "il me manque des informations pour conclure".</p>
+
+<p>Ensuite, le déploiement à grande échelle. Depuis mai 2025, Auto-Diagnose a traité 224 782 exécutions sur 52 635 tests distincts, couvrant 91 130 changements de code signés par 22 962 auteurs différents. L'outil donne aux utilisateurs trois boutons de retour : "Please fix" (utilisé par les reviewers pour demander une correction), "Helpful" et "Not helpful".</p>
+
+<p>Le taux de retours "Not helpful" s'établit à 5,8 %, sous le seuil de 10 % au-delà duquel un outil est désactivé chez Google. Le taux de "Helpful" sur l'ensemble des retours positifs/négatifs atteint 62,96 %. Ce chiffre est plus bas que les 90 % de l'évaluation manuelle, et les auteurs l'expliquent par un biais psychologique documenté : les utilisateurs rapportent plus volontiers les expériences négatives que les positives, surtout sur des boutons de feedback optionnels. Un bon diagnostic, c'est ce qu'on attend de l'outil ; on ne prend pas le temps de cliquer pour le dire.</p>
+
+<p>Parmi 370 outils qui postent des commentaires automatiques dans Critique, Auto-Diagnose se classe 14e en helpfulness, soit dans les 3,78 % les mieux notés. Une position qui suggère que l'outil répond à un vrai besoin — celui identifié par les sondages internes depuis des années.</p>
+
+<h2>Ce que les entretiens utilisateurs révèlent</h2>
+
+<p>Au-delà des chiffres, 11 entretiens ont été conduits avec des auteurs de code et des reviewers. Plusieurs citations méritent d'être reprises. Un participant raconte : <em>"Je me suis toujours demandé pourquoi un LLM ne pouvait pas simplement me dire ça avant. Aujourd'hui, le debug a pris 10-15 minutes, mais nous avons tous eu des problèmes qui prennent plus d'une heure et mobilisent un autre ingénieur."</em></p>
+
+<p>Un autre signale un effet de parcours fluide : <em>"C'est génial que l'information de debug apparaisse directement dans Critique. Je l'ai vue pendant la revue de code, j'ai rouvert mon éditeur et j'ai juste fait le changement."</em> Le diagnostic arrive à l'endroit et au moment où le développeur travaille, pas dans un dashboard séparé qu'il faut aller consulter.</p>
+
+<p>Un troisième témoignage pointe déjà la prochaine frontière : <em>"Auto-Diagnose ne devrait pas se contenter d'un résumé, il devrait me donner le fix."</em> Voilà qui illustre comment les attentes des utilisateurs évoluent : dès qu'un outil LLM résout un problème, on en attend davantage. Le diagnostic devient une table des matières ; ce qu'on veut, c'est la correction.</p>
+
+<h2>Implications pratiques : pourquoi ce travail compte au-delà de Google</h2>
+
+<p>Ce qui rend cette étude intéressante, ce n'est pas la prouesse technique. Brancher un LLM sur des logs n'est pas une innovation conceptuelle. Ce qui compte, c'est tout ce qui entoure la technique et qui fait la différence entre un prototype qui marche sur trois exemples et un outil utilisé quotidiennement par 23 000 ingénieurs.</p>
+
+<p>Première leçon : <strong>le prompt engineering fait le produit</strong>. Les auteurs sont explicites sur le fait que leur prompt a été réécrit plusieurs fois pour empêcher le modèle d'halluciner des diagnostics plausibles mais faux. Les contraintes négatives ("tu ne dois pas conclure si tu n'as pas les logs du composant défaillant") comptent autant que les instructions positives. Pour beaucoup d'équipes qui construisent des produits LLM en 2026, cette leçon n'est toujours pas intégrée.</p>
+
+<p>Deuxième leçon : <strong>l'intégration dans le workflow bat la qualité pure</strong>. Un diagnostic à 95 % de précision affiché dans un outil séparé aurait sans doute été moins utilisé qu'un diagnostic à 90 % posté directement dans le fil de revue de code. L'investissement d'ingénierie pour brancher Auto-Diagnose dans Critique vaut probablement autant que celui consacré au prompt.</p>
+
+<p>Troisième leçon, plus discrète : <strong>les outils LLM révèlent des bugs d'infrastructure</strong>. En demandant explicitement au modèle de dire "je manque d'informations" au lieu de combler les vides, les auteurs ont transformé l'outil en détecteur de problèmes de collecte de logs. Sept cas sur 71 de l'évaluation manuelle ont révélé des bugs dans la sauvegarde des logs, bugs qui passaient inaperçus depuis longtemps parce qu'aucun humain n'avait le temps de remonter à la cause racine.</p>
+
+<p>Quatrième leçon, pour les budgets : <strong>le coût est tenable</strong>. Avec 110 000 tokens en entrée et environ 6 000 en sortie par diagnostic, en utilisant Flash plutôt que Pro, le coût unitaire reste compatible avec un déploiement à des centaines de milliers d'exécutions. Le choix du petit modèle rapide sur la tâche de synthèse textuelle est le bon compromis.</p>
+
+<h2>Pour aller plus loin : les limites et les prochaines étapes</h2>
+
+<p>Les auteurs identifient deux pistes d'amélioration. La première concerne le bruit dans les logs. Beaucoup de messages apparaissent au niveau ERROR alors que l'erreur est récupérée quelques lignes plus loin. Ces faux positifs perturbent autant le LLM que les humains. L'idée proposée : comparer les logs de l'échec avec ceux d'une exécution passée réussie du même test, et filtrer les lignes qui apparaissent dans les deux. Une forme de différentiel qui devrait augmenter le signal.</p>
+
+<p>La seconde piste est plus ambitieuse : passer du diagnostic au correctif. Plusieurs utilisateurs interrogés expriment déjà cette attente. Mais corriger un bug dans un système distribué où plusieurs composants interagissent est une tâche qualitativement différente du diagnostic. Il faut comprendre la sémantique du code, pas seulement le résumé des logs. Les approches comme SWE-Agent ou AutoCodeRover explorent ce terrain sur les tests unitaires ; l'extension aux tests d'intégration reste un problème ouvert.</p>
+
+<p>Plusieurs limites méritent d'être pointées. L'étude a été conduite entièrement chez Google, avec son infrastructure, ses conventions de logging, son système de revue de code. La généralisation à d'autres organisations demanderait probablement un travail d'adaptation significatif, notamment sur la collecte unifiée des logs — un problème qu'une grande partie des entreprises n'ont pas résolu. L'outil repose aussi sur un prompt spécifique à Gemini 2.5 Flash ; les auteurs reconnaissent qu'un changement de modèle ou une modification mineure du prompt pourrait dégrader les résultats.</p>
+
+<p>Enfin, une question que l'article ne tranche pas : le diagnostic automatique rend-il les développeurs meilleurs ou plus dépendants ? Apprendre à lire des logs complexes est une compétence qui se forge sur des heures de frustration. Si les juniors grandissent avec un outil qui fait ce travail à leur place, qu'arrive-t-il quand l'outil se trompe sur un cas critique ? Les entretiens ne posent pas la question, mais elle mérite d'être surveillée dans les années qui viennent.</p>
+
+<p>Ce que cet article montre concrètement, c'est qu'en 2026 la question pertinente pour les équipes d'ingénierie n'est plus "est-ce que les LLM peuvent aider ?" — la réponse est oui, à 90 % — mais "comment intégrer ces outils dans nos flux de travail sans créer de nouvelles dépendances fragiles ?". Auto-Diagnose apporte une réponse mesurée et quantifiée à la première partie. La seconde reste à construire, équipe par équipe.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

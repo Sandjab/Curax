@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-User Large Language Model Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Multi-User Large Language Model Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les LLM et agents LLM sont entraînés sous une hypothèse single-user : un unique principal fixe l'objectif, une seule distribution conditionnelle est supervisée en SFT, un seul signal scalaire de préférence en RLHF. Cette hypothèse se heurte aux déploiements réels en entreprise où un même assistant sert simultanément plusieurs utilisateurs aux rôles, autorités et objectifs divergents. Les auteurs formalisent cette situation comme un problème multi-principal (inspiré de Rees 1985 et Fickinger et al. 2020) et construisent le premier banc d'essai systématique pour évaluer les capacités des modèles frontières dans ce régime.</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole d'interaction distingue contexte privé par utilisateur C_i, contexte partagé C_share sous politique de contrôle d'accès, et persona d'autorité p_i. L'agent optimise un objectif social pondéré sum(w_i U_i) sous contraintes de visibilité. Trois scénarios de stress-test sont instanciés dans Muses-Bench :</p>
+<ul>
+<li><strong>Multi-User Instruction Following</strong> (1 298 scénarios d'exécution + 304 de sélection, 2 à 10 utilisateurs) : résolution de conflits sous hiérarchie CEO > Director > Manager > Senior > Junior > Intern, évalué par F1 de sélection et fidélité d'exécution.</li>
+<li><strong>Cross-User Access Control</strong> (216 scénarios, trois catégories équilibrées : requêtes directes, ingénierie sociale, obfuscation technique) : métriques binaires Privacy Score (absence de fuite) et Utility Score (réponse correcte aux requêtes légitimes).</li>
+<li><strong>Multi-User Meeting Coordination</strong> (216 scénarios, répartis full vs partial disclosure) : taux de succès, taux de présence, nombre de tours.</li>
+</ul>
+<p>19 modèles sont évalués (13 propriétaires, 6 open-weights) avec température 1.0 et top-p 1.0. Les interactions multi-utilisateurs sont sérialisées en rôle user unique selon trois variantes (Says, Colon, XML) faute de support natif par les API. Les personas utilisateurs combinent 8 rôles métier, attributs démographiques, tempérament et posture de sécurité.</p>
+
+<h2>Résultats principaux</h2>
+<p>Gemini-3-Pro domine le classement agrégé (85.6), suivi de Claude-Sonnet-4.5 (82.6) et Gemini-3-Flash (82.0). Trois défaillances systématiques émergent.</p>
+<p><strong>Découplage sélection/exécution.</strong> La capacité à identifier les bonnes instructions ne prédit pas leur exécution fidèle. Qwen3-4B-IT sélectionne à 83.8 mais exécute à 57.9 ; Grok-3-Mini exécute à 88.4 mais sélectionne à 68.2. Sous conflit inter-utilisateurs, l'exécution s'effondre : Claude-Haiku-4.5 chute de 0.86 à 0.62, GPT-OSS-120B de 0.64 à 0.50.</p>
+<p><strong>Érosion progressive de la confidentialité.</strong> Les scores de privacy déclinent de façon monotone sur 10 tours chez quasiment tous les modèles. Claude-3.5-Haiku passe de >0.95 au tour 1 à <0.75 au tour 4. La dégradation est plus forte sur les tours 1-6 puis se stabilise. Les modèles privacy-first (Grok-3-Mini 99.6, GPT-5.1 98.6) paient cette robustesse par une utility faible (59-60).</p>
+<p><strong>Goulot d'étranglement de la coordination.</strong> Même le meilleur modèle plafonne à 77.3% de succès en meeting scheduling. Llama-3-70B illustre un mode d'échec par commitment prématuré : il finalise un créneau malgré le refus explicite d'un participant requis. Le taux de succès décline avec le nombre d'utilisateurs (N jusqu'à 20), surtout en partial disclosure.</p>
+
+<h2>Discussion et limites</h2>
+<p>La formulation théorique est propre et la distinction single-principal vs multi-principal est bien motivée. Plusieurs limites tempèrent la portée des résultats.</p>
+<p>L'agrégation par somme pondérée sum(w_i U_i) avec poids externes fixés est une abstraction forte : les déploiements réels impliquent des mécanismes négociés, implicites ou appris que l'article reconnaît mais n'explore pas. Les utility functions U_i restent des simulacres de préférences générées par prompt, non des utilités révélées.</p>
+<p>Les utilisateurs sont tous simulés par LLM. Aucune validation humaine n'est rapportée sur le réalisme des personas ni sur la pertinence des conflits fabriqués. Les attaques adversariales (fake authorization, roleplaying) restent artisanales et pourraient être faibles comparées à des jailbreaks récents.</p>
+<p>La hiérarchie d'autorité hardcodée (CEO > Intern) ne teste pas les cas où l'autorité est contestée ou ambiguë. Le poids w_i est spécifié exogènement, ce qui évite précisément le problème difficile de l'arbitrage.</p>
+<p>L'article affirme des tendances (ex. "GPT family close source models exhibit lower overall utility") sans tests statistiques formels entre familles. Les barres d'erreur sont rapportées mais aucun test de significativité n'accompagne les comparaisons entre modèles.</p>
+<p>La sérialisation forcée en rôle user unique biaise l'évaluation : on mesure la capacité du modèle à désérialiser correctement autant que sa capacité à raisonner en multi-principal. Les auteurs reconnaissent l'insensibilité aux formats (Figure 8) sans pousser l'analyse.</p>
+
+<h2>Reproductibilité</h2>
+<p>Un dépôt GitHub est annoncé (Korde-AI/Multi-User-LLM-Agent). Les prompts, distributions d'attributs et implémentations des variantes adversariales sont détaillés en annexe. Le protocole (19 modèles, températures fixées, trois variantes de sérialisation) est spécifié. La reproductibilité est bonne pour les modèles open-weights ; pour les modèles propriétaires, elle dépend de la stabilité des versions d'API. Le coût d'exécution n'est pas rapporté.</p>
+
+<h2>Impact et applications</h2>
+<p>Le travail pose un cadre théorique et un banc d'essai qui manquaient. Les directions de recherche ouvertes sont pertinentes : schémas de message natifs multi-user, benchmarks long-horizon, arbitrage via théorie du choix social, intégration avec outils et logs auditables. L'utilité immédiate pour les ingénieurs d'agents est concrète : les scénarios Muses-Bench peuvent servir de tests de régression pour produits multi-tenants.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article se situe à l'intersection de plusieurs lignes de recherche : bancs d'essai tool-agent-user (τ-bench, MINT), alignement multi-objectif et agrégation de préférences (Bakker et al. 2022, Fish et al. 2023), jeux multi-principal (Fickinger et al. 2020). La contribution distinctive est l'insistance sur l'asymétrie de rôle et les contraintes de privacy comme primitives de premier ordre, plutôt que comme extensions du cadre single-user. Le lien avec Jhamtani et al. 2025 est explicite : ces derniers restent dans le paradigme single-principal avec utilisateurs auxiliaires.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>5</td><td>Problème bien posé, originalité du cadrage multi-principal clairement établie.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trois scénarios couvrant des axes orthogonaux, protocole unifié, mais dépendance à la sérialisation.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>1 298 + 304 + 216 + 216 scénarios, 19 modèles, erreurs standard rapportées.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>F1, accuracy, privacy/utility séparés. Matching strict pour utility discutable.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Variantes de sérialisation testées, mais utilisateurs simulés par LLM introduisent un biais circulaire.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code annoncé, prompts en annexe, spécifications précises. Dépend de la stabilité des API.</td></tr>
+<tr><td>Transparence des limitations</td><td>3</td><td>Abstraction des w_i reconnue brièvement. Absence de validation humaine non discutée.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Première étude systématique du régime multi-principal pour agents LLM.</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

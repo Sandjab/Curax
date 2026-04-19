@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM-Based Automated Diagnosis Of Integration Test Failures At Google — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>LLM-Based Automated Diagnosis Of Integration Test Failures At Google</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le diagnostic des échecs de tests d'intégration mobilise significativement plus de temps que celui des tests unitaires chez Google : souvent plus d'une heure, parfois plus d'un jour. Une enquête interne (EngSat, 6 059 développeurs) le classe dans le top 5 des plaintes récurrentes. Les tests incriminés produisent une médiane de 16 fichiers de logs et 2 801 lignes, répartis entre le test driver et les composants du système sous test (SUT).</p>
+<p>Auto-Diagnose s'attaque à ce goulot d'étranglement en concaténant les logs horodatés de tous les composants, en les soumettant à Gemini 2.5 Flash via un prompt structuré, puis en postant un résumé de cause racine directement comme <em>finding</em> dans Critique, l'outil de code review interne. Le positionnement contextuel (pendant la revue) est revendiqué comme élément différenciant par rapport aux agents de debug post-hoc.</p>
+
+<h2>Méthodologie</h2>
+<p>Le système est décrit avec précision : logs de niveau INFO et supérieurs agrégés, prompt template reproduit intégralement dans l'article (Figure 7), température 0.1, top_p 0.8. Aucun fine-tuning n'est appliqué. Le prompt impose un raisonnement étape par étape avec contraintes négatives explicites contre la spéculation.</p>
+<p>L'évaluation combine deux volets. Un volet manuel : 71 échecs réels issus de 39 équipes, jugés par 3 développeurs expérimentés de l'équipe d'infrastructure de test, avec réunion de consensus pour résoudre les désaccords. Un volet production : 224 782 exécutions sur 52 635 tests distincts, avec boutons de feedback "Helpful / Not helpful / Please fix" dans l'interface. Enfin, 11 entretiens qualitatifs auprès d'auteurs et de reviewers ayant laissé un feedback.</p>
+<p>Le protocole souffre de plusieurs faiblesses structurelles. Aucune baseline quantitative : pas de comparaison avec des techniques classiques (SBFL, delta debugging) ni avec des approches LLM alternatives sur le même échantillon. Aucun score de concordance inter-juge rapporté sur les 71 cas. Les évaluateurs appartiennent à l'équipe d'infrastructure et peuvent porter un intérêt organisationnel au succès de l'outil.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur les 71 cas, 64 diagnostics sont jugés corrects, soit 90,14%. Les 7 échecs se décomposent en deux bugs d'infrastructure (logs non sauvegardés lors de crashs), pas en erreurs de raisonnement du modèle — une distinction qui gonfle artificiellement la performance attribuée au LLM.</p>
+<p>En production, le temps médian de publication du diagnostic est de 56 secondes (p90 : 346 s), bien en deçà du temps de debug humain. Le taux "Not helpful" atteint 5,8%, sous le seuil opérationnel de 10% imposé par Critique. Le helpfulness-rate (H / H+N) s'établit à 62,96%, soit un écart substantiel avec les 90,14% mesurés manuellement, que les auteurs attribuent au biais de négativité sans le quantifier.</p>
+<p>Le classement #14 sur 370 outils en helpfulness (top 3,78%) est présenté comme signal fort d'adoption. La consommation reste économiquement viable : 110 617 tokens d'entrée et 5 962 de sortie en moyenne, sur Gemini 2.5 Flash.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le chiffre phare de 90,14% mérite d'être relativisé. Les évaluateurs décident si <em>une</em> des lignes de log signalées ou la conclusion mentionne la cause racine — critère permissif qui ne distingue pas un diagnostic précis d'une mention fortuite dans les logs cités. La métrique de production (5,8% not-helpful) souffre quant à elle d'un énorme biais de sélection : seuls 517 feedbacks sur 224 782 exécutions (0,23%), ce que les auteurs reconnaissent.</p>
+<p>La section "Threats to Validity" est honnête et couvre l'essentiel : spécificité de Gemini 2.5 Flash, variabilité du prompt, qualité variable des logs, contexte Google. Mais l'absence de baseline reste le point aveugle majeur : rien ne prouve qu'un parseur de logs classique ne ferait pas aussi bien sur les cas où la trace d'erreur est explicite.</p>
+<p>L'interview P-9, où Auto-Diagnose refuse de conclure faute de logs, illustre un effet secondaire vertueux : environ 20 diagnostics de ce type ont révélé des bugs d'infrastructure. Ce comportement est piloté par les contraintes négatives strictes du prompt, un choix de conception bien documenté.</p>
+
+<h2>Reproductibilité</h2>
+<p>Nulle. L'étude repose intégralement sur l'infrastructure interne Google (Critique, système de logs propriétaire, pub/sub, corpus de tests fermé). Aucun jeu de données, aucun code source, aucun log d'exemple n'est partagé. Seul le prompt template est reproduit (Figure 7), ce qui permet au moins de réutiliser la structure du raisonnement. Les 71 cas évalués manuellement ne sont pas libérés même de façon anonymisée, ce qui aurait pourtant constitué un benchmark précieux pour la communauté.</p>
+
+<h2>Impact et applications</h2>
+<p>L'échelle du déploiement — 52 635 tests, 22 962 auteurs distincts, 91 130 code changes — fait de ce travail l'un des rares retours d'expérience industriels documentés sur l'usage d'un LLM pour le diagnostic en CI/CD. Les enseignements opérationnels sont transférables : latence p50 sous la minute, seuil de tolérance utilisateur à 10% de not-helpful, intégration dans un outil existant plutôt que création d'une nouvelle surface UI.</p>
+<p>La remarque de P-3 ("Auto-Diagnose ne devrait pas montrer un résumé, il devrait donner le fix") signale une dynamique d'attentes en spirale : l'adoption d'un outil LLM utile reconfigure immédiatement la référence et pousse vers de la réparation automatique. Les auteurs l'identifient comme piste de travail futur.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>La revue de littérature est complète : statistical debugging (Liblit, SOBER), SBFL (Tarantula, Ochiai), delta debugging, failure sketching, approches ML/GNN, et la vague récente d'agents LLM (SWE-Agent, AutoCodeRover, RepairAgent, Agentless). Le positionnement est net : les benchmarks existants (SWE-Bench, HumanEvalFix, DebugBench) ciblent le niveau unitaire ; les tests d'intégration distribués restent sous-étudiés. Cette niche justifie la contribution.</p>
+<p>Le rapprochement avec Passerine (Google) et Engineering Agent (Meta) situe le travail dans un petit cluster de publications industrielles récentes sur la réparation agentique en production. Auto-Diagnose se distingue en restant volontairement non-agentique : un seul appel LLM, pas d'outils, pas de boucle — un choix pragmatique qui privilégie latence et coût sur la généralité.</p>
+
+<h2>Synthèse des scores de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème industriel réel, bien cadré par enquêtes internes chiffrées.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Case study + télémétrie production + entretiens, mais aucune baseline comparative.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>71 cas manuels modestes, mais 52 635 tests en production compensent largement.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Critère de succès permissif (une ligne pertinente suffit), pas d'accord inter-juge rapporté.</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Évaluateurs internes à l'équipe, feedback production fortement auto-sélectionné (0,23%), pas de blinding.</td></tr>
+<tr><td>Reproductibilité</td><td>1</td><td>Environnement propriétaire, aucun code, aucun dataset, seul le prompt est publié.</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Section "Threats to Validity" honnête ; biais de négativité reconnu sur le helpfulness-rate.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Premier retour d'échelle sur tests d'intégration ; technique elle-même peu originale (single-shot LLM).</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3,2 / 5.</strong> Publication d'ingénierie solide et utile par son échelle, mais dont la validité scientifique reste plafonnée par l'absence de comparaison et d'ouverture des données.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

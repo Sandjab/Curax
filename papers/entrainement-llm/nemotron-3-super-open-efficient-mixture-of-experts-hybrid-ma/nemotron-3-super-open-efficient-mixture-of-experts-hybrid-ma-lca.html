@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nemotron 3 Super: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Nemotron 3 Super: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Nemotron 3 Super cible la construction d'un modèle de fondation agentique ouvert combinant trois axes d'efficience rarement assemblés dans un même système de production : une architecture hybride Mamba-Attention pour contourner le coût quadratique du cache KV, un Mixture-of-Experts clairsemé pour augmenter la capacité paramétrique sans exploser le budget FLOP par token, et un pré-entraînement en précision NVFP4 à l'échelle de 25 000 milliards de tokens. NVIDIA vise explicitement deux cibles concurrentes publiques, GPT-OSS-120B d'OpenAI et Qwen3.5-122B, avec un positionnement orienté débit d'inférence (jusqu'à 7,5× en entrée 8k/sortie 64k) plutôt que performance brute en benchmark.</p>
+<p>L'ambition dépasse le simple passage à l'échelle. Le rapport revendique deux contributions architecturales nouvelles — LatentMoE (routage dans un espace latent comprimé) et une tête MTP à poids partagés — et une recette RL multi-environnements (21 environnements, 37 jeux de données) pour des comportements agentiques long-horizon en ingénierie logicielle, usage de terminal et appel d'outils conversationnel.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pré-entraînement utilise un calendrier Warmup-Stable-Decay sur 25T tokens, divisé en deux phases (80% diversité, 20% haute qualité). Le batch global atteint 25 millions de tokens et la longueur de séquence initiale est fixée à 8 192, étendue ensuite à 1M via un stage de continuous pretraining sur 51 milliards de tokens supplémentaires. L'architecture combine 88 couches Mamba-2 entrelacées avec quelques couches d'attention « ancres » globales et des blocs LatentMoE (512 experts totaux, top-22).</p>
+<p>Le post-entraînement suit une séquence à quatre étapes : SFT en deux phases (perte normalisée au token, puis par conversation), RLVR multi-environnements avec GRPO asynchrone, SWE-RL isolé pour les tâches long-horizon dans conteneurs Apptainer, puis RLHF guidé par un GenRM initialisé sur Qwen3-235B. La méthode PivotRL (Yi et al., 2026, non publiée au moment du rapport) est utilisée pour recycler les trajectoires expertes SFT au niveau du tour d'assistant.</p>
+<p>L'évaluation couvre une suite large : MMLU-Pro, AIME25, GPQA, LiveCodeBench, SWE-Bench sur trois harnesses (OpenHands, OpenCode, Codex), TauBench V2, Terminal-Bench, RULER jusqu'à 1M tokens. Le décodage spéculatif natif est mesuré via SPEED-Bench avec longueur de draft fixée à 7.</p>
+
+<h2>Résultats principaux</h2>
+<p>Le modèle de base surpasse GLM-4.5-Air-Base et Ling-flash-Base-2.0 sur l'ensemble des 23 benchmarks listés, avec des gains marqués sur MATH Level 5 (70,0 contre 26,3 pour GLM) et RULER 128K (88,26 contre 61,70). Le modèle post-entraîné se positionne en deçà de Qwen3.5-122B sur les tâches de raisonnement pur (AIME25, GPQA, MMLU-Pro) mais reste compétitif ou supérieur sur les benchmarks agentiques : SWE-Bench OpenHands à 60,47%, RULER 1M à 91,64%.</p>
+<p>Le gain de débit d'inférence est substantiel : 2,2× face à GPT-OSS-120B et 7,5× face à Qwen3.5-122B sur la configuration 8k/64k en B200. L'acceptation MTP atteint 3,45 tokens par étape de vérification en moyenne, surpassant DeepSeek-R1 et talonnant Qwen3-Next avec une dégradation moindre aux indices de draft élevés.</p>
+<p>L'analyse des gradients nuls sous NVFP4 est un résultat diagnostique intéressant : 7% des paramètres présentent des gradients de poids nuls en fin d'entraînement, tracés à des sous-écoulements dans le dgrad des FC2 d'experts, amplifiés par la quantification par blocs 2D. La promotion finale en MXFP8 sur 1T tokens améliore la trajectoire de perte sans gain sur les métriques aval.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le rapport reste un document d'ingénierie plutôt qu'une étude scientifique contrôlée. L'essentiel des choix de design (profondeur latente ℓ=1024, top-K=22, ratio d'entrelacement Mamba/attention) est justifié par référence à des travaux internes (Elango et al. 2026, NVIDIA 2025a/c) parfois non publiés au moment de la rédaction, ce qui limite la vérification indépendante des principes revendiqués. Les principes 1–5 de design LatentMoE sont présentés comme « distillés d'une analyse systématique » sans que l'analyse elle-même figure dans le document.</p>
+<p>Le contrôle des biais d'évaluation mérite scrutin. La décontamination des données synthétiques est décrite uniquement pour le jeu Unconditional Algorithmic (filtrage embedding >0,8) ; rien n'est dit sur les 14M problèmes de code synthétique ou les 279k conversations tool-use, dont la surface de fuite vers HumanEval/MBPP/SWE-Bench reste non quantifiée. Les benchmarks SFT comme IFBench, Arena-Hard et Multi-Challenge reposent sur des juges LLM dont le biais d'auto-préférence n'est pas discuté.</p>
+<p>Les comparaisons face à Qwen3.5-122B utilisent des numéros « officiellement rapportés lorsque disponibles » avec recalcul propre sinon — pratique acceptable mais qui empêche toute comparaison à protocole rigoureusement identique. Le choix du harness OpenHands pour SWE-Bench privilégie un cadre développé en partie par les auteurs, sans analyse de la sensibilité des résultats au harness.</p>
+<p>La section ablation est maigre : hors étude MXFP8 healing et merge de checkpoints, aucune ablation ne valide les contributions revendiquées (LatentMoE vs MoE standard à iso-FLOP, MTP partagé vs MTP indépendant à iso-paramètres). Le lecteur doit faire confiance au rapport technique LatentMoE annexe.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le dispositif de reproductibilité est solide pour un rapport industriel. Les checkpoints (base BF16, post-trained BF16/FP8/NVFP4), le GenRM dérivé de Qwen3-235B, les datasets Nemotron-Pretraining-Specialized-v1.1 et Nemotron-Super-Post-Training-Data sont publiés sur HuggingFace. L'infrastructure RL repose sur NeMo Gym et NeMo RL, deux dépôts publics, et les conteneurs d'évaluation sont disponibles via Nemo Evaluator SDK.</p>
+<p>Deux limites majeures subsistent. L'entraînement a consommé des milliers de GPU Blackwell et 25T tokens, échelle inaccessible à la quasi-totalité de la communauté académique ; la « reproductibilité » se résume à la réutilisation, pas à la réplication. Certaines pièces critiques (PivotRL, LatentMoE détaillé) sont renvoyées à des manuscrits « à venir », rendant certaines recettes opaques au moment de la lecture.</p>
+
+<h2>Impact et applications</h2>
+<p>Le positionnement débit-latence est l'argument le plus fort. Sur les déploiements contraints en latence médiane utilisateur, l'écart de throughput avec Qwen3.5 ouvre un espace applicatif concret pour les agents long-horizon (ingénierie logicielle autonome, navigation web, usage terminal) où chaque trajectoire empile des dizaines de tours. L'ouverture des checkpoints NVFP4 quantifiés rend le modèle déployable sur une seule B200, ce qui démocratise l'accès à un modèle de classe 120B.</p>
+<p>LatentMoE comme motif architectural mérite attention indépendante. Si l'analyse d'accuracy par octet se confirme, la projection vers un espace latent avant routage pourrait devenir un réflexe de design pour les MoE servis en basse latence. La démonstration d'un pré-entraînement NVFP4 stable à 25T tokens valide opérationnellement un pipeline que seul NVIDIA pousse réellement à ce jour.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le rapport s'inscrit dans la lignée directe des modèles Nemotron 3 Nano (NVIDIA 2025a, c) dont il étend la recette aux architectures sparses, et dans la famille émergente des hybrides Mamba-Attention MoE aux côtés de GLM-4.5-Air et Ling-flash-2.0. La concurrence frontale se joue avec GPT-OSS-120B d'OpenAI (dense, MXFP4) et Qwen3.5-122B d'Alibaba (dense BF16), deux modèles qui dominent respectivement par l'efficacité inférentielle et la performance brute.</p>
+<p>L'originalité réside dans la combinatoire — aucun autre modèle public de cette classe ne combine hybrid Mamba-Attention, MoE clairsemé, pré-entraînement FP4 et MTP à tête partagée — plus que dans une percée algorithmique isolée. Le rapport prolonge la tendance initiée par DeepSeek-V3 (auxiliary-loss-free load balancing) et Gloeckle et al. 2024 (MTP) en consolidant ces briques dans un système déployable.</p>
+
+<h3>Tableau récapitulatif des scores de robustesse</h3>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Objectif clair (efficience agentique), bien positionné face aux concurrents.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Pipeline cohérent, mais peu d'ablations directes des contributions revendiquées.</td></tr>
+<tr><td>Taille d'échantillon</td><td>5</td><td>25T tokens de pré-entraînement, suite d'évaluation large (30+ benchmarks).</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Benchmarks standards bien documentés, mais dépendance à des juges LLM non analysée.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Décontamination partielle, harness SWE développé par les auteurs, biais de juge non quantifié.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Checkpoints, datasets et infra publics ; échelle d'entraînement hors de portée communautaire.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Analyse honnête des sous-écoulements NVFP4 ; renvois à des manuscrits non publiés gênants.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Combinatoire originale à l'échelle de production ; briques individuelles connues.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

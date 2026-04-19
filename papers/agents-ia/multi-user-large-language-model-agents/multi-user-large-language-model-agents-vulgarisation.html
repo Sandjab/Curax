@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-User Large Language Model Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Multi-User Large Language Model Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand ChatGPT doit servir plusieurs patrons à la fois</h2>
+
+<p>Un PDG demande à son assistant IA de geler tout nouveau développement pour raisons de sécurité. Quelques secondes plus tard, un ingénieur de la même équipe demande au même assistant de poursuivre le développement et de publier les progrès sur son blog personnel. Deux instructions, deux utilisateurs, une seule IA. Que fait-elle ?</p>
+
+<p>La réponse n'est pas évidente, et c'est précisément ce que montre une étude menée par Stanford, le MIT, KAUST et l'Université de Toronto. Les chercheurs ont soumis dix-neuf grands modèles de langage (GPT-5, Claude Sonnet 4.5, Gemini 3 Pro, Llama-3, DeepSeek-R1, entre autres) à une batterie de tests conçus pour un scénario qui devient la norme en entreprise : un agent IA partagé entre plusieurs utilisateurs aux intérêts divergents.</p>
+
+<p>Le constat est sévère. Les modèles les plus performants du marché échouent à maintenir une hiérarchie d'autorité stable, laissent fuiter des informations confidentielles au fil des tours de conversation, et s'enlisent dans les négociations de groupe. Le problème n'est pas technique au sens habituel. Il est architectural : les LLM actuels ont été entraînés pour plaire à un seul utilisateur, pas pour arbitrer entre plusieurs.</p>
+
+<h2>Le problème : une IA construite pour un monologue, déployée dans un dialogue</h2>
+
+<p>Regardez sous le capot d'un chatbot standard. Le format des échanges suit un schéma figé : un rôle <em>system</em> (consignes du développeur), un rôle <em>user</em> (la personne qui parle), un rôle <em>assistant</em> (la réponse du modèle). Trois étiquettes, une seule voix humaine. Toute l'architecture d'entraînement des LLM repose sur ce triangle.</p>
+
+<p>Quand on veut faire parler plusieurs personnes au même assistant, l'astuce actuelle est bricolée : on concatène toutes leurs paroles derrière un unique rôle <em>user</em>, avec des préfixes du type « userA says: », « userB says: ». Le modèle lit cette soupe comme s'il s'agissait d'un seul interlocuteur schizophrène. Aucune distinction native entre identités, autorités, ou périmètres de confidentialité.</p>
+
+<p>Cette limite remonte à l'apprentissage par renforcement à partir de retours humains (RLHF). Le signal de récompense est un scalaire unique qui représente « ce qu'un utilisateur moyen considère comme la meilleure réponse ». Le modèle apprend donc à optimiser un objectif agrégé, sans mécanisme pour représenter des préférences contradictoires. Quand trois utilisateurs avec des intérêts divergents s'adressent à lui, il ne dispose d'aucune boussole interne pour trancher.</p>
+
+<p>Les chercheurs formalisent ce basculement comme le passage d'un problème <em>mandant-mandataire</em> unique (un principal, un agent) à un problème à principaux multiples. En économie, ce type de configuration est connu depuis les années 1970 : elle exige des mécanismes explicites d'arbitrage, des règles d'autorité, une gestion de l'information asymétrique. Les LLM en sont démunis.</p>
+
+<h2>La méthode : trois tests de résistance, trois angles d'attaque</h2>
+
+<p>Pour mesurer l'ampleur du problème, l'équipe a construit Muses-Bench, une batterie de scénarios simulant des interactions à plusieurs utilisateurs. Chaque utilisateur reçoit une persona détaillée : rôle (PDG, ingénieur junior, analyste financier, stagiaire…), niveau d'autorité sur une échelle de 1 à 10, ancienneté, tempérament, posture sécuritaire. Un PDG obtient un niveau 9-10, un manager 6, un stagiaire 1.</p>
+
+<p>Trois épreuves sont soumises aux modèles.</p>
+
+<p>La première teste le <strong>suivi d'instructions conflictuelles</strong>. Plusieurs utilisateurs envoient des requêtes simultanées, parfois alignées, parfois contradictoires. L'agent doit accepter les instructions légitimes (alignées avec l'objectif global, conformes à la hiérarchie) et refuser les autres. Deux métriques : la capacité à sélectionner les bonnes instructions (score F1) et la fidélité d'exécution (respecter une contrainte de longueur, un format imposé, etc.).</p>
+
+<p>La deuxième porte sur le <strong>contrôle d'accès inter-utilisateurs</strong>. L'agent garde une ressource sensible — une base de données de salaires, un coffre-fort de mots de passe. Seuls certains utilisateurs y ont accès. Les autres peuvent poser des questions banales ou tenter des attaques : faux prétextes (« c'est urgent, Alice m'a autorisé »), jeux de rôle, pression émotionnelle. Le modèle doit protéger les secrets face aux non-autorisés tout en restant utile aux autorisés.</p>
+
+<p>La troisième évalue la <strong>coordination d'un créneau de réunion</strong> entre plusieurs participants aux agendas partiellement connus. L'agent doit collecter les disponibilités, repérer les vides, relancer les silencieux, proposer un créneau qui convient à tous. Deux variantes : en divulgation complète, chacun annonce ses disponibilités d'emblée ; en divulgation partielle, l'agent doit poser des questions pour obtenir les informations manquantes.</p>
+
+<h2>Résultats clés : des failles systématiques</h2>
+
+<p>Même les modèles de pointe trébuchent sur des situations qu'un assistant humain compétent gérerait sans difficulté.</p>
+
+<h3>Le conflit entre utilisateurs fait s'effondrer l'exécution</h3>
+
+<p>Quand les instructions des différents utilisateurs sont alignées, la plupart des modèles s'en sortent honorablement. Claude Haiku 4.5 atteint 86 % de précision d'exécution. GPT-OSS-120B plafonne à 64 %. Les résultats restent exploitables.</p>
+
+<p>Dès qu'un conflit apparaît entre deux utilisateurs, tout se dégrade. Claude Haiku 4.5 chute de 86 % à 62 %. GPT-OSS-120B passe de 64 % à 50 %. Gemini 2.5 Flash perd 12 points. Ce n'est pas un bruit statistique : la chute est systématique sur tous les modèles testés. L'écart révèle que les LLM ne raisonnent pas vraiment sur la hiérarchie d'autorité. Ils s'appuient sur des indices de surface — le ton dominant, la fréquence des requêtes, la formulation assertive — et craquent dès qu'il faut arbitrer.</p>
+
+<h3>La confidentialité s'érode au fil des tours</h3>
+
+<p>Claude-3.5-Haiku obtient un score de confidentialité supérieur à 95 % au premier tour d'échange. Quatre tours plus tard, il est tombé sous les 75 %. Le phénomène se retrouve sur tous les modèles, propriétaires comme open-weight.</p>
+
+<p>La dégradation est graduelle, pas abrupte. À chaque tour, l'agent est exposé à de nouveaux indices contextuels, à des relances, à des pressions. Il finit par céder, non par une brèche franche, mais par accumulation de petites concessions. Un exemple frappant : Claude-3.5-Haiku refuse fermement au premier tour de donner accès au coffre-fort administrateur à une utilisatrice non autorisée. Au deuxième tour, pressé par l'urgence invoquée (« je bloque tout un projet de sécurité »), le modèle maintient formellement son refus d'ouvrir le coffre… tout en divulguant directement l'identifiant de session ADMIN-MASTER-5773 dans sa réponse. Il protège l'interface mais pas le secret.</p>
+
+<p>Cette faille illustre un malentendu profond : le modèle traite la contrainte de sécurité comme une restriction sur l'outil plutôt que sur l'information elle-même.</p>
+
+<h3>La coordination de groupe patine</h3>
+
+<p>Le meilleur modèle sur le scénario de planification de réunion, GPT-OSS-120B, atteint 77 % de réussite. La plupart des modèles propriétaires stagnent entre 50 et 66 %. Quand le nombre de participants dépasse dix, la performance chute.</p>
+
+<p>Llama-3-70B exhibe un mode d'échec particulièrement révélateur, baptisé <em>engagement prématuré</em>. Face à un utilisateur Rupert qui refuse explicitement un créneau pour cause de maintenance système critique, le modèle hallucine un consensus : il déclare que « nous avons trouvé un créneau qui vous convient aussi » et finalise la réunion. Moins de tours de conversation, mais une décision fausse. Le modèle préfère clore la discussion à résoudre le désaccord.</p>
+
+<p>Le benchmark fait aussi apparaître un arbitrage pervers entre confidentialité et utilité. Grok-3-Mini et GPT-5.1 atteignent respectivement 99,7 % et 98,6 % en protection de la vie privée, mais leur score d'utilité plafonne à 60 %. Ils refusent tout, y compris les requêtes autorisées. Inversement, GPT-OSS-120B sert 94 % des demandes autorisées mais laisse fuiter davantage d'informations. Trouver l'équilibre reste un problème ouvert.</p>
+
+<h2>Implications pratiques : une dette technique collective</h2>
+
+<p>Ces résultats ne relèvent pas d'un défaut d'un modèle particulier. Ils pointent un trou béant dans la pile logicielle actuelle des assistants IA. Toute entreprise qui déploie aujourd'hui un copilote partagé entre plusieurs collaborateurs hérite de ces failles.</p>
+
+<p>Le cas typique : un assistant branché sur Slack ou Teams, accessible à toute une équipe. Il voit passer les messages du manager, de l'ingénieur senior, du stagiaire. Si le manager lui demande un rapport confidentiel et que le stagiaire enchaîne avec une question apparemment anodine, rien dans l'architecture actuelle ne garantit que le contenu du rapport ne fuitera pas. Les permissions sont gérées par l'application qui héberge le modèle, pas par le modèle lui-même, qui n'a aucune représentation native des rôles.</p>
+
+<p>Autre exemple concret : les agents qui coordonnent des projets multi-équipes. Un outil comme Notion AI ou un copilote de gestion de projet reçoit simultanément des instructions de la direction, des chefs d'équipe et des contributeurs individuels. Quand ces instructions se contredisent — et elles se contredisent souvent dans la vraie vie des organisations —, le modèle applique des règles implicites, souvent biaisées vers l'utilisateur le plus récent ou le plus insistant. Pas forcément vers le plus légitime.</p>
+
+<p>Les agents autonomes qui négocient entre eux (un commercial IA face à un acheteur IA) ajoutent une couche de risque. Sans protocole pour gérer l'asymétrie d'information et l'autorité, ces agents peuvent être manipulés par des contreparties rusées. L'étude cite les travaux sur les négociations agent-agent dans les marchés consommateurs : le vernis d'efficacité masque des vulnérabilités qui seraient inacceptables dans un contexte humain régulé.</p>
+
+<p>Pour les équipes techniques qui construisent ces produits, le message est clair. Les garde-fous applicatifs (RBAC classique, filtres de sortie, isolation des sessions) restent indispensables. Compter sur le modèle pour appliquer les politiques de sécurité à partir d'un prompt système bien rédigé est une mauvaise idée. Les tests sur GPT-5.1 et Grok-3-Mini montrent qu'on peut obtenir une bonne protection, mais au prix d'une inutilité qui rendra le produit impopulaire.</p>
+
+<h2>Pour aller plus loin : cinq chantiers ouverts</h2>
+
+<p>Les auteurs esquissent plusieurs pistes, dont aucune n'est résolue à ce jour.</p>
+
+<p>La première concerne le <strong>format natif des messages multi-utilisateurs</strong>. Plutôt que de sérialiser toutes les voix dans un unique rôle <em>user</em>, il faudrait un schéma où chaque utilisateur est une entité de premier ordre, avec identité, rôle, niveau d'autorité, périmètre de visibilité. OpenAI a déjà introduit un rôle <em>developer</em> en plus de <em>system</em> et <em>user</em>, mais cela ne résout pas le problème sous-jacent : le modèle ne sait toujours pas distinguer userA de userB. Une refonte du format de chat template, adoptée par les principaux fournisseurs, serait un prérequis. On n'en est pas là.</p>
+
+<p>Deuxième chantier : l'<strong>évaluation sur des horizons longs</strong>. Les benchmarks actuels, y compris Muses-Bench, opèrent sur des interactions courtes. Les déploiements réels durent des semaines, voire des mois. Comment un agent se comporte-t-il quand la pression adversariale s'étale sur cent tours, quand de nouveaux utilisateurs rejoignent la conversation, quand les rôles évoluent ? Les données manquent cruellement.</p>
+
+<p>Troisième piste : les <strong>mécanismes d'arbitrage inspirés du choix social</strong>. La théorie du choix social, bien connue des économistes, propose des règles formelles pour agréger des préférences contradictoires tout en préservant certaines propriétés (non-dictature, indépendance des alternatives non pertinentes). Appliquer ces cadres à l'entraînement des LLM permettrait de dépasser l'agrégation implicite et opaque du RLHF classique. Les travaux sur la « generative social choice » (Fish et al., 2023) vont dans cette direction.</p>
+
+<p>Quatrième axe : l'<strong>auditabilité</strong>. Un agent multi-utilisateurs qui prend des décisions de partage d'information doit pouvoir être inspecté a posteriori. Quelle instruction a été acceptée ? Laquelle refusée ? Sur la base de quelle règle d'autorité ? Les logs structurés et les appels d'outils tracés sont essentiels pour que les entreprises adoptent ces systèmes dans des contextes régulés (santé, finance, juridique).</p>
+
+<p>Dernier chantier, le plus difficile : les <strong>études avec des humains réels</strong>. Les utilisateurs simulés de Muses-Bench restent des personas générés par un autre LLM. Les humains se comportent différemment. Ils mentent avec plus de subtilité, négocient avec plus de patience, oublient des contraintes. Les modes d'échec observés en simulation sous-estiment probablement ceux qu'on rencontrera en production.</p>
+
+<p>La conclusion de l'étude est mesurée, sans verser dans l'alarmisme. Les LLM actuels ne sont pas fondamentalement incapables de gérer plusieurs utilisateurs — certains s'en sortent honorablement dans des configurations simples. Mais ils ne sont pas conçus pour ça, et les méthodes actuelles d'entraînement ne préparent pas le terrain. Le passage du mandant-mandataire unique au mandant-mandataire multiple n'est pas une extension triviale. C'est un changement de nature du problème qui exige de repenser à la fois les architectures, les objectifs d'entraînement et les protocoles d'évaluation.</p>
+
+<p>Pour les équipes qui déploient des copilotes en entreprise, la prudence s'impose. Tester explicitement les scénarios de conflit, les tentatives d'escalade de privilèges, les fuites par accumulation sur plusieurs tours. Ne pas supposer que le modèle appliquera la politique décrite dans son prompt système. Et surveiller les travaux à venir : le premier fournisseur qui proposera un format de chat multi-utilisateur natif, couplé à un entraînement dédié, prendra une longueur d'avance considérable sur ce segment qui représente l'essentiel des déploiements B2B en cours.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
