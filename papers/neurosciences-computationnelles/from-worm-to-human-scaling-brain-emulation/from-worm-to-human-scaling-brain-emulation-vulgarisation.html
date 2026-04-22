@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Worm to Human: Scaling Brain Emulation — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>From Worm to Human: Scaling Brain Emulation</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>En octobre 2024, une équipe de 200 chercheurs a publié la cartographie complète du cerveau d'une mouche : 139 255 neurones, 54,5 millions de synapses. Deux mois plus tard, une équipe chinoise faisait tourner une simulation de 86 milliards de neurones sur 14 012 GPU, l'équivalent numérique approximatif d'un cerveau humain. Entre ces deux événements, un seuil a été franchi sans que grand monde ne le remarque : l'émulation de cerveaux entiers est sortie du domaine de la science-fiction pour entrer dans celui de l'ingénierie.</p>
+
+<p>La thèse d'Isaak Freeman, soutenue au MIT sous la direction d'Edward Boyden, tire les conséquences de ce basculement. Son argument tient en une phrase : nous disposons désormais de suffisamment de briques technologiques pour envisager sérieusement la reconstruction numérique de cerveaux biologiques, en commençant par le ver <em>C. elegans</em>, puis le poisson-zèbre, la souris, et à terme l'humain. Le travail consiste moins à faire de la prospective qu'à mesurer précisément ce qui manque encore — et combien cela coûterait.</p>
+
+<h2>Le problème : pourquoi simuler un cerveau est si difficile</h2>
+
+<p>Un cerveau n'est pas une puce électronique. C'est un enchevêtrement tridimensionnel de cellules où chaque neurone peut former entre 8 000 et 40 000 connexions avec ses voisins, via des synapses larges de 200 à 800 nanomètres. Pour qu'une simulation soit fidèle, il faut connaître trois choses : la structure (qui est connecté à qui), la fonction (comment les neurones s'activent dans le temps) et la chimie moléculaire (quels récepteurs, quels neurotransmetteurs).</p>
+
+<p>Le cerveau humain contient environ 86 milliards de neurones répartis dans 1,4 million de millimètres cubes de tissu. Celui de la souris, 75 millions de neurones dans 420 millimètres cubes. Comparez avec <em>C. elegans</em>, le petit ver transparent utilisé depuis les années 1980 comme organisme modèle : 302 neurones, un volume d'un millionième de millimètre cube. Le saut d'échelle est vertigineux. Cartographier un cerveau de souris équivaut à mille fois le travail déjà accompli sur la mouche ; un cerveau humain, 2 800 fois celui de la souris.</p>
+
+<p>Jusqu'en 2020, cartographier un seul neurone coûtait environ 16 500 dollars, dans les années 1980 avec les techniques de l'époque. Ce chiffre a chuté à 100 dollars pour une larve de poisson-zèbre en 2024. La trajectoire rappelle celle du séquençage du génome humain : longue, coûteuse, puis soudainement accessible.</p>
+
+<h2>La méthode vulgarisée : trois piliers technologiques</h2>
+
+<p>Freeman structure son analyse autour de trois capacités techniques qui doivent progresser conjointement.</p>
+
+<h3>Cartographier la structure</h3>
+
+<p>Première étape : photographier le cerveau avec une résolution suffisante pour voir chaque synapse. Deux familles d'outils existent. La microscopie électronique offre la résolution ultime — jusqu'à 3 nanomètres — mais exige de découper le cerveau en tranches ultrafines (50 nanomètres d'épaisseur), de les colorer aux métaux lourds, puis de les imager une par une. Imaginez scanner un cerveau de souris avec un appareil photo dont chaque pixel fait 10 nanomètres : vous obtenez 500 millions de milliards de pixels.</p>
+
+<p>Un microscope électronique actuel imagerait un cerveau de souris en 104 ans à lui seul. En faire tourner vingt en parallèle ramène le chiffre à cinq ans — un projet lourd mais réalisable à l'échelle d'un programme gouvernemental. Pour un cerveau humain, il faudrait 200 microscopes pendant dix ans, soit environ 200 millions de dollars d'instruments. La plupart des innovations restent latentes : les constructeurs comme Zeiss et Thermo-Fisher produisent quelques centaines d'appareils par an, faute de demande massive.</p>
+
+<p>La seconde famille, la microscopie optique par expansion, procède autrement. Le tissu cérébral est ancré dans un hydrogel qui gonfle quand on y ajoute de l'eau. Les molécules s'éloignent physiquement les unes des autres, et un microscope optique ordinaire peut alors voir des détails quatre à douze fois plus petits que sa résolution native. Cette technique permet aussi de marquer des protéines spécifiques, ce que la microscopie électronique ne sait pas faire.</p>
+
+<h3>Enregistrer l'activité</h3>
+
+<p>Un cerveau mort ne pense pas. Pour simuler la fonction, il faut observer les neurones en action. Les chercheurs injectent aux animaux des protéines fluorescentes qui s'allument quand un neurone décharge. On peut alors filmer des milliers de neurones simultanément à travers un microscope.</p>
+
+<p>Chez la larve de poisson-zèbre, transparente et munie de seulement 100 000 neurones, on enregistre déjà l'activité de plus de 70 000 neurones à la fois. Chez la souris, une technique récente appelée <em>light beads microscopy</em> capte jusqu'à un million de neurones dans le cortex dorsal. Le nombre de neurones enregistrables double tous les 7,4 ans depuis les années 1950, mais cette croissance s'est accélérée depuis 2015. Le plafond reste physique : la lumière ne pénètre pas au-delà d'un ou deux millimètres dans un tissu opaque. Pour un cerveau humain derrière un crâne, les méthodes optiques ne suffiront jamais seules.</p>
+
+<h3>Simuler</h3>
+
+<p>Une fois les données collectées, il faut les faire tourner sur du matériel informatique. Freeman propose deux estimations. Pour une simulation simplifiée, où chaque neurone est un calculateur binaire à la McCulloch-Pitts, un seul GPU H100 suffirait pour émuler un cerveau humain en temps réel. Pour une simulation biophysiquement réaliste, avec des neurones de type Hodgkin-Huxley à 1 000 compartiments et 7 000 synapses chacun, il faut environ 6×10²⁰ opérations par seconde — l'équivalent de 100 000 GPU modernes, ce que des clusters comme Colossus de xAI atteignent déjà.</p>
+
+<p>Le stockage suit la même logique : 70 pétaoctets de mémoire vive distribuée, soit 700 gigaoctets par GPU, contre 180 disponibles aujourd'hui. Écart d'un facteur quatre, qui se comblera probablement dans la décennie.</p>
+
+<h2>Résultats clés : ce qui a déjà été fait</h2>
+
+<p>Les chiffres accumulés dans la thèse dessinent une trajectoire cohérente.</p>
+
+<ul>
+<li><strong>Connectomique</strong>. Le ver <em>C. elegans</em> a été entièrement cartographié en 1986 (302 neurones). La mouche <em>Drosophila</em> l'a été en 2024 (140 000 neurones). Un millimètre cube de cortex humain a été imagé et segmenté (49 000 neurones, 150 millions de synapses) — plus de synapses à lui seul que le cerveau entier de la mouche.</li>
+
+<li><strong>Coût par neurone reconstruit</strong>. De 16 500 dollars dans les années 1980 à 100-214 dollars aujourd'hui pour les petits organismes. Les neurones de mammifères restent à 500-1 000 dollars pièce. Pour qu'un connectome de souris tienne dans un budget de un milliard de dollars, il faudrait descendre à 10 dollars par neurone. Pour l'humain, à 1 centime.</li>
+
+<li><strong>Simulations déjà réalisées</strong>. L'Allen Institute a fait tourner 10 millions de neurones de souris sur le supercalculateur Fugaku. Le Blue Brain Project a modélisé 4,2 millions de neurones du cortex somatosensoriel du rat. La simulation chinoise de 86 milliards de neurones tourne entre 60 et 120 fois plus lentement que le temps réel.</li>
+
+<li><strong>Preuve de concept comportementale</strong>. Shiu et collègues ont utilisé le connectome complet de la mouche avec des neurones simplifiés (équations différentielles d'intégration-décharge) pour reproduire des comportements comme l'alimentation et le toilettage. Sans données moléculaires, avec des équations centenaires, un simple connectome suffit à produire du comportement réaliste.</li>
+</ul>
+
+<p>Pour situer l'effort requis : le Projet Génome Humain a coûté 5 milliards de dollars en 13 ans. Le projet Manhattan, 30 milliards en 3 ans. Apollo, 257 milliards en 8 ans. Une émulation complète de cerveau humain tomberait dans cette fourchette — un méga-projet, pas une fantaisie de laboratoire.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Pourquoi un professionnel de la tech devrait-il s'intéresser à ce domaine ?</p>
+
+<p><strong>Une voie alternative vers l'IA</strong>. Les modèles de langage actuels apprennent à imiter les humains à partir de textes. Une émulation cérébrale serait humaine par construction, avec ses valeurs, ses motivations et son architecture cognitive. Freeman et ses relecteurs — parmi lesquels George Church et Kevin Esvelt — voient là une approche potentiellement plus sûre du problème de l'alignement que les architectures transformer actuelles. L'argument est débattable, mais il mérite examen.</p>
+
+<p><strong>Un laboratoire virtuel pour la neuroscience</strong>. Tester un médicament sur un cerveau de souris simulé permettrait d'itérer mille fois plus vite qu'en laboratoire humide. Les maladies neurologiques touchent 3,4 milliards de personnes. Les thérapies actuelles — stimulation magnétique transcrânienne, stimulation cérébrale profonde — sont calibrées à l'aveugle. Un jumeau numérique permettrait d'optimiser les paramètres avant toute intervention.</p>
+
+<p><strong>Des architectures inspirées de la biologie</strong>. Le cerveau humain consomme environ 20 watts. GPT-4 nécessite des mégawatts pour l'entraînement. Comprendre en détail le calcul biologique pourrait inspirer des architectures neuromorphiques hybrides. Intel Loihi, IBM TrueNorth et le système Hala Point (1,15 milliard de neurones simulés) explorent déjà cette piste.</p>
+
+<p><strong>Un marché latent pour le matériel</strong>. La thèse estime qu'un ordre ferme de quelques centaines de microscopes électroniques haute-cadence suffirait à faire basculer l'industrie d'une production artisanale vers une production de masse. Les constructeurs livrent quelques centaines d'instruments par an dans le monde. La neuroscience n'est pas un marché assez gros pour elle-même, mais combinée à la pharmacologie et à l'IA, l'équation change.</p>
+
+<p><strong>Stockage et calcul à grande échelle</strong>. Imager un cerveau humain à 10 nanomètres de résolution génère 1,4 zettaoctet de données brutes. Compressées, on tombe à 10-100 pétaoctets — l'échelle des datacenters Backblaze actuels. Le goulot d'étranglement n'est plus le stockage mais la bande passante mémoire et l'interconnexion entre GPU, problème familier aux équipes qui entraînent des modèles de frontière.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent ouvertes, et Freeman ne les cache pas.</p>
+
+<p><strong>Combien de données fonctionnelles faut-il vraiment ?</strong> Le travail de Shiu sur la mouche suggère qu'un connectome seul, avec des neurones simplifiés, suffit à reproduire du comportement. Mais personne ne sait si ce résultat se généralise aux mammifères. Le poisson-zèbre sera probablement le premier test : c'est le plus gros organisme pour lequel une cartographie structurelle et une imagerie fonctionnelle complète sont simultanément envisageables.</p>
+
+<p><strong>Le problème moléculaire</strong>. Un connectome donne le câblage, pas la chimie. Chaque synapse contient une combinaison spécifique de récepteurs AMPA, NMDA, GABA, que les microscopes électroniques ne voient pas. Des techniques comme PRISM (marquage binaire de protéines par expansion microscopique) et le séquençage de protéines in situ pourraient combler ce trou, mais restent embryonnaires. Identifier les 30 000 protéines d'une cellule nécessiterait aujourd'hui 3 000 rondes d'imagerie — plusieurs années par échantillon.</p>
+
+<p><strong>La stochasticité fondamentale</strong>. Les cerveaux ne sont pas déterministes. Le bruit thermique des canaux ioniques rend impossible la prédiction exacte d'une trajectoire d'activité neuronale sur plus de quelques secondes. Les métriques comme l'erreur absolue moyenne (utilisée par ZAPBench) capturent mal cette réalité. Freeman suggère d'emprunter aux systèmes dynamiques chaotiques : reconstituer la structure des attracteurs plutôt que prédire les trajectoires. Un modèle de climat prédit El Niño sans prédire la météo exacte de mercredi prochain.</p>
+
+<p><strong>Le financement</strong>. La principale limite n'est plus technique mais institutionnelle. Le travail sur <em>C. elegans</em> est porté par un consortium bénévole sous-financé. Les simulations connectomiques les plus avancées reposent sur une poignée d'équipes à Princeton, au MIT et à Pékin. Le rapport <em>State of Brain Emulation 2025</em>, co-écrit par Freeman et publié en janvier 2026, est un appel à coordination : sans un projet fédérateur à la hauteur du Projet Génome, les avancées resteront éparses.</p>
+
+<p><strong>Le poisson-zèbre comme premier banc d'essai</strong>. Si un organisme doit être émulé intégralement dans les dix prochaines années, ce sera probablement lui. Transparent, vertébré, 100 000 neurones, imageable à l'échelle cellulaire sur tout le cerveau. C'est le point de contrôle qui validera — ou invalidera — l'ensemble du pari. Si une larve de poisson-zèbre numérique peut apprendre à nager vers la lumière comme son homologue biologique, le chemin vers la souris s'ouvre. Sinon, il faudra revoir la théorie.</p>
+
+<p>Le message de Freeman tient en peu de mots : nous avons dépassé le stade spéculatif. L'émulation de cerveaux entiers est devenue un problème d'ingénierie, avec des coûts chiffrés, des goulots identifiés, des jalons intermédiaires. Reste à décider, collectivement, si nous voulons le résoudre.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

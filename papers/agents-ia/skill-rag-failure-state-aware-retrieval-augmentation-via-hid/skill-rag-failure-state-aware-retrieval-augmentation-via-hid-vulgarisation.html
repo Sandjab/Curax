@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill-RAG: Failure-State-Aware Retrieval Augmentation via Hidden-State Probing and Skill Routing — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Skill-RAG: Failure-State-Aware Retrieval Augmentation via Hidden-State Probing and Skill Routing</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Un utilisateur demande à un assistant IA : « Quand sort le nouveau film <em>My Hero Academia</em> ? ». Le système cherche dans sa base documentaire, tombe sur la date de sortie américaine, se rend compte qu'elle ne correspond pas, relance une recherche... et dérive complètement vers un groupe de rock japonais sans rapport. Trois tours plus tard, toujours aucune réponse correcte. Ce scénario, banal mais révélateur, illustre ce que les chercheurs appellent un <strong>échec de récupération persistant</strong> : ajouter de la recherche documentaire ne suffit pas toujours à sauver la réponse.</p>
+
+<p>Les systèmes RAG (<em>Retrieval-Augmented Generation</em>) sont devenus la colonne vertébrale de la plupart des assistants IA d'entreprise. Le principe tient en une phrase : avant de répondre, le modèle consulte une base documentaire, puis génère sa réponse à partir des documents trouvés. Mais une équipe réunissant Michigan, UBC, Rutgers, Penn et Wake Forest vient de publier <em>Skill-RAG</em>, un travail qui s'attaque à un angle mort de ces architectures : que faire quand la récupération échoue, non pas parce que l'information manque, mais parce que la question est mal formulée pour la trouver ?</p>
+
+<h2>Le problème : la récupération qui tourne en rond</h2>
+
+<p>Les systèmes RAG actuels savent de mieux en mieux décider <em>quand</em> chercher et <em>combien de fois</em>. Des approches comme FLARE, DRAGIN ou Self-RAG ont progressé sur ce front. Mais elles partagent toutes un réflexe un peu brutal : si la première recherche ne donne rien, elles recommencent. Parfois avec une reformulation naïve, souvent avec la même requête légèrement remaniée. Quand ça ne marche pas, elles relancent encore.</p>
+
+<p>Les auteurs ont observé que cette stratégie laisse sur le carreau une fraction significative de cas difficiles. Non pas parce que l'information manque dans le corpus, mais parce qu'il existe un <strong>décalage d'alignement</strong> entre la façon dont la question est posée et la façon dont la réponse est indexée dans les documents. Trois cas typiques reviennent :</p>
+
+<ul>
+<li>La question est trop large et renvoie des documents thématiquement proches mais inutiles pour raisonner.</li>
+<li>La question mélange plusieurs sous-questions qu'il faudrait traiter séparément.</li>
+<li>La formulation utilise des termes qui ne correspondent pas au vocabulaire du corpus.</li>
+</ul>
+
+<p>Relancer la même logique de recherche dans ces situations ne corrige rien. Pire, cela peut faire dériver la requête vers des sujets totalement hors-propos, phénomène appelé <em>query drift</em>. Le système s'enfonce dans l'erreur au lieu de s'en extraire.</p>
+
+<p>Le pari de Skill-RAG : si on parvient à <strong>diagnostiquer</strong> la nature de l'échec au lieu de simplement le constater, on peut choisir la bonne action corrective plutôt que de relancer à l'aveugle.</p>
+
+<h2>La méthode vulgarisée : un radar interne et un routeur de compétences</h2>
+
+<p>L'architecture repose sur deux composants complémentaires : un <strong>sondeur d'état interne</strong> (le <em>prober</em>) et un <strong>routeur de compétences</strong>.</p>
+
+<h3>Le sondeur : lire dans les pensées du modèle</h3>
+
+<p>Quand un grand modèle de langage traite une question, il construit une représentation interne — des vecteurs numériques dans ses couches cachées qui encodent ce qu'il « comprend » et ce qu'il « sait ». Les auteurs ont entraîné un petit classifieur à lire ces représentations internes pour prédire une chose simple : <em>le modèle est-il en mesure de répondre correctement, ou bute-t-il ?</em></p>
+
+<p>Le fonctionnement rappelle un entretien d'embauche. Un recruteur expérimenté ne se contente pas des réponses verbales du candidat : il capte des signaux subtils — hésitations, regard fuyant, détours — qui révèlent si la personne maîtrise son sujet ou improvise. Le <em>prober</em> joue ce rôle pour le modèle : il examine les signaux internes plutôt que la réponse finale, et détecte les signes de « bluff ».</p>
+
+<p>Techniquement, les chercheurs extraient les états cachés des deux tiers postérieurs des couches du modèle, entraînent un petit réseau neuronal par couche, puis moyennent leurs prédictions. Le résultat : un signal binaire qui dit <em>« le modèle sait »</em> ou <em>« le modèle est en échec »</em>. Ce sondeur ne coûte quasi rien en calcul comparé au modèle principal.</p>
+
+<h3>Le routeur : quatre compétences pour quatre types d'échec</h3>
+
+<p>Quand le sondeur détecte un échec persistant, un second module entre en scène : le <em>skill router</em>. Sa mission n'est pas de refaire une recherche, mais de diagnostiquer <em>pourquoi</em> la recherche a échoué et de choisir parmi quatre stratégies correctives :</p>
+
+<ul>
+<li><strong>Réécriture de requête</strong> — quand la formulation ne colle pas au vocabulaire du corpus. Le routeur reformule en termes plus proches de ceux que l'indexation utilise.</li>
+<li><strong>Décomposition de question</strong> — quand la question contient plusieurs prémisses imbriquées. Le routeur la découpe en sous-questions traitées successivement.</li>
+<li><strong>Focalisation sur les preuves</strong> — quand la requête est trop large. Le routeur identifie l'information précise qui manque et relance une recherche ciblée sur ce trou informationnel.</li>
+<li><strong>Sortie (<em>exit</em>)</strong> — quand l'échec est irréductible. Le modèle n'a pas l'information, le corpus non plus, insister ne sert à rien. Le système s'arrête proprement plutôt que de brûler du calcul.</li>
+</ul>
+
+<p>Ce dernier point mérite qu'on s'y arrête. La plupart des systèmes RAG n'ont pas de bouton « j'abandonne ». Ils continuent à chercher jusqu'à épuiser leur budget de tours, même quand le diagnostic évident est qu'ils ne pourront pas trouver. Le <em>skill exit</em> introduit une forme de lucidité computationnelle : reconnaître les cas perdus évite d'accumuler des erreurs et économise des ressources.</p>
+
+<h3>Le cycle complet</h3>
+
+<p>Une requête arrive. Le sondeur évalue si le modèle peut répondre sans recherche. Si oui, il répond directement. Sinon, une première recherche documentaire a lieu, puis le sondeur ré-évalue. Si la réponse augmentée est jugée solide, fin du processus. Sinon, le routeur de compétences diagnostique l'échec, sélectionne une compétence, reformule la requête ou reciblé l'évidence, et relance un tour. La boucle s'arrête soit quand le sondeur donne son feu vert, soit quand le routeur choisit la sortie, soit quand le nombre maximum de tours est atteint.</p>
+
+<h2>Résultats clés</h2>
+
+<p>Les auteurs ont testé Skill-RAG sur cinq jeux de données de question-réponse, dont trois pour l'entraînement (HotpotQA, Natural Questions, TriviaQA) et deux gardés en réserve pour évaluer la généralisation (MuSiQue et 2WikiMultiHopQA). Le modèle de base est Gemma2-9B, avec BM25 comme moteur de récupération.</p>
+
+<p>Sur les jeux de données connus, Skill-RAG égale ou dépasse les meilleures alternatives comme Probing-RAG, FLARE, DRAGIN et Adaptive-RAG. Rien de spectaculaire à ce stade. C'est sur les jeux de données <strong>hors distribution</strong> — ceux que le système n'a jamais vus pendant son entraînement — que l'écart se creuse :</p>
+
+<ul>
+<li>+6,1 points d'exactitude sur MuSiQue face à Probing-RAG</li>
+<li>+13,6 points sur 2WikiMultiHopQA</li>
+</ul>
+
+<p>Ces gains sur des données inédites signalent quelque chose d'important : la méthode ne mémorise pas des astuces spécifiques à un jeu de données, elle apprend un mécanisme de correction qui se transfère. En moyenne sur les cinq benchmarks, Skill-RAG atteint 46,8 % d'exactitude contre 42,4 % pour Probing-RAG et 38,7 % pour DRAGIN.</p>
+
+<p>Une analyse visuelle vient étayer l'approche. Les chercheurs ont projeté en 2D les représentations internes des cas d'échec. Ils observent deux nuages de points bien séparés : d'un côté, les échecs liés à un mauvais alignement (récupérables par reformulation) ; de l'autre, les échecs vraiment irréductibles (information absente du corpus). Quand on applique les quatre compétences, le premier nuage se contracte progressivement — les cas se résolvent. Mais quand les auteurs testent une variante où un LLM génère lui-même une vingtaine de compétences supplémentaires, la structure des nuages disparaît. Trop de compétences tuent la capacité à router correctement.</p>
+
+<p>Cette observation est plus profonde qu'elle n'y paraît : elle suggère que les modes d'échec d'un système RAG ont une <strong>géométrie intrinsèque</strong>, et qu'une taxonomie parcimonieuse (quatre compétences) colle mieux à cette géométrie qu'une explosion de catégories.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Pour les équipes qui déploient des RAG en production, le papier propose trois leçons exploitables dès maintenant.</p>
+
+<h3>1. Diagnostiquer vaut mieux que relancer</h3>
+
+<p>La tentation naturelle quand un RAG échoue est d'augmenter le nombre de tours de recherche ou d'élargir le top-k de documents récupérés. Skill-RAG montre qu'on peut obtenir de meilleurs résultats avec <em>moins</em> de tours, à condition que chaque tour soit informé par un diagnostic précis. C'est un changement d'état d'esprit : passer du « plus de calcul » au « meilleur calcul ».</p>
+
+<h3>2. L'état interne du modèle est une ressource sous-exploitée</h3>
+
+<p>Beaucoup de systèmes en production évaluent la qualité d'une réponse uniquement sur sa sortie textuelle — éventuellement avec un second LLM juge, coûteux. Le sondeur de Skill-RAG démontre qu'un petit classifieur entraîné sur les représentations internes peut faire ce travail à une fraction du coût, sans appel supplémentaire au modèle principal. Pour les équipes qui ont accès aux états cachés de leur modèle (open source, ou API étendues), c'est une piste d'optimisation concrète.</p>
+
+<h3>3. Le bouton « j'abandonne » a de la valeur</h3>
+
+<p>La compétence <em>exit</em> illustre une vertu rarement conceptualisée : savoir ne pas répondre. Dans un contexte où les hallucinations coûtent cher en confiance utilisateur, un système capable de dire « je ne trouve pas l'information dans mes sources » plutôt que d'inventer une réponse plausible mais fausse représente un gain de fiabilité. Ce n'est pas qu'une optimisation technique, c'est un choix produit.</p>
+
+<p>Concrètement, les cas d'usage les plus susceptibles d'en tirer parti sont les assistants techniques sur bases documentaires denses (juridique, médical, support logiciel), où les questions complexes à plusieurs sauts sont fréquentes et où une mauvaise réponse a des conséquences réelles.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Skill-RAG ouvre plusieurs questions que les auteurs reconnaissent eux-mêmes.</p>
+
+<p>Le diagnostic par le routeur repose sur la capacité du LLM sous-jacent à suivre des instructions. Sur des modèles plus petits ou moins alignés, la qualité du diagnostic pourrait chuter. Les tests n'ont porté que sur Gemma2-9B — on ignore comment l'approche se comporte sur Llama, Mistral, Qwen ou les modèles propriétaires à plus large échelle. Les auteurs annoncent des résultats sur d'autres familles pour plus tard.</p>
+
+<p>La taxonomie à quatre compétences a été dérivée d'observations sur des benchmarks de QA ouverte. D'autres domaines — littérature scientifique, corpus multilingues, documents juridiques denses — pourraient présenter des modes d'échec différents, demandant une taxonomie ajustée. La piste intéressante serait de découvrir automatiquement, pour un nouveau domaine, les compétences minimales qui couvrent la géométrie des échecs observés.</p>
+
+<p>Une autre question se pose sur l'interaction avec les récupérateurs denses modernes. Les expériences utilisent BM25, un moteur lexical classique. Les récupérateurs denses (DPR, Contriever, E5) ont des modes d'échec différents — ils souffrent moins du vocabulaire mais plus des questions mal posées sémantiquement. Il se pourrait que le bénéfice des quatre compétences se redistribue sur des récupérateurs plus sophistiqués.</p>
+
+<p>Enfin, une ambition plus large se dessine en arrière-plan : transformer le RAG d'un mécanisme monolithique en une architecture <strong>diagnostique et réflexive</strong>, capable d'introspection sur ses propres échecs. C'est un glissement méthodologique qu'on retrouve dans d'autres travaux récents sur les agents auto-critiques et les architectures à plusieurs étapes. Skill-RAG ajoute une pierre à cet édifice en montrant qu'on peut faire de l'introspection utile sans brûler davantage de calcul que les approches classiques.</p>
+
+<p>Le papier ne résout pas le problème général de la récupération documentaire. Il propose une façon élégante de traiter la fraction résiduelle de cas difficiles, ceux qui résistent aux méthodes standard. Cette fraction, dans un déploiement industriel, représente souvent la différence entre un produit qui impressionne en démo et un produit qui tient la route en production.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

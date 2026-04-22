@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autonomous Evolution of EDA Tools: Multi-Agent Self-Evolved ABC — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Autonomous Evolution of EDA Tools: Multi-Agent Self-Evolved ABC</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand une IA réécrit 1,2 million de lignes de code vieux de vingt ans</h2>
+
+<p>Le logiciel ABC, développé à Berkeley depuis plus de deux décennies, est l'outil de référence mondial pour la synthèse logique — cette étape qui transforme une description abstraite de circuit en portes logiques concrètes gravables sur silicium. Il pèse 1,2 million de lignes de C, s'étale sur plus de 4 000 fichiers source, et chaque ajustement dans un module en provoque en cascade ailleurs. Deux chercheurs de NVIDIA Research viennent de montrer qu'une équipe d'agents basés sur Claude Sonnet 4.5 peut modifier ce code pendant des jours d'affilée, sans pilote humain, et en ressortir avec une version qui bat la base de référence de 8,3 % sur les métriques standard de l'industrie.</p>
+
+<p>Le résultat est frappant pour deux raisons. D'abord parce que ABC concentre des décennies d'optimisations manuelles écrites par les meilleurs experts du domaine — le genre de code dont on pense qu'il n'y a plus rien à gratter. Ensuite parce que la taille est sans commune mesure avec les travaux précédents : AlphaEvolve de Google DeepMind opérait sur quelques centaines de lignes, SATLUTION de NVIDIA sur quelques dizaines de milliers. Passer à l'échelle du million est un saut qualitatif, pas quantitatif.</p>
+
+<h2>Le problème : un monument figé que personne n'ose retoucher</h2>
+
+<p>La synthèse logique repose sur deux étapes imbriquées. La première simplifie un réseau booléen pour réduire sa taille ou sa profondeur sans changer son comportement. La seconde associe chaque sous-ensemble du circuit à une cellule physique réelle — une porte NAND, un multiplexeur, une bascule. Les deux problèmes sont NP-difficiles, ce qui signifie qu'aucun algorithme exact n'est envisageable à l'échelle des puces modernes. Les outils comme ABC accumulent donc des heuristiques : des règles pragmatiques, calibrées à la main, qui donnent de bons résultats la plupart du temps.</p>
+
+<p>Le problème avec ces heuristiques, c'est qu'elles vieillissent mal. Quand un ingénieur veut améliorer un critère de sélection de coupe dans le mapper technologique, il doit comprendre comment cette fonction interagit avec quinze autres modules, sous peine de casser silencieusement un invariant quelque part. La densité du code fait que même les développeurs expérimentés passent des semaines à valider un changement mineur. Résultat : beaucoup de décisions algorithmiques restent celles des années 2000, alors que l'espace de conception réel offrirait encore des gains substantiels si on pouvait l'explorer.</p>
+
+<p>Les premiers travaux d'évolution de code par LLM ont montré que des agents pouvaient réécrire des fonctions isolées et battre des baselines humaines. Mais ces démonstrations portaient sur du code compact, aux dépendances limitées. ABC est l'inverse : quatre couches d'abstraction hiérarchique, des structures de données partagées entre tous les modules, des fichiers de build entremêlés. Transposer naïvement les approches existantes ne pouvait pas marcher.</p>
+
+<h2>La méthode : une équipe d'agents spécialisés, pas un oracle solitaire</h2>
+
+<p>L'idée centrale est de refuser l'agent monolithique. Au lieu de demander à un seul modèle de comprendre ABC dans sa totalité, les chercheurs ont monté une équipe de quatre agents avec des rôles distincts, tous instanciés à partir de Claude Sonnet 4.5.</p>
+
+<p>Un <strong>agent planificateur</strong> joue le rôle de chef d'orchestre. Il lit les retours de performance du cycle précédent, compare les propositions des agents codeurs, et décide quel sous-système mérite d'évoluer ensuite. Trois <strong>agents codeurs</strong> travaillent chacun sur une zone cloisonnée du dépôt : le premier sur l'ordonnancement des passes d'optimisation (dossier <code>src/opt/flowtune</code>), le deuxième sur le mapper technologique (<code>src/map/mapper</code>), le troisième sur l'optimisation logique indépendante de la technologie (<code>src/base/abci</code>). Cette partition évite qu'ils ne se marchent dessus et garantit que chaque modification reste traçable.</p>
+
+<p>Avant même de commencer à évoluer, les agents passent par une phase de profilage. Ils lisent la documentation, cartographient la hiérarchie des répertoires, identifient les points d'injection possibles dans chaque module, et absorbent un tutoriel Markdown rédigé par les humains qui détaille comment ajouter une nouvelle commande ABC ou modifier une structure de données existante. Les chercheurs ont découvert qu'un tutoriel structuré en Markdown produit des agents beaucoup plus fiables qu'une explication en prose, parce que le format discipline le raisonnement et limite les hallucinations. Cette étape consomme à elle seule 68 % du budget total de tokens — le gros de la dépense est donc en amont, pas pendant l'évolution.</p>
+
+<p>Chaque cycle d'évolution suit ensuite une boucle rigoureuse. Un agent codeur propose un patch. Le code modifié est compilé. S'il y a une erreur, le compilateur renvoie ses messages à l'agent qui entre dans un mode d'auto-débogage. Une fois la compilation passée, le système lance une <strong>vérification d'équivalence combinatoire</strong> : il compare formellement le circuit produit par la version modifiée et celui produit par la version de référence sur un jeu de benchmarks, pour s'assurer que la logique n'a pas été silencieusement corrompue. C'est l'équivalent d'un filet de sécurité mathématique — si les deux circuits ne calculent pas exactement la même fonction booléenne, la modification est rejetée sur-le-champ.</p>
+
+<p>Ce filet change tout. Sans lui, un LLM qui dégrade subtilement une fonction logique peut quand même faire croire à une amélioration sur les métriques de surface ou de délai, parce que le circuit produit est plus petit — simplement il est faux. SATLUTION, le prédécesseur dans le domaine des solveurs SAT, avait déjà mis en évidence ce piège. La vérification d'équivalence systématique fait que plus de 90 % des tokens dépensés par les agents le sont sur des états de code sémantiquement valides, ce qui évite de gaspiller des dizaines d'heures de calcul sur des impasses.</p>
+
+<p>Une fois la correction établie, l'évaluation à grande échelle commence. Les chercheurs distribuent les tests sur un cluster de 87 nœuds CPU AMD EPYC. Chaque benchmark est synthétisé avec huit flows différents couvrant toute la chaîne de l'ASAP7 7 nm : optimisation logique, mapping, insertion de buffers, dimensionnement des portes, analyse temporelle statique. Ce déploiement massif permet de collecter à chaque cycle un profil multidimensionnel de la version évoluée — nombre de nœuds dans le graphe ET-inverseur, profondeur, surface post-buffering, pire marge temporelle, statistiques d'énumération de coupes. Un cycle complet, vérification d'équivalence comprise, prend deux à trois heures.</p>
+
+<p>Le dernier élément ingénieux est la <strong>base de règles auto-évolutive</strong>. Au démarrage, le planificateur impose aux agents des garde-fous conservateurs — ne pas toucher à tel module, respecter telle convention d'allocation mémoire. Quand ces règles bloquent à répétition des modifications qui auraient produit des gains, le planificateur propose lui-même un assouplissement mesuré, validé contre des contraintes de sûreté globales. Les premiers cycles sont donc prudents, les derniers deviennent progressivement plus explorateurs. C'est une forme de méta-apprentissage du cadre de travail lui-même.</p>
+
+<h2>Résultats : 8,3 % de mieux que l'état de l'art</h2>
+
+<p>Le tableau de résultats principal compare toutes les combinaisons possibles de sous-systèmes évolués versus vanille. Évoluer un seul module donne des gains modestes : 3,8 % pour FlowTune seul, 4,3 % pour l'optimisation AIG seule, 1,2 % pour le mapping seul. Évoluer deux modules ensemble fait mieux qu'additionner les gains individuels, ce qui révèle un effet de complémentarité. Évoluer les trois donne le meilleur score : 0,917, soit 8,3 % de réduction sur la métrique normalisée de qualité combinée surface-délai, par rapport à une baseline déjà renforcée des meilleures extensions open-source récentes.</p>
+
+<p>Sur le timing statique, l'amélioration moyenne de la pire marge négative atteint 8 à 9 %. Certains circuits arithmétiques d'EPFL — les multiplieurs et diviseurs les plus sollicités du benchmark — gagnent entre 12 et 15 %. Le nombre de nœuds dans le graphe ET-inverseur diminue de 3 à 8 % sur les circuits arithmétiques, et la profondeur après mapping baisse de 4 à 6 % grâce à des heuristiques sensibles à la profondeur que l'agent mapping a introduites de lui-même.</p>
+
+<p>Le coût financier mérite un chiffrage. Le système complet a consommé environ 2 400 dollars de tokens Claude, dont 1 400 pour la seule phase de profilage initial. Chaque cycle d'évolution coûte ensuite entre 60 et 80 dollars, selon le nombre de réparations que les agents ont dû enchaîner. À cette échelle, améliorer un outil industriel de 1,2 million de lignes pour moins de 3 000 dollars de compute LLM change les équations de coût-bénéfice du développement EDA.</p>
+
+<p>Un résultat plus qualitatif surprend les auteurs : la qualité du code produit. Malgré leur exposition à des conventions de style hétérogènes pendant le profilage initial, les agents convergent spontanément vers le style natif d'ABC. Ils reproduisent fidèlement la structure des en-têtes, les conventions de nommage, l'usage idiomatique des macros <code>Abc_Print</code>, et même les chaînes d'aide des paramètres. Un ingénieur ABC expérimenté qui lirait le module <code>abcFlowTune7.c</code> généré au cycle 7 pourrait raisonnablement croire qu'il a été écrit par un collègue humain.</p>
+
+<h2>Implications pratiques : un modèle transposable</h2>
+
+<p>Pour l'industrie des semi-conducteurs, 8 % sur la qualité de synthèse n'est pas une amélioration cosmétique. C'est l'ordre de grandeur qu'une équipe d'experts met plusieurs années à extraire d'un outil mature. Les retombées directes se jouent sur la surface de puce (donc le coût de fabrication) et sur la fréquence maximale atteignable (donc la performance du produit final). Multiplié par les milliards de puces que l'industrie fabrique chaque trimestre, même un pourcentage modeste représente une valeur industrielle considérable.</p>
+
+<p>Au-delà de l'EDA, la démonstration a une portée plus large. Beaucoup de logiciels critiques d'infrastructure — compilateurs, noyaux de base de données, runtimes, moteurs de rendu — partagent le profil d'ABC : code ancien, massif, densément couplé, optimisé par des générations successives d'experts, et difficile à améliorer parce que toute modification casse quelque chose d'invisible. L'approche multi-agent avec garde-fous formels offre un patron reproductible pour ces situations. La clé n'est pas la puissance brute du LLM, mais l'architecture de vérification qui l'encadre.</p>
+
+<p>Le découpage en agents spécialisés mérite aussi qu'on s'y arrête. Les auteurs ne cherchent pas un modèle qui saurait tout faire. Ils construisent un système où chaque agent a un périmètre clair, une initialisation ciblée, et des règles qui contraignent son espace d'action. Cette discipline architecturale compte autant que le choix du modèle sous-jacent.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Les auteurs sont honnêtes sur les limites. Leurs agents excellent à raffiner des directions algorithmiques qui ont déjà un précédent structurel dans ABC : ajuster un seuil négligé, affiner un score sensible à la profondeur, introduire une heuristique conditionnelle. Quand ils tentent d'introduire un paradigme complètement nouveau, sans ancrage dans les invariants existants, ils échouent plus souvent — erreurs de compilation, <em>segfaults</em>, violations subtiles de correction que l'auto-débogage ne rattrape pas. Autrement dit, le système amplifie brillamment le savoir humain déjà encodé dans la base de code, mais il ne produit pas (encore) d'idées disruptives.</p>
+
+<p>Plusieurs questions restent ouvertes. L'approche tient-elle au-delà du million de lignes ? Les grands codebases industriels comme LLVM (plus de 5 millions de lignes) ou le noyau Linux (30 millions) posent des défis supplémentaires de cohérence inter-modules. La vérification d'équivalence combinatoire fonctionne pour la synthèse logique parce qu'on sait définir l'équivalence mathématiquement. Pour un compilateur généraliste, il faudrait inventer des oracles de correction équivalents — tests de régression massifs, preuves formelles partielles, <em>differential fuzzing</em>.</p>
+
+<p>Une autre piste concerne l'initialisation. Les 68 % de tokens dépensés en profilage soulèvent une question d'échelle : peut-on amortir ce coût sur plusieurs cycles d'évolution indépendants, ou faut-il le refaire à chaque nouvelle base de code ? Un système capable de capitaliser l'expérience acquise sur un dépôt pour démarrer plus vite sur un autre changerait radicalement l'économie de l'approche.</p>
+
+<p>Les auteurs concluent par une reconnaissance qui mérite d'être citée : la réussite des agents repose entièrement sur des décennies de contributions humaines. Les algorithmes qu'ils raffinent, les tests qu'ils exécutent, le compilateur qu'ils invoquent, le benchmark qu'ils optimisent — tout vient d'un travail humain accumulé. L'évolution autonome ne remplace pas l'expertise. Elle transforme la façon dont on peut la faire fructifier.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

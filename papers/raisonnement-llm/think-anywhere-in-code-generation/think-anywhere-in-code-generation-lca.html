@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Think Anywhere in Code Generation — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Think Anywhere in Code Generation</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le travail s'attaque à une limite structurelle des LLM de raisonnement actuels (o1, DeepSeek-R1, Kimi K2) appliqués à la génération de code : le paradigme <em>upfront thinking</em> confine la délibération à un bloc initial &lt;think&gt;, avant toute écriture de code. Les auteurs identifient deux faiblesses concrètes de ce schéma. D'abord, la complexité d'un problème algorithmique ne se révèle souvent qu'au moment de l'implémentation (bug d'indexation 0-based/1-based dans un DP, cas limites). Ensuite, l'effort de raisonnement est réparti uniformément en amont, alors que la difficulté cognitive varie fortement entre du boilerplate et une décision algorithmique critique.</p>
+<p>La contribution principale, THINK-ANYWHERE, formalise un mécanisme qui entrelace des blocs &lt;thinkanywhere&gt; à des positions de token arbitraires, choisies dynamiquement par le modèle. Le code exécutable est obtenu en retirant ces blocs, qui restent invisibles à l'exécution mais guident la génération.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline tient en deux étages. Un cold-start supervisé d'abord : environ 5 000 exemples sont synthétisés par Gemini 2.5 Flash, filtrés sur la validité du formatage, puis utilisés pour du fine-tuning LoRA sur Qwen2.5-Coder-7B-Instruct. Cette phase installe le motif d'invocation, pas la pertinence des positions.</p>
+<p>Un étage RLVR ensuite, via GRPO, avec un reward hiérarchique combinant une composante structurelle R<sub>struct</sub> (vérifie la présence d'un bloc initial &lt;think&gt; et d'au moins un &lt;thinkanywhere&gt;, pondérée α = 0,1) et une composante fonctionnelle R<sub>correct</sub> basée sur le passage des cas de test. L'entraînement tourne sur 14K problèmes du dataset Skywork, 8 A100 40G, batch 128, 2 époques, rollout de 8 échantillons à 4096 tokens.</p>
+<p>Les auteurs testent également une variante à token dédié (THINK-ANYWHERE*) avec une initialisation d'embedding sémantiquement composée : 0,5 × moyenne(e<sub>think</sub>, e<sub>any</sub>, e<sub>where</sub>) + 0,5 × e<sub>&lt;im_start&gt;</sub>. Cette variante suit une procédure de cold-start en deux phases (alignement d'embeddings d'abord, fine-tuning joint ensuite).</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur quatre benchmarks (LeetCode, LiveCodeBench, HumanEval, MBPP), THINK-ANYWHERE atteint 70,3 % de moyenne pass@1 contre 61,0 % pour le modèle de base et 68,4 % pour GRPO standard. Le gain le plus marqué est sur LeetCode (+18,8 points vs base, +2,1 vs GRPO). Le modèle généralise hors distribution vers les benchmarks mathématiques (AIME 2024, AIME 2025, HMMT 2025) sans avoir vu de données mathématiques : pass@1 AIME 2024 passe de 5,3 % à 17,3 %, alors qu'il n'a été entraîné que sur du code.</p>
+<p>Les ablations sont instructives. Le cold-start seul s'effondre à 47,9 % sur LeetCode (−21,5), le RLVR seul à 63,4 % (−6,0). Le raisonnement par ligne plutôt que par token perd 2,2 points, confirmant l'intérêt de la granularité fine. Le retrait de la phase initiale &lt;think&gt; ne coûte que 2,8 points, suggérant que la valeur ajoutée réside bien dans les blocs intra-code. Une variante <em>Padding Thinking</em> (contenu des blocs remplacé par du padding) chute de 1,8 point : une part des gains provient de la simple identification des positions, le reste du contenu raisonné.</p>
+<p>L'analyse d'interprétabilité est le point fort de l'étude. Le modèle déclenche préférentiellement des blocs à haute entropie locale (Figure 2a), et les positions syntaxiques ciblées (assignations, returns, conditions via AST parsing) coïncident avec des décisions algorithmiques chargées. Contre-intuitivement, THINK-ANYWHERE consomme moins de tokens que GRPO ou CoT : la phase &lt;think&gt; initiale se raccourcit substantiellement (215 tokens vs 309 pour GRPO sur HumanEval), et le surcoût des &lt;thinkanywhere&gt; (22,5 tokens en moyenne) ne compense pas cette réduction.</p>
+
+<h2>Discussion et limites</h2>
+<p>Plusieurs zones d'ombre méritent d'être pointées. L'évaluation utilise systématiquement du greedy sampling (température 0), ce qui élimine la variance mais ne renseigne pas sur la stabilité des gains. Aucun test statistique n'est proposé pour départager THINK-ANYWHERE de CodeRL+ (66,8 vs 70,3), et les écarts sur certains benchmarks (HumanEval : 91,5 vs 90,9) sont dans le bruit plausible d'un run unique.</p>
+<p>La variante à token dédié THINK-ANYWHERE* obtient 70,0 %, quasi identique à la version texte (70,3 %). Les auteurs l'attribuent à la quantité limitée de données post-training, mais cela questionne le bénéfice réel de l'ingénierie d'embeddings proposée. Le rationnel théorique (désambiguïsation sémantique du délimiteur) n'est pas validé empiriquement.</p>
+<p>Le reward structurel force la présence d'au moins un bloc &lt;thinkanywhere&gt;, ce qui introduit un biais systématique vers l'invocation. L'ablation <em>No Upfront Thinking</em> (−2,8 points) suggère que la phase initiale reste utile, mais les auteurs ne testent pas la symétrique : forcer zéro &lt;thinkanywhere&gt; tout en conservant le reste du pipeline. La comparaison propre avec un GRPO recevant le même budget de tokens manque également.</p>
+<p>La transférabilité aux benchmarks mathématiques est impressionnante en magnitude (+12 points pass@1 sur AIME 2024), mais repose sur un modèle de base faible (5,3 %). À ces niveaux, les gains absolus de quelques bonnes réponses sur un petit benchmark (30 problèmes pour AIME) sont fragiles.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code source et les données sont annoncés sur GitHub (jiangxxxue/Think-Anywhere). Les hyperparamètres d'entraînement sont documentés (batch, learning rate, nombre d'époques, framework VeRL). Le modèle de base (Qwen2.5-Coder-7B-Instruct) et le dataset d'entraînement (Skywork) sont publics. Les données de cold-start synthétisées par Gemini 2.5 Flash ne sont pas explicitement publiées, mais le protocole de construction est décrit. Le prompt template est fourni intégralement (Table 1). La reproductibilité est correcte pour un preprint, sans atteindre les standards de publications comme les rapports DeepSeek-R1.</p>
+
+<h2>Impact et applications</h2>
+<p>L'idée d'un raisonnement invocable à granularité token plutôt qu'en bloc amont cristallise une tendance déjà visible (Interleaved Thinking de Xie et al. 2025, TwiG pour la génération visuelle). La contribution n'est pas tant conceptuelle que méthodologique : montrer qu'un cold-start SFT + RLVR outcome-based suffit à faire émerger des patterns de raisonnement adaptatif sans supervision explicite sur les positions. C'est un résultat d'ingénierie RL cohérent avec les observations récentes sur l'efficacité des rewards vérifiables.</p>
+<p>Les applications pratiques concernent au premier chef les petits modèles de code : le gain de +13,9 points sur Qwen2.5-Coder-1.5B suggère que THINK-ANYWHERE compense partiellement une capacité paramétrique limitée par une allocation dynamique de calcul. L'économie de tokens par rapport à GRPO ouvre un cas d'usage en inférence à budget contraint.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier se situe à l'intersection de trois lignées. La première, post-training RL pour le code (Skywork-OR1, CodePRM, CodeBoost, CodeRL+), auxquelles THINK-ANYWHERE ajoute une dimension structurelle au-delà de la seule optimisation du reward final. La deuxième, interleaved reasoning (Xie et al. 2025, PlanTain de Liang et al. 2025), dont il se distingue par l'absence de sous-étapes imposées : le modèle décide lui-même quand penser. La troisième, <em>pause tokens</em> et calcul implicite (Goyal et al. 2024, Pfau et al. 2024), avec lesquels il partage l'idée que des tokens non-informatifs peuvent porter du calcul utile — l'ablation <em>Padding Thinking</em> l'illustre explicitement.</p>
+<p>Le rapprochement avec Meta-Chain-of-Thought et les architectures récurrentes de type <em>think-anywhere</em> mentionnées dans la taxonomie des domaines est direct. Ce travail apporte une preuve empirique qu'un simple token delimiter suffit à déclencher une forme d'auto-allocation du calcul, sans changement d'architecture.</p>
+
+<h2>Synthèse des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4/5</td><td>Problème bien posé, limites du upfront thinking clairement identifiées avec exemples concrets.</td></tr>
+<tr><td>Design expérimental</td><td>4/5</td><td>Ablations systématiques (5 variantes), comparaisons avec 9 baselines, analyse d'interprétabilité via entropie et AST.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4/5</td><td>Quatre benchmarks de code, trois benchmarks maths pour la généralisation, trois modèles de base testés. Pas d'intervalles de confiance.</td></tr>
+<tr><td>Qualité des métriques</td><td>3/5</td><td>Pass@1 et pass@k standard, mais greedy sampling unique par défaut. Pas de test de significativité statistique sur les écarts fins.</td></tr>
+<tr><td>Contrôle des biais</td><td>3/5</td><td>Reward structurel force la présence de blocs, ce qui biaise l'évaluation. Comparaison isobudget de tokens absente.</td></tr>
+<tr><td>Reproductibilité</td><td>4/5</td><td>Code annoncé sur GitHub, modèle et dataset publics, hyperparamètres détaillés. Données cold-start synthétiques non explicitement partagées.</td></tr>
+<tr><td>Transparence des limites</td><td>3/5</td><td>L'absence d'impact réel du token dédié est mentionnée, mais les limites sur la variance d'évaluation et les tests statistiques ne sont pas discutées.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4/5</td><td>Mécanisme conceptuellement simple mais efficace, gains consistants, cross-domain non triviaux. Incrémentale par rapport à Interleaved Thinking.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

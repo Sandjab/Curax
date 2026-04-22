@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why Fine-Tuning Encourages Hallucinations and How to Fix It — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Why Fine-Tuning Encourages Hallucinations and How to Fix It</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le fine-tuning supervisé (SFT) est la pratique standard du post-entraînement des LLM, mais il dégrade paradoxalement la justesse factuelle : en apprenant de nouveaux faits, le modèle se met à halluciner sur des connaissances qu'il maîtrisait auparavant. Kaplan et collègues partent d'un constat établi par Gekhman et al. (2024) et Kalai et al. (2025) pour le reformuler dans le cadre de l'apprentissage continu. L'hypothèse centrale : ces hallucinations sont un oubli catastrophique localisé, résultat d'un compromis stabilité–plasticité entre rétention de connaissances pré-entraînées et acquisition de nouveaux faits.</p>
+<p>Trois questions structurent l'article. Peut-on dissocier l'apprentissage de la tâche de l'acquisition factuelle via le gel de modules ? Peut-on préserver la stabilité tout en autorisant la plasticité via l'auto-distillation ? Quel mécanisme précis produit l'oubli : limitation de capacité, clonage comportemental, ou interférence représentationnelle ?</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole s'appuie sur la méthode SLiCK de Gekhman et al. (2024), qui classe chaque fait selon la cohérence des réponses du modèle à travers 20 prompts few-shot. Seuls les faits <em>HighlyKnown</em> et <em>Unknown</em> sont retenus, formant trois sous-ensembles aux rôles disjoints : D<sub>Known</sub> (apprentissage de la tâche), D<sub>Unk</sub> (plasticité factuelle), D<sub>Held</sub> (stabilité factuelle). Le corpus est tiré d'ENTITYQUESTIONS, restreint à quatre relations Wikidata (P17, P36, P407, P495) dont la prévalence <em>HighlyKnown</em> dépasse 30%.</p>
+<p>Trois modèles sont évalués : Qwen 2.5 en 1.5B et 8B, Llama 3.1 8B. Les expériences principales font varier la portion de paramètres mise à jour (attention seule, FFN seul, sous-projections q/k/v/o, gate+up/down) et comparent SFT standard, condition <em>Only Known</em>, et auto-distillation à la Li &amp; Hoiem (2017) avec teacher figé après la première époque (λ = 1, τ = 0.5).</p>
+<p>Pour tester les trois hypothèses mécanistes, les auteurs construisent un corpus synthétique sur la relation P17 où la clé est soit un nom recombiné à partir de tokens de vrais lieux (<em>Bergadena</em> = Bergamo + Pasadena), soit un identifiant UUID aléatoire. L'échelle varie de 10³ à 10⁶ faits. La dérive représentationnelle est mesurée au niveau de la couche 14 par distance cosinus, complétée par cinq autres métriques (neighborhood structure, mean targeted drift, Rank-ρ, neighborhood token ratio, Jensen-Shannon).</p>
+
+<h2>Résultats principaux</h2>
+<p>Le SFT standard reproduit le schéma en deux phases documenté par Gekhman et al. : apprentissage rapide du format QA (D<sub>Known</sub> proche de 100%, D<sub>Held</sub> culmine à 93%), puis chute de 15 points sur D<sub>Held</sub> au fur et à mesure que D<sub>Unk</sub> monte. La condition <em>Only Known</em> (sans faits inconnus) ne produit aucune dégradation, confirmant que l'oubli est causé par l'acquisition factuelle, pas par le fine-tuning en soi.</p>
+<p>Le gel paramétrique révèle une dissociation nette : entraîner uniquement les couches d'attention bloque la plasticité (D<sub>Unk</sub> ≈ 1%) tout en préservant la tâche (D<sub>Known</sub> = 94.6%) et la stabilité (D<sub>Held</sub> = 93.1%). Le FFN seul se comporte comme le SFT complet. Les ablations fines montrent que même une seule projection d'attention (k, v ou o) suffit, et qu'au sein du FFN la voie <em>gate+up</em> porte l'essentiel de la plasticité factuelle.</p>
+<p>L'auto-distillation atteint le meilleur des deux mondes : la chute sur D<sub>Held</sub> tombe à ~3% (contre ~15% pour le SFT standard), alors que D<sub>Unk</sub> converge à un rythme comparable au SFT. L'effet se réplique sur Llama 3.1 8B et Qwen 2.5 7B avec une mitigation d'environ 80% de l'oubli. Sur les faits <em>MaybeKnown</em>, plus fragiles, la mitigation atteint 90%.</p>
+<p>L'investigation mécaniste produit un résultat décisif. Les clés UUID ne déclenchent quasiment aucun oubli (0–4%) même à 10⁶ faits nouveaux, alors que les clés sémantiquement proches provoquent une dégradation croissante avec l'échelle. Cette asymétrie réfute l'hypothèse de capacité (qui prédirait une dégradation uniforme) et le clonage comportemental (qui prédirait un effet indépendant de la forme de surface). La dérive cachée (RD) se stabilise à ~5% pour les UUID et l'auto-distillation, mais monte à ~11% sous SFT sur clés sémantiques — exactement l'excédent attribuable à l'interférence.</p>
+<p>Une ablation supplémentaire sur la distillation top-k (76 tokens sur le vocabulaire) reproduit intégralement l'effet de l'auto-distillation complète, alors que la distillation random-k le perd entièrement. Ce qui compte n'est donc pas la régularisation globale des poids (ℓ² échoue aussi), mais la préservation de la distribution sur la région à forte probabilité où résident les entités candidates concurrentes.</p>
+
+<h2>Discussion et limites</h2>
+<p>La convergence de six métriques de dérive (cachée, structurelle, ciblée, rang, tokens voisins, JSD) vers le même diagnostic renforce l'interprétation structurelle. L'oubli n'est pas une translation globale des représentations mais une réorganisation locale : D<sub>Held</sub> et D<sub>Unk</sub> divergent en MTD, indiquant que le modèle creuse un cluster nouveau qui déplace latéralement les représentations voisines. Ce pattern est cohérent avec la "representation shattering" décrite par Nishi et al. (2025).</p>
+<p>Les limites restent circonscrites. Le corpus expérimental ne couvre que quatre relations Wikidata factuelles isolées, choisies précisément parce qu'elles sont sémantiquement disjointes. Rien ne garantit que le mécanisme s'étende aux connaissances procédurales, compositionnelles, ou aux hallucinations d'inférence. La taille des modèles plafonne à 8B, ce qui laisse ouverte la question du passage à l'échelle où les dynamiques de mémoire changent. Les auteurs ne revendiquent pas que tous les types d'hallucinations relèvent de ce mécanisme — le cadre vise spécifiquement celles induites par le SFT.</p>
+<p>La discussion des limitations est factuelle mais courte : pas de section dédiée, les réserves sont disséminées dans le texte. Le choix de se restreindre à <em>HighlyKnown</em> est justifié (Annexe A) mais exclut de facto la majorité des faits réels, qui relèvent de <em>MaybeKnown</em>.</p>
+
+<h2>Reproductibilité</h2>
+<p>La procédure est décrite avec suffisamment de précision (taux d'apprentissage, époques, hyperparamètres de distillation, procédure de construction des entités synthétiques en Annexe E) pour permettre une reproduction. Le choix des modèles et du dataset est public. En revanche, l'article ne mentionne pas explicitement la mise à disposition du code ou des splits exacts de données, ce qui pénalise la reproductibilité stricte. Les annexes compensent partiellement par des ablations détaillées (freezing fin, hyperparamètres λ et τ, variantes d'objectif de distillation).</p>
+
+<h2>Impact et applications</h2>
+<p>Pour les praticiens, deux recettes opérationnelles émergent. Dans les scénarios où l'acquisition de nouveaux faits est inutile ou indésirable (alignement, adaptation stylistique, fine-tuning sur domaine privé sans apport factuel), geler le FFN suffit à préserver la factualité. Dans les scénarios d'adaptation de domaine avec contenu factuel nouveau, l'auto-distillation devient la méthode de choix : un coût d'entraînement modéré (une passe teacher après la première époque) pour diviser par cinq la dégradation factuelle.</p>
+<p>Le résultat top-k a une conséquence pratique ignorée par les auteurs : il suffit de stocker les 76 tokens de tête du teacher par position, pas toute la distribution. Cette observation pourrait réduire drastiquement l'empreinte mémoire des méthodes de distillation en entraînement continu.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article se situe à la confluence de trois courants. Il prolonge la ligne Gekhman–Kalai sur les hallucinations induites par le SFT en fournissant le mécanisme causal qui manquait. Il importe dans les LLM les outils de l'apprentissage continu (Kirkpatrick, Li &amp; Hoiem, Shenfeld) en traitant la connaissance pré-entraînée comme l'objectif de stabilité. Il dialogue avec l'interprétabilité mécaniste (Geva et al. sur les FFN-as-memory, Dar et al. sur l'attention, Kaplan et al. 2025 sur le lexique interne) en localisant l'interférence dans les voisinages représentationnels.</p>
+<p>La contribution la plus originale reste la démonstration que l'oubli est sélectif et pas global — résultat qui contredit les modèles de capacité de Allen-Zhu &amp; Li (2024) et déplace le problème vers la géométrie des représentations. Les travaux récents de Shenfeld et al. (2026) sur l'auto-distillation comme levier de continual learning reçoivent ici une validation empirique précise dans le cas factuel.</p>
+
+<h2>Synthèse des scores de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Problème majeur, bien cadré, trois hypothèses testables explicites</td></tr>
+<tr><td>Design expérimental</td><td>5</td><td>Dissociation claire tâche/factualité, contrôles <em>Only Known</em> et UUID, ablations fines</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>Trois modèles, 8K exemples par split, scaling jusqu'à 10⁶ ; plafond à 8B de paramètres</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Six métriques de dérive convergentes ; certaines choix (couche 14) appuyés sur littérature</td></tr>
+<tr><td>Contrôle des biais</td><td>5</td><td>Baseline UUID dissocie interférence et acquisition ; contrôle ℓ² élimine l'effet de régularisation générique</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Méthodes détaillées, hyperparamètres reportés ; pas de mention explicite de code ou données publiées</td></tr>
+<tr><td>Transparence sur limites</td><td>3</td><td>Limites évoquées au fil du texte, pas de section dédiée ; restriction à 4 relations peu discutée</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Contribution mécaniste forte ; s'appuie sur une ligne de travaux existants (Gekhman, Shenfeld, Zhu)</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autonomous Evolution of EDA Tools: Multi-Agent Self-Evolved ABC — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Autonomous Evolution of EDA Tools: Multi-Agent Self-Evolved ABC</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>La synthèse logique repose depuis deux décennies sur ABC, plateforme open-source de plus d'1,2 million de lignes de C structurée sur quatre couches d'abstraction et près de 4 000 fichiers sources. Les heuristiques internes (sélection de coupes, seuils de refactoring, fonctions de coût de mapping) ont été fixées manuellement par les développeurs et rarement revisitées malgré leur nature NP-difficile. Yu et Ren postulent que les gains QoR résiduels sont importants mais inaccessibles à l'effort humain, et proposent de confier l'évolution du code à un système multi-agents LLM.</p>
+<p>Le travail s'inscrit dans la lignée d'AlphaEvolve (kernels de quelques centaines de lignes) et de SATLUTION (solveurs SAT, dizaines de milliers de lignes), mais cible un passage d'échelle d'un ordre de grandeur supérieur, avec des objectifs multiples conflictuels (aire, délai, profondeur, correction).</p>
+
+<h2>Méthodologie</h2>
+<p>Trois agents de codage spécialisés (Flow Agent sur <code>src/opt/flowtune</code>, Mapper Agent sur <code>src/map/mapper</code>, Logic Minimization Agent sur <code>src/base/abci/</code>) sont orchestrés par un Planning Agent unique, tous instanciés via Claude Sonnet 4.5 dans l'environnement Cursor entreprise. Le cycle 0 reçoit un profilage de dépôt, un tutoriel Markdown structuré sur les APIs ABC et des résumés de flux de synthèse ; les cycles suivants sont pilotés uniquement par le feedback QoR.</p>
+<p>Chaque itération enchaîne : planification, édition du code dans une sous-arborescence dédiée, compilation (auto-debug en cas d'échec gcc), vérification d'équivalence combinatoire via <code>cec</code>/<code>dsat</code> d'ABC (BMC profondeur 1 pour les circuits séquentiels), puis évaluation QoR distribuée sur 87 nœuds AMD EPYC avec huit flux de synthèse et la bibliothèque ASAP7 7 nm. Un mécanisme de rulebase auto-évolutif relâche ou durcit les règles de modification selon la dynamique des récompenses.</p>
+<p>Les benchmarks couvrent ISCAS'85, ISCAS'89, ITC'99, EPFL, VTR DSP et des blocs arithmétiques. Les métriques combinent le WNS/aire post-buffering (objectifs primaires) et un vecteur structurel intermédiaire (nœuds AIG, profondeur, statistiques de coupes, deltas par passe).</p>
+
+<h2>Résultats principaux</h2>
+<p>L'ablation du Tableau 2 chiffre les contributions par sous-système. Évolution isolée : FlowTune 0,962, AIG Synthesis 0,957, Mapping 0,988 (QoR normalisée, baseline 1,000, plus bas = meilleur). Les combinaisons à deux sous-systèmes gagnent davantage (0,924 pour FlowTune + Orch). L'évolution conjointe des trois atteint 0,917, soit un gain global de 8,3 % par rapport à la base intégrée et 24 % face à l'ABC vanilla (1,21).</p>
+<p>Le WNS s'améliore de 8–9 % en moyenne, avec des pointes à 12–15 % sur certains circuits arithmétiques EPFL. Le nombre de nœuds AIG baisse de 3–8 % sur les designs arithmétiques, la profondeur post-mapping de 4–6 %. Côté coût : 2 400 $ de tokens pour l'ensemble de l'étude, dont 79 % consommés en pré-évolution (profilage), 2–3 h par itération complète, et un taux de validité sémantique supérieur à 90 % grâce au filtrage CEC.</p>
+<p>Observation qualitative intéressante : les agents convergent spontanément vers le style de codage natif ABC (namespaces, macros <code>Abc_Print</code>, conventions de <code>module.make</code>) et réussissent mieux à raffiner des heuristiques existantes qu'à introduire des paradigmes algorithmiques entièrement nouveaux.</p>
+
+<h2>Discussion et limites</h2>
+<p>La faiblesse la plus sérieuse est l'absence de variance inter-exécutions. Aucune répétition multi-seed n'est rapportée : les 8,3 % de gain proviennent d'une trajectoire unique d'évolution, sur un pipeline stochastique (génération LLM). Rien ne permet de séparer le signal du bruit, ni d'affirmer que la reproduction donnerait des gains comparables.</p>
+<p>Le protocole ne compare pas à des baselines LLM plus simples : évolution mono-agent, évolution sans rulebase auto-évolutive, ou recherche aléatoire guidée par CEC+QoR. L'attribution des gains au mécanisme multi-agents vs au simple accès massif aux benchmarks reste spéculative. L'ablation Table 2 compare seulement des configurations vanilla/évoluées par sous-système, sans isoler les contributions architecturales du framework lui-même.</p>
+<p>L'apport humain est sous-estimé dans la narration « auto-évolution ». Le cycle 0 injecte un tutoriel Markdown rédigé par les auteurs, une sélection curée de dépôts externes (FlowTune, SLAP, Orchestration) et des règles de développement interdites. Ce scaffolding conditionne fortement l'espace exploré ; les auteurs le reconnaissent implicitement en concluant que les agents échouent à produire des constructions « entièrement nouvelles ».</p>
+<p>La vérification par CEC couvre la correction combinatoire mais ne garantit ni l'absence de régressions de timing sur des flots absents des huit évalués, ni la stabilité sur des circuits industriels hors suite académique. Le BMC à profondeur 1 sur les circuits séquentiels est une hypothèse forte que le papier ne justifie pas formellement.</p>
+
+<h2>Reproductibilité</h2>
+<p>Aucun lien vers un dépôt public, une release binaire ou des artefacts DAC n'est mentionné. Le dépôt ABC « customisé » (850 K → 1,2 M lignes) n'est pas distribué. Les prompts, tutoriels Markdown du cycle 0, règles de développement et logs d'évolution ne sont pas joints. L'infrastructure (Cursor entreprise, 87 nœuds EPYC) est hors de portée de la majorité des laboratoires. Un tiers ne peut pas reproduire les 8,3 % annoncés ni même relancer une évolution comparable sans effort d'ingénierie considérable.</p>
+
+<h2>Impact et applications</h2>
+<p>Premier travail qui démontre une évolution par agents LLM à l'échelle du million de lignes sur un outil EDA de référence. Le résultat pragmatique est modeste en absolu (8,3 %) mais significatif dans un domaine où les heuristiques sont figées depuis des années et où chaque pour cent se gagne au prix de mois d'ingénierie humaine.</p>
+<p>Le schéma généralise potentiellement à d'autres outils EDA (placement, routage, timing) et à toute codebase scientifique legacy où la correction peut être vérifiée formellement ou empiriquement. Le coût de 2 400 $ par campagne complète rend l'approche accessible à des laboratoires académiques, ce qui est notable.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier s'inscrit dans la trajectoire AlphaEvolve (Novikov et al., 2025) → SATLUTION (Yu et al., 2025) → self-evolving ABC, avec une montée en échelle d'un à deux ordres de grandeur à chaque étape. Il exploite la même idée centrale de correctness-preserving evolution que SATLUTION (DRAT pour SAT, CEC pour ABC), et hérite du scaffolding de profilage-par-agent. EvoPlace (Yao et al., 2026) explore une direction voisine sur le placement global. La contribution propre tient à la coordination multi-agents sous objectifs conflictuels et au rulebase auto-évolutif — deux briques qui gagneraient à être isolées dans une ablation dédiée, absente du papier.</p>
+
+<h3>Synthèse des scores de robustesse</h3>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Claire, originale, motivée par un verrou réel (stagnation QoR d'ABC).</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Protocole cohérent, ablation par sous-système ; manque baselines LLM alternatives et isolation du rulebase.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Multi-suites de benchmarks solides, mais une seule trajectoire d'évolution, pas de réplications multi-seeds.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>WNS post-STA, aire post-buffering, ASAP7 7 nm, métriques AIG intermédiaires — standards du domaine.</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Pas de variance inter-runs, pas de comparaison à une évolution naïve, cherry-picking des 12–15 % possible.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Aucun code public, pas de prompts ni de logs d'évolution, infrastructure propriétaire.</td></tr>
+<tr><td>Transparence des limites</td><td>3</td><td>Reconnaît la faiblesse des agents sur les paradigmes nouveaux et la dépendance aux priors humains ; silencieux sur la variance.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier passage à l'échelle du million de lignes sur un outil EDA canonique, gains QoR concrets.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

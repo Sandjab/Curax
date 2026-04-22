@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill-RAG: Failure-State-Aware Retrieval Augmentation via Hidden-State Probing and Skill Routing — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Skill-RAG: Failure-State-Aware Retrieval Augmentation via Hidden-State Probing and Skill Routing</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les systèmes RAG adaptatifs existants (FLARE, DRAGIN, Self-RAG, Adaptive-RAG, Probing-RAG) traitent l'échec de récupération comme un signal pour relancer une requête, sans diagnostiquer la cause structurelle. Wei et collègues partent d'un constat empirique : une part significative des échecs persistants ne provient pas de l'absence d'évidence pertinente mais d'un <strong>désalignement</strong> entre la formulation de la requête et l'espace documentaire. L'objectif est de substituer à la boucle « re-récupérer » une boucle « diagnostiquer puis corriger » en mobilisant un vocabulaire fini de compétences correctives.</p>
+<p>Le cadrage est pertinent et prolonge deux lignes de travail : le gating par états cachés (Probing-RAG, 2025) et la réécriture corrective (CRAG, 2024). La contribution revendiquée est l'unification probe + routing en un pipeline sans appels LLM supplémentaires pour la décision.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline Skill-RAG articule trois blocs. Un probe d'états cachés, entraîné comme MLP à une couche cachée par couche du modèle puis agrégé par moyenne des probabilités, décide si la génération actuelle est suffisante. Les données d'entraînement du probe proviennent de HotpotQA, NQ et TriviaQA (3000 exemples) avec double passe (avec et sans récupération) et étiquetage binaire par comparaison à la réponse gold.</p>
+<p>Quand le probe signale un échec, un routeur par prompt reçoit la question, le raisonnement échoué et l'évidence courante, puis sélectionne parmi quatre skills : réécriture de requête, décomposition en sous-questions, focalisation sur un slot d'évidence manquant, ou sortie gracieuse. La boucle se termine sur sélection de <em>exit</em>, probe satisfait, ou nombre maximal de tours atteint.</p>
+<p>L'évaluation porte sur cinq benchmarks QA (HotpotQA, NQ, TriviaQA en in-domain ; MuSiQue et 2WikiMultiHopQA en OOD), 500 exemples par jeu OOD, BM25 comme récupérateur, prompting 4-shot, backbone Gemma2-9B unique. Les métriques sont Exact Match et Accuracy.</p>
+<p>Le choix de BM25 plutôt qu'un récupérateur dense est discutable : il amplifie mécaniquement les gains de la réécriture de requête, qui est précisément conçue pour réaligner la surface lexicale. Un récupérateur dense aurait constitué un test plus sévère de la valeur ajoutée du skill routing.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur les benchmarks in-domain, Skill-RAG égale ou dépasse Probing-RAG en ACC (46,1 vs 44,7 sur HotpotQA ; 49,7 vs 48,5 sur NQ ; 65,9 égalité sur TriviaQA) mais reste inférieur à DRAGIN en EM sur HotpotQA (24,2 vs 35,6). Les gains les plus marqués apparaissent en OOD : +6,1 points ACC sur MuSiQue et +13,6 points sur 2WikiMultiHopQA par rapport à Probing-RAG.</p>
+<p>L'analyse de l'espace de représentation par t-SNE (figure 2) est le résultat le plus original. Les auteurs montrent deux clusters géométriquement séparables dans l'état initial : un cluster dense d'échecs par désalignement et un cluster dispersé d'échecs irréductibles. L'application progressive des skills contracte le premier cluster, tandis qu'une expansion du vocabulaire à plus de six skills auto-générés par LLM dissout toute structure. Cet argument parcimonie-par-géométrie est élégant mais repose sur une visualisation t-SNE, notoirement sensible aux hyperparamètres et peu quantitative.</p>
+<p>L'étude de cas (My Hero Academia) illustre le mécanisme de <em>query drift</em> que Probing-RAG subit par concaténation naïve et que Skill-RAG évite par diagnostic <code>query_misaligned</code>. Un cas unique ne suffit pas à établir la fréquence du phénomène.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le gain OOD est réel mais trois confondants ne sont pas contrôlés. <strong>Premièrement</strong>, aucune ablation n'isole la contribution individuelle des quatre skills : on ignore si la réécriture fait l'essentiel du travail et si la décomposition ou la focalisation sont utilisées. <strong>Deuxièmement</strong>, le routeur par prompt ajoute un appel LLM par tour d'échec, ce qui contredit partiellement la revendication « no additional LLM calls for either decision » de l'introduction — le probe évite un LLM call, pas le routeur. <strong>Troisièmement</strong>, la comparaison avec DRAGIN reste ambiguë : DRAGIN gagne en EM sur deux benchmarks, Skill-RAG en ACC, et les auteurs évacuent cette tension sans l'expliquer.</p>
+<p>Les auteurs listent explicitement leurs limitations : dépendance à la capacité d'instruction du LLM pour le routage, vocabulaire de skills dérivé d'un ensemble fixe de benchmarks QA, validation sur une seule famille de modèles. Cette transparence est appréciable mais ne compense pas l'absence d'expériences multi-modèles dans un article présenté comme établissant une taxonomie transférable.</p>
+
+<h2>Reproductibilité</h2>
+<p>Aucun lien vers du code, des données d'entraînement du probe, ou des poids n'est fourni dans le texte. Les prompts exacts des quatre skills ne sont pas donnés, ce qui est préoccupant pour une méthode dont la performance dépend du prompt engineering. Les hyperparamètres du probe (taille de la couche cachée, couches agrégées, seuil de décision) ne sont pas spécifiés. Un chercheur tiers ne peut pas répliquer les résultats à partir du seul article.</p>
+
+<h2>Impact et applications</h2>
+<p>La contribution conceptuelle — traiter les échecs RAG comme <em>typés</em> plutôt que <em>monolithiques</em> — est légitime et s'inscrit dans une tendance plus large : les systèmes agentiques de production (Claude Code, systèmes de skill-routing) convergent vers des vocabulaires de compétences discrètes sélectionnées dynamiquement. L'idée de probing des états cachés comme <em>gate</em> d'entrée dans une routine corrective est transposable au-delà du RAG, par exemple pour la détection d'état d'échec dans les agents de code.</p>
+<p>L'impact pratique immédiat reste limité par l'absence de validation sur des récupérateurs denses modernes et sur des modèles plus récents. Le résultat OOD suggère néanmoins une propriété intéressante : le découplage diagnostic/exécution pourrait améliorer la généralisation hors distribution, hypothèse qui mériterait d'être testée au-delà du RAG.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Skill-RAG se positionne à l'intersection de Probing-RAG (gating par états cachés) et de CRAG (correction par réécriture). Sa nouveauté tient à l'unification : Probing-RAG ne diagnostique pas, CRAG ne gate pas par états cachés. Le parallèle avec Adaptive-RAG est instructif — ce dernier route par complexité <em>avant</em> récupération, Skill-RAG route par état d'échec <em>après</em>. Les deux approches sont complémentaires et une combinaison serait un prolongement naturel.</p>
+<p>Le cadre s'inscrit dans le mouvement plus large du <em>skill-based agentic retrieval</em>, où les compétences forment un vocabulaire fini sur lequel un routeur apprend à sélectionner. La démonstration que six skills auto-générés dégradent la structure géométrique est un argument empirique en faveur de la parcimonie, mais l'expérience reste anecdotique — une seule visualisation t-SNE ne fait pas une loi d'échelle.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Hypothèse claire et bien motivée par l'observation d'échecs persistants dans les RAG adaptatifs.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Comparaison à six baselines sur cinq benchmarks, mais absence d'ablation par skill et de récupérateur dense.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>500 exemples par jeu OOD, 3000 pour l'entraînement du probe — standard mais limite pour conclusions fines.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>EM et ACC standards ; ACC non précisément définie, absence de métriques de calibration du probe.</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Un seul backbone (Gemma2-9B), un seul récupérateur (BM25), pas de variance inter-seeds rapportée.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Aucun code public annoncé, prompts et hyperparamètres du probe non spécifiés.</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Section Limitations explicite et honnête sur les trois faiblesses principales.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Cadrage conceptuel original (échecs typés vs monolithiques), analyse géométrique du failure space inédite.</td></tr>
+</tbody>
+</table>
+
+<h3>Appréciation globale</h3>
+<p>Article de format court (workshop ou short paper) au cadrage conceptuel solide et aux résultats OOD réellement intéressants. Les faiblesses principales tiennent à l'étroitesse du banc d'essai (un modèle, un récupérateur), à l'absence d'ablation par skill, et à une reproductibilité faible. La contribution méritera d'être consolidée par une version étendue avec plusieurs backbones, un récupérateur dense, et une étude quantitative du vocabulaire de skills au-delà de la visualisation t-SNE.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

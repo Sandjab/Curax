@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why Fine-Tuning Encourages Hallucinations and How to Fix It — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Why Fine-Tuning Encourages Hallucinations and How to Fix It</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Un modèle de langage connaît la capitale de la France. Vous le fine-tunez sur un jeu de données médicales spécialisé. Quelques heures plus tard, interrogé sur Paris, il répond parfois « Lyon ». Ce phénomène porte un nom dans la littérature : les hallucinations induites par le fine-tuning supervisé. Il touche tous les modèles, toutes les tailles, et il était jusqu'ici considéré comme une rançon inévitable de l'adaptation d'un LLM à un domaine.</p>
+
+<p>Un papier signé par Guy Kaplan et ses collègues (universités hébraïque de Jérusalem, Illinois Urbana-Champaign, Technion, USC) propose une relecture de ce problème qui change la donne. Les auteurs reformulent ces hallucinations comme un cas particulier d'<strong>oubli catastrophique</strong>, un phénomène bien documenté dans la littérature sur l'apprentissage continu. Surtout, ils montrent que des techniques empruntées à ce domaine réduisent le taux d'erreurs factuelles de 15 % à 3 % sans sacrifier l'apprentissage de nouvelles connaissances.</p>
+
+<p>Derrière ce résultat, une découverte mécanistique plus profonde : ces hallucinations ne viennent pas d'une saturation de capacité ni d'un simple biais comportemental. Elles sont causées par une interférence entre représentations sémantiquement proches. Apprendre à un modèle qu'une ville fictive nommée « Bergadena » est en Grèce suffit à lui faire confondre la localisation de Milan. Apprendre que l'identifiant aléatoire « Loc_fcfb42 » est en Grèce ne déclenche aucun effet, même avec un million de faits similaires.</p>
+
+<h2>Le problème : pourquoi fine-tuner fait désapprendre</h2>
+
+<p>Le fine-tuning supervisé (SFT) est la brique standard de tout pipeline LLM industriel. On part d'un modèle de base, on lui montre des milliers d'exemples question-réponse dans un format précis, et il apprend à répondre dans ce format tout en absorbant les connaissances contenues dans ces exemples. Jusque-là, tout va bien.</p>
+
+<p>Le problème apparaît quand les exemples d'entraînement contiennent des faits que le modèle ne connaissait pas avant. Des travaux antérieurs (Gekhman et al., 2024) avaient montré que ces faits inconnus sont mal absorbés : le modèle met du temps à les apprendre, et pendant ce temps, il <em>désapprend</em> des faits qu'il maîtrisait auparavant. Son score sur des questions de culture générale chute, ses réponses deviennent moins fiables, et il se met à inventer.</p>
+
+<p>Les équipes produits qui fine-tunent des modèles pour des usages métier connaissent bien ce symptôme sans toujours savoir le nommer. Vous ajoutez 10 000 exemples spécifiques à votre domaine pharmaceutique ou juridique, vos métriques internes s'améliorent, mais les benchmarks généralistes se dégradent. Jusqu'ici, le trade-off semblait structurel.</p>
+
+<p>Kaplan et ses collègues posent la question autrement : et si ce trade-off n'était pas une fatalité, mais un effet de bord réparable ? La littérature sur l'apprentissage continu (continual learning) étudie depuis trente ans des réseaux neuronaux qui doivent apprendre des tâches en séquence sans oublier les précédentes. Le parallèle tient. L'oubli catastrophique sur des tâches devient, pour un LLM, l'oubli factuel sur des connaissances.</p>
+
+<h2>La méthode : séparer ce qui s'apprend de ce qui se préserve</h2>
+
+<p>Pour isoler le phénomène, les chercheurs s'appuient sur un protocole nommé SLiCK qui permet de classer chaque fait selon ce que le modèle en sait déjà. Quatre catégories, de HighlyKnown (le modèle répond correctement à toutes les formulations du prompt) à Unknown (il ne répond jamais juste). Cette granularité change tout : elle permet de construire trois ensembles distincts.</p>
+
+<ul>
+<li><strong>D_Known</strong> : des faits que le modèle maîtrise déjà. Ils servent uniquement à lui apprendre le format question-réponse, sans introduire de nouvelle information.</li>
+<li><strong>D_Unk</strong> : des faits totalement inconnus. Ils mesurent la capacité du modèle à absorber du neuf (plasticité factuelle).</li>
+<li><strong>D_Held</strong> : un ensemble mis de côté, jamais vu pendant le fine-tuning, composé de faits connus. C'est ici qu'on observe l'oubli (stabilité factuelle).</li>
+</ul>
+
+<p>Cette tripartition est le vrai apport méthodologique du papier. Elle sépare ce qui relève de l'apprentissage du format, ce qui relève de l'acquisition de nouvelles connaissances, et ce qui relève de la préservation de l'existant. Trois axes qu'on mesure indépendamment au cours de l'entraînement.</p>
+
+<p>Les auteurs appliquent ensuite deux stratégies issues de l'apprentissage continu.</p>
+
+<h3>Première stratégie : geler certains paramètres</h3>
+
+<p>Les couches feed-forward (FFN) d'un transformer sont connues pour stocker l'essentiel de la connaissance factuelle. Les couches d'attention, elles, sont davantage liées à la manipulation contextuelle. Si l'on gèle les FFN et qu'on ne met à jour que l'attention, le modèle peut apprendre un format de tâche sans toucher à ses connaissances stockées.</p>
+
+<p>Cette approche convient aux cas où l'on veut adapter un modèle à un style de réponse, un ton, une structure, sans lui injecter de nouvelles connaissances. Le fine-tuning d'alignement, par exemple, ou le déploiement sur un domaine privé où les faits ne doivent pas bouger.</p>
+
+<h3>Seconde stratégie : l'auto-distillation</h3>
+
+<p>Quand on <em>veut</em> que le modèle apprenne du neuf, geler ne suffit plus. Les auteurs adoptent alors l'auto-distillation, une technique où le modèle pendant son fine-tuning est contraint de rester proche de sa propre distribution de sortie initiale.</p>
+
+<p>L'analogie : imaginez un étudiant qui révise un nouveau chapitre tout en s'obligeant à revoir chaque soir ses anciens cours. À chaque mise à jour de ses neurones sur le nouveau contenu, une seconde voix lui rappelle ce qu'il pensait avant. Concrètement, le modèle reçoit deux signaux d'entraînement : la tâche nouvelle (next token prediction sur les nouvelles données) et un terme de régularisation qui pénalise l'écart avec les probabilités produites par une copie figée de lui-même, prise juste avant le fine-tuning.</p>
+
+<p>Le professeur, ici, n'est pas un modèle plus grand comme dans la distillation classique. C'est le modèle lui-même, photographié avant l'entraînement. D'où le nom.</p>
+
+<h2>Résultats clés : de 15 % à 3 % d'oubli</h2>
+
+<p>Sur un benchmark standard (EntityQuestions, dérivé de triplets Wikipedia), avec des modèles Qwen 2.5 et Llama 3.1 de 1,5 à 8 milliards de paramètres, les chiffres sont nets.</p>
+
+<p>Le fine-tuning supervisé classique dégrade la précision sur les faits connus de <strong>15 points</strong>. L'auto-distillation ramène cette dégradation à <strong>3 points</strong>. Autrement formulé : 80 % de l'oubli est évité. La vitesse d'acquisition des nouveaux faits, elle, reste comparable. Pas de ralentissement, pas de compromis visible sur la plasticité.</p>
+
+<p>Le gel sélectif des paramètres produit un résultat similaire quand on n'a pas besoin d'apprendre de nouveaux faits : la précision sur les faits préexistants reste à 93 %, contre 78 % en SFT standard.</p>
+
+<p>Mais la partie la plus éclairante du papier est ailleurs. Les auteurs veulent comprendre <em>pourquoi</em> l'oubli se produit. Trois hypothèses concurrentes :</p>
+
+<ol>
+<li><strong>Saturation de capacité</strong> : le modèle a une taille finie, chaque nouveau fait en chasse un ancien.</li>
+<li><strong>Clonage comportemental</strong> : le SFT apprend au modèle à répondre même quand il ne sait pas, ce qui pollue ses réponses sur des sujets connus.</li>
+<li><strong>Interférence structurelle</strong> : les nouveaux faits corrompent les anciens quand ils partagent des représentations internes similaires.</li>
+</ol>
+
+<p>Pour départager, les chercheurs construisent deux types de faits synthétiques. Le premier type, qu'ils appellent clés sémantiques, consiste à fabriquer des noms de lieux fictifs en recombinant des morceaux de vrais noms : Bergamo + Pasadena donne Bergadena. Ces noms ressemblent à de vrais lieux, ils activent des neurones proches. Le second type, les clés UUID, sont des identifiants aléatoires du type « Loc_fcfb42 ». Aucune ressemblance avec quoi que ce soit de connu.</p>
+
+<p>Ils entraînent ensuite le modèle sur ces faits à différentes échelles, de 1 000 à 1 000 000 d'exemples. Les résultats coupent court à deux hypothèses.</p>
+
+<blockquote>
+<p>Avec des clés sémantiques, l'oubli grimpe de façon spectaculaire à mesure qu'on augmente le nombre de faits. Avec des clés UUID, l'oubli reste à près de zéro, même à un million de nouveaux faits.</p>
+</blockquote>
+
+<p>Une hypothèse de capacité prédirait une dégradation uniforme quel que soit le type de clé : la taille du modèle est la même, le nombre d'informations stockées est le même. Une hypothèse comportementale prédirait aussi une dégradation comparable : dans les deux cas, le modèle apprend à répondre à des questions dont il ne connaissait pas la réponse. Seule l'hypothèse de l'interférence structurelle colle aux observations.</p>
+
+<p>Les chercheurs confirment ensuite ce résultat en mesurant le « drift » des représentations internes des entités mises de côté. Sous SFT classique avec clés sémantiques, les représentations dérivent de 11 %. Sous auto-distillation ou sous SFT avec clés UUID, le drift reste à 5 %, un niveau correspondant uniquement à l'apprentissage du format de tâche. L'auto-distillation bloque précisément la composante nocive du drift, celle qui déplace les représentations voisines.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Ce travail change la conversation pour quiconque déploie des LLM en production.</p>
+
+<p>Le premier enseignement concerne les équipes qui font du fine-tuning d'alignement ou qui adaptent un modèle à un style (voix de marque, format de réponse, registre). Elles n'ont généralement pas besoin d'injecter de nouveaux faits. Le gel sélectif des couches feed-forward devient une recette simple et efficace : on garde les connaissances générales du modèle intactes tout en lui apprenant un comportement cible. Aucune complexité algorithmique supplémentaire, juste un flag dans le code d'entraînement.</p>
+
+<p>Le second enseignement vise les équipes qui font de l'adaptation de domaine : ajouter à un modèle la connaissance de produits internes, de documentation technique, de jurisprudence spécialisée. Pour elles, l'auto-distillation devient une option par défaut. Le surcoût est modeste (il faut conserver une copie du modèle initial en mémoire pour calculer la régularisation KL), mais le gain sur la stabilité factuelle est substantiel. Les hyperparamètres recommandés sont spécifiés : température 0,5, poids de distillation λ = 1, teacher figé après une époque sur les faits connus.</p>
+
+<p>Le troisième enseignement est plus stratégique. Il concerne la conception même des jeux de fine-tuning. Puisque l'oubli est proportionnel à la ressemblance sémantique entre nouveaux faits et faits existants, on peut réduire l'interférence en choisissant soigneusement les entités nouvelles. Un produit nommé « NeoProduit-X47 » interférera moins avec la connaissance générale qu'un produit nommé « Pantheon » ou « Apollo ». Les équipes data qui construisent des jeux d'entraînement ont là un levier concret.</p>
+
+<p>Enfin, ce cadre suggère une relecture utile des évaluations. Beaucoup d'équipes mesurent la qualité d'un fine-tuning uniquement sur leur tâche cible. Le papier rappelle qu'il faut mesurer aussi ce qui a été perdu, et propose une métrique propre (la précision sur un ensemble mis de côté de faits connus) qui complète les benchmarks standards.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent ouvertes. La première concerne la généralisation à d'autres régimes d'entraînement. Le papier se concentre sur le SFT classique. Qu'en est-il du RLHF, du DPO, de l'entraînement par renforcement ? Un article concurrent (Shenfeld et al., 2025) suggère que le RL en ligne oublie moins que le SFT, précisément parce qu'il introduit moins de drift distributionnel. L'auto-distillation pourrait combiner ses bénéfices aux siens.</p>
+
+<p>La seconde question porte sur les mécanismes internes. Le papier identifie l'interférence comme cause proximale, mais la géométrie exacte des représentations partagées reste à caractériser. Quels neurones sont impliqués ? Les travaux sur le « representation shattering » (Nishi et al., 2025) suggèrent que l'édition de connaissance cause une réorganisation locale du voisinage représentationnel. Croiser ces deux lignes de recherche pourrait produire des outils de diagnostic précis : identifier quels faits d'un corpus sont susceptibles de provoquer de l'interférence avant même de lancer l'entraînement.</p>
+
+<p>Troisième piste : la quantification. Les modèles déployés en production sont souvent quantifiés (int8, int4). Est-ce que la compression amplifie ou atténue l'interférence structurelle ? La réponse n'est pas évidente et conditionne les pratiques d'un pan entier de l'industrie.</p>
+
+<p>Quatrième piste, plus spéculative : les implications pour l'apprentissage continu en ligne. Si l'on savait prédire, avant d'intégrer un nouveau fait, à quel point il va perturber les représentations voisines, on pourrait concevoir des systèmes qui acceptent ou rejettent des mises à jour en fonction de leur coût en stabilité. Une forme de garde-fou cognitif pour modèles en production.</p>
+
+<p>La contribution la plus durable de ce papier n'est peut-être pas la méthode elle-même, qui restera sans doute une technique parmi d'autres. C'est le recadrage conceptuel. Traiter les hallucinations induites par le fine-tuning comme un problème d'apprentissage continu, et non comme une pathologie propre aux LLM, importe trente ans de littérature dans un champ qui avait tendance à se sentir orphelin. Le gain en outillage intellectuel est considérable, et on peut parier que les prochaines avancées viendront de ce pont retrouvé entre deux communautés qui se parlaient peu.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
