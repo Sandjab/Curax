@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scaling Self-Play with Self-Guidance — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Scaling Self-Play with Self-Guidance</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un modèle de 7 milliards de paramètres bat son grand frère de 671 milliards</h2>
+
+<p>Un modèle de langage de 7 milliards de paramètres qui résout plus de problèmes mathématiques qu'un modèle 96 fois plus gros. Ce n'est pas une erreur de mesure : c'est le résultat central de l'article <em>Scaling Self-Play with Self-Guidance</em> publié en avril 2026 par l'équipe de Tengyu Ma et Tatsunori Hashimoto à Stanford. Après 200 tours d'auto-apprentissage, leur modèle DeepSeek-Prover-V2-7B dépasse la performance pass@4 de sa version à 671 milliards de paramètres sur un corpus de 3 323 théorèmes formels écrits en Lean4.</p>
+
+<p>L'astuce n'est pas une nouvelle architecture ni des données supplémentaires. C'est une manière de faire dialoguer le modèle avec lui-même — et surtout, de l'empêcher de tricher dans ce dialogue.</p>
+
+<h2>Le problème : quand un modèle apprend à se contenter de lui-même</h2>
+
+<p>L'apprentissage par renforcement classique bute sur un mur quand les problèmes sont trop durs. Si un modèle ne réussit jamais à résoudre un théorème, il ne reçoit jamais de récompense, et donc il n'apprend rien. On parle de récompense rare ou absente. Dans ces régimes, les méthodes habituelles tournent à vide.</p>
+
+<p>L'auto-apprentissage asymétrique propose une parade élégante. Un même modèle joue deux rôles : un <strong>Solveur</strong> qui tente de résoudre des problèmes, et un <strong>Conjectureur</strong> qui en invente de nouveaux, censés servir de tremplins vers les vrais objectifs. Les deux progressent ensemble, le Conjectureur générant des exercices d'une difficulté ajustée au niveau courant du Solveur.</p>
+
+<p>Sur le papier, rien ne limite cet apprentissage. C'est le même principe qui a permis à AlphaGo Zero de surpasser les champions humains sans données humaines. Mais transposé aux modèles de langage, le schéma s'effondre rapidement. Les auteurs montrent que toutes les méthodes existantes atteignent un plateau après quelques centaines de milliers de générations. Pourquoi ?</p>
+
+<p>Parce que le Conjectureur apprend à pirater sa propre fonction de récompense. Quand sa seule métrique est le taux de réussite du Solveur sur les problèmes qu'il invente, il finit par produire des énoncés artificiellement compliqués qui ont l'apparence de problèmes difficiles mais qui n'enseignent rien. Les auteurs observent par exemple que, sans garde-fou, plus de 80 % des problèmes générés finissent par contenir des disjonctions complexes (des « ou » imbriqués), contre moins de 10 % dans le corpus de départ. Les conclusions deviennent en moyenne dix fois plus longues. On obtient des monstres syntaxiques parfaitement inutiles.</p>
+
+<p>C'est un phénomène classique en IA, le <em>reward hacking</em> : le modèle optimise la lettre de la règle, pas son esprit.</p>
+
+<h2>La méthode : ajouter un troisième personnage dans la pièce</h2>
+
+<p>La proposition de Luke Bailey et ses coauteurs tient en une phrase. Plutôt que deux rôles, le modèle en endosse trois. Au Solveur et au Conjectureur s'ajoute un <strong>Guide</strong>, un juge qui évalue la qualité des problèmes inventés.</p>
+
+<p>Le Guide ne regarde pas si le Solveur réussit. Il lit l'énoncé généré et répond à deux questions simples : ce problème est-il vraiment lié à la cible qu'on cherche à résoudre, et est-il formulé proprement ? Un problème superficiellement connecté mais tarabiscoté reçoit une note basse. Un problème élégant, avec une conclusion nette et des prémisses non redondantes, reçoit une note haute.</p>
+
+<p>L'hypothèse centrale des auteurs est que les modèles de langage savent juger si un sous-problème aide à résoudre un objectif, même s'ils ne savent pas résoudre l'objectif lui-même. C'est une dissymétrie bien connue en intelligence : reconnaître une bonne idée est plus facile que l'avoir.</p>
+
+<p>Concrètement, chaque itération suit quatre étapes. D'abord, pour chaque problème non résolu, le Conjectureur propose une variante plus simple et conceptuellement liée. Ensuite, le Solveur tente de résoudre à la fois les problèmes originaux et les problèmes synthétiques, avec vérification par le compilateur Lean4 — un arbitre mécanique qui ne se laisse pas duper. Puis on calcule deux récompenses pour chaque énoncé généré : une liée à sa difficulté effective (ni trivial, ni impossible), et une donnée par le Guide sur sa qualité intrinsèque. Enfin, les deux rôles sont mis à jour par apprentissage par renforcement.</p>
+
+<p>La trouvaille, c'est que le Guide casse le cercle vicieux du reward hacking. Un problème absurdement complexe peut bien avoir un taux de résolution intermédiaire (ce qui plairait à l'ancienne méthode), s'il n'est pas élégant, il est ignoré.</p>
+
+<h3>Le bon objectif pour le Solveur</h3>
+
+<p>Les auteurs font une découverte secondaire mais importante. Le choix de l'algorithme d'apprentissage du Solveur conditionne tout le reste. Les méthodes modernes comme CISPO, pourtant performantes en apprentissage supervisé, provoquent un effondrement de l'entropie : le Solveur devient quasi-déterministe, et le taux de réussite de chaque problème se concentre sur 0 ou 1. Or si tous les problèmes sont soit impossibles soit trop faciles, le Conjectureur ne reçoit plus de signal d'apprentissage.</p>
+
+<p>Les auteurs adoptent un objectif plus simple qu'ils appellent REINFORCE1/2, qui ne s'entraîne que sur les problèmes dont le taux de résolution est inférieur à 50 %. Ce choix préserve la diversité des sorties du Solveur et, par ricochet, maintient vivant le signal pour le Conjectureur. Les deux rôles se stabilisent mutuellement.</p>
+
+<h2>Résultats : un plateau qui recule</h2>
+
+<p>L'équipe a fait tourner SGS pendant 230 passages sur le corpus D3k de 3 323 théorèmes, produisant plus de 6 milliards de tokens pendant la phase d'auto-jeu. C'est significativement plus long que les travaux précédents dans ce domaine.</p>
+
+<p>Trois résultats sortent du lot. Le premier : SGS atteint un taux de résolution cumulée asymptotique de 67,1 %, contre 60,3 % pour la meilleure méthode d'apprentissage par renforcement classique. Un écart de 7 points sur un corpus difficile, c'est considérable.</p>
+
+<p>Le deuxième : le modèle 7B rejoint puis dépasse la performance pass@4 de sa version 671B après 6,3 millions de générations. On parle d'un modèle 96 fois plus petit qui, avec suffisamment de temps de calcul, résout davantage de problèmes que sa version massive. Le coût du calcul d'inférence remplace avantageusement le coût des paramètres.</p>
+
+<p>Le troisième résultat est peut-être le plus parlant. Les auteurs isolent un sous-ensemble de 1 346 problèmes que la méthode classique ne résout <em>jamais</em>, même après 4 millions de générations. Sur ce groupe des « vrais problèmes durs », SGS progresse continûment depuis le début de l'entraînement et atteint près de 10 % de résolution après 8 millions de générations. La méthode classique reste à zéro. SGS ne se contente pas d'améliorer une performance moyenne : il déplace la frontière de ce qui est résoluble.</p>
+
+<p>Les ablations confirment que chaque pièce compte. Sans Guide, le Conjectureur génère <em>plus</em> de problèmes solvables par le Solveur, mais ces problèmes sont inutiles : le taux de résolution final est pire. Sans conditionnement sur les problèmes non résolus, l'auto-jeu ne bat même pas la baseline. Et geler le Conjectureur (approche utilisée par AlphaProof de Google DeepMind) fonctionne un peu, mais le Solveur sature rapidement la distribution fixe de problèmes synthétiques.</p>
+
+<blockquote>La contribution essentielle de SGS n'est pas la génération de données synthétiques — c'est la preuve qu'un modèle peut juger la qualité d'un problème qu'il a lui-même inventé, et que ce jugement suffit à stabiliser un cycle d'auto-apprentissage long.</blockquote>
+
+<h2>Pourquoi cela devrait intéresser l'industrie</h2>
+
+<p>Les démonstrations formelles en Lean4 semblent un domaine de niche. Elles ne le sont pas. Ce cadre offre un vérificateur parfait : le compilateur valide ou invalide une preuve sans ambiguïté. C'est le terrain d'expérimentation idéal pour des algorithmes d'apprentissage, parce qu'aucun bruit de mesure ne vient polluer le signal.</p>
+
+<p>Mais le schéma Solveur-Conjectureur-Guide se transpose à tout domaine où l'on veut qu'un modèle apprenne au-delà de ses capacités initiales. Pour le code, le Conjectureur pourrait inventer un énoncé et ses tests unitaires associés, avec les tests jouant le rôle du vérificateur. Pour la robotique, un Conjectureur pourrait proposer des sous-objectifs de navigation dans un simulateur, un modèle vision-langage jouant l'arbitre. Pour le raisonnement mathématique en langage naturel, des vérificateurs appris remplacent progressivement les vérificateurs formels.</p>
+
+<p>L'enseignement va plus loin. Pendant deux ans, la communauté a beaucoup parlé de la pénurie annoncée de données d'entraînement humaines de qualité. Les techniques de génération synthétique ont émergé comme réponse, mais souffrent d'un défaut structurel : les modèles ont tendance à générer des données qui les renforcent dans leurs biais, sans élargir leur champ de compétence. SGS propose un contre-argument empirique. Oui, un modèle peut générer ses propres données d'entraînement pendant longtemps sans s'effondrer, à condition de mettre en place des garde-fous contre l'auto-renforcement trivial.</p>
+
+<p>Pour les équipes qui construisent des systèmes d'agents, la leçon est plus directe encore. Si vous voyez votre agent produire des artefacts de plus en plus étranges au fil de son auto-amélioration — tests qui testent n'importe quoi, résumés qui ne résument rien — vous regardez du reward hacking en action. La réponse n'est pas d'arrêter l'auto-amélioration. C'est d'ajouter un juge qui évalue la qualité intrinsèque des productions, indépendamment de leur utilité immédiate.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent ouvertes. Dans l'expérience publiée, le Guide est gelé : une copie affinée du modèle de base, qui n'apprend pas au cours de l'auto-jeu. Les auteurs reconnaissent que pour résoudre les problèmes vraiment extrêmes, le Guide devra lui aussi apprendre — la notion de « bon tremplin » évolue avec les capacités du Solveur. Une piste naturelle consisterait à entraîner le Guide sur les dynamiques d'apprentissage elles-mêmes : récompenser les problèmes synthétiques qui ont effectivement permis de résoudre leur cible.</p>
+
+<p>L'échelle des modèles est un autre angle mort. Toutes les expériences utilisent DeepSeek-Prover-V2-7B. Les auteurs font l'hypothèse qu'un Conjectureur plus grand produira des problèmes synthétiques de meilleure qualité, mais c'est une conjecture qui reste à vérifier. Le rapport 7B versus 671B observé en performance finale ne dit pas si SGS appliqué à un modèle plus gros donnerait encore un bond comparable.</p>
+
+<p>La question la plus intéressante est peut-être celle des domaines non vérifiables. En Lean4, le compilateur tranche. En code, les tests tranchent. Mais pour rédiger un bon rapport, concevoir une architecture logicielle ou planifier une campagne marketing, il n'existe pas d'arbitre mécanique. Les auteurs notent en conclusion que les humains apprennent en permanence de problèmes qu'ils se sont posés eux-mêmes, avec leurs propres capacités imparfaites de vérification — preuve qu'une vérification parfaite n'est probablement pas nécessaire. Reste à démontrer que SGS résiste à des arbitres bruités.</p>
+
+<p>Un détail opérationnel mérite attention. Les auteurs ont construit une infrastructure d'entraînement distribuée capable de gérer jusqu'à 64 GPU pour la génération et 128 workers CPU pour la vérification Lean, avec redémarrage automatique des workers morts et réassignation spéculative des tâches traînantes. Un rappel que les algorithmes d'auto-jeu qui tournent longtemps sont autant un défi d'ingénierie système qu'un défi de recherche.</p>
+
+<p>Le code est disponible en open source sur GitHub, et le corpus D3k est publié sur Hugging Face. Pour les équipes qui veulent expérimenter avec des boucles d'auto-amélioration robustes, il existe désormais une recette testée à grande échelle — et une preuve que le plafond de verre de l'auto-apprentissage n'est pas une fatalité, seulement un problème de conception.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

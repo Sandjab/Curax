@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scaling Test-Time Compute for Agentic Coding — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Scaling Test-Time Compute for Agentic Coding</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent de code rate 30 fois, que faire de ses échecs ?</h2>
+
+<p>Claude 4.5 Opus résout 70,9 % des tickets de SWE-Bench Verified du premier coup. En lui donnant seize tentatives parallèles et une méthode pour trier ses propres brouillons, il grimpe à 77,6 %. Sur Terminal-Bench v2.0, le saut est encore plus net : de 46,9 % à 59,1 %. Gemini 3.1 Pro gagne 12 points sur ce même benchmark. Le plus surprenant ? Aucune de ces améliorations ne vient d'un meilleur modèle. Elles viennent d'une meilleure manière de faire parler les tentatives passées entre elles.</p>
+
+<p>Le papier <em>Scaling Test-Time Compute for Agentic Coding</em>, publié par une équipe de Meta Superintelligence Labs avec des chercheurs de Princeton, CMU et Washington, propose une recette qui transforme l'échec en carburant. L'idée centrale se résume en un mot : <strong>représentation</strong>. Un agent de code qui a galéré pendant quarante étapes produit un pavé illisible de logs, d'erreurs et de commandes bash. Ce pavé contient de l'information précieuse, mais noyée. La résumer correctement change tout.</p>
+
+<h2>Le problème : scaler un agent, ce n'est pas scaler un LLM classique</h2>
+
+<p>Depuis deux ans, on sait qu'on peut améliorer un modèle de langage en lui laissant plus de temps à l'inférence. On génère dix réponses, on vote, on garde la meilleure. On fait du self-consistency, du best-of-N, du chain-of-thought étendu. Ces techniques marchent bien pour les maths ou la génération de code en une passe : les sorties sont courtes, comparables, on peut les empiler dans un contexte.</p>
+
+<p>Un agent de coding, lui, ne produit pas une réponse. Il produit une <strong>trajectoire</strong>. Il lit des fichiers, écrit du code, lance des tests, lit les erreurs, corrige, relance. Une seule tentative sur SWE-Bench Verified peut faire 40 étapes et générer plusieurs milliers de tokens de logs. Comparer deux trajectoires complètes pour décider laquelle est la meilleure devient un enfer : le modèle juge se noie dans les détails secondaires — les tentatives avortées, les lectures de fichiers inutiles, les messages d'erreur redondants.</p>
+
+<p>Résultat : le best-of-N classique ne transfère pas proprement. On sait que parmi seize tentatives, certaines réussissent et d'autres non. On ne sait pas lesquelles sans exécuter les tests cachés. Et on ne peut pas simplement demander au modèle « choisis la meilleure parmi ces seize trajectoires de 10 000 tokens chacune » — il répond n'importe quoi.</p>
+
+<h2>La méthode : résumer, comparer en tournoi, recommencer</h2>
+
+<p>L'équipe propose un pipeline en trois temps qu'elle appelle <strong>PDR + RTV</strong>. Voici comment ça marche, sans équations.</p>
+
+<h3>Étape 1 : transformer chaque tentative en une fiche synthétique</h3>
+
+<p>Plutôt que de conserver la trajectoire brute, on demande au modèle de produire un résumé structuré de chacune de ses seize tentatives. Ce résumé garde ce qui compte : l'hypothèse de départ, le diagnostic posé, les corrections essayées, les modes d'échec identifiés. Il jette le reste — les redites, les explorations sans issue, les dumps de fichiers. Pensez à la différence entre un journal de bord complet et une note post-mortem de quelques paragraphes.</p>
+
+<p>Ce choix de représentation est la clé du papier. Les auteurs montrent expérimentalement que comparer des résumés structurés donne de meilleurs résultats que comparer des trajectoires brutes, même quand on utilise le même modèle comme juge. Les détails bruyants polluent le jugement.</p>
+
+<h3>Étape 2 : Recursive Tournament Voting (RTV), un tournoi de coupe</h3>
+
+<p>Avec seize résumés en main, comment choisir le meilleur sans connaître la vérité terrain ? La tentation serait de les empiler dans un prompt et de demander au modèle de classer. Mauvaise idée : comparer seize candidats d'un coup le sature.</p>
+
+<p>RTV fonctionne comme un tournoi sportif. On apparie les résumés deux par deux, on demande au modèle de voter plusieurs fois (8 votes, majorité l'emporte), on garde le gagnant. On répète au round suivant. De seize, on passe à huit, puis quatre, puis deux, puis un. Chaque comparaison est locale, bornée, gérable.</p>
+
+<p>Pourquoi ça marche mieux qu'un vote global ? Parce que juger entre deux candidats impose au modèle une décision concrète, alors que classer seize l'oblige à construire une hiérarchie globale à partir d'informations hétérogènes. L'analogie avec les tournois humains n'est pas fortuite : on organise rarement des finales à seize.</p>
+
+<h3>Étape 3 : Parallel-Distill-Refine (PDR), recommencer en tenant compte du passé</h3>
+
+<p>Le tournoi ne garde pas qu'un seul gagnant. Il garde les quatre meilleurs. Ces quatre résumés forment un <strong>contexte de raffinement</strong> qui va nourrir une deuxième salve de seize nouvelles tentatives, exécutées dans des environnements fraîchement réinitialisés.</p>
+
+<p>Chaque nouvelle tentative démarre donc avec quatre synthèses d'expériences antérieures. Elle sait quelles hypothèses ont été posées, quelles pistes ont mené quelque part, où les précédentes se sont cassé les dents. L'agent ne part plus de zéro : il hérite.</p>
+
+<p>Un dernier tournoi RTV sélectionne ensuite la meilleure parmi ces seize tentatives raffinées. Le pipeline complet enchaîne donc : générer, résumer, trier, regénérer avec contexte, trier à nouveau.</p>
+
+<h2>Résultats : des gains consistants sur cinq modèles de pointe</h2>
+
+<p>Les auteurs testent la recette sur Claude 4.5 Opus, Gemini 3.1 Pro, Claude 4.5 Sonnet, Gemini 3 Flash et GPT-5 (0825), sur deux benchmarks exigeants. Les gains sont systématiques.</p>
+
+<p>Sur SWE-Bench Verified, Claude 4.5 Sonnet grimpe de 67,4 % à 75,6 % — plus de 8 points. GPT-5 gagne 8,4 points. Sur Terminal-Bench v2.0, les sauts sont plus spectaculaires : Claude 4.5 Sonnet passe de 40,6 % à 56,8 % (+16,2 points), Gemini 3.1 Pro de 52,5 % à 64,8 % (+12,3 points).</p>
+
+<p>Deux résultats moins attendus méritent qu'on s'y arrête.</p>
+
+<p><strong>Les agents apprennent à aller droit au but.</strong> En moyenne, les tentatives de la deuxième itération prennent moitié moins d'étapes que celles de la première. Claude 4.5 Opus passe de 41 étapes à 14 sur SWE-Bench Verified. Le contexte de raffinement ne se contente pas d'améliorer le taux de succès : il élimine les détours, les explorations inutiles, les tentatives avortées. L'agent connaît déjà la structure du repo, les erreurs probables, la bonne piste.</p>
+
+<p><strong>Certains problèmes deviennent solubles après coup.</strong> Dans Terminal-Bench v2.0, Claude 4.5 Opus résout <code>gpt2-codegolf</code> en itération 2 alors qu'il échouait sur ses seize tentatives initiales. Gemini 3.1 Pro débloque <code>large-scale-text-editing</code>, une tâche qu'<em>aucun</em> des cinq modèles ne savait résoudre en une passe. Le raffinement ne fait pas que polir les succès : il crée occasionnellement de nouvelles solutions.</p>
+
+<p>Un dernier chiffre donne à réfléchir. Les auteurs mesurent la qualité du contexte de raffinement en comptant combien des quatre résumés retenus correspondent à des tentatives qui passaient réellement les tests. Quand les quatre passent, la nouvelle itération réussit à plus de 99 %. Quand aucun ne passe, elle plafonne à 0,1 %. La qualité du contexte prédit presque parfaitement la qualité des tentatives suivantes. C'est ce qui justifie l'investissement dans RTV comme filtre.</p>
+
+<h2>Implications pratiques : l'ingénierie du test-time scaling change</h2>
+
+<p>Pour les équipes qui déploient des agents de coding en production — Cursor, Devin, Cognition, et toutes celles qui construisent leurs propres pipelines — ce papier offre des leçons actionnables.</p>
+
+<p>D'abord, <strong>le goulot d'étranglement n'est pas le modèle, c'est la représentation</strong>. On a tendance à acheter du compute en espérant des gains linéaires : plus de tentatives, plus de tokens, plus de thinking. Les auteurs montrent qu'investir dans la manière de condenser et réutiliser l'expérience passée rapporte davantage. Un bon résumé de trajectoire vaut mieux que dix tentatives supplémentaires mal exploitées.</p>
+
+<p>Ensuite, <strong>le jugement par paires bat le classement global</strong>. Si vous faites du best-of-N sur vos agents, remplacez le vote à plat par un tournoi à petits groupes. Le coût est similaire, le gain est mesurable. La taille optimale de groupe est 2, avec 8 votes par comparaison — au-delà, les gains sont marginaux.</p>
+
+<p>Troisième point pratique : <strong>la parallélisation et la séquentialité sont complémentaires, pas alternatives</strong>. Faire seize tentatives en parallèle donne un certain gain. Les raffiner en une deuxième itération en donne un autre. Les deux se cumulent. Le pipeline PDR + RTV exploite les deux axes, et un dernier tournoi sur les tentatives raffinées continue d'extraire de la valeur parce qu'il reste de la diversité utile.</p>
+
+<p>Enfin, sur le coût. Seize tentatives en parallèle, plus seize raffinées, plus les appels de résumé et de jugement, ça représente facilement 30 à 50 fois le coût d'une seule tentative. Pour des tâches critiques ou des benchmarks de R&D, ça se justifie. Pour un usage quotidien, on cherchera probablement un compromis : peut-être quatre tentatives, un seul tournoi, pas de raffinement. Les auteurs ne discutent pas cette dimension économique, mais les ablations permettent de la reconstruire.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Le papier soulève plusieurs questions ouvertes qui vont occuper la recherche des prochains mois.</p>
+
+<p>La plus évidente concerne le <strong>juge</strong>. Aujourd'hui, le modèle qui génère les tentatives est aussi celui qui les compare. Or les auteurs montrent que Gemini 3.1 Pro, pourtant très fort en génération, se débrouille moins bien comme juge que d'autres modèles. Un juge dédié — soit un modèle plus petit entraîné spécifiquement, soit un système de vérification partielle — pourrait décoller les performances. Cette piste rejoint les travaux sur les reward models et les process reward models dans le raisonnement mathématique.</p>
+
+<p>Une deuxième piste concerne la <strong>persistance</strong>. Dans le pipeline actuel, chaque itération repart d'un environnement vierge, et toute la mémoire transite par les résumés textuels. Les auteurs suggèrent en conclusion qu'on pourrait laisser l'agent accumuler des artefacts persistants : notes, patchs partiels, tests dérivés, scripts de debug, outils construits à la volée. Passer de « réutiliser des descriptions d'expérience » à « réutiliser les artefacts produits » ouvre un champ nouveau, proche des travaux sur les agents avec mémoire longue comme Voyager ou les systèmes multi-agent avec shared workspace.</p>
+
+<p>Une troisième question reste en suspens : <strong>est-ce que ces gains se transfèrent à des tâches non-code ?</strong> Les benchmarks utilisés (SWE-Bench, Terminal-Bench) ont des signaux de succès binaires clairs. Pour des tâches plus floues — écriture, recherche, analyse stratégique — la notion de « résumé d'une trajectoire » et de « vote par paires » devient moins évidente. Les auteurs restent prudents et se limitent au coding, mais le cadre théorique qu'ils posent (représentation, sélection, réutilisation) a une portée plus générale.</p>
+
+<p>Enfin, pour les praticiens, une leçon métier dépasse le papier lui-même. Les auteurs montrent que les trajectoires qui échouent prennent en moyenne plus d'étapes que celles qui réussissent. Ce n'est pas juste une corrélation statistique : c'est un signal exploitable. Un agent qui dépasse un certain budget d'étapes sans progrès mesurable a probablement pris une mauvaise piste. Des stratégies de coupure anticipée, combinées à une relance avec résumés partiels, pourraient réduire significativement les coûts sans trop sacrifier la qualité. Les ablations du papier suggèrent que ce compromis existe, même si elles ne l'explorent pas frontalement.</p>
+
+<p>Ce qu'il faut retenir, c'est que l'époque où l'on mesurait un agent de coding à son pass@1 sur une seule tentative touche à sa fin. Le test-time scaling devient une discipline à part entière, avec ses recettes, ses ablations, ses compromis. Et la bonne question n'est plus « quel modèle choisir ? » mais « quelle représentation des trajectoires choisir ? ». La réponse de Meta et ses co-auteurs : compacte, structurée, et sélectionnée en tournoi.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training LLM Agents for Spontaneous, Reward-Free Self-Evolution via World Knowledge Exploration — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Training LLM Agents for Spontaneous, Reward-Free Self-Evolution via World Knowledge Exploration</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA visite un site web comme un touriste curieux</h2>
+
+<p>Un modèle de 14 milliards de paramètres qui bat Gemini-2.5-Flash sur des tâches de navigation web. Non pas en devenant plus gros, ni en étant mieux entraîné sur plus de données, mais simplement parce qu'il a pris le temps d'explorer le site avant qu'on lui pose des questions. C'est le résultat qui saute aux yeux dans le papier de Zhang et ses collègues de Tencent et HKUST.</p>
+
+<p>L'idée tient en une phrase : les agents actuels attendent qu'on leur donne une tâche pour commencer à agir. Les chercheurs proposent de leur apprendre à faire exactement l'inverse — explorer un environnement inconnu, en dresser une carte mentale, puis se servir de cette carte quand un problème se présente. Un peu comme un employé qui arrive dans une nouvelle entreprise : il passe ses premiers jours à comprendre qui fait quoi, où se trouvent les ressources, comment on s'y prend ici. Ensuite, il est bien plus efficace sur les vraies tâches.</p>
+
+<p>Le résultat chiffré est solide : <strong>+20 % de taux de réussite absolu</strong> sur deux benchmarks de navigation web exigeants, WebVoyager et WebWalker. Et les connaissances générées sont transférables : un modèle compact qui reçoit la carte mentale produite par un autre agent devient compétitif avec des modèles dix fois plus gros.</p>
+
+<h2>Le problème : la fausse autonomie des agents actuels</h2>
+
+<p>Quand on parle d'agents qui « s'auto-améliorent », la réalité est moins glorieuse que le marketing. Les auteurs démontent ce qu'ils appellent <em>l'illusion de l'auto-évolution</em>. Regardons les deux grandes familles d'approches existantes.</p>
+
+<p>La première famille, <strong>l'évolution par l'expérience</strong>, fait tourner l'agent sur des tâches définies par des humains avec des signaux de récompense également définis par des humains. L'agent accumule des trajectoires, on note ses performances, il s'améliore. Très bien. Sauf que tout repose sur une infrastructure humaine : qui a défini les tâches ? Qui a écrit la fonction de récompense ? Retirez ces béquilles et l'évolution s'arrête net.</p>
+
+<p>La deuxième famille, <strong>l'évolution adversariale</strong>, met deux agents face à face : un « challenger » qui invente des problèmes de plus en plus durs et un « solver » qui apprend à les résoudre. Moins de travail humain visible, c'est vrai. Mais le pipeline qui orchestre ce jeu, les règles du combat, la définition de ce qui compte comme « plus dur » — tout ça reste conçu par des ingénieurs. L'agent s'entraîne dans un préau qu'on lui a construit.</p>
+
+<p>Le contraste avec l'intelligence humaine est frappant. Quand vous arrivez dans une ville que vous ne connaissez pas, vous n'attendez pas qu'on vous donne une mission pour sortir de l'hôtel. Vous marchez, vous regardez, vous construisez une représentation mentale du quartier. Cette exploration est gratuite, sans but immédiat, sans récompense explicite. Elle sert de fondation pour tout ce que vous ferez ensuite. Les LLM, eux, sont restés dans une posture réactive : ils attendent l'instruction.</p>
+
+<p>Le défi technique est précis : comment entraîner un modèle à explorer <em>sans lui dire ce qu'il cherche</em> ? Sans objectif explicite, la notion même de succès devient glissante. C'est ce que les chercheurs appellent le problème du signal d'entraînement pour l'évolution.</p>
+
+<h2>La méthode : apprendre à cartographier un site web sans plan</h2>
+
+<p>Les auteurs proposent ce qu'ils nomment la <strong>Native Agency</strong>. Un agent qui, face à un nouvel environnement, produit spontanément un document de connaissance — concrètement un Markdown structuré — décrivant cet environnement. Ils l'appellent la <em>World Knowledge</em>. Ce document sera ensuite injecté dans le contexte de l'agent quand de vraies tâches arriveront.</p>
+
+<p>La vie de l'agent se découpe en deux phases distinctes. D'abord la phase d'évolution native : sans tâche, sans récompense, l'agent explore le site et produit sa carte mentale. Ensuite la phase d'exécution assistée : l'agent reçoit une vraie question et utilise sa carte pour y répondre.</p>
+
+<p>Le cœur du problème d'entraînement, c'est l'astuce suivante. On ne peut pas récompenser directement la qualité d'une carte mentale — qu'est-ce qu'une « bonne » carte d'un site ? Les chercheurs contournent la difficulté en mesurant l'utilité de la carte, pas son contenu. Une carte est bonne si elle permet à un agent de mieux répondre à des questions sur ce site. La récompense devient alors concrète : la différence de taux de réussite entre un agent qui dispose de la carte et un agent qui part à l'aveugle.</p>
+
+<p>Cette récompense ne sert qu'à l'entraînement. Une fois le modèle formé, il produit des cartes de manière autonome, sans avoir besoin de mesurer quoi que ce soit. C'est le renversement clé : on utilise un signal supervisé pendant l'apprentissage pour installer un comportement qui, en inférence, n'a plus besoin de supervision.</p>
+
+<h3>Le pipeline d'entraînement en deux temps</h3>
+
+<p>Les chercheurs entraînent leurs modèles en deux étapes. La première, classique, est un <strong>apprentissage supervisé</strong> (SFT) où un modèle enseignant — Gemini-2.5-Pro — montre l'exemple en générant plusieurs cartes pour chaque site. On garde celle qui donne les meilleurs résultats sur les tâches associées, avec toute la trajectoire d'exploration qui l'a produite. Le modèle élève apprend à imiter ce processus complet : planifier l'exploration, visiter les pages, résumer, affiner.</p>
+
+<p>La seconde étape est plus maligne. Plutôt que de faire du renforcement en ligne (trop coûteux ici, car évaluer la qualité d'une carte demande de la tester sur plusieurs tâches), les auteurs utilisent du <strong>rejection sampling</strong>. Le modèle génère plusieurs candidats, on garde les meilleurs selon la fonction de récompense, et on réentraîne dessus. Ils appliquent cette boucle deux fois.</p>
+
+<p>Une contrainte pratique intéressante : les sites web réels sont massifs. Un site comme celui de SIGCHI contient des centaines de pages. Laisser l'agent explorer librement mène à des trajectoires interminables et instables. Les chercheurs préprocessent donc chaque site en un graphe orienté, avec un score d'importance par page (mélange de liens entrants et sortants) et un regroupement par préfixe d'URL. L'agent reçoit une vue structurée du site plutôt qu'une page d'accueil nue.</p>
+
+<h2>Résultats : quand explorer vaut mieux que grossir</h2>
+
+<p>Les expériences portent sur deux backbones open-source : Qwen3-30B et Seed-OSS-36B. Les benchmarks couvrent quatre domaines sur WebWalker (conférences, jeux, organisations, éducation) et quatre sites sur WebVoyager (Wolfram, Apple, Dictionary, Coursera). Au total 1 427 questions.</p>
+
+<p>Les chiffres parlent d'eux-mêmes. Sur WebWalker, Qwen3-30B passe de 22 % de réussite sans carte à 41 % avec le modèle final entraîné — un gain absolu de 19 points. Seed-OSS-36B fait un saut similaire, de 16 % à 37,5 %. Sur WebVoyager, les gains sont du même ordre de grandeur.</p>
+
+<p>Le point intéressant n'est pas seulement l'amélioration. C'est que les modèles entraînés <em>dépassent leur propre professeur</em>. Gemini-2.5-Pro, qui a servi à générer les données SFT, atteint 29,8 % sur WebWalker quand on lui demande de produire une carte avec le bon prompt. Le Qwen3-30B entraîné monte à 40,9 %. L'élève a appris à explorer mieux que le maître qui lui a montré comment faire.</p>
+
+<p>Autre observation contre-intuitive : sans entraînement spécifique, donner le même prompt au modèle de base pour qu'il génère sa propre carte <em>dégrade</em> ses performances. 22 % sans carte, 19,5 % avec une carte produite par le même modèle sans entraînement. La raison est simple : un modèle qui ne sait pas explorer produit du bruit. Ce bruit distrait ensuite l'agent lors de l'exécution. La carte devient un handicap plutôt qu'un atout.</p>
+
+<h3>La transférabilité comme bonus inattendu</h3>
+
+<p>Les cartes produites par un modèle entraîné ne sont pas liées à ce modèle. Les auteurs les injectent dans d'autres modèles — Qwen3-14B, GPT-OSS-120B, Kimi-K2-Turbo, Gemini-2.5-Flash — et mesurent les gains. Partout, les performances grimpent. Le cas le plus frappant : Qwen3-14B équipé de la carte dépasse Gemini-2.5-Flash non assisté (35,6 % contre 31,3 % sur le domaine Conférences).</p>
+
+<p>La formule provocatrice des auteurs : <em>exploration over parameters</em>. Le goulot d'étranglement n'est pas la taille du modèle, mais sa connaissance de l'environnement. Une carte précise de 16 000 tokens vaut mieux que dix fois plus de paramètres.</p>
+
+<h3>Gains d'efficacité</h3>
+
+<p>Au-delà du taux de réussite, les cartes réduisent aussi le nombre d'étapes nécessaires pour répondre. En moyenne 17 % d'étapes en moins sur WebWalker. L'agent qui connaît déjà la topologie du site va droit au but. Celui qui découvre doit tâtonner depuis la page d'accueil.</p>
+
+<p>Une étude de sensibilité sur la longueur de la carte montre un optimum autour de 8 000 à 16 000 tokens. En dessous, l'information manque. Au-dessus, le bruit s'accumule et distrait l'agent. La courbe n'est pas monotone : trop de contexte nuit, comme souvent avec les LLM.</p>
+
+<h2>Implications pratiques : un changement de posture pour les agents</h2>
+
+<p>Pour les équipes qui construisent des agents en production, plusieurs conséquences concrètes se dessinent.</p>
+
+<p>D'abord, la décomposition en deux phases — préparation puis exécution — est facile à industrialiser. Un agent déployé sur un nouveau domaine fonctionnel (un ERP client, une documentation technique, un portail administratif) peut passer quelques heures à le cartographier en amont, avant tout trafic utilisateur. Le coût est ponctuel. Le bénéfice se retrouve sur chaque requête ultérieure. Ce découplage ressemble aux index qu'on construit en RAG, mais en plus structuré : une carte mentale plutôt qu'une collection d'embeddings.</p>
+
+<p>Ensuite, la transférabilité des cartes ouvre un modèle économique intéressant. Un acteur peut entraîner un modèle exploreur coûteux, puis vendre les cartes qu'il produit à des utilisateurs de modèles plus légers. La carte ACL 2024 de 16 Ko sert autant à Kimi-K2-Turbo qu'à Gemini-2.5-Flash. Séparer la production de connaissance de son utilisation change la granularité de ce qu'on peut packager.</p>
+
+<p>Troisième point : le mécanisme de récompense basé sur l'utilité est généralisable au-delà du web. Tout environnement structuré qui dispose de tâches mesurables peut s'y prêter : bases de code, wikis internes, interfaces de jeux, documentation d'API. Le pipeline (exploration → compression → évaluation par amélioration des tâches) est agnostique au domaine. Les auteurs ont choisi le web comme testbed parce qu'il est difficile — dynamique, bruité, hétérogène — mais rien n'empêche de l'appliquer ailleurs.</p>
+
+<p>Il faut aussi noter les limites. La fabrication des données d'entraînement est lourde. Six cents questions sur vingt sites, chacune évaluée pour chaque candidat de carte généré. Le modèle enseignant Gemini-2.5-Pro tourne longtemps — les trajectoires font en moyenne 375 étapes avec 3 300 tokens par étape. Ce n'est pas reproductible dans un garage. Les auteurs publient heureusement leur code, leurs données et leurs modèles.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent ouvertes et mériteraient leurs propres papiers.</p>
+
+<p>La première concerne la <strong>mise à jour des cartes</strong>. Un site web évolue : nouvelles pages, liens morts, restructurations. Une carte produite en avril sera obsolète en octobre. Comment détecter qu'une carte n'est plus à jour, et comment la raffraîchir sans refaire toute l'exploration ? Les auteurs n'abordent pas le problème. C'est pourtant central pour un déploiement à long terme.</p>
+
+<p>La deuxième porte sur la <strong>composition des cartes</strong>. Un agent doit souvent naviguer entre plusieurs environnements dans une même tâche (passer d'un outil CRM à une messagerie, puis à un drive). Peut-on combiner plusieurs cartes ? Y a-t-il des connaissances cross-environnements qui émergeraient d'un corpus de cartes ? Le papier reste dans le cadre d'un environnement à la fois.</p>
+
+<p>La troisième touche à la <strong>nature même de la World Knowledge</strong>. Les auteurs choisissent du Markdown plat avec des sections par catégorie. Ce format est pratique — il s'injecte dans un prompt — mais il est pauvre. Une représentation graphique, ou un système de retrieval à l'intérieur de la carte elle-même, pourrait pousser le concept plus loin. L'étude de sensibilité montre déjà qu'au-delà de 16 000 tokens les gains plafonnent. La forme limite visiblement le fond.</p>
+
+<p>Enfin, un point philosophique que les auteurs soulèvent sans le développer. Leur cadre élimine la supervision humaine <em>en inférence</em>, mais la réintroduit massivement en entraînement : les 600 questions, les sites choisis, le format de carte, tout est défini par des humains. Comparer ça à la curiosité spontanée humaine relève de la licence rhétorique. Ce qui est réel, en revanche, c'est le découplage temporel : la supervision est concentrée en amont, puis l'agent devient autonome. Ce n'est pas l'AGI promise dans la conclusion, mais c'est un pas concret vers des agents moins passifs.</p>
+
+<p>Le papier s'inscrit dans une tendance plus large : les gains en performance des agents LLM viennent de moins en moins de l'augmentation des paramètres, et de plus en plus de l'ingénierie du contexte, de la mémoire et de l'exploration. Zhang et ses collègues ajoutent une pièce concrète à ce puzzle — une pièce qui a le mérite de chiffrer précisément ce que coûte la passivité des agents actuels et ce que rapporte un peu de curiosité entraînée.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training LLM Agents for Spontaneous, Reward-Free Self-Evolution via World Knowledge Exploration — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Training LLM Agents for Spontaneous, Reward-Free Self-Evolution via World Knowledge Exploration</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le papier attaque un problème réel de la littérature sur les agents auto-évolutifs : la plupart des méthodes qualifiées de « self-evolving » dépendent de tâches et de récompenses conçues par des humains pour une cible précise. Retirez ces signaux, l'évolution s'arrête. Zhang et collègues proposent de séparer proprement deux phases dans la vie d'un agent : une phase d'évolution native où l'agent explore un environnement inconnu et en fabrique une représentation condensée appelée <em>World Knowledge</em> (K), puis une phase d'exécution guidée par cette K.</p>
+<p>L'ambition affichée va plus loin que l'ingénierie : les auteurs veulent des agents qui construisent spontanément une « carte mentale » d'un site web, d'un jeu ou d'un dépôt de code, comme un humain qui explore une nouvelle ville. Le travail s'inscrit dans la lignée des agents web basés sur Cognitive Kernel-Pro et utilise Playwright pour l'interaction.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline combine un reward mécanisme <em>outcome-based</em> (mesurer l'utilité de K par le gain de taux de succès qu'elle apporte sur des tâches downstream étiquetées) et un entraînement en deux temps. Première étape : un SFT par imitation depuis un modèle enseignant Gemini-2.5-Pro qui génère trois candidats K par instance, dont le meilleur est retenu via le reward. Seconde étape : deux itérations de Reinforcement-based Rejection Sampling (RFT), préférées à un GRPO jugé impraticable compte tenu de la longueur des trajectoires (374,8 étapes en moyenne, 3322 tokens par étape).</p>
+<p>Un point fort méthodologique : le pré-traitement des sites web en graphe orienté avec un score d'importance <code>0.7·d_in + 0.3·d_out</code> et un clustering par préfixe d'URL. Ce n'est pas accessoire, puisque les auteurs reconnaissent qu'une exploration libre depuis la homepage conduit à des runtimes longs et des sorties instables. Les expériences tournent sur 1427 requêtes issues de sous-ensembles de WebWalker et WebVoyager, avec 600 questions de deep search sur 20 sites pour l'entraînement.</p>
+<p>Un détail gênant : les questions répondables directement par la connaissance pré-entraînée du backbone sont filtrées. Ce filtrage, non détaillé quantitativement, peut favoriser systématiquement les configurations avec K.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur Qwen3-30B-A3B-Instruct, la configuration RFT atteint 40,91 % sur WebWalker contre 22,04 % sans K, soit un gain absolu proche de 19 points. Elle surpasse aussi le baseline « Prompt-only (Gemini) » à 29,85 %, ce qui signifie que le modèle élève dépasse son propre enseignant sur cette métrique. Sur WebVoyager, le gain est plus modeste (57,44 % vs 41,08 %). Pour Seed-OSS-36B, les chiffres sont cohérents avec Qwen3.</p>
+<p>Le résultat le plus marquant concerne la transférabilité : la K produite par Seed-36B améliore Qwen3-14B de 18,3 points en moyenne et Kimi-K2-Turbo de 21,0 points. Un Qwen3-14B équipé de cette K bat un Gemini-2.5-Flash non assisté (35,6 % vs 31,3 % en Conference, 30,5 % vs 25,7 % en Game). Les auteurs en tirent une thèse intéressante : explorer l'environnement compte davantage que scaler les paramètres.</p>
+<p>L'analyse de sensibilité montre un plateau clair entre 16k et 64k tokens de K, voire une légère dégradation au-delà sur les sites de jeu. L'ablation confirme que SFT et rft1 portent l'essentiel du gain, rft2 étant marginal.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'affirmation centrale du papier — un paradigme « workflow-free et reward-free » — mérite d'être retournée. Pendant l'inférence, oui, aucun reward n'est calculé. Mais la compétence d'exploration que le modèle déploie à l'inférence a été sculptée par un reward explicitement supervisé, calculé à partir de paires (question, réponse) vérifiées humainement. Appeler cela « spontaneous, reward-free self-evolution » relève du glissement sémantique : la même chose pourrait se dire de n'importe quel modèle RLHF utilisé en inférence.</p>
+<p>L'évaluation repose sur des juges LLM (Qwen-2.5-32B pour WebWalker, Gemini-2.5-Flash pour WebVoyager). Les biais d'auto-préférence et la corrélation imparfaite entre jugement LLM et vérité terrain ne sont pas discutés. Pas d'intervalles de confiance, pas de tests statistiques, pas de mesure de variance entre seeds. Sur 1427 requêtes, les comparaisons à 2-3 points de différence restent fragiles.</p>
+<p>Le cas d'usage se limite à l'agent web ; les auteurs affirment que le paradigme est « domain-agnostic » mais n'en fournissent aucune preuve. La phrase conclusive (« paving the way toward Artificial General Intelligence ») est un marqueur rhétorique qui dessert le papier.</p>
+<p>Autre angle mort : le coût. Les trajectoires d'exploration atteignent 500 étapes et 43200 secondes. Le budget computationnel nécessaire pour générer K dépasse largement celui de l'exécution de la tâche, ce que les auteurs ne confrontent pas honnêtement à la question de l'efficience globale.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les auteurs annoncent la publication du code, des modèles et des données. Les prompts sont fournis en annexe (C.1 à C.5), les détails d'infrastructure Playwright et les seuils temporels sont précisés. Les modèles backbone sont ouverts (Qwen3, Seed-OSS). C'est le point le plus solide du travail : un chercheur motivé peut reproduire les chiffres principaux.</p>
+<p>Bémol : le jeu de 600 questions de deep search est propriétaire et l'opération de filtrage des questions « directement répondables » n'est pas documentée assez finement pour être répliquée à l'identique.</p>
+
+<h2>Impact et applications</h2>
+<p>L'idée de traiter K comme un module externe chargé dans le prompt — à la manière d'une skill Markdown — est pragmatiquement juste et compatible avec les frameworks d'inférence haut-débit (vLLM, DeepSpeed), contrairement au Test-Time Training classique qui modifie les poids. Pour un ingénieur travaillant sur des agents web en production, la recette est applicable : pré-explorer un site cible une fois, cacher la K, réutiliser sur les tâches utilisateur.</p>
+<p>La transférabilité cross-modèle suggère qu'une organisation peut amortir le coût d'exploration (modèle cher) sur des modèles de service moins coûteux. C'est la contribution la plus actionnable du papier.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier se positionne en opposition frontale à deux lignées : l'evolution expérientielle (ReasoningBank, Mem0, AgentSquare) et l'évolution adversariale (R-Zero, SPICE). Il emprunte au TTT (Sun et al., Titans, Atlas) l'idée de s'adapter à de nouvelles distributions, mais sans la contrainte des mises à jour de poids. Conceptuellement, le framework est proche des approches RAG agentiques et du travail SkillWeaver (Zheng et al., 2025), ce que les auteurs auraient pu reconnaître plus explicitement.</p>
+<p>La contribution réelle n'est pas l'idée d'extraire de la connaissance environnementale — cela existe — mais la combinaison SFT+RFT avec un reward outcome-based qui dépasse l'enseignant Gemini-2.5-Pro. C'est un résultat empirique non trivial.</p>
+
+<h2>Synthèse des scores de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score / 5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien cadré, formulation originale du couple explore/compress.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Deux benchmarks, ablations et analyse de sensibilité, mais filtrage non documenté et absence de tests statistiques.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>1427 requêtes d'évaluation, 20 sites d'entraînement : suffisant pour des tendances, insuffisant pour des différences fines.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Accuracy via juges LLM ; pas d'évaluation de l'accord juge-humain.</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Aucune discussion du biais des juges LLM, pas d'analyse de variance, glissement sémantique sur « reward-free ».</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code, modèles, données et prompts publiés ; jeu de 600 questions pas entièrement ouvert.</td></tr>
+<tr><td>Transparence des limitations</td><td>2</td><td>Absence de section limitations, conclusion en « voie vers l'AGI » sans nuance, coût computationnel éludé.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Recette empirique intéressante et transférabilité marquante, mais proche des travaux existants sur skills et RAG agentique.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

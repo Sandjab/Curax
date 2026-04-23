@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TACO : un framework auto-évolutif pour agents terminaux efficaces via compression observationnelle du contexte — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>TACO : un framework auto-évolutif pour agents terminaux efficaces via compression observationnelle du contexte</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les agents terminaux souffrent d'un problème mécanique : chaque commande renvoie une observation brute (logs verbeux, traces de build, listes de fichiers) qui gonfle le contexte de façon quadratique avec le nombre de tours. Les auteurs ciblent ce goulot d'étranglement avec TACO, un adaptateur qui compresse les sorties terminales via un pool de règles structurées qui s'auto-raffine pendant l'exécution.</p>
+<p>La question est posée sans détour : comment obtenir une compression adaptative aux environnements terminaux hétérogènes sans entraîner de compresseur dédié type SWE-Pruner, et sans retomber sur des heuristiques figées qui transfèrent mal ? La réponse proposée repose sur trois briques : un Global Rule Pool partagé entre tâches, une évolution intra-tâche réactive aux plaintes implicites de l'agent, et un score de ranking mélangeant confiance et fréquence d'usage.</p>
+
+<h2>Méthodologie</h2>
+<p>Une règle est une structure JSON avec <code>trigger_regex</code>, <code>keep_patterns</code>, <code>strip_patterns</code>, bornes de rétention et priorité. L'exécuteur est déterministe. Les règles sont générées, sélectionnées et raffinées par un LLM via trois prompts distincts (initialisation cache/cold-start, création pour output non couvert, remplacement conservateur après plainte).</p>
+<p>Le mécanisme de plainte implicite est le point astucieux : si l'agent redemande la sortie complète ou rejoue la même commande, la règle déclenchée est suspendue et une variante plus conservatrice est générée. Le critère de convergence (Retention Top-30) mesure le recouvrement du frontier de règles entre deux passes sur le dataset.</p>
+<p>Les expériences couvrent six benchmarks (TerminalBench 1.0/2.0, SWE-Bench Lite, CompileBench, DevEval, CRUST-Bench), deux scaffolds (Terminus-2, Mini-SWE-Agent), et une douzaine de backbones allant de Qwen3-8B à Kimi-K2-1T. La taille de batch N=4 et le top-k=30 sont justifiés par ablation.</p>
+
+<h2>Résultats principaux</h2>
+<p>Les gains d'accuracy sur TerminalBench oscillent entre 0,36 et 6,02 points absolus selon le modèle. Sur MiniMax-M2.5, TACO apporte +2,95 pts sur TB 1.0 et +1,36 pts sur TB 2.0 avec une réduction de tokens de l'ordre de 10 %. Sur les petits modèles (< 40 B), les économies par étape sont marginales mais le gain d'accuracy provient du fait que l'agent ne meurt plus prématurément sur les tâches complexes, ce qui augmente mécaniquement le nombre d'étapes et donc le coût total.</p>
+<p>L'étude pass@k (k=4 à 8) confirme que la compression améliore non seulement la précision par tentative mais aussi la diversité des solutions, point non trivial puisqu'un nettoyage trop agressif pourrait au contraire homogénéiser les trajectoires. Les courbes accuracy-vs-token-budget montrent un gain stable de 1 à 3 % à budget fixé sur tous les modèles testés.</p>
+<p>L'étude de cas sur vulnerable-secret illustre la plus-value du mécanisme : une règle <code>objdump_disassembly_rule</code> générée réactivement à l'épisode 9 est réutilisée 18 fois sur les 92 épisodes suivants et économise à elle seule 29 464 caractères, soit 54 % des gains de compression de la tâche.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'ablation montre que retirer l'évolution intra-tâche fait chuter l'accuracy de 1,7 point, et retirer l'évolution globale la fait chuter de 0,2 point : les deux composants sont nécessaires mais l'intra-tâche porte l'essentiel du bénéfice. Ce résultat relativise l'argument central sur le transfert cross-task.</p>
+<p>Les limites structurelles sont insuffisamment discutées par les auteurs. Premièrement, aucune analyse de variance sur plusieurs graines n'est fournie pour les résultats principaux du Tableau 1 ; les écarts de 1 % pourraient être dans le bruit statistique, la Figure 5(b) suggère d'ailleurs un écart-type de 1 % post-convergence. Deuxièmement, la génération de règles via LLM introduit un coût d'auto-évolution non négligeable (plusieurs millions de tokens sur un run complet de 4 jours), coût qui n'est pas intégré dans les comparaisons d'efficience. Troisièmement, la définition d'une sortie "Critical" repose sur des signaux syntaxiques (erreurs, exceptions) qui peuvent être trompeurs selon les langages et les shells.</p>
+<p>Le papier soulève aussi des questions de reward hacking latent : rien ne garantit que les règles apprises ne sur-ajustent pas au style particulier de Terminus-2 ou aux benchmarks TB. Le transfert vers CompileBench n'apporte d'ailleurs aucun gain d'accuracy (75,0 vs 75,0), seulement une économie de tokens.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le dépôt <code>MAP/TACO</code> est annoncé public. Les seed rules sont entièrement spécifiées en annexe (Listings 1-2), les prompts complets sont fournis (Annexe C), et les hyperparamètres (N=4, K=30, τ non précisé numériquement) sont documentés. Point faible : le seuil de confiance τ pour la réécriture globale est mentionné sans valeur, et les critères de détection des plaintes implicites (redemande de sortie, réexécution) ne sont pas formalisés par un matcher explicite.</p>
+<p>La note arXiv indique "2604.19572v1" avec une date "21 Apr 2026", et plusieurs références citent des papiers 2026 non encore accessibles au moment de l'évaluation ; la vérifiabilité des travaux concurrents (SWE-Pruner, Nex-N1, MetaClaw) reste donc partielle.</p>
+
+<h2>Impact et applications</h2>
+<p>Le problème traité est concret et à forte valeur industrielle : les agents terminaux de production (coding agents, SRE bots, pipelines CI/CD) paient effectivement le coût quadratique du contexte en tokens. Une méthode training-free qui rapporte 10 % d'économie sans dégrader la précision est directement déployable sur un scaffold existant, ce qui la distingue de SWE-Pruner.</p>
+<p>Le design du Global Rule Pool avec score <code>Rgs = cg · (n+1)</code> constitue une abstraction réutilisable pour d'autres formes d'évolution symbolique de harness (compression de fenêtres navigateur, filtrage d'événements MCP, synthèse de logs).</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>TACO se place clairement dans la lignée des agents auto-évolutifs training-free (Memento-Skills, SAGE, Symbolic Learning de Zhou et al.) en déplaçant l'objet d'évolution des plans ou skills vers les règles de compression. Par rapport à SWE-Pruner qui nécessite un fine-tuning spécifique, l'approche est plus générique mais paie ce gain par une dépendance runtime à un LLM externe pour la mutation des règles.</p>
+<p>La comparaison avec les baselines de compression statique (Seed Rules 6 règles, High-Quality Rules 200 règles curées) est honnête et montre que même 200 règles écrites à la main ne battent pas l'évolution automatique, argument fort en faveur de la thèse du papier.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Problème concret, bien cerné, originalité du cadre auto-évolutif appliqué à la compression</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Six benchmarks, deux scaffolds, douze backbones, ablations et études d'hyperparamètres</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>Couverture modèles large, mais une seule graine par configuration</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Accuracy, tokens par étape, pass@k, accuracy à budget fixé : combinaison pertinente</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Pas d'analyse de variance, risque de sur-ajustement aux benchmarks TB non testé</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code annoncé, prompts et seed rules fournis ; seuil τ et matcher de plainte sous-spécifiés</td></tr>
+<tr><td>Transparence des limitations</td><td>2</td><td>Aucune section dédiée aux limites, coût d'auto-évolution non intégré aux comparaisons</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Approche directement déployable, abstraction Global Rule Pool réutilisable</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

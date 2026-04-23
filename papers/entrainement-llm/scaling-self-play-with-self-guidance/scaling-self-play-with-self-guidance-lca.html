@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scaling Self-Play with Self-Guidance — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Scaling Self-Play with Self-Guidance</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le self-play asymétrique promet un apprentissage sans borne : un Conjecturer génère des problèmes, un Solver les résout, les deux progressent ensemble. En pratique, les algorithmes LLM de ce type plafonnent rapidement. Bailey et ses coauteurs identifient précisément la cause : sur les runs longs, le Conjecturer hacke sa récompense en produisant des problèmes artificiellement complexes qui n'aident plus le Solver à progresser sur les cibles réelles.</p>
+<p>La question posée est opérationnelle : étant donné un ensemble fixe de problèmes difficiles, comment faire passer à l'échelle le self-play pour en résoudre le maximum ? La réponse proposée, Self-Guided Self-Play (SGS), ajoute un troisième rôle, un <strong>Guide</strong> LLM, qui juge la qualité des sous-problèmes synthétiques et pénalise ceux qui sont superficiellement liés à la cible mais inélégants ou boursouflés.</p>
+
+<h2>Méthodologie</h2>
+<p>SGS instancie trois rôles à partir du même modèle de base DeepSeek-Prover-V2-7B : Solver (πθ), Conjecturer (gϕ), Guide (ρ). À chaque itération, pour chaque problème non résolu de la cible, le Conjecturer génère un problème apparenté plus simple, le Solver tente les deux (8 rollouts chacun), le compilateur Lean4 vérifie les preuves, puis les deux modèles sont mis à jour par RL.</p>
+<p>La récompense du Conjecturer combine deux signaux : un <strong>Rsolve</strong> qui favorise les problèmes intermédiairement difficiles (nul si taux de résolution 0 ou dans le top 30 %), et un <strong>Rguide</strong> produit par le juge LLM selon trois critères — pertinence (0-5), redondance des prémisses (0-1), complexité de la conclusion (0-4, avec score automatique de 0 si complexité haute). Le Guide est un fine-tuning léger (2 048 exemples GPT-4.1 mini) pour stabiliser le format de sortie à plus de 99 %.</p>
+<p>Le Solver est mis à jour via <strong>REINFORCE1/2</strong>, un objectif simple qui n'entraîne que sur les problèmes avec taux de résolution ≤ 0,5. Ce choix est justifié empiriquement contre CISPO et Expert Iteration : CISPO produit un effondrement d'entropie qui sature les taux à 0 ou 1 et prive le Conjecturer de gradient. Le dataset D3k (3 323 problèmes Lean4 issus de Goedel-Pset-V1) est filtré en quatre passes, dont une dernière passe par GPT-5 mini qui élimine les énoncés formellement faux.</p>
+<p>L'évaluation passe par des scaling laws sigmoïdales ajustées sur la courbe de taux de résolution cumulé en fonction du log-compute, permettant d'extrapoler une asymptote A comparable entre méthodes.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur D3k, SGS atteint un taux de résolution cumulé asymptotique de 67,1 % contre 60,3 % pour le meilleur baseline RL (REINFORCE1/2), soit un gain de 6,8 points. À 6,3 M générations, le 7B entraîné avec SGS dépasse le pass@4 du DeepSeek-Prover-V2-671B, un résultat frappant.</p>
+<p>Les ablations isolent proprement la contribution de chaque composant. Sans conditionnement sur problèmes non résolus, SGS ne bat pas le baseline RL. Sans Guide, l'asymptote tombe à 65,5 % et surtout le Conjecturer collapse vers des conclusions très longues avec des disjonctions (plus de 80 % de conclusions disjonctives contre moins de 10 % dans D3k) — plus de problèmes solvables produits, mais aucun gain sur la cible. Le Frozen Conjecturer plafonne car la distribution fixe est rapidement saturée.</p>
+<p>La section sur l'entropie du Solver est l'un des apports les plus originaux : remplacer REINFORCE1/2 par CISPO comme objectif Solver annule tout le bénéfice de SGS, car l'effondrement d'entropie pousse les taux de résolution vers 0 ou 1, ce qui prive mécaniquement le Conjecturer de signal d'apprentissage. Le choix de l'objectif Solver et le choix du juge sont donc couplés.</p>
+<p>Sur le sous-ensemble Dhard (1 346 problèmes jamais résolus par le baseline RL), SGS atteint près de 10 % de résolution cumulée à 8 M générations, alors que le baseline reste à 0 % par construction.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs assument les limites principales. Le domaine est vérifiable au sens fort (compilateur Lean4), ce qui simplifie drastiquement le rôle du Conjecturer : il produit un état initial, pas un MDP complet. L'extension aux domaines non vérifiables (contrôle embodied, code, math en langage naturel) reste spéculative et dépendra de la qualité des vérificateurs appris.</p>
+<p>Le Guide est gelé pendant tout l'entraînement. Cela suffit à prévenir le collapse observé, mais les auteurs reconnaissent eux-mêmes qu'un Guide figé ne suivra pas l'évolution de ce qui constitue un bon sous-problème au fur et à mesure que le Solver devient plus capable. Entraîner le Guide sur les signaux de dynamique du Solver est mentionné comme extension naturelle mais non testée.</p>
+<p>L'axe taille de modèle est totalement absent. Toute la validation repose sur un unique modèle 7B initialisé depuis DeepSeek-Prover-V2, lui-même déjà spécialisé Lean4 par RL massif. Les résultats sont donc conditionnés à un point de départ déjà fortement tuné sur la tâche, ce qui limite la lecture comme preuve générale de scaling du self-play.</p>
+<p>Le rubric du Guide a été construit itérativement en observant les défauts produits au cours d'un run long, ce qui introduit un biais d'ingénierie difficile à quantifier : le prompt a été ajusté pour pénaliser les pathologies spécifiques observées sur D3k.</p>
+
+<h2>Reproductibilité</h2>
+<p>Excellente. Le code est publié sur GitHub (LukeBailey181/sgs), le dataset D3k est diffusé sur Hugging Face, l'ensemble des prompts (Conjecturer, Guide, filtrage de solvabilité, catégorisation) est reproduit in extenso en annexe E, et les hyperparamètres par expérience sont tabulés en annexe C. La procédure de sélection du learning rate est documentée (sweep sur {3e-7, 1e-6, 3e-6, 1e-5}), et l'infrastructure d'entraînement (architecture serveur-worker, tolérance aux pannes par réassignation spéculative) est décrite en détail en annexe B.</p>
+<p>La robustesse des scaling laws est testée explicitement : suppression de 10/20/30 % des points finaux, et 100 fits sur sous-échantillons aléatoires de 50 % — l'écart-type de l'asymptote reste à 1,1 %, que les auteurs adoptent comme seuil de prudence pour les comparaisons.</p>
+
+<h2>Impact et applications</h2>
+<p>Contribution claire au self-play LLM long-horizon : identifier et caractériser quantitativement le mode d'effondrement du Conjecturer (disjonctions, longueur de conclusion explosant) est en soi un résultat utile. La solution proposée — un juge LLM du même modèle avec un rubric court sur pertinence/redondance/complexité — est simple, peu coûteuse et directement transposable.</p>
+<p>Le couplage démontré entre entropie du Solver et apprenabilité du Conjecturer est un résultat sous-exploré de la littérature RL-LLM : il suggère que le choix de l'objectif Solver dans tout pipeline self-play doit être contraint par la contre-condition qu'il laisse au Conjecturer un spectre exploitable de taux de résolution intermédiaires.</p>
+<p>Pour la preuve formelle, le fait qu'un 7B dépasse un 671B pass@4 à compute suffisant est un signal fort sur le retour d'investissement du scaling en compute d'entraînement par rapport au scaling en paramètres.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>SGS se situe dans la lignée de Sukhbaatar et al. (2017) et Florensa et al. (2018) pour le cadre asymétrique, et prolonge directement STP (Dong & Ma, 2025), la référence self-play Lean4 dont un des auteurs est co-signataire. Le crossover expérimental avec STP intervient autour de 1 M générations, ce qui positionne SGS comme une amélioration scalable plutôt que comme une rupture de paradigme.</p>
+<p>Face aux approches sans seed data (Absolute Zero, R-Zero, Self-Questioning LMs), SGS fait le choix inverse : ancrer la génération sur un ensemble de cibles fixe et mesurer combien on les résout. Ce choix rend les courbes interprétables mais limite la comparaison directe aux méthodes zero-data. La référence à AlphaProof (Hubert et al., 2025) cadre bien la position : là où AlphaProof utilise un Gemini fixe comme Conjecturer, SGS démontre qu'entraîner le Conjecturer avec un garde-fou qualitatif bat le Conjecturer gelé.</p>
+
+<h3>Récapitulatif des scores de robustesse</h3>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Question opérationnelle, originale, directement motivée par un plateau empirique bien caractérisé.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Ablations ciblées sur chaque composant, baselines RL tunées par sweep, comparaison explicite à STP.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Un seul dataset (3 323 problèmes), une seule taille de modèle (7B), un seul modèle de départ pré-spécialisé.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Scaling laws sigmoïdales avec validation par bootstrap, seuil de prudence 1,1 % assumé.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Ablations isolent conditionnement, Guide, gel du Conjecturer ; objectif Solver croisé avec Guide.</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Code, données, prompts, hyperparamètres et infrastructure publiés intégralement.</td></tr>
+<tr><td>Transparence sur limites</td><td>5</td><td>Section limitations explicite et honnête sur domaine vérifiable, Guide gelé, axe taille de modèle non testé.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Caractérisation quantitative du collapse Conjecturer et couplage entropie-apprenabilité ; 7B qui bat 671B pass@4.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

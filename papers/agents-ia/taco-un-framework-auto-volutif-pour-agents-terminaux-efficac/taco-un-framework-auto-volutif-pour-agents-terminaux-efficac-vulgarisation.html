@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TACO : un framework auto-évolutif pour agents terminaux efficaces via compression observationnelle du contexte — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>TACO : un framework auto-évolutif pour agents terminaux efficaces via compression observationnelle du contexte</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA se noie dans ses propres logs</h2>
+
+<p>Un agent exécute <code>apt-get install r-base</code>. En retour, le terminal lui renvoie 10 000 caractères : deux cents lignes « Unpacking libc6-dev », « Setting up gcc-13 », « Processing triggers »… Pour l'agent, une seule information compte : l'installation a réussi. Le reste est du bruit. Et ce bruit reste dans le contexte, étape après étape, gonflant la facture jusqu'à rendre le raisonnement à long terme impraticable.</p>
+
+<p>C'est le constat de départ d'une équipe de chercheurs de l'Université de Manchester, de HKUST et de Beihang University. Leur réponse, baptisée <strong>TACO</strong> (Terminal Agent Compression), propose une idée simple dans son principe et redoutablement efficace : laisser l'agent apprendre lui-même quoi jeter, quoi garder, et transmettre ce savoir d'une tâche à l'autre sans jamais toucher aux poids du modèle. Sur les benchmarks de référence, TACO fait gagner 1 à 4 points de précision à des modèles comme DeepSeek-V3.2 ou MiniMax-M2.5 tout en réduisant la consommation de tokens d'environ 10 %.</p>
+
+<h2>Le problème : une mémoire qui explose quadratiquement</h2>
+
+<p>Les agents terminal-centriques — ceux qui pilotent une ligne de commande pour compiler, déboguer, installer, tester — ont une particularité ingrate. Chaque commande produit une sortie, et cette sortie doit rester accessible pour les décisions futures. Au bout de quarante ou cinquante étapes, le contexte devient un cimetière de logs dans lequel l'information réellement utile est noyée sous les barres de progression, les traces de build répétées et les messages de statut.</p>
+
+<p>Le coût est double. D'abord financier : avec une croissance quadratique des tokens par rapport au nombre d'étapes, une trajectoire longue peut consommer plusieurs millions de tokens. Ensuite cognitif : plus le contexte est bruité, plus le modèle peine à identifier les signaux pertinents. Les performances baissent non pas parce que le modèle est incompétent, mais parce qu'il cherche une aiguille dans une botte de foin qu'il a lui-même fabriquée.</p>
+
+<p>Les solutions existantes ont toutes leurs limites. La troncature brute coupe aveuglément et perd parfois l'information critique — celle qui arrive souvent en fin de sortie. Les heuristiques rédigées à la main fonctionnent bien sur les cas prévus, échouent sur les autres. Résumer avec un LLM génériquement coûte cher et produit des résumés inégaux. Les approches entraînées comme SWE-Pruner apprennent un filtre dédié, mais nécessitent un fine-tuning coûteux et se spécialisent sur un type de tâche.</p>
+
+<p>Les environnements terminal sont fondamentalement hétérogènes. Un <code>objdump -d</code> ne se compresse pas comme un <code>pytest</code>, qui lui-même se traite différemment d'un <code>git clone</code>. Aucune règle figée ne peut couvrir cette diversité.</p>
+
+<h2>La méthode : des règles qui apprennent des règles</h2>
+
+<p>TACO prend le problème à l'envers. Plutôt que de coder en dur des règles de compression, le framework les fabrique lui-même à partir des traces d'exécution réelles, les affine au fur et à mesure, et les partage entre toutes les tâches via un répertoire central.</p>
+
+<p>Imaginez une équipe de sténographes affectés à des réunions très différentes. Le premier jour, chacun improvise sa propre méthode de prise de notes. À la fin de la journée, ils se retrouvent et comparent : certaines abréviations marchent pour tout le monde (enlever les hésitations, condenser les répétitions), d'autres sont spécifiques à un domaine (un sténographe juridique n'a pas les mêmes codes qu'un sténographe médical). Ils mettent les bonnes techniques en commun dans un carnet collectif, et le lendemain chaque nouveau sténographe pioche dedans avant de commencer son travail. Petit à petit, le carnet se peuple des meilleures pratiques, et les notes deviennent à la fois plus courtes et plus précises.</p>
+
+<p>Techniquement, une règle TACO est une fonction structurée : un motif qui détecte quand l'appliquer (par exemple « la commande contient <code>apt install</code> »), une liste de motifs à préserver absolument (toute ligne contenant <code>error</code>, <code>fatal</code>, <code>Successfully installed</code>), une liste de motifs à supprimer (les « Unpacking », « Setting up » répétés), et des bornes conservatrices pour éviter de trop couper. Ces règles restent lisibles par un humain — pas des poids de réseau neuronal opaques.</p>
+
+<p>Le framework orchestre trois niveaux d'évolution. Avant de démarrer une tâche, il va chercher dans le <em>Global Rule Pool</em> les règles les mieux notées et les adapte au contexte du moment via un appel LLM. Pendant la tâche, il observe : si une commande produit une sortie qu'aucune règle ne couvre, il génère une nouvelle règle à la volée. Si l'agent réclame la sortie complète après une compression — signe qu'il a perdu quelque chose d'important — TACO trace les règles coupables, les désactive et les remplace par des variantes plus prudentes. À la fin de la tâche, les règles qui ont prouvé leur utilité remontent au pool global avec un score de confiance mis à jour.</p>
+
+<p>Le détail qui change tout : les sorties qui contiennent des signaux d'erreur explicites (traces d'exception, erreurs de syntaxe) ne sont jamais compressées. La philosophie est conservatrice par construction. En cas de doute, on garde.</p>
+
+<h2>Résultats : efficacité et précision, en même temps</h2>
+
+<p>Sur TerminalBench 2.0, DeepSeek-V3.2 passe de 40,6 % à 42,7 % de précision avec TACO, tout en consommant 12 % de tokens en moins. MiniMax-M2.5 gagne 1,4 point et réduit sa facture. Qwen3-Coder-480B monte de 23,3 à 25,8 %. Les gains sont modestes en absolu mais remarquables par leur régularité : six backbones différents, deux benchmarks, et la courbe monte presque partout.</p>
+
+<p>Le cas des petits modèles est révélateur. Un Qwen3-32B passe de 3,9 à 7,4 % sur TerminalBench 2.0 — presque un doublement. L'explication tient en une phrase : ces modèles échouaient précocement parce qu'ils se perdaient dans le bruit. En nettoyant le contexte, TACO leur permet d'aller au bout de tâches qu'ils abandonnaient avant.</p>
+
+<p>Les chercheurs ont voulu vérifier que les gains ne venaient pas simplement de trajectoires plus longues qui finiraient par converger par force brute. Ils ont donc évalué la précision à budget de tokens constant. Verdict : à 40 millions de tokens, DeepSeek-V3.2 + TACO bat DeepSeek-V3.2 seul de 2 à 3 points. À budget égal, on fait mieux. C'est le test le plus honnête qu'on puisse demander à une méthode de compression.</p>
+
+<p>L'étude du Best-of-K renforce le résultat. En échantillonnant plusieurs tentatives par tâche, on mesure le potentiel maximal d'un agent. TACO améliore pass@k sur tous les modèles testés et toutes les valeurs de k. Autrement dit, les règles de compression n'optimisent pas seulement la tentative moyenne, elles augmentent aussi la diversité des solutions correctes accessibles.</p>
+
+<p>Le framework se généralise au-delà de son terrain d'entraînement. Sur SWE-Bench Lite, CompileBench, DevEval et CRUST-Bench, TACO améliore la précision de 0,82 à 1,64 point tout en réduisant les tokens. Sur DevEval, par exemple, la consommation totale chute de 36,7 millions à 26,8 millions de tokens avec une précision qui monte de 38,1 à 39,7 %.</p>
+
+<h2>Une étude de cas qui rend les chiffres concrets</h2>
+
+<p>Regardons trois trajectoires réelles sur TerminalBench 2.0 avec Qwen3-Coder-480B.</p>
+
+<p>Tâche <em>adaptive-rejection-sampler</em> (calcul statistique en R) : l'agent lance <code>apt-get install -y r-base</code>. Sortie brute de 10 071 caractères. La règle initiale du pool compresse le premier bloc à 5 371 caractères. Mais la suite — 200 lignes répétitives de « Unpacking » et « Setting up » pour chaque paquet — n'est couverte par aucune règle. TACO génère à la volée une nouvelle règle <code>apt_install_unpacked_packages</code> qui réduit le bloc suivant de 10 071 à 73 caractères. Réduction de 99,3 %.</p>
+
+<p>Tâche <em>vulnerable-secret</em> (reverse engineering binaire) : l'agent désassemble un exécutable avec <code>objdump -d</code>. Aucune règle ne couvre ce type de sortie à l'épisode 9. TACO écrit une règle <code>objdump_disassembly_rule</code> qui garde les appels de fonctions, les labels de symboles, les en-têtes de section, et jette les lignes d'hex-dump pures. Cette règle se déclenchera 18 fois sur les 92 épisodes restants, économisant à elle seule 29 464 caractères — 54 % des économies de la tâche.</p>
+
+<p>Tâche <em>sqlite-with-gcov</em> (instrumentation build) : deux règles du pool global et deux règles générées à l'initialisation suffisent pour toute la trajectoire. Aucune évolution en cours de route. Quand le pool est mûr, les tâches « familières » ne nécessitent plus de travail d'adaptation.</p>
+
+<p>Ces trajectoires illustrent un comportement qui tranche avec la troncature classique : TACO préserve systématiquement la dernière ligne critique (le <code>cc -fprofile-arcs -ftest-coverage</code> qui confirme que l'instrumentation de couverture est activée, par exemple) même quand elle arrive en fin de sortie, là où une coupure positionnelle l'aurait perdue.</p>
+
+<h2>Implications pratiques pour qui construit des agents</h2>
+
+<p>Pour les équipes qui déploient des agents en production, trois enseignements se dégagent.</p>
+
+<p>Le premier concerne le coût. Une réduction de 10 % des tokens à performance égale se traduit directement en économies sur la facture d'inférence. Sur des benchmarks comme SWE-Bench Lite où les trajectoires peuvent atteindre 300 millions de tokens au total, le gain devient significatif à l'échelle d'une flotte d'agents tournant en continu.</p>
+
+<p>Le deuxième concerne l'accessibilité des petits modèles. Les modèles sous les 40 milliards de paramètres ont longtemps été considérés comme inaptes aux tâches terminal-centriques longues. TACO montre qu'une partie substantielle de leur sous-performance tient à la saturation du contexte, pas à une limite fondamentale de raisonnement. Un Qwen3-32B convenablement équipé peut atteindre des performances jusqu'ici réservées à des modèles dix fois plus lourds sur certaines tâches.</p>
+
+<p>Le troisième concerne l'architecture des systèmes agentiques. TACO est un adaptateur plug-and-play. Il s'intercale entre l'environnement et l'agent sans modifier ni le modèle, ni le framework hôte. Les auteurs l'ont intégré à Terminus-2 et à Mini-SWE-Agent avec le même code de base. Cette modularité compte : elle permet d'ajouter la compression sans renégocier l'ensemble de sa pile agentique.</p>
+
+<p>Pour les développeurs d'outils DevOps et de copilotes de code, le message est plus large : la mémoire d'un agent n'a pas vocation à stocker des transcriptions brutes. Elle doit filtrer, trier, distiller. Et ce filtre peut s'auto-configurer si on lui donne le bon cadre.</p>
+
+<h2>Pour aller plus loin : les questions qui restent</h2>
+
+<p>TACO résout élégamment un problème spécifique, mais son approche soulève des interrogations intéressantes.</p>
+
+<p>La première porte sur la généralisation hors du terminal. Les interactions web, les APIs REST, les réponses de bases de données produisent le même type de bruit structurel. Rien dans le framework ne l'attache intrinsèquement aux sorties de shell. Transposer TACO à un agent qui navigue sur un site ou interroge Elasticsearch semble faisable — reste à voir si les règles symboliques gardent leur pouvoir expressif face à du HTML ou du JSON profondément imbriqué.</p>
+
+<p>La deuxième concerne l'interaction avec les approches entraînées. SWE-Pruner et TACO ne sont pas nécessairement concurrents. On pourrait imaginer un compresseur neuronal qui gère les cas complexes que les règles symboliques ratent, et TACO qui traite le gros du bruit structurel. La combinaison reste à explorer.</p>
+
+<p>La troisième touche à la transparence. Les règles TACO sont lisibles, auditables, modifiables à la main. Dans des contextes réglementés où les décisions d'un agent doivent pouvoir être expliquées, cette propriété devient précieuse. Un ingénieur peut inspecter le pool global, comprendre quelles règles ont influencé tel comportement, en désactiver une s'il juge qu'elle cause un problème. Comparez cela avec un compresseur neuronal opaque : l'écart en termes de gouvernance est considérable.</p>
+
+<p>Enfin, le travail pose implicitement une question sur la nature du progrès en IA agentique. Beaucoup d'efforts portent aujourd'hui sur l'augmentation de la taille des modèles et de leur fenêtre de contexte. TACO rappelle que l'autre levier — la qualité de ce qu'on met dans cette fenêtre — peut donner des gains comparables pour une fraction du coût. Les 4 jours de self-évolution qu'il faut à TACO pour converger sur TerminalBench paraissent longs, mais ils sont amortis sur toutes les tâches futures que le pool servira. Un investissement unique contre une économie récurrente.</p>
+
+<p>La publication est disponible publiquement sur le dépôt MAP/TACO. Pour les équipes qui construisent des agents avec des contextes longs, c'est un point de départ immédiatement exploitable — et un rappel salutaire qu'avant de demander plus de puissance à un modèle, il vaut la peine de regarder ce qu'on lui fait ingérer.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

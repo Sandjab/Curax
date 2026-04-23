@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scaling Test-Time Compute for Agentic Coding — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Scaling Test-Time Compute for Agentic Coding</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les méthodes classiques de test-time scaling (self-consistency, best-of-N, self-refine) supposent des sorties bornées, comparables token à token. Les agents de coding long-horizon violent cette hypothèse : chaque tentative produit une trajectoire étendue mêlant actions bash, observations du terminal, erreurs et progrès partiels. Kim et ses coauteurs reformulent le problème : le goulot n'est plus la génération de tentatives supplémentaires, mais la <strong>représentation</strong> de l'expérience passée dans une forme exploitable pour la sélection et la réutilisation.</p>
+<p>L'article défend une thèse précise : pour les agents à horizon long, le scaling inférentiel se joue sur trois axes — représentation, sélection, réutilisation. Deux bancs d'essai servent de terrain : SWE-Bench Verified (500 tâches, harness mini-SWE-agent) et Terminal-Bench v2.0 (88 tâches, harness Terminus 1).</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline repose sur trois briques. Chaque rollout est converti en un résumé structuré compact S_i = Π_LM[P_sum(R_i)] qui préserve hypothèses saillantes, progrès et modes d'échec tout en évacuant le bruit (sorties terminales répétées, explorations en cul-de-sac).</p>
+<p><strong>Recursive Tournament Voting (RTV)</strong> : N rollouts parallèles sont d'abord résumés, puis comparés par petits groupes de taille G avec agrégation de V votes. Le processus se répète récursivement jusqu'à un candidat unique. Les ablations fixent G=2 et V=8 comme configuration optimale.</p>
+<p><strong>Parallel-Distill-Refine (PDR) agentique</strong> : après une itération 0 de N rollouts, RTV extrait un top-K de résumés. Une itération 1 de N nouveaux rollouts démarre dans des environnements frais, conditionnée sur ces K résumés distillés. Un RTV final sélectionne la trajectoire gagnante.</p>
+<p>Configuration principale : N=16, T=2, K=4, G=2, V=8. Cinq modèles testés : Claude-4.5-Opus, Gemini-3.1-Pro, Claude-4.5-Sonnet, Gemini-3-Flash, GPT-5-0825.</p>
+
+<h2>Résultats principaux</h2>
+<p>Les gains sont consistants et substantiels sur les deux benchmarks. Sur SWE-Bench Verified, Claude-4.5-Opus passe de 70,94% à 77,60% (+6,66 pp), Claude-4.5-Sonnet de 67,41% à 75,60% (+8,19 pp), GPT-5-0825 de 61,41% à 69,80% (+8,39 pp). Sur Terminal-Bench v2.0, les améliorations sont encore plus marquées : Claude-4.5-Sonnet gagne +16,20 pp (40,62% → 56,82%), Gemini-3.1-Pro +12,28 pp (52,49% → 64,77%).</p>
+<p>Trois findings empiriques structurent la contribution. Les résumés structurés battent systématiquement les traces brutes comme objets de comparaison — l'écart se creuse dans les derniers rounds du tournoi où les candidats restants exigent de l'attention à des détails nuancés. Les comparaisons récursives en petits groupes (G=2) surpassent les classements plats sur N candidats. La qualité du contexte de raffinement prédit quasi-linéairement la performance itération-1 : 0,1% de succès avec 0/4 rollouts passants en contexte, 99,2% avec 4/4.</p>
+<p>Observation secondaire remarquable : les rollouts itération-1 consomment environ deux fois moins d'étapes que ceux d'itération-0 (Claude-4.5-Opus : 41,23 → 14,31 étapes sur SWE-Bench), suggérant que le contexte distillé court-circuite les phases exploratoires. La méthode résout aussi des tâches inaccessibles aux 16 rollouts initiaux (ex. gpt2-codegolf pour Opus, large-scale-text-editing pour Gemini-3.1-Pro).</p>
+
+<h2>Discussion et limites</h2>
+<p>La force du papier tient à la clarté du cadrage conceptuel — la représentation comme goulot — et à la rigueur des ablations isolant chaque choix de design. Le dispositif expérimental croise benchmarks, modèles et variantes méthodologiques, ce qui rend le signal empirique robuste.</p>
+<p>Plusieurs limites méritent d'être pointées sans détour. Le juge LLM-as-a-Judge est ici le modèle lui-même évaluant ses propres rollouts, ce qui introduit un risque d'auto-préférence non isolé. Les auteurs reconnaissent d'ailleurs que Gemini-3.1-Pro atteint le plus faible taux de sélection correcte, sans quantifier l'impact d'un juge dédié. Les précisions de sélection groupwise (Table 6) oscillent entre 43% et 87% selon modèle et itération — l'amélioration résiduelle de RTV en itération 1 (+0,44 pp pour Gemini-3.1-Pro) interroge le coût-bénéfice du second RTV pour certains modèles.</p>
+<p>Le budget de calcul n'est pas comparé explicitement à d'autres stratégies de scaling (plus de rollouts bruts, plus de tokens par rollout). Le papier montre des gains à N=16, T=2, mais ne cartographie pas la frontière de Pareto compute/performance. Les auteurs évoquent aussi des échecs d'infrastructure API affectant Gemini-3.1-Pro lors du RTV final, ce qui introduit une source de variance non corrigée.</p>
+
+<h2>Reproductibilité</h2>
+<p>La reproductibilité est le point faible. Tous les modèles évalués sont propriétaires, accessibles uniquement via API payantes. Les prompts P_sum, P_action, P_comp ne sont pas reproduits intégralement dans le texte principal — les appendices G et H fournissent des exemples mais pas les templates exacts. Les benchmarks eux-mêmes (SWE-Bench Verified, Terminal-Bench v2.0) sont publics, ce qui sauve partiellement la comparabilité. Aucun code source n'est annoncé dans la version disponible. Le coût financier d'une réplication complète (500 + 88 tâches × 16 rollouts × 2 itérations × 5 modèles frontières) est prohibitif pour la plupart des laboratoires académiques.</p>
+
+<h2>Impact et applications</h2>
+<p>La contribution s'inscrit directement dans l'ingénierie des agents de production. Le pattern « résumer la trajectoire puis comparer les résumés » offre une recette applicable au-delà du coding : tâches agentiques long-horizon en général, pipelines de recherche autonome, agents de diagnostic. Le constat que le raffinement itératif réduit de moitié le nombre d'étapes tout en améliorant le taux de succès a des implications pratiques immédiates pour le coût opérationnel des flottes d'agents.</p>
+<p>La piste ouverte en conclusion — passer de résumés textuels à des artefacts persistants (notes, patchs partiels, tests dérivés, outils réutilisables) — pointe vers une évolution naturelle du cadre : accumulation d'état externe plutôt que réutilisation de descriptions.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier se positionne à l'intersection de trois courants : test-time scaling classique (Wang et al. 2023, Snell et al. 2024, Madaan et al. 2023/2025), agents de coding (SWE-Search d'Antoniades et al. 2024, CodeMonkeys d'Ehrlich et al. 2025, Otter d'Ahmed et al. 2025), et gestion de contexte agentique (Lindenbauer et al. 2025, Lu et al. 2025, Xiao et al. 2025).</p>
+<p>La filiation avec PDR de Madaan et al. 2025 est explicite — le papier en est l'adaptation au régime agentique. L'originalité tient à l'identification de RTV comme opérateur de sélection adapté aux trajectoires longues, et à l'intégration PDR+RTV en pipeline unifié. La comparaison avec des approches type MCTS (SWE-Search) n'est pas conduite frontalement, ce qui laisse ouverte la question du positionnement vis-à-vis des méthodes de recherche arborescente.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Cadrage net : la représentation comme goulot du scaling agentique long-horizon.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Ablations systématiques isolant G, V, K, substrat de comparaison.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>500 tâches SWE-Bench + 88 Terminal-Bench × 5 modèles × N=16.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Pass@1, pass@N standards ; pas de tests statistiques formels.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Auto-préférence du juge LLM non isolée ; pas de juge externe.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Modèles propriétaires, prompts incomplets, code non annoncé.</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Échecs API Gemini reconnus, asymétrie juge/générateur discutée.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>RTV original ; gains empiriques substantiels ; pipeline transférable.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3,8 / 5.</strong> Contribution empirique solide, argumentation conceptuelle convaincante, mais dépendance forte aux API propriétaires et absence de juge externe pèsent sur la confiance à long terme dans les résultats.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

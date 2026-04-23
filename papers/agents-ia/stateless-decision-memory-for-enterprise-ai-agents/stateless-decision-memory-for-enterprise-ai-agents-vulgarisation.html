@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stateless Decision Memory for Enterprise AI Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Stateless Decision Memory for Enterprise AI Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un régulateur demande « pourquoi ce refus de crédit ? », six mois après</h2>
+
+<p>Un demandeur voit son prêt immobilier refusé. Six mois plus tard, son avocat écrit à la banque. La loi exige que l'établissement rejoue la décision : mêmes documents, même logique, même conclusion. Si l'agent d'IA qui a traité le dossier ne sait pas reproduire sa propre décision à l'identique, la banque a un problème réglementaire. Et si elle ne sait pas montrer quelle pièce du dossier a déclenché quel raisonnement, elle en a un second.</p>
+
+<p>Vasundra Srinivasan, architecte IA et formatrice à Stanford, publie en avril 2026 un article qui part de ce constat très concret pour s'attaquer à une question plus large : pourquoi les entreprises régulées utilisent-elles massivement des pipelines RAG (retrieval-augmented generation) basiques, alors que la recherche produit depuis dix ans des architectures de mémoire d'agent bien plus sophistiquées ? Sa réponse tient en un mot : la traçabilité. Et elle propose une architecture, DPM (Deterministic Projection Memory), qui réconcilie les deux mondes.</p>
+
+<h2>Le problème : la recherche et la production ne mesurent pas la même chose</h2>
+
+<p>Les papiers académiques sur la mémoire d'agent — MemGPT, HyMem, GAM, TiMem, MIRIX, A-Mem — rivalisent sur un axe : la qualité de décision. L'agent se souvient-il bien de ce qu'il a vu ? Raisonne-t-il correctement sur de longues trajectoires ? Les benchmarks classiques (LongMemEval, LoCoMo, MemoryAgentBench) mesurent cet axe et rien d'autre.</p>
+
+<p>Mais un agent déployé en souscription de crédit, ajustement de sinistre ou pré-autorisation médicale opère dans un environnement qui impose quatre contraintes supplémentaires, et aucune ne concerne la qualité de décision. Srinivasan les nomme les <strong>quatre propriétés d'entreprise</strong>.</p>
+
+<p>La première : le <em>rejeu déterministe</em>. Rejouer la décision à partir des mêmes entrées doit produire la même sortie. Un auditeur doit pouvoir reconstruire le chemin logique six mois plus tard.</p>
+
+<p>La deuxième : la <em>traçabilité du raisonnement</em>. Chaque affirmation dans la justification de la décision doit pointer vers un événement précis du dossier. Pas « le profil de l'emprunteur est fragile », mais « le document [47] indique un ratio d'endettement de 42 %, au-dessus du seuil fixé par la politique interne [12] ».</p>
+
+<p>La troisième : l'<em>isolation multi-tenant</em>. Si le système traite en parallèle les dossiers de mille clients, aucune fuite mémoire d'un dossier vers un autre n'est tolérable. Un document confidentiel de l'entreprise A ne doit jamais influencer la décision sur l'entreprise B.</p>
+
+<p>La quatrième : l'<em>absence d'état</em>. Un service qui traite des milliers de décisions par heure doit pouvoir répartir la charge sur une flotte de serveurs, sans qu'une requête dépende d'un état stocké sur un nœud particulier.</p>
+
+<p>Les architectures de mémoire académiques violent au moins une de ces propriétés par construction. MemGPT gère un état mémoire qui mute à chaque tour. A-Mem construit un graphe de mémoire qui se modifie au fil de la trajectoire. Les arbres de résumés hiérarchiques accumulent leurs transformations à chaque étape. Rejouer une décision sous ces architectures exige de rejouer chaque mise à jour intermédiaire — chacune étant un appel LLM avec sa propre stochasticité résiduelle.</p>
+
+<p>Le RAG, lui, satisfait les quatre propriétés par simplicité architecturale : un index immuable, une requête pure, aucun état partagé. D'où son adoption massive, malgré ses performances inférieures sur les benchmarks de décision. L'industrie préfère un outil moins précis mais rejouable à un outil plus précis mais opaque.</p>
+
+<h2>La méthode : une mémoire qui n'existe qu'au moment de décider</h2>
+
+<p>DPM tranche le nœud d'une manière contre-intuitive. L'idée tient en deux composants.</p>
+
+<p>D'abord, un <strong>journal d'événements immuable</strong>. Chaque document consulté, chaque sortie d'outil, chaque message utilisateur est ajouté à une liste append-only, dans l'ordre d'arrivée. Rien n'est jamais résumé, réécrit, compressé pendant que l'agent travaille. Le journal est la seule source de vérité.</p>
+
+<p>Ensuite, une <strong>projection unique au moment de la décision</strong>. Quand il faut décider, un seul appel LLM à température zéro prend en entrée le journal complet, la tâche, et un budget en caractères. Il en extrait une vue structurée en trois sections : les faits (montants, dates, identifiants, conservés verbatim), le raisonnement (chaîne inférentielle citant les indices d'événements), et les notes de conformité (dispositions réglementaires concernées).</p>
+
+<p>L'analogie qui éclaire l'architecture vient du monde bancaire : la <em>comptabilité en partie double</em>. Un grand livre bancaire n'efface jamais une ligne. Une erreur se corrige par une écriture inverse, jamais par une rature. Le solde d'un compte à une date donnée n'est pas stocké : il se calcule en rejouant toutes les écritures jusqu'à cette date. C'est le pattern d'event sourcing, bien connu en ingénierie distribuée, que Srinivasan applique à la mémoire d'agent.</p>
+
+<p>Cette approche est volontairement plus faible que les architectures concurrentes sur un plan : un agent DPM ne peut pas « réfléchir en éditant sa propre mémoire » pendant la trajectoire. Il ne peut pas tenir à jour une hypothèse qu'il raffine au fil des documents. Il voit tout au moment où il décide, pas avant. Srinivasan défend cette restriction comme un choix d'ingénierie adapté au régulé : on sacrifie une capacité théorique en échange de quatre propriétés opérationnelles gratuites.</p>
+
+<h2>Résultats : équivalent sur le papier, imbattable sous contrainte</h2>
+
+<p>L'évaluation porte sur dix cas de décisions régulées — cinq prêts hypothécaires sous ECOA/Reg B, cinq sinistres d'assurance — avec des trajectoires de 26 000 à 28 000 caractères et 82 à 96 événements par cas. DPM est comparé à la baseline la plus solide : la <em>summarization incrémentale</em>, qui résume la mémoire à chaque nouvel événement.</p>
+
+<p>Trois budgets mémoire sont testés : large (ratio de compression 2×), modéré (5×), serré (20×). Quatre axes de mesure : précision factuelle, cohérence du raisonnement, exactitude de la décision, reconstruction de la conformité.</p>
+
+<p>À budget large ou modéré, les deux architectures font match nul. Aucune différence statistiquement significative sur aucun axe. La summarization a la place de préserver les ancres factuelles à chaque étape, et DPM n'a rien à gagner. Un déploiement qui peut s'offrir 5 000 caractères de mémoire pour 27 000 caractères de trajectoire peut choisir l'une ou l'autre architecture sans pénalité de décision.</p>
+
+<p>À budget serré (compression 20×), l'écart s'ouvre franchement. DPM améliore la précision factuelle de +0,52 (Cohen's h = 1,17, p = 0,0014) et la cohérence du raisonnement de +0,53 (h = 1,13, p = 0,0034). Ce sont des effets de très grande taille dans le jargon statistique. Le mécanisme est intuitif : à chaque étape de summarization sous contrainte, l'opérateur doit jeter de l'information. Sur 82 étapes, les pertes s'accumulent et au moment de décider, des montants ou des dates critiques ont disparu du résumé courant. DPM ne compresse jamais pendant la trajectoire, donc ne perd rien.</p>
+
+<p>Le second résultat est économique. DPM effectue un seul appel LLM au moment de décider. La summarization en effectue un par événement, plus l'appel de décision final — entre 83 et 97 appels au total. Le gain de latence et de coût : <strong>7,4× à budget serré, 14,9× à budget modéré</strong>. Pour un service traitant des milliers de décisions par heure, c'est un ordre de grandeur sur la facture d'inférence.</p>
+
+<p>Srinivasan publie également une étude de déterminisme qui mérite d'être comprise honnêtement. Dix rejeux par cas à température zéro contre l'API Anthropic en production : aucun des deux systèmes ne produit des sorties byte-identiques. La stochasticité résiduelle existe au niveau du sampler. Mais l'asymétrie architecturale reste : DPM expose un seul appel non-déterministe par décision, la summarization en expose N. Si chaque appel introduit une dérive ε, la dérive attendue sous DPM est de l'ordre de ε, sous summarization de l'ordre de εN.</p>
+
+<p>Le rejeu byte-exact n'est donc pas garanti par DPM seul. Il nécessite un backend d'inférence déterministe — poids épinglés, runtime déterministe, sampler reproductible — que seul un modèle auto-hébergé offre vraiment. DPM réduit la surface de rejeu à un seul appel, rendant cet engagement opérationnellement praticable. Ce n'est pas un gadget, mais ce n'est pas une solution complète non plus.</p>
+
+<h2>Implications pratiques : une heuristique pour trancher</h2>
+
+<p>Srinivasan condense ses résultats en une règle qu'elle baptise TAMS (Task-Adaptive Memory Selection) :</p>
+
+<blockquote>
+<p>Si le déploiement exige du rejeu déterministe, une justification auditable, ou de l'isolation multi-tenant : utiliser DPM.<br>
+Sinon, si le ratio de compression trajectoire/budget dépasse environ 10× : utiliser DPM.<br>
+Sinon, les deux architectures conviennent ; choisir selon la préférence opérationnelle.</p>
+</blockquote>
+
+<p>La règle est binaire par design. Elle ne prétend pas couvrir toute la littérature des architectures de mémoire. Dans le régime évalué, les architectures à récupération et à schéma sont dominées sur les axes de décision tout en ne satisfaisant pas mieux les propriétés d'entreprise que DPM. Le choix à faire, en pratique, oppose la summarization à DPM.</p>
+
+<p>L'analyse des modes d'échec de la mémoire stateful en conditions d'entreprise est le passage le plus pédagogique de l'article. Cinq problèmes concrets :</p>
+
+<ul>
+<li>La <em>dérive d'état sous concurrence</em> : quand un agent lance des appels parallèles, l'ordre dans lequel les résumés se combinent change le résultat final. DPM enregistre les deux ordres dans le log et voit les deux au moment de projeter.</li>
+<li>La <em>complexité du rejeu</em> : rejouer une trajectoire stateful exige de rejouer chaque mise à jour, chacune avec sa propre stochasticité. La probabilité d'obtenir une mémoire identique chute exponentiellement avec la longueur de la trajectoire.</li>
+<li>La <em>fuite inter-tenants dans les caches partagés</em> : les architectures de production mettent en cache les résumés intermédiaires pour amortir le coût. Un cache mal clé sert le résumé du tenant A sur la requête du tenant B.</li>
+<li>La <em>surface d'audit</em> : 83 à 97 paires input-output par décision à stocker sous summarization, contre 2 sous DPM. Sur des milliers de décisions par heure, c'est la différence entre un log applicatif et un pipeline de données d'audit.</li>
+<li>Le <em>coût du retrofit</em> : toutes les propriétés d'entreprise sont implémentables sur une architecture stateful — à condition de paginer chaque appel, logger chaque mise à jour, partitionner chaque cache. Chaque retrofit est un coût d'ingénierie et une source de bugs latente qui compose avec la sophistication architecturale de base.</li>
+</ul>
+
+<h2>Pour aller plus loin : le plafond de la projection unique</h2>
+
+<p>DPM a une limite architecturale explicite : la projection se fait en un seul appel LLM, donc la trajectoire complète doit tenir dans la fenêtre de contexte du modèle. Avec les modèles Anthropic actuels, le plafond est autour d'un million de tokens. Au-delà, une projection hiérarchique devient nécessaire — des réducteurs intermédiaires qui consolident des sous-logs avant la projection finale. Srinivasan reconnaît que ces réducteurs réintroduisent une partie des problèmes de non-déterminisme et de surface d'audit. DPM hiérarchique est du travail futur assumé.</p>
+
+<p>Le second angle mort concerne la robustesse adverse. Les quatre propriétés d'entreprise sont traitées comme des exigences opérationnelles. Dans un contexte où un dossier soumis à l'agent peut contenir une tentative d'injection de prompt ou de substitution d'ancres numériques, la surface d'audit devient un axe de sécurité. L'article ne traite pas ce scénario mais le mentionne comme direction.</p>
+
+<p>Le domaine couvert est restreint : deux verticaux régulés (crédit immobilier, sinistres), une famille de modèles (Claude Haiku 4.5), dix cas par condition. L'argument architectural sur les quatre propriétés est indépendant du domaine — ces propriétés sont des propriétés de l'environnement d'exploitation, pas du contenu de la décision. Mais la taille d'effet mesurée à budget serré ne se transfère pas mécaniquement à l'autorisation préalable médicale (HIPAA, granularité de justification différente), à l'examen fiscal (structure temporelle pluriannuelle), ou aux décisions d'embauche (obligations anti-discriminations distinctes).</p>
+
+<p>L'apport central de l'article tient finalement en une reformulation de la question. La communauté recherche demande : quelle est la meilleure architecture de mémoire pour qu'un agent raisonne bien sur une longue trajectoire ? L'industrie régulée pose une autre question : quelle est la meilleure architecture de mémoire pour qu'un agent puisse raisonner, être audité, rejoué et sécurisé sur une longue trajectoire ? DPM n'optimise pas la première. Il démontre qu'on peut optimiser la seconde sans payer la pénalité de précision que le RAG acceptait jusqu'ici comme le prix de la conformité.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

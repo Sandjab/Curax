@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stateless Decision Memory for Enterprise AI Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Stateless Decision Memory for Enterprise AI Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le déploiement d'agents de décision à long horizon en domaines régulés (souscription, sinistres, revue clinique, examen fiscal) repose massivement sur des pipelines RAG, alors que la littérature académique produit depuis dix ans des architectures de mémoire stateful plus sophistiquées (MemGPT, A-Mem, H-MEM, graph memory). L'auteure formule l'hypothèse qu'un écart de propriétés systèmes — non de précision — explique cette divergence. Quatre propriétés structurent l'argument : replay déterministe, traçabilité auditable des raisonnements, isolation multi-tenant, statelessness pour scalabilité horizontale. La proposition centrale, Deterministic Projection Memory (DPM), traite la trajectoire comme un event log append-only et remplace la consolidation incrémentale par une projection unique au moment de la décision.</p>
+
+<h2>Méthodologie</h2>
+<p>L'évaluation empirique s'appuie sur LongHorizon-Bench, un benchmark de dix cas répartis entre qualification hypothécaire (ECOA/Regulation B) et adjudication de sinistres, avec trajectoires de 26 000 à 28 000 caractères et 82 à 96 événements par cas. Le design est 3×4×2 : trois budgets mémoire (tight 1 338 caractères, moderate 5 352, loose 13 381), quatre axes d'alignement (FRP précision factuelle, RCS cohérence de raisonnement, EDA exactitude décisionnelle, CRR reconstruction de conformité), deux architectures (DPM versus Summ-only). Backend claude-haiku-4-5-20251001 pour agent et juge, température 0, seed fixe. Statistiques par permutation pariée 10 000 resamples, intervalles bootstrap appariés, h de Cohen pour la taille d'effet. Une seconde expérience mesure la stabilité byte-level sur dix replays par cas via SHA-256 et distance de Levenshtein normalisée sur préfixe de 200 caractères.</p>
+
+<h2>Résultats principaux</h2>
+<p>À budgets moderate et loose, DPM et Summ-only sont statistiquement indiscernables sur les quatre axes. Au budget tight (compression 20×), DPM domine franchement : FRP +0.515 (h=1.17, p=0.001), RCS +0.533 (h=1.13, p=0.003), avec EDA et CRR également supérieurs de 0.5 point mais n'atteignant pas la significativité au seuil conventionnel (p=0.065 et 0.066). Côté coût, DPM accélère la décision de 7.4× au tight et 14.9× au moderate grâce à l'asymétrie 1-versus-N du nombre d'appels LLM. L'étude de déterminisme révèle que l'API Anthropic à température 0 n'est pas byte-déterministe : les dix replays produisent dix hashs distincts même quand le préfixe reste stable. L'asymétrie structurelle demeure — DPM expose un appel non-déterministe, Summ-only en expose 82 à 96 — mais DPM seul ne garantit pas le replay bit-exact.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le papier reconnaît explicitement ses faiblesses méthodologiques, ce qui est inhabituel. Trois limites pèsent sur la généralisabilité. D'abord n=10 par cellule : la permutation pariée plafonne à p≈0.002, donc les grandes tailles d'effet sont le vrai signal, pas les p-valeurs. Ensuite une famille de modèle unique (Claude Haiku 4.5) pour agent et juge — le biais de juge de même famille reste un angle mort que l'auteure signale sans le corriger par un run croisé (GPT ou Gemini). Enfin deux domaines seulement, tous deux financiers. L'argument structurel sur les quatre propriétés est indépendant du domaine, mais les magnitudes d'effet ne le sont pas. La comparaison se limite à Summ-only : retrieval et schema-anchored sont écartés sur la base du papier compagnon, ce qui concentre la force empirique mais affaiblit la couverture architecturale. La contribution de DPM comme telle est modeste sur le plan conceptuel — il s'agit d'appliquer event sourcing (Fowler, Kleppmann) à la mémoire agentique. Le mérite n'est pas l'invention, mais la formalisation du trade-off et sa quantification.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le harness d'évaluation est publié sur GitHub (LongHorizon-Bench, implémentations des deux conditions, code de scoring, analyses de déterminisme et de scale). Seed expérimental 20260420, modèle pinné claude-haiku-4-5-20251001, température 0. Le prompt de projection est décrit dans le corps du papier et le prompt complet accompagne l'artefact code. Reproductibilité forte pour un papier d'ingénierie, sous réserve de l'accès à l'API Anthropic et de la disponibilité future du modèle pinné.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport opérationnel dépasse l'apport académique. TAMS — la règle pratique énoncée en section 9 — fournit un critère binaire actionnable : si replay déterministe, audit ou isolation multi-tenant sont requis, ou si le ratio de compression dépasse 10×, utiliser DPM. Sinon, indifférent. Pour les équipes qui construisent des agents régulés (banque, assurance, santé), le papier résout un arbitrage architectural concret et chiffre le coût du retrofit de propriétés systèmes sur une architecture stateful. L'analyse de surface d'audit (tableau 4 : 83 à 97 surfaces pour Summ-only contre 2 pour DPM) formalise un argument que les équipes trustworthy-AI faisaient jusqu'ici de manière intuitive.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier se positionne explicitement contre la lignée MemGPT, A-Mem et H-MEM, qu'il qualifie d'architecturalement plus expressives mais incompatibles avec les contraintes d'entreprise régulée. Le cadrage est honnête : DPM est strictement moins puissant (impossibilité de délibérer en éditant sa propre mémoire en cours de trajectoire) et c'est le compromis assumé. La filiation avec REALM, le RAG original de Lewis et al., et le pattern log-plus-projection de Fowler et Kleppmann est clairement tracée. L'originalité ne tient pas à l'idée — event sourcing est un pattern classique — mais à l'identification des quatre propriétés systèmes comme axe d'évaluation manquant dans les benchmarks existants (MemoryAgentBench, LongMemEval, LoCoMo, AMA-Bench). C'est un apport de cadrage épistémique plus qu'une innovation technique.</p>
+
+<h2>Synthèse des scores de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Problème industriel réel, formulation épistémique claire, pertinence immédiate</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Plan 3×4×2 approprié, comparaison pariée, déterminisme mesuré séparément</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>n=10 par cellule, n=5 par domaine, permutation plafonnée à p≈0.002</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Axes FRP/EDA vérifiables contre ground truth, RCS/CRR jugés par LLM</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Juge de même famille que l'agent, pas de run croisé GPT/Gemini</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, seed fixe, modèle pinné, prompts documentés</td></tr>
+<tr><td>Transparence sur les limites</td><td>5</td><td>Sections 11 et 12 dédiées, biais de juge explicité, scope narratif assumé</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Application d'event sourcing à la mémoire agentique — cadrage fort, invention modeste</td></tr>
+</tbody>
+</table>
+
+<p><strong>Note globale : 3.4/5.</strong> Un papier d'ingénierie rigoureux dont la valeur tient moins à la nouveauté conceptuelle qu'à la quantification précise d'un trade-off architectural que les équipes d'agents en production affrontent quotidiennement. Les faiblesses méthodologiques (n faible, juge non-croisé, deux domaines) sont reconnues explicitement et ne remettent pas en cause la direction des résultats, mais plafonnent leur portée statistique.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
