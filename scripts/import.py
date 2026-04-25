@@ -727,10 +727,17 @@ Ta tache : analyse cet article et produis :
 Reponds en JSON."""
 
 
-def build_keywords_prompt(title, text_excerpt, existing_tags):
+def build_keywords_prompt(title, text_excerpt, existing_tags, author=None):
     """Construit le prompt pour extraire des mots-clés cherchables."""
     tags_str = ', '.join(existing_tags) if existing_tags else "(aucun)"
     excerpt = text_excerpt[:4000]
+    author_block = ""
+    if author:
+        author_block = f"""
+Auteur identifié (handle ou nom) : {author}
+- Inclus ce handle/nom dans les mots-clés (lowercase, tel quel).
+- Si tu peux déduire un nom réel à partir du texte (signature, mention "par X", bio), inclus-le aussi (prénom + nom).
+"""
     return f"""Extrait 10-20 mots-clés cherchables pour ce contenu.
 
 Contraintes :
@@ -740,7 +747,7 @@ Contraintes :
 - NE DUPLIQUE PAS ces tags déjà assignés : {tags_str}
 - Priorise les termes qu'un lecteur taperait dans une barre de recherche pour retrouver ce contenu
 - Ne fabrique pas de mots-clés absents du texte — reste fidèle au contenu
-
+{author_block}
 Titre : {title}
 
 Extrait :
@@ -749,11 +756,11 @@ Extrait :
 Réponds en JSON avec une clé "keywords" contenant un tableau de 10 à 20 mots-clés."""
 
 
-def call_keywords_for_item(title, text_excerpt, existing_tags):
+def call_keywords_for_item(title, text_excerpt, existing_tags, author=None):
     """Appelle Claude Haiku pour extraire les mots-clés. Retourne [] si échec."""
     try:
         result = call_claude_with_retry(
-            build_keywords_prompt(title, text_excerpt, existing_tags),
+            build_keywords_prompt(title, text_excerpt, existing_tags, author=author),
             KEYWORDS_SCHEMA,
             timeout=60,
             model=KEYWORDS_MODEL,
@@ -1177,6 +1184,8 @@ def do_import(analyses, file_contents, catalog):
             "keywords": info.get('keywords', []),
             "quality_score": info['quality_score'],
             "quality_note": info['quality_note'],
+            "author": info.get('author') if info.get('author') and info['author'] != 'unknown' else None,
+            "source": info.get('source', 'twitter'),
         }
 
         counts[domain] += 1
@@ -1420,6 +1429,7 @@ def cmd_reclassify(args):
                 "tags": result["tags"],
                 "quality_score": result["quality_score"],
                 "quality_note": result["quality_note"],
+                "source": meta.get("source", "twitter"),
             }
 
             # Detecter changements de domaine et/ou de slug
@@ -1710,10 +1720,18 @@ def cmd_import(args):
         print("=" * 60 + "\n")
 
         file_contents = {}
+        file_sources = {}
         for fname in html_files:
             filepath = os.path.join(source_dir, fname)
             with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
                 file_contents[filepath] = f.read()
+            fname_lower = fname.lower()
+            if fname_lower.startswith('linkedin-article'):
+                file_sources[filepath] = 'linkedin'
+            elif fname_lower.startswith('medium-article'):
+                file_sources[filepath] = 'medium'
+            else:
+                file_sources[filepath] = 'twitter'
 
         catalog = load_catalog()
         print("1. Detection des doublons...")
@@ -1735,6 +1753,7 @@ def cmd_import(args):
             if filepath in excluded:
                 continue
             info = analyze_article(filepath, content)
+            info['source'] = file_sources.get(filepath, 'twitter')
             analyses.append(info)
 
         if analyses:
@@ -1785,6 +1804,7 @@ def cmd_import(args):
                         info.get('title', ''),
                         info['text'],
                         info.get('tags', []),
+                        author=info.get('author') if info.get('author') and info['author'] != 'unknown' else None,
                     )
                     return (info, kw)
 
@@ -1958,10 +1978,13 @@ def cmd_import(args):
                         except Exception as e:
                             print(f"  ERREUR extraction abstract {info['filename']}: {e}")
                             abstract = info['text'][:3000]
+                        authors_list = info.get('authors') or []
+                        author_hint = ', '.join(authors_list[:5]) if authors_list else None
                         kw = call_keywords_for_item(
                             info.get('title', ''),
                             abstract,
                             info.get('tags', []),
+                            author=author_hint,
                         )
                         return (info, kw)
 

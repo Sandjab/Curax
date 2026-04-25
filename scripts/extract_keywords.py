@@ -34,6 +34,7 @@ save_catalog = _curax.save_catalog
 load_papers_catalog = _curax.load_papers_catalog
 save_papers_catalog = _curax.save_papers_catalog
 extract_text_spans = _curax.extract_text_spans
+extract_author = _curax.extract_author
 extract_pdf_abstract = _curax.extract_pdf_abstract
 call_keywords_for_item = _curax.call_keywords_for_item
 _regenerate_manifest = _curax._regenerate_manifest
@@ -42,14 +43,18 @@ _regenerate_manifest = _curax._regenerate_manifest
 CHECKPOINT_EVERY = 10
 
 
-def _load_article_text(article_key):
-    """Lit le HTML et renvoie le texte extrait, ou None si fichier introuvable."""
+def _load_article_text_and_author(article_key):
+    """Lit le HTML et renvoie (texte, auteur), ou (None, None) si fichier introuvable."""
     path = os.path.join(PROJECT_ROOT, article_key)
     if not os.path.isfile(path):
-        return None
+        return None, None
     with open(path, encoding="utf-8", errors="replace") as f:
         content = f.read()
-    return extract_text_spans(content)
+    text = extract_text_spans(content)
+    author = extract_author(content)
+    if author == "unknown":
+        author = None
+    return text, author
 
 
 def _needs_keywords(meta, force):
@@ -69,7 +74,8 @@ def _pick_title(meta, key):
 
 
 def _process_articles(catalog, workers, force, limit):
-    """Itere sur les articles du catalog et attribue des keywords en parallele."""
+    """Itere sur les articles du catalog et attribue des keywords en parallele.
+    Backfill aussi le champ `author` (extrait du HTML) si absent."""
     articles = catalog.get("articles", {})
     candidates = [(k, m) for k, m in articles.items() if _needs_keywords(m, force)]
     skipped = len(articles) - len(candidates)
@@ -85,12 +91,12 @@ def _process_articles(catalog, workers, force, limit):
     print(f"  {total} articles a traiter ({skipped} deja avec keywords, skip).")
 
     def _work(key, meta):
-        text = _load_article_text(key)
+        text, author = _load_article_text_and_author(key)
         if text is None:
-            return (key, None, "fichier introuvable")
+            return (key, None, None, "fichier introuvable")
         title = _pick_title(meta, key)
-        kw = call_keywords_for_item(title, text, meta.get("tags", []))
-        return (key, kw, None)
+        kw = call_keywords_for_item(title, text, meta.get("tags", []), author=author)
+        return (key, kw, author, None)
 
     done = 0
     success = 0
@@ -100,7 +106,9 @@ def _process_articles(catalog, workers, force, limit):
         futures = {executor.submit(_work, k, m): k for k, m in candidates}
         for future in as_completed(futures):
             done += 1
-            key, kw, err = future.result()
+            key, kw, author, err = future.result()
+            if author is not None and articles[key].get("author") in (None, "unknown"):
+                articles[key]["author"] = author
             if err or not kw:
                 failed += 1
                 reason = err or "aucun mot-cle retourne"
@@ -109,7 +117,8 @@ def _process_articles(catalog, workers, force, limit):
                 success += 1
                 articles[key]["keywords"] = kw
                 preview = ", ".join(kw[:5]) + ("..." if len(kw) > 5 else "")
-                print(f"  [{done}/{total}] {key} -> {len(kw)} mots-cles ({preview})")
+                author_note = f" [auteur: {author}]" if author else ""
+                print(f"  [{done}/{total}] {key} -> {len(kw)} mots-cles ({preview}){author_note}")
 
             since_checkpoint += 1
             if since_checkpoint >= CHECKPOINT_EVERY:
@@ -149,7 +158,9 @@ def _process_papers(papers_catalog, workers, force, limit):
         if not abstract.strip():
             return (key, None, "abstract vide")
         title = meta.get("title") or os.path.splitext(os.path.basename(key))[0]
-        kw = call_keywords_for_item(title, abstract, meta.get("tags", []))
+        authors_list = meta.get("authors") or []
+        author_hint = ", ".join(authors_list[:5]) if authors_list else None
+        kw = call_keywords_for_item(title, abstract, meta.get("tags", []), author=author_hint)
         return (key, kw, None)
 
     done = 0

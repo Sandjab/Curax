@@ -97,6 +97,8 @@ def build_manifest_from_catalog(catalog_path: Path) -> dict:
                 "quality_note": meta.get("quality_note", ""),
                 "tags": meta.get("tags", []),
                 "keywords": meta.get("keywords", []),
+                "author": meta.get("author"),
+                "source": meta.get("source", "twitter"),
             }
             articles.append(article)
 
