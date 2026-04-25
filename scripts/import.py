@@ -762,7 +762,7 @@ def call_keywords_for_item(title, text_excerpt, existing_tags, author=None):
         result = call_claude_with_retry(
             build_keywords_prompt(title, text_excerpt, existing_tags, author=author),
             KEYWORDS_SCHEMA,
-            timeout=60,
+            timeout=120,
             model=KEYWORDS_MODEL,
         )
         kw = result.get("keywords", []) if isinstance(result, dict) else []
