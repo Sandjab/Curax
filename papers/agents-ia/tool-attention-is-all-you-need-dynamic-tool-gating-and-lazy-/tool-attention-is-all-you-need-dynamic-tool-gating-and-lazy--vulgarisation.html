@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tool Attention Is All You Need: Dynamic Tool Gating and Lazy Schema Loading for Eliminating the MCP/Tools Tax in Scalable Agentic Workflows — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Tool Attention Is All You Need: Dynamic Tool Gating and Lazy Schema Loading for Eliminating the MCP/Tools Tax in Scalable Agentic Workflows</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand votre agent IA paie un impôt invisible de 47 000 tokens</h2>
+
+<p>Un chiffre pour planter le décor : 55,20 dollars contre 3,20 dollars. C'est ce que coûtent 10 000 opérations identiques selon qu'on les exécute via un agent connecté à des serveurs MCP ou via une simple ligne de commande. Le rapport est de 17 pour 1. Ce surcoût n'a rien à voir avec la qualité du modèle ou la complexité de la tâche. Il vient d'un détail de plomberie protocolaire que la plupart des équipes découvrent au moment où la facture arrive.</p>
+
+<p>Anuj Sadani et Deepak Kumar (Infrrd.ai) ont posé un nom sur ce phénomène : le <strong>Tools Tax</strong>. Et ils proposent une solution qui emprunte son intuition au papier fondateur des Transformers de 2017. Leur thèse se résume en une phrase : le goulot d'étranglement des systèmes agentiques modernes n'est pas la longueur du contexte des LLM, c'est l'efficacité du protocole qui injecte les outils dans ce contexte.</p>
+
+<h2>Le problème : un protocole élégant qui saigne en silence</h2>
+
+<p>Le Model Context Protocol (MCP) a été introduit par Anthropic fin 2024 puis adopté par OpenAI, Google et Microsoft. Sa promesse est simple et belle : remplacer les intégrations sur mesure entre N agents et M outils par un standard unique, façon USB-C pour l'IA. Au lieu de coder N×M connecteurs, on en code N+M.</p>
+
+<p>Le défaut de conception se loge dans un mot : <em>stateless</em>. Comme les API de chat-completion sont sans état, le client doit re-sérialiser le catalogue complet des outils à <strong>chaque tour de conversation</strong>. Vous ouvrez Claude Desktop avec quatre serveurs MCP branchés (GitHub, base de données, Slack, filesystem) ? Bien. À chaque message que vous envoyez, le client renvoie au modèle l'intégralité des descriptions JSON de tous les outils exposés, même si vous demandez juste l'heure qu'il est.</p>
+
+<p>Les audits publics convergent vers des chiffres édifiants. Une configuration entreprise typique avec 4 à 6 serveurs consomme entre 15 000 et 20 000 tokens par tour rien qu'en définitions d'outils. La suite GitHub MCP complète ? 55 000 tokens. Un catalogue de 106 outils sur une base de données d'entreprise ? 54 600 tokens. Pour un modèle avec une fenêtre de 200 000 tokens, c'est un quart du budget englouti avant que l'utilisateur n'ait dit bonjour.</p>
+
+<p>Trois conséquences en cascade. La première est économique : le coût par session explose, dans un rapport qui peut dépasser 17 pour 1 face à une approche CLI équivalente. La deuxième est cognitive : les études sur la pollution de contexte montrent qu'au-delà de 70% d'utilisation, la qualité de raisonnement s'effondre. Le modèle hallucine des paramètres, confond des outils similaires, perd le fil d'une tâche multi-étapes. C'est ce que les praticiens appellent la "dérive de mi-session" sur les longs runs agentiques.</p>
+
+<p>La troisième conséquence est plus inquiétante. Chaque description d'outil est un texte que le LLM lit, parse et intègre à son raisonnement. Un attaquant qui contrôle un seul serveur MCP peut injecter des instructions adverses dans la description d'un outil anodin — c'est l'attaque par <strong>Tool Poisoning</strong>. Plus le catalogue injecté est large, plus la surface d'attaque est grande. Le coût d'efficacité a un jumeau côté sécurité.</p>
+
+<h2>La méthode : et si on traitait les outils comme l'attention traite les tokens ?</h2>
+
+<p>L'analogie qui structure le papier mérite qu'on s'y arrête. En 2017, le mécanisme d'attention a libéré le traitement du langage de la tyrannie des réseaux récurrents en permettant à chaque token d'aller chercher dynamiquement, parmi tous les autres tokens, ceux dont il a besoin. Plus de goulot d'étranglement par un état caché de taille fixe.</p>
+
+<p>Sadani et Kumar font le même geste un cran au-dessus. L'injection eager de tous les schémas d'outils à chaque tour, c'est l'équivalent du réseau récurrent : on charge tout, tout le temps, par défaut. <strong>Tool Attention</strong> remplace ce mécanisme par une sélection dynamique conditionnée à l'intention de l'utilisateur. Trois composants articulés.</p>
+
+<p>D'abord, le <em>score d'overlap intention-schéma</em> (ISO). Pour chaque outil, on précalcule un résumé compact (nom + description courte, environ 60 tokens). On embarque ce résumé avec un encodeur de phrases léger (MiniLM-L6, 22 millions de paramètres). Quand l'utilisateur écrit une requête, on l'embarque aussi, et on calcule la similarité cosinus entre la requête et chaque outil. Cette similarité estime, à coût quasi nul, la pertinence de l'outil pour la demande en cours.</p>
+
+<p>Ensuite, une <em>fonction de gating</em> qui ajoute une couche de logique métier. Un outil peut être pertinent sémantiquement mais inutilisable dans l'état courant : authentification absente, étape précédente non franchie, scope insuffisant. Le gating filtre déterministe ces cas. Là où la similarité cosinus peut être trompée par une paraphrase adverse, l'état authentique du système ne ment pas.</p>
+
+<p>Enfin, le <em>chargement paresseux en deux phases</em>. Phase 1 : tous les résumés courts restent en permanence dans le contexte. Le modèle sait donc que ces outils existent et peut les évoquer. Coût : environ 4 800 tokens pour 120 outils, mais ce contenu est stable d'un tour à l'autre, donc cacheable. Phase 2 : seuls les schémas JSON complets des k outils gated sont injectés (typiquement 8 à 12 outils). Le reste reste hors-contexte, dans un registre interrogeable à la demande.</p>
+
+<p>Une analogie plus parlante : imaginez un cuisinier dans un restaurant qui a 120 plats à la carte. L'approche MCP naïve revient à étaler tous les ingrédients de tous les plats sur le plan de travail à chaque commande. Tool Attention garde une carte synthétique sous les yeux, et ne sort du frigo que les ingrédients des trois plats susceptibles d'être commandés ce soir-là.</p>
+
+<p>Le mécanisme inclut un dernier garde-fou. Si le modèle, malgré le filtrage, tente d'invoquer un outil dont il n'a vu que le résumé sans le schéma complet, le middleware rejette l'appel avec une erreur structurée. Le modèle peut alors réessayer ou demander une clarification. Ce <strong>portail anti-hallucination</strong> rend le filtrage agressif sans danger : un faux négatif au routage est rattrapé en aval.</p>
+
+<h2>Les résultats : 95% de tokens en moins, et le reste qui suit</h2>
+
+<p>Les auteurs ont construit un banc d'essai simulé de 120 outils répartis sur 6 serveurs (GitHub, Filesystem, Database, Slack, Web, Jira), calibré sur les empreintes mesurées de déploiements réels. Le coût d'injection naïve atteint 47 312 tokens par tour, un chiffre qui colle aux 54 600 et 55 000 observés sur des installations comparables en production.</p>
+
+<p>Tool Attention fait tomber ce chiffre à 2 368 tokens par tour. Réduction mesurée : <strong>95,0%</strong>. L'utilisation effective du contexte passe de 24% à 91%, un facteur 3,8. Ces deux nombres sont des mesures directes obtenues avec le tokenizer cl100k_base, reproductibles en moins de 30 secondes sur n'importe quelle machine. C'est l'apport empirique solide du papier.</p>
+
+<p>Les autres métriques — taux de succès, latence, coût par tâche — sont des projections. Les auteurs sont transparents sur ce point et marquent toutes les valeurs projetées d'un dagger dans leurs tableaux. La projection combine les comptes de tokens mesurés avec les courbes de dégradation de raisonnement publiées et les grilles tarifaires des fournisseurs. Sous ces hypothèses, on obtient un succès projeté de 94% contre 72% pour l'approche naïve, une latence P50 divisée par deux (4,2 s → 2,0 s) et un coût par tâche divisé par sept (0,21 $ → 0,03 $).</p>
+
+<p>Comparaison avec les alternatives. Le <em>pruning statique</em> (un humain choisit 30 outils sur 120) fait pire que tout sur le succès projeté : le curateur omet régulièrement des outils dont une tâche spécifique a besoin. La <em>retrieval simple</em> (top-10 cosinus, sans gating ni chargement paresseux) descend à 4 000 tokens mais reste 1,7 fois plus lourd que Tool Attention. La <em>découverte CLI paresseuse</em> (le modèle appelle <code>--help</code> à la demande) atteint 480 tokens mais paie 6 points de succès parce que le modèle se trompe parfois d'ordre ou ne devine pas le nom des outils exotiques.</p>
+
+<p>L'ablation est instructive. Retirer le chargement paresseux coûte 10,3 points de succès projeté : le modèle a besoin du schéma complet pour remplir correctement les paramètres, le résumé ne suffit pas. Retirer les préconditions coûte 3,6 points. Remplacer MiniLM-L6 par MPNet-base ne gagne que 0,4 point ; le rétrograder vers TF-IDF en perd 8,1. Le sémantique l'emporte sur le lexical, mais l'encodeur léger fait déjà le travail.</p>
+
+<p>Sur l'axe sécurité, les auteurs ont testé 50 descriptions empoisonnées issues du benchmark TPA. Le gate de Tool Attention exclut 46 d'entre elles parce que leur empreinte sémantique ne matche pas les requêtes utilisateur réelles. Le taux de succès projeté des attaques tombe de 38% à 6%. C'est un bénéfice défensif collatéral du filtrage, pas une défense ciblée — mais il est gratuit.</p>
+
+<h2>Ce que ça change concrètement</h2>
+
+<p>L'implémentation de référence tient en quelques centaines de lignes de Python. Elle s'appuie sur LangGraph côté middleware, FAISS pour l'index vectoriel, sentence-transformers pour les embeddings, tiktoken pour la mesure. Quatre modules : <code>IntentRouter</code>, <code>ToolVectorStore</code>, <code>LazySchemaLoader</code>, <code>ToolAttention</code>. Le tout se branche sur les hooks <code>before_model</code> et <code>after_model</code> que les frameworks d'agents modernes exposent déjà.</p>
+
+<p>Pour une équipe qui opère un agent en production, le calcul économique est immédiat. Une équipe FinOps disciplinée découvre régulièrement que les tokens de schéma représentent 40 à 60% de la dépense API totale d'un agent. Diviser ce poste par vingt n'est pas une optimisation marginale, c'est un changement de catégorie budgétaire. Sur les charges intensives, le retour sur investissement de l'intégration se compte en jours.</p>
+
+<p>Le bénéfice cognitif compte autant. Les longues sessions agentiques (15 à 40 tours) sont précisément celles où la dérive est la plus pénible et la moins diagnostiquable. Garder l'utilisation de contexte sous le seuil critique de 70% n'est pas un luxe d'ingénierie ; c'est ce qui distingue un agent qui termine sa tâche d'un agent qui s'égare au milieu.</p>
+
+<p>Le bénéfice défensif vient en bonus. Toute organisation qui connecte des serveurs MCP tiers à ses agents internes accepte aujourd'hui une surface d'attaque proportionnelle à son catalogue d'outils. Filtrer dynamiquement par intention réduit cette surface tour par tour, sans nécessiter de changement de politique de sécurité.</p>
+
+<p>Quelques caveats utiles pour qui voudrait déployer demain. La qualité du retrieval dépend entièrement de la qualité des résumés d'outils. Un nom comme <code>search_customer_orders_by_date_status_and_amount</code> bat <code>query_db</code> à plate couture sur la F1 de retrieval. Les auteurs fournissent un utilitaire <code>summarize_tool.py</code> qui régénère les résumés à partir de la sortie brute de <code>tools/list</code>, réduisant leur longueur de 63% tout en améliorant la F1 de 8 points. Le travail de description n'est pas éliminé, il est déplacé en amont — et il est outillé.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs limites méritent d'être nommées. L'évaluation est une simulation calibrée, pas une campagne live contre des LLM payants ; les chiffres de succès et de latence sont des projections honnêtes mais des projections. Les auteurs publient leur banc d'essai et leurs prompts d'évaluation pour que la communauté puisse remplacer la couche de projection par des mesures réelles. C'est un standard de transparence qu'on aimerait voir plus souvent.</p>
+
+<p>L'attaque par paraphrase adverse reste un angle mort. Un attaquant qui crafte une description d'outil dont l'empreinte sémantique matche systématiquement les requêtes utilisateur bénignes peut se faire gater <em>in</em> et exécuter sa charge. La parade recommandée est de coupler Tool Attention avec un moniteur runtime type MindGuard qui surveille l'énergie d'attention totale (TAE) sur les schémas fraîchement promus. Les deux mécanismes sont complémentaires.</p>
+
+<p>Le routage cross-tour est une piste claire. La requête embarquée actuelle ne tient compte que du dernier message utilisateur. Une version plus riche conditionnerait sur une représentation apprise de l'état de la tâche, intégrant les sorties intermédiaires des outils précédents. Les auteurs rapportent qu'un simple ré-embedding après chaque observation gagne déjà 1,7 point de succès sur les tâches multi-hop.</p>
+
+<p>À plus long terme, deux convergences se dessinent. Le draft IETF MCP-over-MOQT propose des tracks publish-subscribe avec cache de schémas en edge ; une fois adopté, il absorberait au niveau transport une partie de ce que Tool Attention fait au niveau application. Et le pattern de code execution proposé par Anthropic optimise l'autre face du problème — non plus la définition des outils mais l'agrégation de leurs sorties dans une sandbox. Un système combiné ferait tomber la consommation de contexte d'un ordre de grandeur supplémentaire sur les workflows data-heavy.</p>
+
+<p>La leçon de fond du papier dépasse le mécanisme proposé. Pendant deux ans, la course aux fenêtres de contexte plus longues a tenu lieu de stratégie face aux limites des agents. Sadani et Kumar inversent la perspective : ce n'est pas la longueur du contexte qui pose problème, c'est ce qu'on choisit d'y mettre. L'efficacité protocolaire devient le levier de scalabilité dominant, exactement comme l'attention a remplacé la récurrence il y a neuf ans. Le titre du papier est un clin d'œil, mais l'intuition tient debout.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

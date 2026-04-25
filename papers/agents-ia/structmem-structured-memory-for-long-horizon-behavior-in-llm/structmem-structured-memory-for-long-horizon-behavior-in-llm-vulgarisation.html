@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StructMem: Structured Memory for Long-Horizon Behavior in LLMs — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>StructMem: Structured Memory for Long-Horizon Behavior in LLMs</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent conversationnel oublie ce que vous lui avez dit la semaine dernière</h2>
+
+<p>Vous discutez avec un assistant IA depuis trois mois. Lundi dernier, vous lui avez mentionné que votre fille commençait la guitare. Aujourd'hui, vous lui demandez une idée de cadeau pour son anniversaire. Réponse : une suggestion générique, sans aucun lien avec la guitare. L'information était stockée quelque part, mais l'agent n'a pas su la relier au bon moment.</p>
+
+<p>Ce scénario résume le problème central que cherche à résoudre <strong>StructMem</strong>, un système de mémoire pour modèles de langage publié par une équipe de l'Université du Zhejiang en collaboration avec Ant Group. Le papier démontre des gains substantiels sur les tâches de raisonnement temporel et multi-saut, tout en divisant par cinq la consommation de tokens et par dix le nombre d'appels API par rapport aux approches concurrentes les plus efficaces.</p>
+
+<p>L'enjeu dépasse l'anecdote du cadeau d'anniversaire. À mesure que les agents conversationnels s'installent dans les entreprises pour des cycles de plusieurs mois — assistants commerciaux, copilotes de développement, agents de support client — leur capacité à se souvenir avec finesse devient un facteur économique. Une mémoire mal conçue génère des coûts d'inférence qui explosent, des latences qui dégradent l'expérience, et des réponses incohérentes qui érodent la confiance.</p>
+
+<h2>Le problème : deux familles de mémoire, deux impasses</h2>
+
+<p>Les chercheurs du domaine se sont longtemps répartis en deux camps, chacun avec ses limites.</p>
+
+<p>Le premier camp est celui de la <strong>mémoire plate</strong>. Le principe : à chaque tour de conversation, on extrait des faits isolés et on les stocke dans une base vectorielle. Quand l'utilisateur pose une question, on récupère les entrées les plus similaires sémantiquement. Simple, rapide, peu coûteux. Mais cette approche traite l'historique comme un sac de propositions sans liens entre elles. Demandez à un système plat « Quand Caroline et Mélanie sont-elles allées au festival de la Pride ensemble ? » : il retrouvera deux phrases séparées (« Caroline a participé à la Pride en 2022 » et « Mélanie a passé du bon temps à la Pride »), mais sera incapable d'inférer qu'elles y étaient ensemble. Les liens implicites se perdent.</p>
+
+<p>Le second camp est celui de la <strong>mémoire en graphe</strong>. Ici, on extrait non seulement des faits, mais aussi des entités et leurs relations, qu'on organise en graphe de connaissances. Microsoft GraphRAG, Mem0g, Zep appartiennent à cette famille. La structure est riche, le raisonnement multi-saut devient possible. Le revers : pour chaque nouvel événement, le système enchaîne quatre opérations LLM en cascade — extraction d'entités, déduplication d'entités, extraction de relations, déduplication de relations. Le coût explose. Pire, les déduplications deviennent quadratiques quand le graphe grossit. Et chaque erreur d'extraction propage du bruit qui pollue le graphe pour toujours.</p>
+
+<p>Les auteurs de StructMem identifient la racine du problème : ce n'est pas le choix entre plat et graphe qui pose souci, c'est l'<em>unité de mémoire</em>. Stocker des faits atomiques ou des triplets entité-relation, c'est faire le mauvais découpage. La bonne unité, selon eux, est l'<strong>événement relationnel ancré dans le temps</strong>. Une unité qui préserve à la fois le contenu factuel et le contexte interpersonnel, sans imposer un schéma rigide.</p>
+
+<h2>La méthode vulgarisée : deux niveaux d'organisation</h2>
+
+<p>StructMem fonctionne sur deux étages. Pensez à votre propre mémoire : vous gardez des souvenirs précis d'événements vécus (« mardi dernier, j'ai dîné avec Paul, il avait l'air fatigué »), et vous formez progressivement des compréhensions plus larges qui relient ces événements (« Paul traverse une période difficile depuis le rachat de sa boîte »). Le système reproduit ce double mécanisme.</p>
+
+<h3>Premier étage : capturer chaque événement avec deux regards</h3>
+
+<p>Quand un nouveau message arrive, le système ne se contente pas d'extraire les faits. Il déclenche deux extractions en parallèle, avec deux prompts distincts.</p>
+
+<p>La première extraction produit des <strong>entrées factuelles</strong> : qui a fait quoi, quand, où. La seconde produit des <strong>entrées relationnelles</strong> : qui a réagi à qui, qui a soutenu qui, quelle dynamique émotionnelle se joue. Si Alice annonce son admission en master et que Bob répond « Je suis tellement fier de toi, c'est sur quel sujet de recherche ? », le système enregistre côté factuel l'admission d'Alice, et côté relationnel le fait que Bob l'a félicitée et a manifesté de l'intérêt pour ses travaux.</p>
+
+<p>Toutes ces entrées sont ensuite ancrées au même horodatage que le message d'origine. Cet ancrage temporel commun permet plus tard de reconstruire la totalité d'un événement en regroupant les entrées qui partagent le même timestamp. Pas de schéma rigide, pas de résolution d'entités, pas de triplet sec — juste du langage naturel attaché à un instant.</p>
+
+<h3>Deuxième étage : consolider périodiquement les liens entre événements</h3>
+
+<p>C'est là que se joue la magie du raisonnement multi-saut. Le système accumule les entrées dans un buffer pendant une fenêtre de temps (par défaut, une heure). Quand le seuil est franchi, il déclenche une consolidation.</p>
+
+<p>La mécanique : le système concatène les entrées du buffer, les transforme en requête vectorielle, puis va chercher dans toute la mémoire historique les 15 entrées les plus proches sémantiquement. Pour chaque entrée trouvée, il reconstruit l'événement complet auquel elle appartient en récupérant toutes les entrées partageant son timestamp. Il dispose alors d'un cluster d'événements actuels et passés liés par le sens.</p>
+
+<p>Un appel LLM final synthétise ce cluster en un texte narratif qui explicite les connexions entre événements : causalités, continuités, échos. Cette synthèse est stockée à son tour dans la mémoire, comme une couche d'abstraction supplémentaire. Au moment de répondre à une question utilisateur, le système combine les entrées atomiques et les synthèses pour construire son contexte.</p>
+
+<p>L'astuce économique tient en un mot : <strong>localité temporelle</strong>. Les événements sémantiquement liés tendent à se regrouper naturellement dans des fenêtres de temps courtes. En traitant les événements par paquets périodiques plutôt qu'un par un, le système transforme une opération coûteuse à chaque tour en une opération bien moins fréquente sur des batchs.</p>
+
+<h2>Résultats : meilleur et beaucoup moins cher</h2>
+
+<p>L'évaluation se fait sur LoCoMo, un benchmark de référence pour la mémoire à long terme contenant dix conversations de 588 tours en moyenne. Quatre types de questions sont testés : single-hop (un fait isolé suffit), multi-hop (il faut combiner plusieurs faits), temporal (raisonnement sur les dates), open-domain (questions ouvertes).</p>
+
+<p>StructMem obtient le meilleur score global parmi douze systèmes comparés, à 76,82 %. Mais le chiffre brut n'est qu'une partie de l'histoire. Le système se distingue sur deux dimensions où ses concurrents trébuchent : le raisonnement temporel (81,62 %, deuxième meilleur résultat) et le multi-saut. Ce sont précisément les tâches qui exigent de relier des événements éloignés dans le temps.</p>
+
+<p>Le contraste avec les approches en graphe est frappant côté coûts. Sur la même tâche, Mem0g consomme 35,8 millions de tokens en construction et 53 514 appels API. StructMem fait le même travail avec 1,9 million de tokens et 1 056 appels. Soit dix-huit fois moins de tokens et cinquante fois moins d'appels, pour de meilleurs résultats. La différence se voit aussi sur le runtime : 22 854 secondes contre 115 670, un rapport de 1 à 5.</p>
+
+<p>Les courbes d'évolution selon le nombre de tours de dialogue sont éloquentes. La mémoire en graphe voit ses coûts grimper en cloche, atteignant 400 000 tokens après 200 tours. La mémoire plate suit une croissance modérée. StructMem reste quasiment à plat, autour de 75 000 tokens, indépendamment de la longueur de la conversation.</p>
+
+<p>Une analyse interne révèle un point intéressant : augmenter simplement le nombre d'entrées récupérées au moment de répondre ne suffit pas. La performance plafonne à 60 entrées et n'augmente plus au-delà. Le goulot n'est pas la couverture mais le raisonnement. C'est précisément ce que la couche de synthèses cross-événements vient débloquer en créant de l'information qui n'existait dans aucune entrée individuelle.</p>
+
+<h2>Implications : ce que ça change pour qui construit avec des LLM</h2>
+
+<p>Pour les équipes qui déploient des agents conversationnels en production, trois conséquences directes méritent l'attention.</p>
+
+<p>D'abord, la facture d'inférence. Quand un assistant tourne 24h/24 avec des milliers d'utilisateurs, multiplier par cinq ou dix le coût de mémoire change la structure économique du produit. Les approches en graphe étaient souvent réservées à des cas d'usage où la qualité justifiait le coût. StructMem suggère qu'on n'a plus à arbitrer.</p>
+
+<p>Ensuite, la latence. Les agents temps-réel qui doivent répondre en moins d'une seconde ne peuvent pas se permettre des cascades de quatre appels LLM à chaque tour. Le batch périodique de StructMem déplace le coût hors du chemin critique de la réponse, vers des moments d'inactivité.</p>
+
+<p>Enfin, la robustesse. Une étude de fidélité menée par les auteurs montre que les liens cross-événements générés par StructMem présentent un taux d'hallucination de 0,61 % à 3,63 % selon les juges utilisés. Quand on retire les contraintes de prompt qui imposent de citer des timestamps précis, ce taux explose à 7,45 %–20 %. Le résultat illustre une leçon plus générale : la qualité d'un système de mémoire dépend autant des contraintes de grounding qu'on impose au LLM que de l'architecture sous-jacente.</p>
+
+<p>Le code est publié sur GitHub sous le nom LightMem, ce qui ouvre la porte à des intégrations dans les frameworks d'agents existants. Les configurations testées utilisent gpt-4o-mini comme backbone et text-embedding-3-small pour les vecteurs, des choix raisonnables qui se transposent à d'autres modèles.</p>
+
+<h2>Pour aller plus loin : ce qui reste à résoudre</h2>
+
+<p>Les auteurs ne cachent pas les limites du système. Deux manques se détachent.</p>
+
+<p>Le premier concerne la <strong>résolution de conflits</strong>. StructMem accumule de l'information mais ne sait pas vraiment réviser ce qu'elle contient. Si un utilisateur change de préférences, déménage, change de poste, les anciennes informations cohabitent avec les nouvelles. Sur des horizons courts, ce n'est pas dramatique. Sur des années d'usage, les contradictions s'empilent. Un mécanisme de mise à jour ou de décroissance temporelle reste à concevoir.</p>
+
+<p>Le second touche à la <strong>dépendance aux prompts</strong>. La qualité des extractions duales (factuelles + relationnelles) repose sur des prompts soigneusement calibrés. Les auteurs notent qu'une formulation sous-optimale peut produire des extractions incomplètes ou inexactes. L'optimisation automatique de ces prompts, peut-être via DSPy ou des approches similaires, est une piste ouverte.</p>
+
+<p>Au-delà de ces limites identifiées, le travail soulève une question plus large pour le domaine : faut-il continuer à explorer des architectures de mémoire toujours plus sophistiquées, ou la prochaine génération de modèles avec des fenêtres de contexte de plusieurs millions de tokens va-t-elle rendre ces systèmes obsolètes ? Les expériences montrent que même avec un contexte plat de tout l'historique (la baseline « FullContext »), on plafonne à 73,83 %, sous les 76,82 % de StructMem. Le phénomène du « lost in the middle » — la dégradation de l'attention sur les longs contextes — semble persister. Une mémoire bien structurée n'est pas seulement une optimisation économique, c'est un ingrédient nécessaire au raisonnement profond sur de longues histoires conversationnelles.</p>
+
+<p>Reste à voir si le découpage proposé — événement relationnel temporellement ancré comme unité primitive — s'imposera comme nouveau standard. Les arguments empiriques sont solides. La prochaine étape consistera probablement à tester ces idées au-delà des benchmarks académiques, sur des déploiements réels où les utilisateurs interagissent pendant des mois avec des contraintes de coût et de latence sans pitié.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

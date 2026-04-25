@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tool Attention Is All You Need: Dynamic Tool Gating and Lazy Schema Loading for Eliminating the MCP/Tools Tax in Scalable Agentic Workflows — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Tool Attention Is All You Need: Dynamic Tool Gating and Lazy Schema Loading for Eliminating the MCP/Tools Tax in Scalable Agentic Workflows</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le Model Context Protocol (MCP) standardise la connexion entre agents LLM et outils externes, mais sa conception stateless réinjecte le catalogue complet à chaque tour de conversation. Les audits cités par les auteurs estiment ce surcoût entre 15 000 et 60 000 tokens par tour pour des déploiements standards à quatre ou six serveurs, et au-delà de 150 000 tokens en cas de prolifération d'outils. Sadani et Kumar baptisent ce phénomène le <strong>Tools Tax</strong> et le présentent comme une contrainte structurelle plutôt qu'un simple problème d'optimisation.</p>
+<p>L'argumentation économique du papier s'appuie sur trois externalités cumulatives : coût opérationnel multiplié par un ordre de grandeur, dégradation du raisonnement au-delà d'environ 70 % d'utilisation du contexte, et surface d'attaque accrue pour les Tool Poisoning Attacks. La question centrale est de concevoir une couche middleware qui élimine cette taxe sans rompre la sémantique du protocole ni imposer de refactor lourd côté agent.</p>
+
+<h2>Méthodologie</h2>
+<p>Tool Attention décompose le routage en trois mécanismes. Un score Intent–Schema Overlap calcule la similarité cosinus entre l'embedding de la requête utilisateur (encodeur all-MiniLM-L6-v2, 384 dimensions) et celui de chaque résumé d'outil. Une fonction de gating stateful filtre ensuite les outils selon des préconditions déclaratives (authentification, milestones, sorties d'outils antérieures). Enfin, un loader paresseux à deux phases maintient en contexte les résumés compacts (≤60 tokens) pour les N outils tout en ne promouvant les schémas JSON complets que pour le top-k retenu par le gate.</p>
+<p>L'évaluation repose sur un banc d'essai synthétique de 120 outils répartis sur six serveurs (GitHub, Filesystem, Database, Slack, Web, Jira), calibré pour reproduire les empreintes de tokens des audits publics. Les auteurs comparent cinq baselines (Full-Schema, Static Pruning, Simple Retrieval, CLI Lazy Discovery, Tool Attention) sur 500 tâches couvrant des workflows mono-étape, multi-étapes et long-horizon (15 à 40 tours). Les ablations balayent l'encodeur (MiniLM, MPNet, TF-IDF), le seuil θ, le top-k, et désactivent successivement le gate d'hallucination, les préconditions et le loader paresseux.</p>
+<p>La nuance critique du protocole tient dans la séparation explicite que les auteurs imposent entre quantités mesurées et quantités projetées. Seuls les comptages de tokens via tiktoken et le ratio d'utilisation effective ρ sont mesurés directement. Les taux de succès, latences P50/P95, coûts par tâche et scores de qualité LLM-juge sont des projections obtenues en combinant les comptages mesurés avec la tarification publique des modèles et des courbes de dégradation issues de la littérature. Aucun agent LLM réel n'est exécuté contre un endpoint payant.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur le critère mesuré, Tool Attention réduit les tokens d'outils par tour de 47 312 à 2 368, soit 95,0 %. L'utilisation effective du contexte ρ passe de 0,24 à 0,91 au tour 30 des tâches longues. CLI Lazy fait mieux en pure efficacité (480 tokens) mais selon les projections paie 6 points de pourcentage de succès en moins. Static Pruning dégrade le succès projeté en dessous de Full-Schema, le curateur omettant des outils requis sans recours possible.</p>
+<p>Les ablations isolent la contribution de chaque composant. Le loader paresseux pèse pour 10,3 points de succès projeté : sans schéma complet, le modèle peuple mal les paramètres. Les préconditions ajoutent 3,6 points en bloquant les appels dont l'état requis est absent. Le gate d'hallucination contribue pour 3,2 points en rejetant déterministiquement les appels vers des outils non promus. L'upgrade de MiniLM vers MPNet n'apporte que 0,4 point, tandis que le passage à TF-IDF coûte 8,1 points, validant la nécessité d'un appariement sémantique plutôt que lexical.</p>
+<p>Le tableau des scores de robustesse synthétise l'évaluation critique par critère.</p>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème pratique bien identifié, formalisé via une expression close du Tools Tax.</td></tr>
+<tr><td>Design expérimental</td><td>2</td><td>Simulation pure : aucun agent LLM réel n'est sollicité, les métriques de bout en bout sont des extrapolations.</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>500 tâches synthétiques, mais les chiffres de succès reposent sur des projections, pas sur des runs.</td></tr>
+<tr><td>Qualité des métriques</td><td>2</td><td>Comptage de tokens rigoureux (tiktoken, byte-for-byte). Tout le reste dépend de courbes externes.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Cinq baselines et ablations multiples, mais l'absence de runs réels empêche tout contrôle des effets de modèle.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code Python complet en appendice, repository GitHub, seed fixe, harness de comptage exécutable en 30 secondes.</td></tr>
+<tr><td>Transparence des limitations</td><td>5</td><td>Marquage systématique au dague des projections, scope de la simulation explicité avant les tableaux.</td></tr>
+<tr><td>Impact / nouveauté</td><td>3</td><td>Mécanisme utile et déployable aujourd'hui, mais combine des briques connues (retrieval dense, middleware, lazy loading).</td></tr>
+</tbody>
+</table>
+
+<h2>Discussion et limites</h2>
+<p>La principale faiblesse du papier tient à un écart entre l'ambition rhétorique du titre et le périmètre réel de l'évaluation. Le slogan "95 % de réduction de tokens et +22 points de succès" agrège dans la même phrase une mesure directe et une projection, alors que les seconds chiffres dépendent intégralement de courbes empruntées à d'autres études. Les auteurs reconnaissent ce point avec une honnêteté inhabituelle, marquant chaque colonne projetée d'un dague et consacrant une section dédiée au scope de la simulation. Cette transparence sauve le papier d'un procès en surinterprétation, sans pour autant valider les chiffres aval.</p>
+<p>Le banc d'essai est synthétique. Les empreintes par serveur sont calibrées sur des audits publics, ce qui est défendable, mais les 500 tâches sont fabriquées par les auteurs avec leur ground-truth maison. Rien n'exclut un biais de construction où les requêtes synthétiques sont précisément celles que des résumés bien rédigés savent matcher. L'analyse des 29 échecs de Tool Attention l'admet à demi-mot : 7 échecs sur 29 viennent de descriptions d'outils mal écrites, et la régénération de ces résumés en élimine 6. Le mécanisme dépend donc fortement de la qualité éditoriale du catalogue.</p>
+<p>L'évaluation adverse contre les Tool Poisoning Attacks souffre du même défaut. Elle mesure le taux d'exclusion par le gate sur 50 descriptions empoisonnées, puis projette une réduction du succès d'attaque de 38 % à 6 %. C'est un sous-produit défensif intéressant, pas une défense ciblée, et les auteurs le reconnaissent. Un attaquant qui calibre sa charge utile pour matcher sémantiquement la requête utilisateur passerait probablement le gate sans difficulté.</p>
+<p>Le seuil θ est calibré une fois par déploiement sur 100 à 200 paires (requête, outil) annotées. Cette dépendance à un jeu de calibration soigneusement constitué n'est pas anodine : elle déplace une partie du coût opérationnel de l'inférence vers une phase d'annotation initiale, sans que le papier quantifie le coût d'entretien quand le catalogue évolue.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le repository public (github.com/asadani/tool-attention) contient les quatre modules essentiels (intent_router, vector_store, lazy_loader, tool_attention), reproduits intégralement en appendice. Le harness benchmark.py reproduit les comptages de tokens en moins de 30 secondes sur du matériel grand public, sans appel API. Le seed 42 est fixé. Les prompts d'évaluation et le catalogue synthétique sont publiés.</p>
+<p>Cette reproductibilité ne vaut toutefois que pour les colonnes mesurées des tableaux. Les colonnes projetées dépendent de la tarification et des courbes de TTFT publiées par les fournisseurs de modèles, dont les auteurs ne fixent pas une version précise. Un futur lecteur souhaitant régénérer les projections devra reconstituer lui-même le snapshot tarifaire utilisé.</p>
+
+<h2>Impact et applications</h2>
+<p>Pour les équipes opérant des agents MCP en production, le mécanisme proposé est immédiatement déployable. Il s'insère dans les hooks before_model et after_model du middleware LangGraph et coexiste avec le prompt caching d'Anthropic, dont il maximise le taux de hit en stabilisant la phase 1 du contexte (84 % de hits sur 30 tours contre 22 % pour l'injection naïve). La complexité par tour reste sub-milliseconde sur CPU pour des catalogues jusqu'à 10 000 outils.</p>
+<p>L'apport théorique réside dans la réutilisation contrapositive du formalisme Total Attention Energy de MindGuard : un outil dont l'expectation de TAE est négligeable peut être exclu sans modifier la décision de l'agent. Cette articulation entre routage par embeddings et théorie de l'attention causale donne une justification au-delà de l'argument empirique d'efficience.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier se positionne comme une couche application complémentaire des évolutions protocolaires (drafts MCP-over-MOQT, Agent Communication Gateway de l'IETF) qui adresseront le problème au niveau transport quand elles seront adoptées. Vis-à-vis des approches précédentes — Toolformer, ReAct, Cloudflare Code Mode, gateways MCP bespoke — la contribution distinctive est la combinaison explicite de trois mécanismes (ISO scoring, gating statelful, lazy loading deux phases) avec un fondement théorique commun et une implémentation de référence.</p>
+<p>L'analogie avec "Attention Is All You Need" est rhétorique plus que technique. Les auteurs ne proposent pas un nouveau mécanisme d'attention différentiable mais un routage retrieval classique habillé d'un vocabulaire emprunté à Vaswani et al. Le titre fonctionne comme dispositif mémorable, pas comme contribution architecturale au transformer. Le lecteur averti retiendra que la valeur du papier tient à l'ingénierie middleware et à la formalisation économique du Tools Tax, pas à une rupture algorithmique.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

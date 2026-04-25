@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recursive Language Models — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Recursive Language Models</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un modèle de langage apprend à se parler à lui-même</h2>
+
+<p>GPT-5 a une fenêtre de contexte de 272 000 tokens. Suffisant pour avaler un roman entier, ou presque. Pourtant, sur certaines tâches, ses performances s'effondrent bien avant cette limite. À 130 000 tokens, sur un benchmark de raisonnement où chaque ligne du prompt compte, le modèle obtient 44 %. Son cousin doté du paradigme RLM, sur la même tâche, atteint 56,5 %. Et sur des problèmes encore plus denses, l'écart explose : 0,1 % contre 58 %.</p>
+
+<p>Le papier <em>Recursive Language Models</em>, publié en janvier 2026 par trois chercheurs du MIT CSAIL (Alex L. Zhang, Tim Kraska et Omar Khattab — ce dernier, créateur de DSPy, est une figure connue du milieu), propose une idée simple : et si, plutôt que de gaver un LLM avec des millions de tokens, on lui donnait juste de quoi écrire du code Python pour explorer ces tokens lui-même ? Le résultat dépasse les attentes. Des prompts deux ordres de grandeur plus longs que la fenêtre de contexte sont traités proprement. Sur des tâches où les meilleurs modèles frontières échouent catastrophiquement, le RLM tient debout.</p>
+
+<h2>Le problème : la "pourriture" du contexte</h2>
+
+<p>On parle souvent de la course aux fenêtres de contexte. 128k, 200k, 1M, 2M tokens. Les chiffres grimpent, et avec eux la promesse implicite que le modèle saura faire quelque chose d'intelligent avec ce volume. La réalité est plus rugueuse. Un phénomène baptisé <strong>context rot</strong> par les chercheurs de Chroma fait qu'à mesure que le prompt grossit, la qualité des réponses se dégrade — souvent à des longueurs très inférieures à la limite annoncée.</p>
+
+<p>Pire : la dégradation dépend de la tâche. Trouver une aiguille dans une botte de foin, où la "réponse" tient en une phrase noyée parmi des milliers d'autres, reste praticable jusqu'à 1M de tokens. Mais demandez au modèle de classer sémantiquement chaque ligne d'un dataset, ou pire, de raisonner sur toutes les paires possibles d'entrées, et l'effondrement arrive bien plus tôt. Les auteurs introduisent un benchmark, OOLONG-Pairs, où la complexité de traitement croît quadratiquement avec la longueur. Sur cette tâche, GPT-5 nu obtient 0,1 % de F1. Autant dire qu'il ne fait rien.</p>
+
+<p>Les approches existantes pour gérer les longs contextes ont toutes leurs limites. La <strong>compaction</strong>, popularisée par Claude Code et d'autres agents, résume le contexte quand il dépasse un seuil. Sauf que résumer, c'est jeter de l'information. Pour une tâche où chaque détail compte, c'est suicidaire. Les agents de recherche style retrieval extraient des morceaux pertinents, mais finissent toujours par les empiler dans la fenêtre du modèle, qui plafonne. Les architectures de sub-agents, où un modèle délègue à des copies de lui-même, butent sur la longueur d'output : on ne peut pas verbaliser des milliers de sous-tâches.</p>
+
+<h2>La méthode : transformer le prompt en variable Python</h2>
+
+<p>L'idée centrale tient en une phrase : ne pas donner le prompt au modèle, mais lui donner une référence vers le prompt.</p>
+
+<p>Concrètement, le RLM démarre un environnement REPL Python. Le prompt utilisateur, qu'il fasse 10 000 ou 10 millions de tokens, est chargé comme une variable nommée <code>context</code>. Le modèle, lui, ne reçoit qu'une fiche signalétique : la longueur totale, un court préfixe, et la signature d'une fonction <code>llm_query</code> qui lui permet d'invoquer un autre LLM sur n'importe quel morceau choisi. Le modèle écrit alors du code Python pour explorer, découper, transformer, et — le point crucial — appeler récursivement d'autres LLM sur des tranches de ce contexte.</p>
+
+<p>Une analogie : imaginez un chercheur face à une bibliothèque de cent mille livres. La méthode classique consisterait à lui apporter physiquement tous les livres dans son bureau. Il finirait étouffé sous les piles. La méthode RLM lui donne un catalogue, une échelle, et le droit d'embaucher des assistants pour lire chacun un rayon donné. Le chercheur orchestre. Les assistants exécutent.</p>
+
+<p>L'algorithme tient en quelques étapes. Le modèle racine reçoit la métadonnée du prompt et écrit du code. Le code s'exécute dans le REPL. Les variables persistent entre les itérations. Quand le modèle est satisfait, il pose son résultat dans une variable <code>Final</code> et le scaffold renvoie le contenu à l'utilisateur. À aucun moment le contexte brut ne pollue la fenêtre du modèle racine.</p>
+
+<p>Trois choix de design, en apparence anodins, font toute la différence avec les architectures existantes :</p>
+
+<ul>
+<li>Le prompt est un objet symbolique manipulable, pas un flux à digérer. Le modèle peut écrire <code>context[1000:2000]</code> sans avoir lu les 1000 premiers tokens.</li>
+<li>L'output passe aussi par une variable. Le modèle peut donc produire des réponses arbitrairement longues, en les construisant morceau par morceau dans le REPL.</li>
+<li>La récursion est <em>programmatique</em>. Le modèle peut écrire une boucle <code>for</code> qui lance dix mille appels à <code>llm_query</code>, sans avoir à les énumérer en langage naturel.</li>
+</ul>
+
+<p>C'est ce dernier point qui débloque la complexité quadratique. Pour traiter toutes les paires d'un dataset de mille entrées, il faut potentiellement un million d'appels. Aucune architecture de délégation verbale n'y arriverait. Une boucle Python, oui.</p>
+
+<h2>Résultats : un modèle qui tient là où les autres craquent</h2>
+
+<p>Les chercheurs évaluent leur paradigme sur quatre tâches : recherche multi-documents (BrowseComp+), agrégation sémantique (OOLONG), raisonnement par paires (OOLONG-Pairs) et compréhension de dépôts de code (LongBench-v2 CodeQA). Ils utilisent deux modèles principaux : GPT-5 (modèle frontière fermé) et Qwen3-Coder-480B (modèle frontière ouvert).</p>
+
+<p>Sur BrowseComp+ avec 1000 documents, soit entre 6 et 11 millions de tokens en entrée — bien au-delà de la fenêtre de GPT-5 — le modèle nu obtient 0 %. Il n'arrive même pas à charger l'input. Le RLM bâti sur GPT-5 grimpe à 91,3 %. Le coût moyen par requête : 0,99 dollar. Une extrapolation linéaire du coût de GPT-5-mini sur le même volume de tokens donnerait entre 1,50 et 2,75 dollars, sans même parler de la qualité.</p>
+
+<p>Sur OOLONG-Pairs, la tâche quadratique, GPT-5 plafonne à 0,1 %. Le RLM atteint 58 %. Sur OOLONG standard, on passe de 44 % à 56,5 %. Sur la compréhension de code, de 24 % à 62 %. Et tout cela pour un coût comparable, parfois inférieur, à un appel direct au modèle de base.</p>
+
+<p>Plus surprenant : l'ablation. Quand on retire au RLM la capacité de s'appeler récursivement et qu'on lui laisse seulement le REPL, les résultats restent souvent forts. Sur certaines tâches, ils dépassent même la version récursive complète. Le simple fait de transformer le prompt en variable manipulable explique une grande partie du gain. La récursion, elle, devient déterminante sur les tâches information-denses, où il faut traiter chaque ligne séparément.</p>
+
+<p>Les chercheurs sont allés plus loin et ont fine-tuné un modèle 8B (Qwen3-8B) pour qu'il opère nativement comme RLM. Avec seulement 1000 trajectoires distillées depuis Qwen3-Coder-480B sur un domaine non lié, le petit modèle gagne 28,3 % en moyenne sur les benchmarks d'évaluation. Sur certaines tâches, il s'approche de GPT-5 nu. 48 heures sur 8 GPU H100 ont suffi.</p>
+
+<h3>Le coût : médiane raisonnable, queue lourde</h3>
+
+<p>Tous les bilans ne sont pas roses. Si la médiane des coûts RLM se situe souvent en dessous de celle des appels au modèle de base, la variance est forte. Certaines trajectoires partent en vrille, le modèle multipliant les sous-appels inutiles. Qwen3-Coder, en particulier, a tendance à lancer un sous-appel par ligne sur OOLONG, là où GPT-5 reste plus parcimonieux. Les auteurs ont dû ajouter une ligne au prompt système de Qwen pour l'inciter à grouper ses requêtes — sans cela, on tombe sur des cas à plusieurs milliers d'appels pour une tâche basique.</p>
+
+<h2>Implications pratiques : un nouveau pattern pour les agents</h2>
+
+<p>Le résultat dépasse l'exercice académique. Plusieurs leçons sont directement transférables à l'ingénierie d'agents en production.</p>
+
+<p>Première leçon : le contexte n'est pas une ressource à remplir, c'est un objet à manipuler. La majorité des frameworks d'agents actuels — y compris Claude Code, OpenHands, et les variantes de ReAct — fonctionnent sur le principe du "tout dans la fenêtre". On accumule les outputs d'outils, les snippets retrouvés, l'historique de conversation, jusqu'à saturation. Puis on compacte. C'est exactement le scaffold qu'Algorithm 2 du papier qualifie de mauvais. Une approche RLM-like, où l'historique reste accessible via des handles symboliques mais ne pollue pas la fenêtre, change la donne.</p>
+
+<p>Deuxième leçon : la récursion programmatique est le bon niveau d'abstraction. Beaucoup d'équipes essaient de construire des hiérarchies de sous-agents, avec des prompts dédiés, des rôles spécialisés, des protocoles de communication. Le RLM montre qu'un modèle générique avec accès à un REPL et à une fonction <code>llm_query</code> suffit. Le modèle décide lui-même de la stratégie de décomposition. Pas de routage manuel, pas de templates verbeux.</p>
+
+<p>Troisième leçon : la longueur d'output n'est plus une contrainte. Dans le paradigme classique, un modèle ne peut produire que ce que sa fenêtre tolère. Avec un RLM, le résultat se construit dans une variable, par concaténation programmatique. On peut générer un livre entier, un audit complet d'un dépôt, une traduction de plusieurs millions de tokens, sans frapper aucun mur.</p>
+
+<p>Quatrième leçon, peut-être la plus importante pour les équipes produit : l'entraînement spécialisé est rentable. Le fine-tuning sur 1000 trajectoires a transformé un Qwen3-8B médiocre en un agent compétitif sur des tâches qu'il ne pouvait pas effleurer auparavant. Les coûts d'inférence ont chuté grâce à de meilleures décisions. Pour une organisation qui maintient son propre agent, la question n'est plus "faut-il fine-tuner ?" mais "sur quelles trajectoires ?".</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Le papier reste un point de départ. Les auteurs eux-mêmes listent plusieurs limites et pistes ouvertes.</p>
+
+<p>La profondeur de récursion, dans toutes les expériences, est fixée à un. Le modèle racine appelle des sous-LLM, mais ces sous-LLM ne se rappellent pas eux-mêmes. Que se passe-t-il avec deux, trois, dix niveaux ? Personne ne sait encore. Intuitivement, certaines tâches devraient bénéficier d'une décomposition hiérarchique plus profonde — un audit de monorepo, par exemple, où chaque service contient des sous-systèmes contenant des modules.</p>
+
+<p>L'asynchronicité est un autre chantier ouvert. Toutes les implémentations du papier sont séquentielles. Un appel à <code>llm_query</code> bloque jusqu'au retour. Pour des trajectoires qui lancent des centaines d'appels, c'est dramatique en termes de latence. Une version asynchrone, avec exécution parallèle des sous-appels, divise potentiellement les temps de réponse par un ordre de grandeur. Les auteurs notent que cela "peut significativement réduire le runtime" mais laissent l'ingénierie aux suivants.</p>
+
+<p>La question de l'entraînement à plus grande échelle reste pleinement ouverte. 1000 trajectoires sur un 8B ont donné 28 % de gain. Que donnerait un million de trajectoires sur un 70B ? Les auteurs émettent l'hypothèse que les trajectoires RLM pourraient être vues comme une forme de raisonnement, entraînable par bootstrapping à la manière de STaR ou Quiet-STaR. Si c'est vrai, on tient là un nouvel axe de scaling pour les modèles de prochaine génération — ni plus de paramètres, ni plus de tokens d'entraînement, mais plus de profondeur récursive et plus de finesse dans la décomposition de tâches.</p>
+
+<p>Reste enfin la question de la robustesse. Les modèles ne sont pas toujours bons décideurs. Dans plusieurs trajectoires analysées par les auteurs, on observe des comportements absurdes : Qwen3-Coder qui construit méticuleusement une réponse dans la première itération, puis l'oublie et recommence à zéro. GPT-5 qui rend son plan au lieu de sa réponse finale parce qu'il s'est trompé de balise. Ces ratés sont des artefacts de scaffolding plus que de fond, et un modèle entraîné nativement comme RLM les éliminerait en grande partie. Mais en l'état, les pipelines de production devront prévoir des garde-fous : limites de profondeur, plafonds de coût, validation des outputs finaux.</p>
+
+<p>Le code est disponible sur GitHub (<code>alexzhang13/rlm</code>). Les benchmarks le sont aussi. Pour quiconque construit des agents en 2026, le papier mérite une lecture attentive — non comme une solution clé en main, mais comme une réorientation conceptuelle. Le contexte cesse d'être un parchemin que le modèle déroule. Il devient un espace mémoire que le modèle parcourt.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OUROBOROS: Dynamic Weight Generation for Recursive Transformers via Input-Conditioned LoRA Modulation — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>OUROBOROS: Dynamic Weight Generation for Recursive Transformers via Input-Conditioned LoRA Modulation</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Un modèle de langage de 70 milliards de paramètres empile typiquement 80 couches de transformers. Chaque couche réalise une opération distincte, apprise pendant l'entraînement. Le coût de fonctionnement ? Entre 2 et 10 dollars par million de tokens sur les API commerciales, et une impossibilité quasi totale de faire tourner ces modèles sur un téléphone ou un ordinateur portable.</p>
+
+<p>Une idée séduit les chercheurs depuis quelques années pour réduire ce coût : et si, au lieu de stocker 80 couches différentes, on stockait une seule couche qu'on appliquait 80 fois de suite ? On gagnerait massivement en mémoire, tout en conservant une profondeur effective équivalente. Ces modèles sont appelés <strong>transformers récursifs</strong> ou bouclés.</p>
+
+<p>Mais il y a un hic, et c'est précisément ce hic que deux chercheurs de RightNow AI, Jaber Jaber et Osama Jaber, attaquent dans leur article <em>OUROBOROS</em>. Si la même couche est appliquée 80 fois, elle fait 80 fois la même chose. Or un modèle classique, à la couche 5, fait quelque chose de très différent de ce qu'il fait à la couche 33. La couche 5 décode les mots, la couche 33 prépare la prédiction finale. Boucler une couche unique, c'est forcer toutes les étapes à utiliser la même boîte à outils. Pour un poème ou un problème de mathématiques, le modèle reçoit exactement le même traitement à chaque itération.</p>
+
+<p>OUROBOROS propose une solution élégante : ajouter un petit chef d'orchestre, baptisé <em>Controller</em>, qui regarde l'état actuel du calcul et décide à chaque pas comment ajuster la couche partagée. La couche reste unique, mais le Controller la modifie dynamiquement, en fonction de ce que le modèle est en train de traiter.</p>
+
+<h2>Le problème : la malédiction de l'uniformité</h2>
+
+<p>Reprenons l'image. Imaginons une chaîne d'usinage avec 36 postes de travail. Chaque poste possède ses propres outils, calibrés pour une tâche précise. C'est ainsi que fonctionne un transformer classique de 36 couches. Le poste 5 visse, le poste 18 polit, le poste 33 contrôle la qualité.</p>
+
+<p>Maintenant, supprimons 19 postes pour réduire les coûts. Il n'en reste que 17. Pour conserver la qualité de finition, on demande à un poste unique de tourner 36 fois sur lui-même : l'objet repasse 36 fois entre les mêmes mains. Mais ces mains n'ont qu'un seul jeu d'outils. Elles ne peuvent ni visser, ni polir, ni contrôler selon le besoin du moment. Elles font la même chose à chaque tour.</p>
+
+<p>C'est la limitation centrale des transformers récursifs. Plusieurs équipes ont tenté de la contourner. RingFormer (EMNLP 2025) ajoute des signaux fixes par étape pour différencier les passages. Le travail de DeepMind sur les transformers récursifs assouplis (ICLR 2025) ajoute des adaptateurs LoRA, une technique standard pour ajuster un modèle, propres à chaque itération. Huginn (NeurIPS 2025) coupe le modèle en trois sections — prélude, partie récurrente, coda — et démontre qu'on peut diviser par 40 % le nombre de paramètres tout en conservant les performances sur les benchmarks de raisonnement.</p>
+
+<p>Toutes ces approches ont un point commun : leurs ajustements par étape sont <strong>fixés à l'entraînement</strong>. Une fois le modèle figé, le pas numéro 3 fait toujours la même chose, qu'on lui soumette une équation différentielle ou un sonnet. C'est mieux que rien, mais ça reste statique.</p>
+
+<p>La question posée par les frères Jaber est donc : peut-on rendre ces ajustements <em>dynamiques</em> ? Peut-on construire un petit module qui observe ce que le modèle calcule à l'instant <em>t</em> et qui décide, en temps réel, comment modifier la couche partagée pour le pas suivant ?</p>
+
+<h2>La méthode : un chef d'orchestre miniature</h2>
+
+<p>OUROBOROS combine trois ingrédients que les auteurs jugent insuffisants pris séparément, mais redoutables ensemble.</p>
+
+<h3>Premier ingrédient : la décomposition prélude / récurrent / coda</h3>
+
+<p>Les chercheurs prennent Qwen2.5-3B, un modèle open source de 36 couches, et le découpent en trois morceaux. Le <strong>prélude</strong> (8 couches) traduit le texte d'entrée en représentations abstraites. La <strong>partie récurrente</strong> est constituée d'une seule couche, la 18, qui sera bouclée plusieurs fois. La <strong>coda</strong> (8 dernières couches) reconvertit les représentations en prédictions de mots. Au total, 17 couches sur 36 sont conservées. Les 19 autres sont supprimées, et c'est leur savoir-faire qu'il va falloir compenser.</p>
+
+<h3>Deuxième ingrédient : l'héritage des couches supprimées</h3>
+
+<p>Les auteurs utilisent une technique mathématique appelée SVD (décomposition en valeurs singulières) pour extraire l'essence des 19 couches supprimées. L'idée intuitive : chaque couche supprimée diffère de la couche conservée d'une certaine manière. On calcule la différence moyenne, puis on extrait les directions principales de cette différence. Ces directions sont gelées dans le modèle final, comme des partitions à disposition de l'orchestre.</p>
+
+<p>Le Controller n'a donc pas à inventer ces directions, ce qui serait extrêmement coûteux à apprendre. Elles existent déjà, héritées des couches sacrifiées. Le Controller doit simplement décider, à chaque pas, à quel volume jouer chaque partition.</p>
+
+<h3>Troisième ingrédient : le Controller hypernetwork</h3>
+
+<p>C'est le cœur de l'innovation. Un hypernetwork est un réseau qui produit les paramètres d'un autre réseau. Ici, le Controller observe deux choses : un résumé de l'état actuel du calcul (la moyenne des représentations cachées) et un numéro de pas (1, 2, 3...). À partir de ces deux informations, il génère un vecteur d'ajustement qui module les fameuses partitions héritées des couches supprimées.</p>
+
+<p>Le résultat : à chaque tour de boucle, la couche partagée est légèrement différente, et cette différence dépend à la fois de l'étape et du contenu en cours de traitement. Un poème et une équation reçoivent des ajustements distincts.</p>
+
+<h3>L'astuce qui change tout : la porte temporelle</h3>
+
+<p>Reste un problème pratique. Boucler une couche dix ou vingt fois fait dériver les représentations. Les valeurs explosent, le modèle s'effondre. Les auteurs reprennent une trouvaille de Hung-Hsuan Chen (2026) : insérer une <strong>porte de récurrence</strong> entre chaque itération.</p>
+
+<p>Cette porte mélange l'état nouveau et l'état précédent. À l'initialisation, elle conserve 88 % de l'état précédent et n'admet que 12 % du nouveau. Autrement dit, le modèle commence par bouger très lentement, comme un funambule qui apprend à marcher avant de courir. Pendant l'entraînement, la porte apprend à s'ouvrir davantage quand c'est utile.</p>
+
+<p>Sans cette porte, l'expérience montre que le modèle empire systématiquement à chaque itération supplémentaire. Avec la porte, il s'améliore.</p>
+
+<h2>Résultats clés</h2>
+
+<p>Les chiffres méritent qu'on s'y arrête.</p>
+
+<p>Le point de départ : Qwen2.5-3B complet, 36 couches, atteint une perte d'entraînement de 1,38 sur le jeu de données FineWeb-edu. Quand on coupe le modèle à 17 couches sans rien faire d'autre, la perte explose à 8,98. Les couches suppriméd étaient nécessaires.</p>
+
+<p>OUROBOROS, avec ses 9,2 millions de paramètres entraînables ajoutés (soit 0,6 % du modèle de base), ramène cette perte à 5,08. C'est une réduction de 43,4 % par rapport à la baseline tronquée, et cela récupère 51,3 % du fossé creusé par la suppression des couches. Avec moins de 1 % de paramètres supplémentaires, on récupère plus de la moitié des dégâts.</p>
+
+<p>Plus intéressant encore, la comparaison avec une approche statique de taille équivalente. Les auteurs ont entraîné une variante où, au lieu d'un Controller qui regarde le contenu, ils utilisent un simple tableau de paramètres figés par étape. Le Controller bat cette variante dans toutes les configurations testées. À profondeur 1 (une seule itération), l'écart atteint 1,44 point de perte. C'est énorme à cette échelle. Le Controller produit donc une modulation utile dès le premier passage, ce qu'aucun système statique ne peut faire.</p>
+
+<p>Une découverte annexe surprend les auteurs eux-mêmes : les performances sont remarquablement insensibles aux hyperparamètres. Profondeur 1, profondeur 16, rang 8, rang 64 : les pertes finales tiennent dans une fourchette de 0,009 point. Les chercheurs y voient le signe que le système converge vers un attracteur stable, indifférent aux choix techniques pourvu qu'ils soient raisonnables.</p>
+
+<h3>L'ombre au tableau : la généralisation</h3>
+
+<p>Les auteurs sont honnêtes sur la limite principale de leur travail. Le Controller améliore massivement les performances sur les données d'entraînement, mais sur 12 textes inédits non issus de FineWeb-edu, il n'améliore pas la baseline tronquée. Les gains ne se transfèrent pas, du moins pas encore.</p>
+
+<p>Leur diagnostic est précis : les couches gelées de la coda attendent une distribution particulière de représentations en provenance de la couche 18. Le Controller décale cette distribution dans une direction qui réduit la perte sur les textes éducatifs FineWeb. Sur d'autres types de textes, ce décalage n'est plus pertinent, et la coda — qu'on n'a pas modifiée — produit des prédictions dégradées. Plusieurs tentatives de correction (dropout, données plus diverses, contraintes sur l'amplitude des modulations) réduisent l'écart sans le combler.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Pourquoi ce travail compte-t-il, au-delà du cercle des chercheurs en architectures neuronales ?</p>
+
+<p>D'abord, parce qu'il valide une direction de recherche concrète : l'<strong>adaptation dynamique des poids</strong> dans les modèles bouclés. Jusqu'à présent, l'industrie avait deux options pour réduire le coût d'inférence : la quantification (compresser les nombres) et la distillation (entraîner un petit modèle à imiter un gros). OUROBOROS ouvre une troisième voie : reboucler intelligemment un modèle existant. Cette voie est complémentaire des deux autres et pourrait s'y combiner.</p>
+
+<p>Ensuite, parce qu'il établit un point de référence chiffré. Un modèle qui retient 47 % de ses couches et ajoute 0,6 % de paramètres entraînables récupère la moitié des performances perdues. C'est un ratio que les ingénieurs peuvent comparer aux autres techniques d'efficacité.</p>
+
+<p>Enfin, parce que le code est public — 6 979 lignes de Python, 42 fichiers, 66 tests unitaires — sur le dépôt RightNow-AI/ouroboros. Toute équipe peut reproduire les expériences, contester les résultats, ou tester l'approche sur d'autres modèles de base.</p>
+
+<p>Pour les équipes produit qui doivent servir des modèles de langage à grande échelle, l'invariance par rapport à la profondeur est un signal pratique. Si profondeur 1 produit la même perte que profondeur 16, autant utiliser profondeur 1 et économiser le temps de calcul. Les auteurs notent toutefois que cette invariance trahit un échec partiel : le modèle ne tire pas vraiment parti de la récurrence supplémentaire. Le rêve d'un modèle qui réfléchit plus longtemps sur les problèmes difficiles n'est pas encore réalisé.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Trois pistes se dégagent.</p>
+
+<p>La première, la plus évidente, consiste à dégeler une partie de la coda. Si les couches finales pouvaient s'adapter au décalage produit par le Controller, le problème de généralisation disparaîtrait probablement. Le coût en paramètres entraînables augmenterait, mais l'on resterait largement en dessous d'un fine-tuning complet.</p>
+
+<p>La deuxième piste touche à la <strong>profondeur adaptative</strong>. Les auteurs ont implémenté un module Halter qui décide quand arrêter la boucle, mais ne l'ont pas encore évalué. L'objectif serait de faire boucler le modèle davantage sur les problèmes difficiles et moins sur les phrases simples, à la manière dont un humain réfléchit plus longtemps sur un théorème que sur une liste de courses.</p>
+
+<p>La troisième piste consiste à mesurer les gains sur des benchmarks de tâches concrètes : GSM8K (problèmes mathématiques), ARC-Challenge (raisonnement scientifique), HellaSwag (compréhension de bon sens). La perte d'entraînement est un signal indirect. Ce qui compte vraiment, c'est de savoir si OUROBOROS résout des problèmes que la baseline tronquée échoue à résoudre.</p>
+
+<p>Une question reste ouverte sur l'<strong>échelle</strong>. Les expériences portent sur Qwen2.5-3B. À 7 milliards de paramètres, à 70 milliards, à 400 milliards, l'avantage du Controller persiste-t-il, s'amplifie-t-il, ou disparaît-il ? L'intuition des auteurs est qu'il devrait s'amplifier : plus un modèle est grand, plus la redondance entre couches est forte, plus l'initialisation par SVD a de la matière à exploiter. Mais l'intuition n'est pas la preuve. Une équipe avec accès à des GPU de production pourrait trancher.</p>
+
+<p>Au-delà d'OUROBOROS lui-même, ce travail s'inscrit dans une famille plus large d'idées qui considèrent l'inférence comme un processus dynamique plutôt qu'une simple traversée linéaire. COCONUT (ICLR 2025) entraîne des modèles à raisonner dans l'espace des représentations plutôt que dans l'espace des mots. L'Inner Thinking Transformer insère des « tokens de pensée » entre les couches. La direction commune : transformer les modèles de langage de moulinettes statiques en systèmes qui modulent leurs propres calculs. OUROBOROS ajoute une brique à cet édifice naissant, en montrant qu'un module de 0,7 million de paramètres suffit à contrôler dynamiquement un modèle de plusieurs milliards.</p>
+
+<p>Reste à voir si cette brique tiendra à l'épreuve d'autres modèles, d'autres tâches, et d'autres équipes.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recursive Language Models — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Recursive Language Models</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les fenêtres de contexte des LLM frontières restent bornées et sujettes au <em>context rot</em> : la qualité s'effondre bien avant d'atteindre la limite nominale, surtout sur les tâches denses en information. Les approches dominantes pour étendre le contexte — extension architecturale (SSM, attention linéaire) et compaction par résumé — laissent un vide pour les tâches qui exigent un accès dense et fidèle à l'intégralité du prompt.</p>
+<p>Zhang, Kraska et Khattab proposent les Recursive Language Models (RLM), un échafaudage d'inférence qui change la place du prompt : au lieu de l'injecter dans la fenêtre du modèle, il devient une variable d'un environnement REPL Python que le LLM racine examine, transforme et passe en argument à des sous-appels récursifs. Le modèle ne voit que des métadonnées sur la variable et le stdout ; il écrit du code pour découper, filtrer et invoquer des sous-LLM sur les segments. L'objectif est de scaler simultanément la longueur d'entrée, de sortie et l'horizon sémantique, sans dépendre d'une réécriture du backbone.</p>
+
+<h2>Méthodologie</h2>
+<p>L'algorithme 1 formalise la boucle RLM : un REPL persistant initialisé avec le prompt comme variable, une fonction <code>llm_query</code> exposée au modèle racine, et une condition d'arrêt sur l'écriture d'une variable <code>Final</code>. L'algorithme 2 sert de contre-exemple pédagogique : il met en évidence trois choix de conception nécessaires — handle symbolique sur le prompt, sortie via variable plutôt qu'autoregressive, récursivité programmatique des sous-appels.</p>
+<p>L'évaluation repose sur quatre tâches calibrées sur la complexité de traitement par rapport à la longueur d'entrée : S-NIAH (constante), BrowseComp-Plus 1K (multi-hop, ~6-11M tokens), OOLONG trec_coarse (linéaire), OOLONG-Pairs (quadratique, 20 requêtes synthétiques construites pour les auteurs). Les modèles testés sont GPT-5 (avec sous-appels GPT-5-mini), Qwen3-Coder-480B-A35B et Qwen3-8B. Les baselines couvrent l'appel direct, CodeAct (avec et sans BM25, avec et sans sous-appels), et un agent de résumé itératif. Un fine-tuning par distillation sur 1000 trajectoires LongBenchPro produit RLM-Qwen3-8B (48 H100-heures, batch 64, 300 steps).</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur BrowseComp-Plus 1K (6-11M tokens, hors fenêtre de tous les modèles testés), RLM(GPT-5) atteint 91,3 % contre 70,5 % pour le summary agent et 0 % pour le modèle de base. Sur OOLONG-Pairs (quadratique), GPT-5 et Qwen3-Coder plafonnent sous 0,1 % de F1 alors que les RLM correspondants atteignent 58,0 % et 23,1 %. La figure 1 montre que la dégradation de GPT-5 s'amorce dès 16k tokens sur les tâches linéaires et quadratiques, là où le RLM tient la pente.</p>
+<p>L'ablation sans sous-appels reste compétitive sur les tâches peu denses (CodeQA Qwen3-Coder : 66 % vs 56 % avec sous-appels) mais s'effondre sur OOLONG-Pairs (-10 à -59 %), ce qui isole la récursion comme levier propre aux tâches denses. Le coût médian d'un RLM est comparable à celui d'un appel direct ; la queue de distribution est lourde (tail à 95 %), reflétant la variance des trajectoires. RLM-Qwen3-8B fine-tuné gagne 28,3 % de médiane sur les 4 tâches contre Qwen3-8B brut, avec coûts d'inférence inférieurs.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs sont francs sur les ratés : les modèles sans capacités de coding suffisantes échouent comme RLM, les modèles thinking saturent en tokens de sortie sur les longues trajectoires, le prompt système doit être ajusté par modèle (Qwen3-Coder a tendance à lancer des milliers de sous-appels sans la garde-fou explicite). L'implémentation séquentielle/bloquante pénalise les latences ; l'asynchronisme reste à explorer.</p>
+<p>Plusieurs faiblesses méritent d'être nommées. L'échantillon par benchmark est modeste (50 tâches S-NIAH/OOLONG, 20 OOLONG-Pairs, 150 BrowseComp+), sans reporting d'écarts-types par configuration ni tests de significativité — les écarts en gris dans le Tableau 1 portent uniquement sur les coûts. La métrique d'OOLONG sur réponses numériques (<code>0.75^|y-ŷ|</code>) prête le flanc à des effets de bord sur petites différences. La profondeur de récursion est fixée à 1 : on ne sait donc rien des comportements en récursion plus profonde, alors que le formalisme l'autorise. Le fine-tuning de RLM-Qwen3-8B repose sur 1072 trajectoires distillées d'un seul modèle enseignant, ce qui questionne la robustesse de la généralisation au-delà de LongBenchPro.</p>
+<p>Le choix d'un sous-modèle GPT-5-nano pour la baseline summary agent (au lieu de GPT-5) crée une asymétrie de comparaison sur BrowseComp+ que les auteurs reconnaissent mais qui rend l'écart de coût (×20 entre GPT-5 et Qwen3-Coder) non interprétable comme propriété intrinsèque des méthodes.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est publié sur GitHub (alexzhang13/rlm), les prompts système sont reproduits intégralement en annexe C, les 20 tâches OOLONG-Pairs sont listées en annexe D.1, et les paramètres de fine-tuning (prime-rl, batch 64, 300 steps) sont fournis. Les coûts sont calculés par fournisseur (OpenAI, Fireworks). Manquent les seeds, les graines de tirage des 50/150 instances, et les trajectoires brutes — la reproduction exacte des chiffres reste donc incertaine sans réexécution complète.</p>
+
+<h2>Impact et applications</h2>
+<p>L'idée centrale — externaliser le prompt comme variable plutôt que comme contexte du transformeur — est une simplification conceptuelle qui réorganise le débat sur le long-contexte. Elle s'attaque frontalement à une tension que les approches par compaction n'avaient jamais résolue : préserver l'accès dense à toutes les parties du prompt sans saturer la fenêtre. Le résultat sur OOLONG-Pairs (de 0,1 % à 58 %) est qualitativement différent d'une amélioration incrémentale.</p>
+<p>Les implications pratiques pour les agents (Claude Code, OpenHands, agents de recherche profonde) sont directes : les patrons de compaction itérative par résumé ont un plafond structurel sur les tâches information-dense que les RLM contournent. Le succès du fine-tuning sur 1000 trajectoires suggère qu'un nouvel axe de scaling — entraîner nativement des modèles à se comporter comme RLM — est exploitable à coût marginal.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans la lignée de CodeAct (Wang et al. 2024), THREAD (Schroeder et al. 2025), Context-Folding (Sun et al. 2025), AgentFold (Ye et al. 2025) et ReSum (Wu et al. 2025). Les auteurs en isolent précisément la différence : ces approches placent le prompt dans la fenêtre du modèle et délèguent verbeusement, ce qui borne la sortie à la longueur du modèle de base. Les RLM tranchent en faisant de la récursion programmatique sur des slices construits par code la primitive de base. Le rapprochement avec Quiet-STaR et STaR (Zelikman et al. 2022, 2024) en conclusion est suggestif — les trajectoires RLM comme nouvelle forme de raisonnement entraînable — mais reste programmatique.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>5</td><td>Reformulation conceptuelle nette d'un problème ouvert (scaling du contexte) avec hypothèse testable.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Quatre tâches couvrant complexités O(1), O(n), O(n²) ; baselines pertinentes ; ablations propres. Bémol : profondeur de récursion fixée à 1.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>50/150/20 instances par benchmark, sans variance ni tests statistiques rapportés ; gains absolus suffisamment grands pour rester convaincants.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Métriques standards (exact match, F1, multi-choice) ; la métrique numérique d'OOLONG est arbitraire mais documentée.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Asymétrie summary agent (GPT-5-nano pour résumer, GPT-5 pour répondre) reconnue mais non corrigée ; un seul modèle enseignant pour le fine-tuning.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, prompts complets, hyperparamètres de fine-tuning fournis ; seeds et trajectoires brutes manquantes.</td></tr>
+<tr><td>Transparence sur les limites</td><td>5</td><td>Annexe B "Negative Results" honnête : prompt non-portable, modèles thinking saturent, asynchronisme manquant.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Réorganisation conceptuelle (prompt comme variable d'environnement) avec gains qualitatifs (0,1 % → 58 % sur OOLONG-Pairs).</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

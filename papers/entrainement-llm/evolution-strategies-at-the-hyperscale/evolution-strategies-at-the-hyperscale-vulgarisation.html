@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evolution Strategies at the Hyperscale — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Evolution Strategies at the Hyperscale</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Entraîner un modèle d'un milliard de paramètres sans rétropropagation</h2>
+
+<p>Un million de variantes d'un modèle, évaluées en parallèle sur un seul GPU, pour finir par battre l'entraînement classique par rétropropagation. Ce résultat, publié par une équipe d'Oxford, du MILA et de NVIDIA, n'est pas une démonstration anecdotique : il suggère qu'une famille de méthodes d'optimisation laissée de côté depuis les années 70 — les stratégies évolutionnaires — peut désormais rivaliser avec la descente de gradient sur des modèles de langage à plusieurs milliards de paramètres.</p>
+
+<p>Le papier s'appelle <em>Evolution Strategies at the Hyperscale</em> et introduit EGGROLL, un algorithme qui multiplie par cent la vitesse d'entraînement évolutionnaire pour les gros modèles. Derrière l'acronyme rigolo se cache une idée simple, dont les implications dépassent largement le cadre académique.</p>
+
+<h2>Le problème : pourquoi la rétropropagation finit par coincer</h2>
+
+<p>Depuis dix ans, presque tous les réseaux de neurones se forment de la même façon. On calcule l'erreur du modèle, on la propage à rebours dans les couches, on ajuste les poids par petits pas. C'est élégant, c'est efficace, et c'est devenu le standard absolu. Mais la rétropropagation impose des contraintes lourdes.</p>
+
+<p>D'abord, elle exige que tout soit dérivable. Une fonction discrète, un module symbolique, un appel d'outil externe, une simulation physique non différentiable : autant de composants qu'on ne peut pas insérer dans une chaîne de gradient. Ensuite, elle souffre quand on quitte les types de données usuels. Entraîner un modèle directement en int8 ou en fp8 demande des trésors d'ingéniosité pour éviter que les gradients explosent ou disparaissent. Enfin, elle communique mal en environnement distribué : chaque GPU doit échanger ses gradients avec les autres, ce qui plafonne la mise à l'échelle.</p>
+
+<p>Les stratégies évolutionnaires (ES) contournent ces trois problèmes. Le principe, formalisé dans les années 70 puis remis au goût du jour par OpenAI en 2017, est trivial : on perturbe légèrement les poids du modèle dans plusieurs directions aléatoires, on évalue chaque variante sur la tâche, on garde une moyenne pondérée des perturbations qui ont bien marché. Aucun gradient calculé. Aucune dérivabilité requise. Et chaque perturbation s'évalue indépendamment, ce qui parallélise à merveille.</p>
+
+<p>Le souci, c'est que cette approche devient prohibitivement coûteuse à grande échelle. Pour perturber un modèle d'un milliard de paramètres, il faut générer un milliard de nombres aléatoires <em>par membre de la population</em>. Avec mille membres, on manipule mille milliards de valeurs. Le GPU passe son temps à déplacer de la mémoire au lieu de calculer. C'est ce qu'on appelle un problème d'intensité arithmétique : trop peu d'opérations par octet lu en mémoire.</p>
+
+<p>Résultat, les ES restaient cantonnées aux petits réseaux de quelques millions de paramètres et à des populations de quelques centaines d'individus. Très loin de l'échelle des LLM modernes.</p>
+
+<h2>La méthode : du Lego avec des matrices basse-rang</h2>
+
+<p>L'idée centrale d'EGGROLL emprunte à une technique bien connue du fine-tuning : LoRA. Plutôt que de perturber chaque coefficient d'une grande matrice de poids indépendamment, on décompose la perturbation en produit de deux petites matrices très fines. Concrètement, au lieu de stocker une perturbation pleine de taille m × n, on stocke deux matrices A et B de taille m × r et n × r, avec r très petit — souvent r = 1.</p>
+
+<p>L'analogie qui marche le mieux est celle d'une vague à la surface de l'eau. Une perturbation pleine, c'est mille milles vaguelettes désordonnées. Une perturbation basse-rang, c'est une seule grosse vague qui roule dans une direction donnée. On a beaucoup moins d'information à transporter, mais la direction reste utile pour orienter l'optimisation.</p>
+
+<p>Cette décomposition change tout sur le plan matériel. La passe avant d'un modèle perturbé devient un calcul que les GPU adorent : une grosse multiplication matricielle partagée par tous les membres de la population, plus une petite correction par membre. C'est exactement la structure utilisée par les serveurs d'inférence comme vLLM pour servir des centaines d'utilisateurs en parallèle. Les chercheurs récupèrent donc gratuitement toute l'optimisation matérielle déjà investie dans l'inférence batchée.</p>
+
+<p>Le gain est spectaculaire. Sur leur banc d'essai, EGGROLL atteint 91 % du débit théorique d'une simple inférence batchée. Pour comparaison, l'ES naïve plafonne à 0,4 %. Soit deux ordres de grandeur de différence sur les modèles à un milliard de paramètres.</p>
+
+<p>Une objection saute aux yeux : si chaque perturbation est de rang 1, est-ce qu'on n'appauvrit pas l'espace de recherche au point de tuer l'algorithme ? La réponse mathématique est rassurante. La mise à jour finale, qui est une moyenne pondérée de N perturbations, retrouve un rang min(N, m, n). Avec mille membres dans la population, on couvre largement tout l'espace des matrices, même si chaque vote individuel est unidirectionnel. C'est de la démocratie matricielle : chaque électeur a une voix simple, mais le résultat agrégé est riche.</p>
+
+<p>Les auteurs accompagnent cette intuition d'une analyse théorique poussée. Ils prouvent qu'en haute dimension, l'écart entre EGGROLL et l'ES classique pleine décroît à un rythme de l'ordre de 1/r. Autrement formulé : même avec r = 1, on est très proche du comportement idéal, et on l'atteint vite. Leurs simulations montrent qu'à r = 50, la différence est visuellement indiscernable.</p>
+
+<h2>Résultats clés : un million d'individus sur un seul GPU</h2>
+
+<p>L'équipe a poussé EGGROLL dans trois territoires distincts pour vérifier sa robustesse.</p>
+
+<p>Premier terrain : pré-entraîner un modèle de langage entièrement en entiers 8 bits, sans aucune fonction d'activation explicite. La non-linéarité provient uniquement de l'écrêtage naturel des opérations int8 quand elles dépassent les bornes [-127, 127]. Un tel modèle est strictement impossible à entraîner par rétropropagation : les gradients en int8 sont une catastrophe numérique. Avec EGGROLL, ça marche. Sur le dataset minipile, leur modèle de 6 couches atteint une perte de 3,40 bits par octet, mieux qu'un Transformer en fp32 entraîné classiquement (3,58 bits par octet) sur le même volume de données. Avec une population d'un million d'individus, sur un seul GPU. Un million, c'est trois ordres de grandeur de plus que le record précédent d'OpenAI en 2017.</p>
+
+<p>Deuxième terrain : le fine-tuning de LLM sur des tâches de raisonnement. Ils prennent RWKV-7, un modèle récurrent de 7 milliards de paramètres, et le finissent sur les jeux de données Countdown puis GSM8K. Le concurrent direct est GRPO, l'algorithme star utilisé par DeepSeek et consorts pour aligner les LLM par renforcement. Sur le même temps de calcul, EGGROLL fait mieux. Sur GSM8K, leur courbe de validation domine GRPO du début à la fin. Plus impressionnant encore : sur AIME24 (un jeu d'olympiade mathématique), le modèle de 14 milliards de paramètres passe de 13 % à 30 % de réussite. Sur AIME25, de 7 % à 33 %.</p>
+
+<p>Troisième terrain : l'apprentissage par renforcement classique. Sur 16 environnements (Brax, Craftax, Kinetix, Jumanji…), EGGROLL tient la dragée haute à PPO et OpenES, la référence évolutionnaire. Compétitif sur 7, gagnant sur 7, perdant sur 2. Pas de régression de performance, juste un gain en vitesse.</p>
+
+<p>Le détail qui fait sens, c'est la consommation mémoire. GRPO traîne avec lui un optimiseur Adam, qui double voire triple l'empreinte mémoire d'un modèle. Sur les très gros modèles, ça devient bloquant. EGGROLL n'a besoin que des poids du modèle et de quelques scalaires par membre de population. À iso-mémoire, il peut donc travailler sur des modèles plus gros, ou avec des batchs plus larges.</p>
+
+<h2>Implications pratiques : la rétropropagation n'est plus le seul jeu en ville</h2>
+
+<p>Pendant longtemps, ES restait une curiosité académique. EGGROLL change le calcul économique. Si vous pouvez entraîner un modèle de 14 milliards de paramètres en mode évolutionnaire, sur les mêmes infrastructures que celles utilisées pour servir l'inférence, plusieurs verrous sautent.</p>
+
+<p>Premier verrou : les architectures non différentiables. On peut désormais imaginer entraîner de bout en bout des systèmes hybrides où un LLM appelle des outils symboliques, des solveurs SAT, des bases de données, des simulateurs physiques. Tout ce qui était jusqu'ici un trou noir pour la rétropropagation devient optimisable. Les agents qui composent plusieurs LLM, des moteurs de calcul et des bases de connaissances entrent dans le périmètre du fine-tuning end-to-end.</p>
+
+<p>Deuxième verrou : la quantification. Entraîner directement en int8 résout un problème industriel coûteux. Aujourd'hui, on entraîne en fp16 ou bf16, puis on quantifie pour le déploiement, en perdant un peu de qualité. EGGROLL permet d'optimiser directement dans le format de déploiement. Énergétiquement, c'est massif : une opération int8 consomme une fraction d'une opération fp32.</p>
+
+<p>Troisième verrou : la frugalité matérielle. Le démineur classique de l'IA, c'est la communication entre GPU lors de la rétropropagation distribuée. EGGROLL ne communique que des scalaires de fitness — un nombre par individu, à la fin de l'évaluation. Cela ouvre la porte à des entraînements sur clusters hétérogènes, voire géographiquement distribués. Des nœuds avec des GPU lents peuvent contribuer sans freiner les rapides.</p>
+
+<p>Quatrième verrou : pass@k. Quand on évalue un LLM sur du raisonnement, ce qui compte parfois n'est pas la réponse moyenne mais la probabilité qu'au moins une de k tentatives soit correcte. GRPO ne sait pas optimiser cette métrique directement. EGGROLL le peut, parce qu'il opère sur la fitness telle qu'on la définit, sans passer par une fonction de perte différentiable.</p>
+
+<h2>Pour aller plus loin : ce qui reste ouvert</h2>
+
+<p>Tout n'est pas réglé. EGGROLL paie son passage à l'échelle en compute brut. Atteindre la performance d'un Transformer classique avec leur modèle int8 a demandé environ 180 fois plus d'heures GPU. La méthode est intéressante quand on a beaucoup de calcul mais peu de données, ou quand on optimise une cible non différentiable. Sur le pré-entraînement classique de LLM, où la rétropropagation est solide et bien outillée, le rapport qualité-prix d'EGGROLL n'est pas encore tranché.</p>
+
+<p>L'analyse théorique mérite aussi qu'on s'y attarde. Les auteurs identifient trois régimes selon l'échelle du bruit injecté dans les perturbations. Trop de bruit, l'algorithme diverge. Trop peu, il converge vers un simple gradient de premier ordre. Au point critique, il garde des termes d'ordre supérieur qui pourraient capturer des structures que la rétropropagation rate. Cette zone intermédiaire reste inexplorée empiriquement et constitue une piste de recherche évidente.</p>
+
+<p>Question matérielle : à quel point EGGROLL profite-t-il des architectures spécialisées ? Les TPU et les puces Cerebras ont des profils de calcul différents des GPU. Le ratio inférence batchée / opérations par membre y change. On peut deviner que la marge à 91 % du throughput d'inférence varierait selon le hardware.</p>
+
+<p>Enfin, il y a une question philosophique. Pendant des années, le récit dominant était que la rétropropagation a gagné parce qu'elle exploite la structure dérivable des réseaux. Si une méthode zéro-ordre comme EGGROLL atteint des performances comparables sur le raisonnement, qu'est-ce que cela dit de ce qu'on optimise vraiment ? Peut-être que pour des objectifs de type récompense binaire, la rétropropagation surinvestit dans une précision dont on n'a pas besoin. Le cerveau, soit dit en passant, n'utilise pas la rétropropagation.</p>
+
+<p>EGGROLL n'enterre pas la descente de gradient. Mais il rouvre une porte qu'on croyait définitivement fermée : celle d'une optimisation à grande échelle qui n'a pas besoin de dériver quoi que ce soit. Pour un domaine qui s'est uniformisé autour d'un seul outil, c'est une bouffée d'air frais. Le code est public sur <em>eshyperscale.github.io</em>, et les premières expérimentations communautaires devraient permettre de jauger rapidement la solidité du résultat.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

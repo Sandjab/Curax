@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OUROBOROS: Dynamic Weight Generation for Recursive Transformers via Input-Conditioned LoRA Modulation — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>OUROBOROS: Dynamic Weight Generation for Recursive Transformers via Input-Conditioned LoRA Modulation</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les transformers récursifs partagent un même bloc de poids appliqué plusieurs fois en profondeur, échangeant des paramètres contre du calcul. Leur limite structurelle tient à l'uniformité : chaque étape applique la même transformation, alors qu'un modèle classique à 36 couches apprend des opérations distinctes selon la profondeur. Les travaux récents (RingFormer, Relaxed Recursive Transformer) ajoutent des adaptateurs LoRA par étape, mais ces modifications restent fixes après entraînement et ne dépendent pas de l'entrée.</p>
+<p>OUROBOROS pose une question simple : un petit hypernetwork peut-il observer l'état caché courant et générer dynamiquement la modulation des poids pour l'étape suivante ? Le travail s'inscrit dans la lignée des architectures Huginn et Retrofitted Recurrence, mais introduit une dimension de conditionnement par l'entrée absente des approches antérieures.</p>
+
+<h2>Méthodologie</h2>
+<p>Le modèle de base est Qwen2.5-3B (36 couches), partitionné en trois sections : un Prelude figé (8 couches), un Recurrent Block constitué d'une seule couche (la 18e) bouclée N fois, et un Coda figé (8 couches). Les couches retirées (8–17 et 19–27) sont compressées via SVD : pour chaque projection linéaire de la couche récurrente, le résidu moyen vis-à-vis des couches supprimées est décomposé en bases <code>A = V_r^T</code> et <code>B = U_r S_r</code>, gelées.</p>
+<p>Le Controller (0,7M paramètres) prend en entrée l'état caché moyenné <code>h̄</code> et un embedding d'étape, et produit pour chacune des 7 cibles LoRA (Q, K, V, O, gate, up, down) un vecteur diagonal <code>δ_k</code>. La mise à jour de poids est <code>ΔW_k = (α/r) · B_k · diag(δ_k) · A_k</code>. Trois mécanismes complémentaires sont combinés : recurrence gatée biaisée à 88% de rétention (suivant Chen 2026), bases LoRA figées issues de la SVD, et modulation diagonale conditionnée par l'entrée.</p>
+<p>Au total, 9,2M paramètres entraînables (0,6% du modèle de base) : 0,7M Controller, 8,4M gate, 131K LayerNorms par étape. Entraînement sur 300K steps, FineWeb-edu, séquence 2048, batch effectif 32, sur H100 unique en BF16.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur la distribution d'entraînement, OUROBOROS fait passer la loss du baseline 17 couches de 8,975 à 5,082 (gain de 43,4%), récupérant 51,3% de l'écart vers le modèle complet 36 couches (loss 1,378). Le Controller domine le baseline LoRA statique de même taille dans toutes les configurations testées, avec un écart maximal de 1,44 point à profondeur 1, où le LoRA statique ne dispose que d'un unique vecteur diagonal.</p>
+<p>Le système présente une robustesse remarquable aux hyperparamètres : 8 configurations (profondeurs 1, 2, 4, 8, 16 ; rangs 8, 32, 64 ; learning rates 3e-4 et 1e-3) convergent toutes vers une loss comprise entre 5,073 et 5,082. La profondeur ne change rien — un seul passage modulé suffit. L'ablation sur Qwen2.5-0.5B confirme que la recurrence gatée est nécessaire : sans elle, l'application itérative dégrade la loss de 0,20 point ; avec elle, gain de 3,49 points.</p>
+<p>L'évaluation hors distribution sur 12 passages divers donne en revanche un résultat négatif. La loss moyenne d'OUROBOROS (5,961) reste supérieure à celle du baseline 17 couches (5,690), et le système ne bat le baseline que sur 3 passages sur 12. Les mitigations testées (dropout 0,1/0,2, mélange de données, contrainte sur α) réduisent l'écart de +0,27 à +0,24 sans franchir zéro.</p>
+
+<h2>Discussion et limites</h2>
+<p>La cause racine identifiée par les auteurs est plausible : le Coda figé attend une distribution spécifique d'états cachés, et la modulation LoRA déplace cette distribution vers des patterns qui réduisent la loss FineWeb-edu mais détériorent les prédictions sur du texte hors distribution. C'est une forme classique de surajustement à la distribution d'entraînement, masquée par l'absence d'adaptation des couches downstream.</p>
+<p>Plusieurs limites méthodologiques pèsent sur l'interprétation. L'évaluation se réduit à la loss en cross-entropy ; aucun benchmark downstream (GSM8K, ARC-Challenge, HellaSwag) n'est rapporté, alors que les auteurs les mentionnent comme travail futur. L'échantillon de test hors distribution (12 passages) est dérisoire pour conclure quoi que ce soit. Les expériences se limitent à un seul modèle (Qwen2.5-3B) et un seul corpus (FineWeb-edu), ce qui empêche de juger si l'avantage du Controller persiste à 7B ou 70B.</p>
+<p>L'invariance par profondeur est troublante. Si profondeur 1 et profondeur 16 produisent la même loss, le mécanisme de boucle récurrente n'apporte rien au-delà de la première itération — autrement dit, l'argument central du papier (composer des opérations distinctes en profondeur) n'est pas validé empiriquement. Les auteurs reconnaissent ce point en l'attribuant au gate à 88% de rétention qui amortit fortement les contributions des étapes suivantes.</p>
+<p>Un détail formel interpelle : le PDF est daté du 2 avril 2026 (arXiv:2604.02051) mais porte la mention « 37th Conference on Neural Information Processing Systems (NeurIPS 2023) » dans son en-tête. Il s'agit probablement d'un artefact de template non corrigé, mais cela jette un doute sur le soin éditorial.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le point fort du travail. Le code est public sur GitHub (RightNow-AI/ouroboros) : 6 979 lignes de Python, 42 fichiers, 66 tests unitaires passants, 12 modules d'architecture, 14 scripts d'entraînement et d'évaluation. Le modèle de base (Qwen2.5-3B) et le corpus (FineWeb-edu) sont publics. Les hyperparamètres sont entièrement spécifiés (AdamW β=0,9/0,95, weight decay 0,05, warmup 2000 steps, gradient clip 1,0, seq 2048, batch 32). Un travail reproductible à l'identique pour qui dispose d'une H100.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport principal est conceptuel : démontrer qu'un hypernetwork compact peut générer dynamiquement la modulation d'un bloc récurrent à partir de l'état caché, sans dégrader la stabilité de l'entraînement. La combinaison gate biaisé + bases SVD figées + modulation diagonale conditionnée constitue un design pattern réutilisable pour les architectures à poids partagés.</p>
+<p>L'utilité pratique reste hypothétique tant que la généralisation n'est pas résolue. Sans transfert hors distribution, l'intérêt industriel d'un transformer récursif d'inférence allégée est nul. La piste « adaptation du Coda » suggérée en travail futur est probablement nécessaire mais annule une partie de l'argument paramétrique : ajouter des adaptateurs aux 8 couches du Coda multiplierait sensiblement le budget entraînable.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail se situe à la jonction de quatre lignes : Universal Transformer (Dehghani 2019) pour le partage de poids en profondeur, Huginn (Geiping 2025) pour la décomposition Prelude/Recurrent/Coda, RingFormer (Heo 2025) pour les signaux LoRA par étape et la LayerNorm unique, et Zhyper (Abdalla 2025) pour la modulation diagonale entre bases LoRA figées. La contribution distinctive, comme le tableau 1 du papier le résume, est le caractère input-conditionné de la modulation — Zhyper conditionne sur des descriptions textuelles de tâche, OUROBOROS sur l'état caché courant.</p>
+<p>Comparé à Relaxed Recursive Transformer (Bae 2024), qui obtient des résultats compétitifs avec un rang LoRA de 512, OUROBOROS revendique un budget bien plus modeste (rang 32, 9,2M paramètres) mais sans validation à grande échelle ni sur benchmarks downstream. La filiation avec Thinking Deeper (Chen 2026) est explicite et assumée pour le mécanisme de gate à rétention élevée.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Question claire et bien motivée : le conditionnement par l'entrée d'une modulation LoRA récurrente n'avait pas été testé.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Ablation systématique sur 13 configurations, baseline LoRA statique pertinent, mais limité à un modèle et un corpus.</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>Évaluation hors distribution sur seulement 12 passages, insuffisant pour conclure sur la généralisation.</td></tr>
+<tr><td>Qualité des métriques</td><td>2</td><td>Loss en cross-entropy uniquement, pas de benchmarks downstream (GSM8K, ARC, HellaSwag mentionnés mais non évalués).</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Comparaison à un baseline statique de taille équivalente, mais pas de test sur d'autres modèles ou corpus.</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Code complet (6 979 lignes), 66 tests, hyperparamètres spécifiés, modèle et données publics.</td></tr>
+<tr><td>Transparence sur les limites</td><td>5</td><td>Échec de généralisation rapporté sans euphémisme, analyse causale plausible, pistes futures concrètes.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Contribution incrémentale cohérente sur un design pattern réutilisable, mais utilité pratique conditionnée à la résolution du gap de généralisation.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3,0/5</strong> — Travail technique honnête et reproductible, mais l'évaluation reste insuffisante pour valider l'architecture en pratique. Le récit principal (composition d'opérations distinctes en profondeur) n'est pas démontré empiriquement puisque la profondeur n'améliore pas les résultats.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

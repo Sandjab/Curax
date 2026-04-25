@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Behavioral Contracts: Formal Specification and Runtime Enforcement for Reliable Autonomous AI Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Agent Behavioral Contracts: Formal Specification and Runtime Enforcement for Reliable Autonomous AI Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les agents IA dérivent en silence</h2>
+
+<p>Un agent IA déployé chez un courtier financier commence sa journée avec un ton professionnel impeccable. Quatre heures plus tard, après cinquante échanges avec des clients, il glisse vers un registre familier, mentionne des produits qu'il n'aurait pas dû évoquer, et finit par recommander un placement hors mandat. Personne ne s'en aperçoit avant que le service conformité ne reçoive une plainte.</p>
+
+<p>Cette dérive comportementale, baptisée <em>behavioral drift</em> dans la littérature, est devenue le talon d'Achille des déploiements d'agents autonomes en production. Varun Pratap Bhardwaj, architecte chez Accenture, propose une réponse dans un papier de février 2026 : importer dans le monde des LLM une discipline éprouvée du génie logiciel classique, le <strong>Design by Contract</strong>. Son framework s'appelle Agent Behavioral Contracts (ABC), et il s'attaque à un problème que les garde-fous actuels ne résolvent pas.</p>
+
+<h2>Le problème : des prompts ne sont pas des contrats</h2>
+
+<p>Le logiciel traditionnel repose sur des décennies d'outillage formel. Les types de données empêchent qu'on additionne une chaîne de caractères avec un entier. Les API définissent des préconditions et des postconditions vérifiables. Les assertions plantent le programme à la moindre violation d'invariant. Tout ce que développe un ingénieur peut être vérifié, mécaniquement, soit à la compilation, soit à l'exécution.</p>
+
+<p>Les agents IA, eux, sont gouvernés par des prompts. Du langage naturel. Aucune sémantique formelle, aucune garantie vérifiable, aucun mécanisme d'application. Quand vous écrivez « réponds toujours avec un ton professionnel », rien dans le système ne mesure si la consigne tient sur la durée. Pire, le modèle peut techniquement obéir tout en s'écartant progressivement de l'intention initiale.</p>
+
+<p>Trois pathologies en découlent. D'abord la dérive comportementale, déjà décrite. Ensuite les violations de gouvernance silencieuses : un agent qui dépasse son budget de tokens, invoque un outil interdit, ou divulgue une information qu'il devait protéger. Enfin la dégradation cumulative dans les pipelines multi-agents, où la sortie d'un agent alimente le suivant et où les petites erreurs s'additionnent comme dans un téléphone arabe.</p>
+
+<p>Les approches existantes ratent leur cible. La Constitutional AI d'Anthropic et le RLHF agissent au moment de l'entraînement et ne s'adaptent pas aux contraintes spécifiques d'un déploiement. Les guardrails comme NeMo Guardrails ou Guardrails AI filtrent des réponses individuelles, sans mémoire entre les tours, sans détection de dérive sur la durée. Un résultat théorique récent enfonce le clou : Wang et collègues ont démontré qu'il est mathématiquement impossible pour un agent qui évolue continuellement de rester aligné sans intervention externe active. La sécurité passive ne suffit pas. Il faut surveiller à l'exécution.</p>
+
+<h2>La méthode : importer le contrat dans le monde des agents</h2>
+
+<p>L'idée centrale d'ABC tient en un quintuplet. Chaque contrat se compose de cinq ingrédients : des préconditions à vérifier avant que l'agent démarre, des invariants qui doivent tenir à chaque étape, des règles de gouvernance sur les actions autorisées, et un mécanisme de récupération qui décrit comment corriger un écart.</p>
+
+<p>L'innovation pratique réside dans la distinction entre contraintes <strong>dures</strong> et contraintes <strong>molles</strong>. Une contrainte dure (« ne jamais émettre de numéro de carte bancaire en clair ») n'admet aucune violation. Une contrainte molle (« maintenir un ton professionnel ») peut être enfreinte ponctuellement, à condition que l'agent revienne dans les clous en moins de <em>k</em> étapes. Cette tolérance bornée reflète la réalité des LLM : exiger la perfection à chaque token est irréaliste, mais exiger un retour rapide à la conformité est exigeant et mesurable.</p>
+
+<p>Pour modéliser la dérive elle-même, Bhardwaj emprunte un outil à la physique statistique : le processus d'Ornstein-Uhlenbeck. L'image est parlante. Imaginez un ressort qui rappelle l'agent vers son comportement nominal. Trois forces s'exercent : une tendance naturelle à dériver (taux α), une force de rappel proportionnelle à l'écart (taux γ), et un bruit aléatoire dû au caractère stochastique du sampling de tokens. Le théorème principal du papier établit que si la force de rappel domine la dérive naturelle, l'écart moyen reste borné par α/γ, et la queue de distribution décroît exponentiellement. Traduction : avec un mécanisme de récupération suffisamment énergique, on peut <em>garantir</em> que la dérive ne s'emballe pas.</p>
+
+<p>Un second résultat important concerne la composition. Quand on chaîne plusieurs agents, comment les garanties individuelles s'additionnent-elles ? Mauvaise nouvelle : les fiabilités se multiplient (effet téléphone arabe), tandis que les dérives s'additionnent. Cinq agents fiables à 95 % chacun, reliés par des handoffs à 98 %, donnent une chaîne globalement fiable à 71 %. Le papier formalise quatre conditions suffisantes pour que la composition tienne : compatibilité des interfaces, décharge des hypothèses, cohérence des politiques de gouvernance, et indépendance des récupérations. Ces conditions sont vérifiables au moment de la spécification, pas seulement à l'exécution.</p>
+
+<p>Côté outillage, l'auteur livre deux artefacts. <strong>ContractSpec</strong> est un DSL en YAML pour exprimer les contrats sans écrire de code. <strong>AgentAssert</strong> est la librairie Python qui les évalue à l'exécution. Le coût de vérification est en O(k + |A|) où k est le nombre de contraintes et |A| la taille du vocabulaire d'actions, ce qui se traduit en pratique par moins de 10 ms par action — soit 0,5 à 5 % de la latence d'inférence d'un LLM.</p>
+
+<h2>Résultats clés : ce que les contrats détectent que rien d'autre ne voit</h2>
+
+<p>L'évaluation porte sur 1 980 sessions, 7 modèles de 6 fournisseurs (OpenAI, Anthropic, DeepSeek, xAI, Meta, Mistral), et 200 scénarios benchmark couvrant sept domaines : conseil financier, support client, génération de code, synthèse de recherche, triage médical, plus deux paliers spécifiques (stress de gouvernance et composition).</p>
+
+<p>Premier résultat marquant : les agents sous contrat détectent entre <strong>5,2 et 6,8 violations molles par session</strong> que les agents non contractés laissent passer entièrement. La taille d'effet (Cohen's d) atteint des valeurs entre 6,7 et 33,8, là où la communauté scientifique considère 0,8 comme un effet « grand ». Avec p < 0,0001 sur tous les modèles, le résultat est massif et reproductible.</p>
+
+<p>Deuxième résultat : la conformité aux contraintes dures atteint 88 à 100 % selon les modèles. Pour les modèles frontières (GPT-5.2, Claude Opus 4.6), la récupération après violation molle réussit dans 100 % des cas. Sur l'ensemble des modèles testés, ce taux varie de 17 à 100 %, ce qui révèle un fait inattendu : la qualité de la récupération dépend fortement de la capacité du modèle à comprendre et corriger ses propres écarts quand on les lui pointe explicitement.</p>
+
+<p>Troisième résultat, le plus théoriquement satisfaisant : la dérive comportementale reste bornée à <strong>D* < 0,27</strong> sur des sessions étendues, exactement comme prédit par le théorème. Le modèle stochastique d'Ornstein-Uhlenbeck colle aux mesures empiriques. L'indice composite de fiabilité Θ dépasse 0,90 pour tous les modèles testés.</p>
+
+<p>Une découverte parallèle mérite d'être signalée : les filtres de contenu des plateformes (Azure « DefaultV2 » dans le cas étudié) bloquent 40 à 60 % des sessions financières légitimes quand on injecte les règles de contrat dans le system prompt. La raison est triviale et révélatrice : des termes comme « interdit », « violation » ou « termination » présents dans les règles déclenchent les filtres conçus pour bloquer le contenu toxique. Les deux couches (sécurité plateforme et contrat applicatif) opèrent à des niveaux d'abstraction différents et entrent en conflit. Bhardwaj a dû basculer sur un filtre moins restrictif pour mesurer l'effet ABC sans contamination.</p>
+
+<h2>Implications pratiques : pourquoi les DSI devraient lire ce papier</h2>
+
+<p>Pour les équipes qui déploient des agents en production, ABC propose une réponse opérationnelle à une question qui hantait les comités de risques : comment auditer un agent IA ? Avec un contrat YAML versionné, la réponse devient mécanique. Le contrat est l'artefact d'audit. Il est lisible par un juriste, exécutable par un moteur, et testable contre un benchmark.</p>
+
+<p>L'approche change aussi la conversation entre métiers et tech. Plutôt que de débattre du wording d'un prompt, les équipes négocient des contrats : quelles préconditions doit valider l'agent, quels invariants tiennent toujours, quelles dérives sont tolérables et sur quelle fenêtre. C'est exactement la conversation que les ingénieurs back-end ont avec les architectes API depuis vingt ans.</p>
+
+<p>Le résultat sur la composition a des conséquences directes sur l'architecture des systèmes multi-agents. Les organisations qui empilent dix agents spécialisés doivent comprendre que la fiabilité globale dégrade multiplicativement. Le papier fournit une formule explicite pour dimensionner la fiabilité de chaque maillon en fonction de la cible globale. Concrètement : viser 99 % en bout de chaîne sur cinq agents impose 99,8 % par agent, ce qui change les exigences sur chaque composant.</p>
+
+<p>L'observation sur les guardrails plateforme est probablement le point le plus actionnable à court terme. Les organisations qui déploient des agents sur Azure, AWS ou GCP doivent tester explicitement la compatibilité entre leurs règles métier et les filtres de contenu par défaut. Le constat de Bhardwaj suggère qu'un protocole de qualification s'impose avant toute mise en production.</p>
+
+<p>Côté coût, les 10 ms par action de surcharge sont négligeables. Le surcoût est dominé par le mécanisme de récupération, qui demande un appel LLM supplémentaire en cas de violation molle. Sur des sessions où les violations sont rares, l'économie est marginale. Sur des agents très contraints ou opérant en environnement adverse, le coût peut doubler — ce qui reste acceptable face au risque de violation non détectée.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent ouvertes. La première concerne la corrélation entre agents partageant le même modèle sous-jacent. Le théorème de composition probabiliste suppose une indépendance conditionnelle qui n'est pas garantie quand cinq agents tournent tous sur le même GPT-5.2. Les modes de défaillance corrélés (sensibilité partagée à certains prompts, biais d'entraînement communs) pourraient invalider les bornes optimistes. Le papier reconnaît la limite et propose la borne plus conservative de Fréchet-Hoeffding, mais le travail empirique manque.</p>
+
+<p>La deuxième concerne la spécification elle-même. Écrire un bon contrat est un art. Trop strict, il bloque des comportements légitimes. Trop laxiste, il ne capture pas les violations subtiles. Le papier ne propose pas de méthodologie systématique pour dériver un contrat à partir d'exigences métier, et c'est probablement le prochain chantier important du domaine. On peut imaginer des outils qui apprennent les contraintes à partir d'exemples positifs et négatifs, à la manière du programming by example.</p>
+
+<p>La troisième touche à l'extension multimodale. Les contrats actuels portent sur des actions textuelles et des appels d'outils. Comment formaliser un invariant sur une image générée, un document signé, ou une commande robotique ? La généralisation au-delà du texte demandera de nouvelles primitives.</p>
+
+<p>Une dernière piste tient au rapprochement avec le travail de Ye et Tan sur les contrats de ressources. ABC gouverne le <em>comment</em> (le comportement), tandis que les contrats de ressources gouvernent le <em>combien</em> (les budgets de tokens, de coût, de temps). Les deux frameworks sont orthogonaux et complémentaires. Une plateforme unifiée qui combine les deux pourrait offrir aux équipes opérationnelles le tableau de bord complet qui leur manque aujourd'hui : cet agent respecte-t-il son contrat comportemental ? son budget ? sa hiérarchie de délégation ?</p>
+
+<p>Le code et le benchmark seront publiés sous réserve de levée de la protection brevet, ce qui ralentira l'adoption à court terme mais signale une intention de pérenniser l'effort. En attendant, le papier suffit à amorcer le travail dans les organisations matures : la spécification YAML est suffisamment décrite pour qu'une implémentation maison soit envisageable. Le vrai test viendra quand plusieurs déploiements indépendants confirmeront, ou nuanceront, les bornes de dérive observées sur le benchmark.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

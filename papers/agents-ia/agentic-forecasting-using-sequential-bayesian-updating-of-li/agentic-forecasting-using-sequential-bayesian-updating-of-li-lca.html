@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Forecasting using Sequential Bayesian Updating of Linguistic Beliefs — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Agentic Forecasting using Sequential Bayesian Updating of Linguistic Beliefs</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>La prévision probabiliste d'événements futurs binaires constitue un terrain où les LLM peinent encore à dépasser les marchés de prédiction et les superforecasters humains. Kevin Murphy s'attaque à ce problème en proposant BLF (Bayesian Linguistic Forecaster), un système agentique qui combine trois briques : un état de croyance linguistique semi-structuré mis à jour itérativement, une agrégation multi-essais avec rétrécissement (shrinkage) en espace logit, et une calibration de Platt hiérarchique avec offsets par source.</p>
+<p>Le benchmark cible est ForecastBench, qui mélange questions de marchés (Polymarket, Manifold, Metaculus, RFI) et questions de séries temporelles (yfinance, FRED, DBnomics, Wikipedia, ACLED). Le contexte est explicitement compétitif : surpasser Cassi, Grok 4.20, GPT-5 et Foresight-32B, méthodes publiques classées en tête du leaderboard.</p>
+
+<h2>Méthodologie</h2>
+<p>Le cœur du système est un POMDP simplifié où, à chaque pas, le LLM produit conjointement une action <em>aₜ</em> et un état de croyance <em>bₜ</em> (probabilité, niveau de confiance, évidences pour/contre, questions ouvertes) en JSON. L'historique complet <em>m_{t-1}</em> reste accessible — la croyance n'est pas une statistique suffisante markovienne mais une trace structurée additionnelle. La boucle s'arrête sur <code>submit</code> ou à T=10 pas.</p>
+<p>Les outils sont source-dépendants : recherche web Brave avec filtrage de fraîcheur, lookup d'URL, fetchers spécifiques (yfinance, FRED, Wikipedia avec API temporelle, polymarket/manifold), et un estimateur KNN bypassant le LLM pour DBnomics. Cinq essais indépendants par question sont agrégés par moyenne en espace logit, avec rétrécissement optionnel calibré par leave-one-out vers p=0.5. Une calibration de Platt hiérarchique avec décalages par source régularisés en L2 finalise le pipeline.</p>
+<p>La défense contre la fuite temporelle empile quatre couches : filtrage de date côté moteur de recherche, classifieur LLM (Gemini-3-Flash) sur le contenu, clamping de date au niveau des outils, et blocage d'URL pour les sources de résolution. Un audit post-hoc utilise un classifieur indépendant (Grok-4.1) pour estimer le taux de fuite résiduel.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur 791 dates de résolution issues de 400 questions ForecastBench (tranches A et B), BLF atteint un Brier Index de 73.8 contre 70.8 pour Cassi, 70.2 pour GPT-5, 70.0 pour Foresight-32B et 69.5 pour Grok. Toutes les différences sont significatives à p<0.001 sur des comparaisons appariées avec bootstrap (5000 rééchantillonnages). L'ABI ajusté à la difficulté atteint 71.0, égalant la médiane des superforecasters humains rapportée sur le leaderboard.</p>
+<p>BLF est l'unique méthode à battre significativement la baseline crowd+empirique sur les questions de marché (+3.7***). Toutes les autres méthodes externes restent statistiquement indistinguables du prix de marché, y compris celles disposant d'outils et de recherche web. Les ablations principales montrent une hiérarchie claire des contributions : passage en zero-shot −5.6, désactivation de la recherche −4.6, recherche batch au lieu de séquentielle −3.8, suppression de l'état de croyance structuré −3.0. L'effet de l'état de croyance est comparable à celui de la recherche web.</p>
+<p>L'audit de fuite révèle 1.5% de fuite résiduelle (21 résultats sur 1375 vus par l'agent). La calibration hiérarchique apporte un gain marginal sur BLF complet (+0.4 ns) mais devient critique pour la baseline zero-shot avec prior empirique (+2.7***), où la calibration globale échoue à préserver les prédictions extrêmes pour les sources à taux de base déséquilibrés.</p>
+
+<h2>Discussion et limites</h2>
+<p>Murphy reconnaît trois limites essentielles. D'abord, l'évaluation repose entièrement sur du backtesting : les contraintes du tournoi ForecastBench (2 variantes par quinzaine, délai de 50 jours) rendent infaisable une validation live comparative. Ensuite, le système est presque exclusivement validé sur Gemini-3.1-Pro ; la généralisation à d'autres modèles de base reste conjecturale, même si Kimi et Flash sont testés et chutent de 3.0 et 2.3 points respectivement. Enfin, le périmètre est restreint aux prédictions binaires.</p>
+<p>D'autres faiblesses méritent d'être pointées. Le coût d'une évaluation complète atteint 230$ par méthode pour 50–100M de tokens, ce qui freine la reproduction par des laboratoires modestes. Le rétrécissement de James-Stein réduit à α=1 sur ForecastBench (donc inutile en pratique sur ce benchmark) et ne sert que sur AIBQ2, où la taille d'échantillon (113 questions) génère des intervalles de confiance très larges (CI 95% pour MBS = [24, 54]). La comparaison à Foresight et Grok souffre d'un chevauchement partiel des questions (n=418-423 sur 791), atténuant la robustesse des conclusions sur ces deux concurrents.</p>
+<p>Le choix de Gemini-3.1-Pro à la fois comme agent principal et comme générateur de croyances introduit un risque de sur-spécialisation aux conventions de ce modèle. La distinction conceptuelle entre "état de croyance bayésien" et "accumulation textuelle structurée" reste floue : le système ne calcule aucune mise à jour bayésienne formelle, le terme "bayésien" relève davantage de la métaphore que d'une procédure inférentielle vérifiable.</p>
+
+<h2>Reproductibilité</h2>
+<p>L'article fournit un pseudocode détaillé (Algorithm 1 et 2), une description complète des prompts et de la structure JSON de l'état de croyance, ainsi que les paramètres exacts (Brave, Tmax=10, K=5 essais, hyperparamètres de calibration). Les scores des baselines proviennent de prédictions publiques sur le leaderboard ForecastBench. Cependant, aucun dépôt de code n'est explicitement référencé dans le texte fourni, ce qui constitue une limite forte pour la reproductibilité. La dépendance à Brave Search (avec filtrage de fraîcheur) et à OpenRouter complique aussi la réplication exacte, les snippets retournés pouvant varier dans le temps.</p>
+
+<h2>Impact et applications</h2>
+<p>Le résultat le plus marquant est conceptuel : sur les questions de marché, aucune méthode LLM publique n'arrivait à battre statistiquement le prix de marché — BLF franchit ce seuil. Cela valide l'hypothèse selon laquelle le harness (gestion d'état, séquentialité, calibration par source) compte autant que le modèle de base, ce qui rejoint la littérature sur la "MCP tax" et l'ingénierie de contexte.</p>
+<p>L'égalisation avec la médiane des superforecasters humains sur ABI mérite cependant d'être relativisée : les ensembles de questions et périodes diffèrent, comme l'auteur le précise honnêtement en note de bas de page. Les applications visées (géopolitique, finance, santé publique) restent prospectives ; le coût et la latence (1 à 8 minutes par question) limitent un déploiement à très large échelle.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>BLF se distingue de RTF (Hsieh et al. 2024) et AIA Forecaster (Alur et al. 2025) par l'introduction d'un état de croyance structuré explicite, là où ces systèmes accumulent texte ou utilisent une calibration LLM. La différence avec BayesAgent (Huang et al. 2026) est plus subtile : BayesAgent construit un PGM verbalisé par requête, tandis que BLF maintient une croyance non-markovienne mise à jour séquentiellement. Le travail s'oppose explicitement aux approches RL (Time-R1, OpenForecaster, Foresight-32B) qui modifient les poids du modèle, en pariant sur l'amélioration du harness.</p>
+<p>La contribution méthodologique secondaire — défense de fuite à quatre couches avec audit indépendant — répond directement aux critiques de Paleka et al. (2025) et Li et al. (2026) sur la validité du backtesting, et établit un standard utile pour la communauté.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Problème clairement formulé, pertinence directe pour ForecastBench, hypothèses testables.</td></tr>
+<tr><td>Design expérimental</td><td>5</td><td>Ablations factorielles, deux tranches indépendantes, audit de fuite séparé, contrôle de difficulté par effet fixe.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>791 dates de résolution sur ForecastBench est solide ; AIBQ2 (n=113) reste sous-dimensionné, intervalles très larges.</td></tr>
+<tr><td>Qualité des métriques</td><td>5</td><td>Multiples règles de score propres (BS, MBS, BI, ABI), tests appariés bootstrap avec 5000 rééchantillonnages.</td></tr>
+<tr><td>Contrôle des biais</td><td>5</td><td>Défense anti-fuite à quatre couches, audit post-hoc avec classifieur indépendant, ANOVA décomposant 62% de variance liée à la difficulté.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Pseudocode et hyperparamètres détaillés, mais aucun dépôt de code explicite, dépendance à Brave et coût de 230$/méthode.</td></tr>
+<tr><td>Transparence sur les limites</td><td>4</td><td>Limites du backtesting et de la généralisation modèle reconnues, mais flou conceptuel sur le qualificatif "bayésien" non discuté.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier système LLM public à battre significativement le crowd sur les marchés ; contribution méthodologique sur l'audit de fuite ; portée limitée au binaire et à un seul modèle.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

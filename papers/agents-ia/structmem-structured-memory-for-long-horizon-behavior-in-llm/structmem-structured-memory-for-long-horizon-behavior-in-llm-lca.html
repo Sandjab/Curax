@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StructMem: Structured Memory for Long-Horizon Behavior in LLMs — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>StructMem: Structured Memory for Long-Horizon Behavior in LLMs</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les agents conversationnels long-horizon affrontent un dilemme bien identifié entre deux paradigmes de mémoire externe. La mémoire plate stocke des faits ou résumés indépendants, efficace mais incapable de modéliser les relations inter-événements. La mémoire graphe (Mem0g, Zep, GraphRAG) reconstruit la structure relationnelle via extraction entité-relation, au prix d'un coût de construction élevé et d'une fragilité aux extractions bruitées.</p>
+<p>StructMem propose une troisième voie : organiser la mémoire autour de l'événement comme unité fondamentale, défini comme un cluster d'entrées factuelles et relationnelles ancrées sur un timestamp commun. L'objectif annoncé est de capturer la structure relationnelle sans imposer de schéma rigide ni payer le coût d'une maintenance graphe continue.</p>
+
+<h2>Méthodologie</h2>
+<p>L'architecture opère sur deux niveaux. Au niveau événement, chaque message du dialogue passe par une double extraction : un prompt produit des entrées factuelles décrivant le contenu, un autre extrait les entrées relationnelles capturant les dynamiques interpersonnelles, causales et temporelles. Toutes les entrées d'un même message partagent le timestamp d'origine, ce qui permet la reconstruction du contexte complet lors du retrieval.</p>
+<p>Le niveau inter-événements déclenche une consolidation périodique (fenêtre d'une heure dans les expériences) sur les entrées bufferisées. Le système encode le contexte buffer comme requête, retrouve les K=15 entrées historiques les plus similaires en cosinus, reconstruit chaque événement complet par partage de timestamp, puis synthétise des hypothèses relationnelles cross-événements via un prompt LLM. Cette synthèse forme une couche d'abstraction complémentaire aux entrées atomiques.</p>
+<p>L'évaluation porte sur LoCoMo (10 conversations, 588 tours en moyenne, 16 618 tokens). Les questions sont réparties en quatre types : single-hop (841), multi-hop (282), temporal (321), open-domain (96). Onze baselines sont comparées : RAG (OpenAI, FullContext, MiniRAG, LightRAG), mémoires plates (LangMem, A-Mem, Mem0), mémoires structurelles (MemoryOS, Mem0g, Zep, Memobase). Tous utilisent gpt-4o-mini comme backbone et text-embedding-3-small pour les embeddings.</p>
+
+<h2>Résultats principaux</h2>
+<p>StructMem atteint 76.82% de performance globale, contre 75.78% pour Memobase (deuxième), 75.14% pour Zep, 73.83% pour FullContext. Le gain face au meilleur baseline reste donc modeste (+1.04 point). Les progressions sont concentrées sur le raisonnement temporel (81.62 vs 67.71 pour Zep) et single-session (81.09).</p>
+<p>L'efficience constitue l'apport le plus net : 1.937M tokens de construction contre 35.825M pour Mem0g et 12.196M pour Mem0, 1056 appels API contre 53 514 pour Mem0g. La courbe de tokens versus tours de dialogue montre une croissance quasi linéaire pour StructMem là où la mémoire graphe explose quadratiquement à cause de la déduplication.</p>
+<p>L'ablation isole la contribution des deux niveaux : retirer la consolidation cross-event fait chuter la performance multi-hop de 68.77 à 66.31 et le temporel de 81.62 à 79.44. La sensibilité à K (nombre de seeds sémantiques) est faible : K=15 donne le pic à 76.82 mais K=5 atteint déjà 76.43.</p>
+
+<h2>Discussion et limites</h2>
+<p>La principale faiblesse expérimentale tient au benchmark unique. LoCoMo ne contient que 10 conversations, ce qui interdit toute analyse statistique sérieuse de la variance entre méthodes. Un écart de 1 point entre StructMem et Memobase peut relever du bruit d'échantillonnage. Les auteurs ne reportent ni intervalle de confiance ni test de significativité.</p>
+<p>L'évaluation par LLM-as-judge introduit un biais documenté dans la littérature. Les auteurs anticipent partiellement la critique en testant trois juges (gpt-4o-mini, Qwen2.5-32B, DeepSeek-V3.2) avec un Fleiss κ de 0.83, ce qui est solide. Reste que les trois juges sont des LLM modernes susceptibles de partager des biais corrélés vis-à-vis du style des réponses.</p>
+<p>L'étude de fidélité des consolidations cross-event est rigoureuse et révèle un point intéressant : sans contraintes de grounding (citations de timestamps, focus sur dépendances concrètes), le taux d'hallucination des liens passe de 0.61% à 7.45% (juge GPT) et jusqu'à 20% (juge Qwen). La performance de StructMem dépend donc lourdement du prompt engineering, ce que les auteurs reconnaissent en limitations.</p>
+<p>Les limites annoncées (absence de mécanisme de résolution de conflits, pas de mise à jour mémoire pour faits évolutifs) sont sérieuses pour des déploiements réels mais traitées en perspectives futures.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le dépôt GitHub <code>zjunlp/LightMem</code> est référencé. Les prompts complets pour extraction factuelle, relationnelle, synthèse, déduplication, QA et évaluation occupent l'annexe (figures 4 à 20). Les configurations de tous les baselines sont détaillées (top-K de retrieval, seuils de fenêtre temporelle). Le dataset LoCoMo est public.</p>
+<p>Les éléments manquants pour une reproduction stricte : seeds aléatoires, version exacte des modèles API (gpt-4o-mini évolue silencieusement chez OpenAI), traces brutes des appels juges. La dépendance à des modèles API propriétaires fragilise la reproductibilité long-terme.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport principal est moins la performance brute que le ratio performance/coût. Pour une équipe construisant un agent conversationnel persistant à grande échelle, le gain de 18× sur les tokens de construction face à Mem0g change l'équation économique. Le positionnement comme "middle ground" entre mémoire plate et mémoire graphe est défendable et utile.</p>
+<p>L'idée centrale — l'événement temporellement ancré comme unité de mémoire plutôt que le triplet ou le fait isolé — mérite d'être reprise au-delà du contexte conversationnel. Elle s'applique potentiellement aux agents de coding (consolidation par session), à la mémoire procédurale (skills, workflows), aux systèmes multi-agents.</p>
+<p>L'industrialisation supposera de résoudre les limites annoncées : conflits, mise à jour, dérive sémantique sur horizons très longs (mois, années).</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article s'inscrit dans la vague récente des mémoires hiérarchiques sans schéma rigide (HiMem, TiMem, PREMem, EMem, MemWeaver), discutées avec finesse en section 2. La distinction revendiquée tient à la double extraction perspective et au déclenchement par fenêtre temporelle plutôt que par session physique ou par tour. La filiation avec LightMem (Fang et al., 2026) du même laboratoire est explicite via le dépôt partagé.</p>
+<p>Face aux mémoires graphes établies (Mem0g, Zep, GraphRAG), StructMem ne prétend pas dominer en performance pure mais en équilibre coût/qualité. Cette honnêteté est appréciable. La contribution est incrémentale plutôt que disruptive : un raffinement architectural bien exécuté dans un sous-domaine en effervescence.</p>
+
+<h2>Synthèse des critères de robustesse</h2>
+<table>
+  <thead>
+    <tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Question de recherche</td><td>4</td><td>Problème clair, motivation bien posée, positionnement explicite face au trade-off existant.</td></tr>
+    <tr><td>Design expérimental</td><td>4</td><td>Comparaison large (11 baselines), ablations pertinentes, étude de sensibilité à K.</td></tr>
+    <tr><td>Taille d'échantillon</td><td>2</td><td>Un seul benchmark de 10 conversations, aucune analyse statistique de variance.</td></tr>
+    <tr><td>Qualité des métriques</td><td>3</td><td>LLM-as-judge avec biais connus, mais multi-juges atténue partiellement. Métriques d'efficience solides.</td></tr>
+    <tr><td>Contrôle des biais</td><td>4</td><td>Trois juges testés, Fleiss κ = 0.83, configuration uniformisée des baselines.</td></tr>
+    <tr><td>Reproductibilité</td><td>4</td><td>Code public, prompts complets en annexe, configurations détaillées. Dépendance API affaiblit le score.</td></tr>
+    <tr><td>Transparence sur limites</td><td>4</td><td>Section limitations honnête, étude de fidélité révélant la dépendance au prompt engineering.</td></tr>
+    <tr><td>Impact et nouveauté</td><td>3</td><td>Contribution incrémentale dans un sous-domaine encombré, mais idée de l'événement comme unité méritant diffusion.</td></tr>
+  </tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

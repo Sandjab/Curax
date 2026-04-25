@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evolution Strategies at the Hyperscale — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Evolution Strategies at the Hyperscale</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture Critique d'Article</h2>
+
+<h3>Objectif et contexte</h3>
+<p>Les Evolution Strategies (ES) constituent une famille de méthodes d'optimisation boîte noire attractives — elles ne requièrent pas la différentiabilité, tolèrent les fonctions objectif bruitées et se parallélisent naturellement — mais leur application aux modèles à plusieurs milliards de paramètres se heurte à un obstacle matériel : générer des perturbations matricielles pleine échelle pour chaque membre de la population effondre l'intensité arithmétique des GPUs. Sarkar et collègues proposent EGGROLL (Evolution Guided GeneRal Optimisation via Low-rank Learning), une variante d'ES où chaque perturbation matricielle E ∈ R^(m×n) est remplacée par un produit bas-rang E = (1/√r) A B^⊤ avec r ≪ min(m, n). L'analogie avec LoRA est explicite, mais transposée à l'optimisation zéro-ordre.</p>
+<p>L'enjeu dépasse l'efficacité brute. Les auteurs cherchent à valider trois hypothèses : EGGROLL préserve la qualité d'optimisation d'ES naïf, autorise des tailles de population de plusieurs ordres de grandeur supérieures à l'état de l'art (jusqu'à 2^20 ≈ 10^6 vs ~1440 chez Salimans et al. 2017), et débloque l'entraînement d'architectures incompatibles avec la rétropropagation comme un RNN purement entier int8.</p>
+
+<h3>Méthodologie</h3>
+<p>Le cœur algorithmique est élégant : pour une couche linéaire de paramètre M, le forward perturbé u_i (M + σ E_i)^⊤ devient u_i M^⊤ + (σ/√r)(u_i B_i) A_i^⊤. Le terme dominant u_i M^⊤ reste un GEMM batch standard ; les corrections bas-rang n'ajoutent que des produits scalaires bon marché. Cette décomposition exploite la même structure que les systèmes d'inférence LoRA batchée (vLLM), expliquant l'atteinte de 91% du throughput d'inférence pure. Un RNG déterministe à compteur reconstruit les perturbations à la volée, évitant leur stockage.</p>
+<p>L'analyse théorique en haute dimension est substantielle. Sous des hypothèses de continuité locale Hölder (Assumption 2) et de croissance polynomiale globale (Assumption 3), les Théorèmes 1 et 2 établissent un taux critique σ_d = o(d^(-1/2)) pour la convergence des ES gaussiennes vers la dérivée de premier ordre, identifiant trois régimes (linéarisation, critique, divergence). Le Théorème 3 étend cette convergence à EGGROLL même pour r = 1, et le Théorème 4 prouve un taux de convergence O(r^(-1)) — plus rapide que le O(r^(-1/2)) du TLC paramétrique classique grâce à la symétrie des distributions.</p>
+<p>Le protocole empirique couvre quatre familles de tâches : pré-entraînement int8 d'un RNN sur minipile, RL tabula rasa sur 16 environnements (Navix, Craftax, Brax, Kinetix, Jumanji), fine-tuning RWKV-7 (1.5B, 7B, 14B) sur Countdown, GSM8K et DeepScaleR, et distillation de modèles quantisés int8.</p>
+
+<h3>Résultats principaux</h3>
+<p>Le speedup mesuré atteint 100x face à OpenES sur des modèles milliards de paramètres avec grandes populations. Le RNN int8 EGG (6L-256D) entraîné par EGGROLL avec population 2^20 obtient 3.40 bits/byte en cross-entropy contre 3.58 pour un Transformer fp32 dense de taille équivalente entraîné par backprop SGD à batch identique. Sur 16 environnements RL, EGGROLL est compétitif ou supérieur à OpenES sur 14/16 cas. Pour le fine-tuning, un RWKV-7 14B fine-tuné par EGGROLL passe de 13% à 30% sur AIME24, de 7% à 33% sur AIME25 — régime où GRPO devient infaisable mémoire (Adam). À taille équivalente (7B, 8 GPUs), EGGROLL bat GRPO sur GSM8K en wall-clock.</p>
+<p>Le résultat le plus frappant : avec rang r = 1, l'approximation reste empiriquement excellente. La Figure 3 montre la densité × score marginal convergeant visuellement vers la limite gaussienne dès r ≈ 10, validant le taux théorique O(r^(-1)).</p>
+
+<h3>Discussion et limites</h3>
+<p>Plusieurs zones d'ombre méritent une lecture critique. Le nombre de seeds en fine-tuning LLM est limité à 3 par condition, ce qui rend les comparaisons EGGROLL vs GRPO sur les benchmarks de raisonnement statistiquement fragiles malgré l'ampleur des modèles. Les barres d'erreur sur AIME24/25 ne sont pas reportées, alors que ces benchmarks ont une variance notoirement élevée (peu de problèmes, pass@1 binaire).</p>
+<p>Le coût compute des grandes populations est minimisé dans le récit : l'expérience phare à 2^20 nécessite environ 180 fois plus de GPU-heures que la baseline backprop selon les auteurs eux-mêmes. La comparaison avec backprop n'est donc pas iso-compute mais iso-données, ce qui change la nature du gain — il s'agit d'un scaling compute-only en régime data-limité, pas d'une supériorité absolue.</p>
+<p>L'analyse théorique repose sur des hypothèses NTK-style (paramètres de norme O(1), activations linéarisables) qui s'appliquent imparfaitement aux LLMs réels post-entraînement. Le pont entre la théorie de convergence en dimension infinie et les performances empiriques sur des modèles 14B reste suggestif plutôt que démontré. Les auteurs reconnaissent ces limites en discutant les régimes NTK explicitement.</p>
+<p>Comparée à OpenES, EGGROLL sous-performe sur 2/16 environnements RL — sans analyse approfondie de ces cas négatifs, qui pourraient révéler des régimes où la structure bas-rang nuit réellement.</p>
+
+<h3>Reproductibilité</h3>
+<p>Le code est disponible publiquement (https://eshyperscale.github.io/). Les annexes (A à N, ~50 pages) détaillent l'architecture EGG, les procédures de quantification, l'infrastructure distribuée avec packing base-3 des fitness pour réduire la bande passante inter-workers, et les hyperparamètres complets. Les datasets utilisés (minipile, GSM8K, Countdown, DeepScaleR, AIME) sont publics. Les expériences à 128 GPUs restent toutefois hors de portée d'équipes académiques modestes — la reproduction complète exige des ressources industrielles.</p>
+
+<h3>Impact et applications</h3>
+<p>Trois implications saillantes. Premièrement, EGGROLL débloque pratiquement l'entraînement de modèles à arithmétique entière pure, où la rétropropagation échoue par accumulation d'erreurs de quantification — ouvrant un chemin vers l'inférence et l'entraînement à très basse précision sur matériel spécialisé. Deuxièmement, pour le post-training de LLMs sur récompenses non-différentiables (raisonnement, agents), EGGROLL devient une alternative crédible à GRPO sans optimiseur Adam coûteux en mémoire — pertinent pour les régimes où l'empreinte mémoire domine. Troisièmement, l'algorithme s'étend naturellement aux systèmes neurosymboliques et aux pipelines end-to-end avec composants non-différentiables (calculatrices, mémoires externes, harnesses d'inférence).</p>
+
+<h3>Positionnement dans la littérature</h3>
+<p>Le travail s'inscrit dans une vague récente de réactivation des ES pour les LLMs (Qiu et al. 2025 ; Korotyshova et al. 2025). La distinction technique avec ces approches est claire : Korotyshova et al. décomposent des LoRAs SFT en bases SVD fixes optimisées par CMA-ES (population ~100, recyclage des perturbations sur de nombreux rollouts) ; Jin et al. font de l'ES directement sur les matrices LoRA (limitant le rang final) ; EGGROLL maintient des perturbations bas-rang indépendantes par génération, autorisant des populations égales au batch d'inférence maximal et un update final de rang plein. Garbus & Pollack (2025) atteignent des gains computationnels similaires avec des factorisations bas-rang en neuroévolution, mais restent contraints au rang faible quel que soit la population.</p>
+<p>L'analyse théorique des régimes de convergence en haute dimension constitue une contribution fondamentale qui dépasse EGGROLL : elle clarifie les conditions sous lesquelles ES retrouve un gradient first-order (régime NTK-like), conditions critiques (préservation des dérivées tierces) ou divergence. Cette grille de lecture manquait dans la littérature ES existante (Wierstra et al. 2011 ; Hansen 2023).</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+  <tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+  <tr><td>Question de recherche</td><td>5</td><td>Problématique claire et ambitieuse : passer ES à l'échelle milliards de paramètres.</td></tr>
+  <tr><td>Design expérimental</td><td>4</td><td>Couverture large (RL, pretraining, fine-tuning, distillation) ; comparaisons iso-hardware contre baselines fortes (PPO, GRPO).</td></tr>
+  <tr><td>Taille d'échantillon</td><td>3</td><td>10 seeds en RL est correct ; 3 seeds en fine-tuning LLM reste fragile pour des conclusions fortes sur AIME.</td></tr>
+  <tr><td>Qualité des métriques</td><td>4</td><td>Métriques standards et adaptées (loss, normalised return, validation accuracy, perplexité) ; absence de barres d'erreur sur certains benchmarks finaux.</td></tr>
+  <tr><td>Contrôle des biais</td><td>4</td><td>HPO par environnement, normalisation par PPO, comparaisons à wall-clock égal.</td></tr>
+  <tr><td>Reproductibilité</td><td>4</td><td>Code public, annexes détaillées ; barrière matérielle pour les expériences phares (128 GPUs, 12-24h).</td></tr>
+  <tr><td>Transparence sur les limites</td><td>4</td><td>Coût compute des grandes populations explicité, sous-performances RL non éludées ; analyse des cas négatifs perfectible.</td></tr>
+  <tr><td>Impact et nouveauté</td><td>5</td><td>Speedup 100x, populations 10^3 fois supérieures à l'état de l'art, débloquage de régimes (int8 pur, fine-tuning 14B sans Adam).</td></tr>
+</table>
+
+<p><strong>Note globale de robustesse : 4.3/5</strong></p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
