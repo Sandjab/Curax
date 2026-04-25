@@ -38,8 +38,14 @@
   </header>
 
   <nav class="tab-bar" id="tab-bar" role="tablist" aria-label="Type de contenu">
-    <button class="tab-button active" data-tab="articles" type="button" role="tab" id="tab-btn-articles" aria-selected="true" aria-controls="tab-articles">
-      <span class="tab-icon">📰</span> Articles
+    <button class="tab-button active" data-tab="twitter" type="button" role="tab" id="tab-btn-twitter" aria-selected="true" aria-controls="tab-twitter">
+      <span class="tab-icon">📰</span> Twitter
+    </button>
+    <button class="tab-button" data-tab="medium" type="button" role="tab" id="tab-btn-medium" aria-selected="false" aria-controls="tab-medium">
+      <span class="tab-icon">📝</span> Medium
+    </button>
+    <button class="tab-button" data-tab="linkedin" type="button" role="tab" id="tab-btn-linkedin" aria-selected="false" aria-controls="tab-linkedin">
+      <span class="tab-icon">💼</span> LinkedIn
     </button>
     <button class="tab-button" data-tab="publications" type="button" role="tab" id="tab-btn-publications" aria-selected="false" aria-controls="tab-publications">
       <span class="tab-icon">🎓</span> Publications
@@ -78,11 +84,13 @@
   </div>
 
   <main id="content">
-    <div id="tab-articles" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-articles">
+    <div id="tab-twitter" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-twitter">
       <div class="welcome-message" id="loading">
         <p>Chargement...</p>
       </div>
     </div>
+    <div id="tab-medium" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-medium" style="display:none"></div>
+    <div id="tab-linkedin" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-linkedin" style="display:none"></div>
     <div id="tab-publications" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-publications" style="display:none"></div>
   </main>
 
@@ -148,7 +156,10 @@
     });
 
     // ── Tab switching ──
-    var currentTab = localStorage.getItem('curax-tab') || 'articles';
+    var TAB_SOURCES = { twitter: 'twitter', medium: 'medium', linkedin: 'linkedin' };
+    var TAB_LABELS = { twitter: 'articles Twitter', medium: 'articles Medium', linkedin: 'articles LinkedIn', publications: 'publications' };
+    var currentTab = localStorage.getItem('curax-tab') || 'twitter';
+    if (currentTab === 'articles') currentTab = 'twitter';
 
     function switchTab(tabId) {
       currentTab = tabId;
@@ -179,11 +190,7 @@
 
     function updateSubtitle(tabId) {
       var sub = document.getElementById('subtitle');
-      if (tabId === 'articles') {
-        sub.textContent = window._articlesSubtitle || '';
-      } else {
-        sub.textContent = window._publicationsSubtitle || '';
-      }
+      sub.textContent = (window._tabSubtitles && window._tabSubtitles[tabId]) || '';
     }
 
     document.querySelectorAll('.tab-button').forEach(function(btn) {
@@ -211,8 +218,11 @@
     });
 
     // ── Search & filter state ──
+    window._tabSubtitles = {};
     window._filters = {
-      articles:     { query: '', scoreMin: 0, domain: '', tags: [] },
+      twitter:      { query: '', scoreMin: 0, domain: '', tags: [] },
+      medium:       { query: '', scoreMin: 0, domain: '', tags: [] },
+      linkedin:     { query: '', scoreMin: 0, domain: '', tags: [] },
       publications: { query: '', scoreMin: 0, domain: '', tags: [] }
     };
 
@@ -227,12 +237,19 @@
     function collectAllTags(tabId) {
       var tags = {};
       var items = [];
-      if (tabId === 'articles') {
+      var source = TAB_SOURCES[tabId];
+      if (source) {
         var domains = (window._manifest && window._manifest.domains) || [];
         for (var i = 0; i < domains.length; i++) {
-          items = items.concat(domains[i].articles || []);
+          var arts = domains[i].articles || [];
+          for (var j = 0; j < arts.length; j++) {
+            if ((arts[j].source || 'twitter') === source) items.push(arts[j]);
+          }
         }
-        items = items.concat((window._manifest && window._manifest.uncategorized) || []);
+        var uncat = (window._manifest && window._manifest.uncategorized) || [];
+        for (var i = 0; i < uncat.length; i++) {
+          if ((uncat[i].source || 'twitter') === source) items.push(uncat[i]);
+        }
       } else {
         var pDomains = (window._manifest && window._manifest.papers && window._manifest.papers.domains) || [];
         for (var i = 0; i < pDomains.length; i++) {
@@ -249,8 +266,17 @@
     }
 
     function collectDomains(tabId) {
-      if (tabId === 'articles') {
-        return (window._manifest && window._manifest.domains) || [];
+      var source = TAB_SOURCES[tabId];
+      if (source) {
+        var allDomains = (window._manifest && window._manifest.domains) || [];
+        var filtered = [];
+        for (var i = 0; i < allDomains.length; i++) {
+          var arts = allDomains[i].articles || [];
+          for (var j = 0; j < arts.length; j++) {
+            if ((arts[j].source || 'twitter') === source) { filtered.push(allDomains[i]); break; }
+          }
+        }
+        return filtered;
       }
       return (window._manifest && window._manifest.papers && window._manifest.papers.domains) || [];
     }
@@ -269,7 +295,7 @@
         }
         if (f.query) {
           var q = f.query.toLowerCase();
-          var haystack = (item.title || '') + ' ' + (item.description || '') + ' ' + (item.tags || []).join(' ') + ' ' + (item.keywords || []).join(' ') + ' ' + ((item.authors || []).join(' '));
+          var haystack = (item.title || '') + ' ' + (item.description || '') + ' ' + (item.tags || []).join(' ') + ' ' + (item.keywords || []).join(' ') + ' ' + ((item.authors || []).join(' ')) + ' ' + (item.author || '');
           if (haystack.toLowerCase().indexOf(q) === -1) return false;
         }
         return true;
@@ -307,7 +333,7 @@
       }
 
       var searchInput = document.getElementById('search-input');
-      searchInput.placeholder = tabId === 'articles' ? 'Rechercher dans les articles...' : 'Rechercher dans les publications...';
+      searchInput.placeholder = 'Rechercher dans les ' + (TAB_LABELS[tabId] || 'articles') + '...';
 
       var f = window._filters[tabId];
       searchInput.value = f.query;
@@ -344,17 +370,17 @@
       var filterFn = hasActiveFilters(f) ? buildFilterPredicate(f) : null;
 
       var container = document.getElementById('tab-' + tabId);
-      if (tabId === 'articles') {
-        renderArticlesTab(window._manifest, container, filterFn);
+      var source = TAB_SOURCES[tabId];
+      if (source) {
+        renderArticlesTab(window._manifest, container, filterFn, source);
       } else {
         renderPublicationsTab(window._manifest, container, filterFn);
       }
 
       var resultsEl = document.getElementById('results-count');
       if (filterFn) {
-        var count = tabId === 'articles'
-          ? (window._articlesSubtitle || '').match(/^\d+/)
-          : (window._publicationsSubtitle || '').match(/^\d+/);
+        var subtitle = (window._tabSubtitles && window._tabSubtitles[tabId]) || '';
+        var count = subtitle.match(/^\d+/);
         resultsEl.textContent = (count ? count[0] : '0') + ' résultats';
         resultsEl.style.display = '';
       } else {
@@ -681,12 +707,12 @@
       return card;
     }
 
-    // ── Render articles tab ──
-    function renderArticlesTab(manifest, container, filterFn) {
+    // ── Render articles tab (filtered by source) ──
+    function renderArticlesTab(manifest, container, filterFn, source) {
       var domains = manifest.domains || [];
       var uncategorized = manifest.uncategorized || [];
 
-      // Separate main vs trash via predicate (no mutation)
+      // Filter by source, then separate main vs trash
       var mainDomains = [];
       var trashArticles = [];
       for (var i = 0; i < domains.length; i++) {
@@ -694,6 +720,7 @@
         var articles = domains[i].articles || [];
         for (var j = 0; j < articles.length; j++) {
           var art = articles[j];
+          if ((art.source || 'twitter') !== source) continue;
           if (art.quality_score && art.quality_score <= 4) {
             trashArticles.push(art);
           } else {
@@ -705,7 +732,14 @@
         }
       }
 
-      // Apply filter if provided
+      // Source-filter uncategorized
+      var filteredUncat = [];
+      for (var k = 0; k < uncategorized.length; k++) {
+        if ((uncategorized[k].source || 'twitter') === source) filteredUncat.push(uncategorized[k]);
+      }
+      uncategorized = filteredUncat;
+
+      // Apply user filter if provided
       if (filterFn) {
         var filteredDomains = [];
         for (var i = 0; i < mainDomains.length; i++) {
@@ -721,9 +755,9 @@
 
       var totalArticles = mainDomains.reduce(function(sum, d) { return sum + d.articles.length; }, 0) + uncategorized.length + trashArticles.length;
       var totalDomains = mainDomains.length;
-      window._articlesSubtitle = totalArticles + ' articles / ' + totalDomains + ' catégories';
+      window._tabSubtitles[source] = totalArticles + ' articles / ' + totalDomains + ' catégories';
 
-      container.innerHTML = "";
+      container.textContent = "";
 
       if (totalArticles === 0 && filterFn) {
         container.appendChild(buildNoResults());
@@ -731,11 +765,16 @@
       }
 
       if (totalArticles === 0) {
-        container.innerHTML = '<div class="welcome-message"><p>Aucun article pour le moment.</p></div>';
+        var emptyDiv = document.createElement('div');
+        emptyDiv.className = 'welcome-message';
+        var emptyP = document.createElement('p');
+        emptyP.textContent = 'Aucun ' + (TAB_LABELS[source] || 'article') + ' pour le moment.';
+        emptyDiv.appendChild(emptyP);
+        container.appendChild(emptyDiv);
         return;
       }
 
-      if (manifest.observations && !filterFn) {
+      if (source === 'twitter' && manifest.observations && !filterFn) {
         container.appendChild(buildObservationsBox(manifest.observations));
       }
 
@@ -758,11 +797,16 @@
 
     // ── Render publications tab ──
     function renderPublicationsTab(manifest, container, filterFn) {
-      container.innerHTML = "";
+      container.textContent = "";
 
       if (!manifest.papers || !manifest.papers.domains || manifest.papers.domains.length === 0) {
-        window._publicationsSubtitle = '0 publications';
-        container.innerHTML = '<div class="welcome-message"><p>Aucune publication pour le moment.</p><p>Placez des fichiers PDF dans <code>infiles/</code> et lancez <code>python scripts/import.py infiles/</code></p></div>';
+        window._tabSubtitles['publications'] = '0 publications';
+        var emptyDiv = document.createElement('div');
+        emptyDiv.className = 'welcome-message';
+        var p1 = document.createElement('p');
+        p1.textContent = 'Aucune publication pour le moment.';
+        emptyDiv.appendChild(p1);
+        container.appendChild(emptyDiv);
         return;
       }
 
@@ -801,7 +845,7 @@
 
       var totalPapers = mainDomains.reduce(function(sum, d) { return sum + d.papers.length; }, 0) + trashPapers.length;
       var totalDomains = mainDomains.length;
-      window._publicationsSubtitle = totalPapers + ' publications / ' + totalDomains + ' axes';
+      window._tabSubtitles['publications'] = totalPapers + ' publications / ' + totalDomains + ' axes';
 
       if (totalPapers === 0 && filterFn) {
         container.appendChild(buildNoResults());
@@ -845,10 +889,14 @@
           stampDomainSlugs(window._manifest.papers.domains, 'papers');
         }
 
-        var articlesContainer = document.getElementById("tab-articles");
+        var twitterContainer = document.getElementById("tab-twitter");
+        var mediumContainer = document.getElementById("tab-medium");
+        var linkedinContainer = document.getElementById("tab-linkedin");
         var publicationsContainer = document.getElementById("tab-publications");
 
-        renderArticlesTab(window._manifest, articlesContainer, null);
+        renderArticlesTab(window._manifest, twitterContainer, null, 'twitter');
+        renderArticlesTab(window._manifest, mediumContainer, null, 'medium');
+        renderArticlesTab(window._manifest, linkedinContainer, null, 'linkedin');
         renderPublicationsTab(window._manifest, publicationsContainer, null);
 
         // Init filters UI
@@ -857,14 +905,19 @@
         // Apply initial tab
         switchTab(currentTab);
       } catch (e) {
-        document.getElementById("tab-articles").innerHTML =
-          '<div class="welcome-message">' +
-          "<p>Bienvenue sur Curax.</p>" +
-          "<p>Ajoutez des articles dans le dossier <code>articles/</code> et poussez sur <code>main</code> pour les voir apparaître ici.</p>" +
-          "</div>";
-        window._articlesSubtitle = '';
-        window._publicationsSubtitle = '';
-        switchTab('articles');
+        var errContainer = document.getElementById("tab-twitter");
+        errContainer.textContent = '';
+        var welcomeDiv = document.createElement('div');
+        welcomeDiv.className = 'welcome-message';
+        var p1 = document.createElement('p');
+        p1.textContent = 'Bienvenue sur Curax.';
+        welcomeDiv.appendChild(p1);
+        var p2 = document.createElement('p');
+        p2.textContent = 'Ajoutez des articles dans le dossier articles/ et poussez sur main pour les voir apparaître ici.';
+        welcomeDiv.appendChild(p2);
+        errContainer.appendChild(welcomeDiv);
+        window._tabSubtitles = {};
+        switchTab('twitter');
       }
     })();
   </script>

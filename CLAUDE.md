@@ -72,7 +72,9 @@ Dark mode quality badges use `[data-mode="dark"]` selector, not media query.
 
 ## UI — Tab navigation
 
-Two tabs: "Articles" and "Publications", controlled by pill buttons in `.tab-bar`. Active tab stored in `localStorage` key `curax-tab`. Subtitle updates dynamically per tab.
+Four tabs: "Twitter" (📰), "Medium" (📝), "LinkedIn" (💼), "Publications" (🎓), controlled by pill buttons in `.tab-bar`. Active tab stored in `localStorage` key `curax-tab` (values: `twitter`, `medium`, `linkedin`, `publications`). Subtitle updates dynamically per tab. Backward compat: `curax-tab=articles` is mapped to `twitter` on load.
+
+Articles are filtered by `source` field: each of the first 3 tabs shows only articles matching its source. Observations are shown only in the Twitter tab.
 
 ## Catalog format — Articles (source of truth)
 
@@ -93,6 +95,8 @@ Two tabs: "Articles" and "Publications", controlled by pill buttons in `.tab-bar
   "observations": "Analyse du corpus..."
 }
 ```
+
+`source`: article origin platform — `"twitter"` (default), `"medium"`, or `"linkedin"`. Detected from original filename in `infiles/` during import: `linkedin-article-*` → `"linkedin"`, `medium-article-*` → `"medium"`, else `"twitter"`.
 
 `quality_score` (1-10): semantic quality score assigned by Claude CLI.
 - 1-2: Empty/promotional content
