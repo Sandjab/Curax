@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MASS-RAG: Multi-Agent Synthesis Retrieval-Augmented Generation — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>MASS-RAG: Multi-Agent Synthesis Retrieval-Augmented Generation</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>MASS-RAG aborde un problème connu des systèmes RAG : lorsque le contexte récupéré est bruité, incomplet ou hétérogène, un seul processus génératif peine à réconcilier l'évidence. Les auteurs partent du constat que MAIN-RAG (Chang et al., 2024), considéré comme le SOTA multi-agent, repose sur un agent juge unique opérant depuis une perspective monolithique. Leur proposition consiste à remplacer ce filtre unique par trois agents spécialisés — Summarizer, Extractor, Reasoner — dont les sorties sont ensuite intégrées par un agent de synthèse, avec un Answer Agent optionnel produisant des réponses candidates intermédiaires.</p>
+<p>La question de recherche est claire mais étroite : trois perspectives de filtrage valent-elles mieux qu'une ? L'originalité conceptuelle est limitée. Le découpage en summarization / extraction / reasoning recycle des distinctions classiques de la littérature QA et RAG (Xu et al., 2023 ; Chen et al., 2017 ; Asai et al., 2023). L'apport principal réside dans la mise en cascade et l'agent de synthèse final.</p>
+
+<h2>Méthodologie</h2>
+<p>Le cadre est entièrement <em>training-free</em>. Pour chaque requête, jusqu'à 20 documents sont récupérés via Contriever pré-entraîné sur MS MARCO, puis tronqués au top-5 (Llama2 7B) ou top-10 (autres modèles). Le pipeline standard instancie cinq agents ; pour ARC-Challenge, l'Answer Agent est désactivé en raison de la nature symbolique des réponses (A/B/C/D).</p>
+<p>Les rôles d'agents sont définis par des instructions textuelles courtes décrites en Annexe C. Aucune supervision, aucun fine-tuning, aucun reward signal. Le décodage est greedy (température 0, top-p 1.0) pour garantir le déterminisme.</p>
+<p>Plusieurs choix méthodologiques posent question :</p>
+<ul>
+<li><strong>Coût ignoré</strong> — l'Annexe E indique un coût d'exécution de 7x par échantillon avec Answer Agent (4x sans), mais cette dimension n'apparaît jamais dans les comparaisons principales avec MAIN-RAG ou Self-RAG. Or comparer 7 appels LLM par requête à 1 ou 2 appels d'une baseline n'est pas une comparaison équitable du rapport qualité/coût.</li>
+<li><strong>Backbones hétérogènes</strong> — le Tableau 1 mélange Llama2 7B/13B, Mistral 7B, Llama3 8B, Qwen3 8B. Les comparaisons « équitables » sont annoncées mais l'introduction de Qwen3 comme « référence » brouille la lecture.</li>
+<li><strong>Pas de tests statistiques</strong> — aucun intervalle de confiance, aucune analyse de variance, aucun seed multiple. Avec un décodage greedy, la stabilité est triviale ; mais cela masque l'absence d'évaluation de la robustesse aux variations de prompt ou d'instruction.</li>
+</ul>
+
+<h2>Résultats principaux</h2>
+<p>Sur Llama2 7B (comparable à Self-RAG entraîné), les gains absolus annoncés sont de +3.3 % (TriviaQA), +5.3 % (PopQA), +7.3 % (ARC-C), +20.7 % (ASQA en em). Sur Llama3 8B vs MAIN-RAG : +3.5 %, +0.3 %, +27.1 %, +19.9 %. Le gain de 0.3 % sur PopQA est dans le bruit ; le saut de 27.1 % sur ARC-C suggère que MAIN-RAG est mal adapté aux tâches à choix multiples plus que MASS-RAG ne soit fondamentalement supérieur.</p>
+<p>L'ablation sur l'Answer Agent (Tableau 3) révèle un résultat instructif : sur ASQA et même PopQA avec Mistral, désactiver l'Answer Agent <em>améliore</em> les performances. Cela contredit partiellement la narration générale et indique que le composant ajoute du bruit pour les tâches long-form ou ambiguës.</p>
+<p>L'analyse Evidence Coverage Rate sur les « Uniquely Attributable Subsets » (609 / 108 questions pour Llama3 ; 559 / 85 pour Mistral) cherche à démontrer la complémentarité des filtres. La construction du sous-ensemble par sélection des questions capturées par exactement un agent est circulaire : par définition, ces questions montrent une complémentarité. L'analyse ne quantifie pas combien de questions perdent en précision parce que l'agent de synthèse hésite entre les trois sorties.</p>
+
+<h2>Discussion et limites</h2>
+<p>La section Limitations est générique : elle mentionne que retriever et reranker sont fixes, et que le cadre est inférence-pure. Elle ignore plusieurs faiblesses substantielles :</p>
+<ul>
+<li><strong>Coût computationnel</strong> — multiplication par 7 du nombre d'appels LLM, jamais discutée dans la balance bénéfice/coût.</li>
+<li><strong>Sensibilité aux prompts</strong> — les rôles sont définis par instructions textuelles, mais aucun robustness check sur la formulation.</li>
+<li><strong>Tableaux 4 et 5</strong> — les filtres individuels (Summarizer seul) atteignent parfois une accuracy comparable ou supérieure à la synthèse (ex. Mistral PopQA : Reasoner 62.4, Synthesis 60.9). Ce résultat est mentionné comme « approximate upper bound » mais sans interroger l'utilité réelle de la synthèse.</li>
+<li><strong>Pas de comparaison avec un simple ensemble par vote majoritaire</strong> — un baseline trivial pour valider l'apport de l'agent de synthèse.</li>
+</ul>
+<p>Les case studies (Annexe D) sont sélectionnés sans contre-exemples : on ne voit jamais les cas où la synthèse dégrade une bonne réponse d'un filtre individuel.</p>
+
+<h2>Reproductibilité</h2>
+<p>Aucune URL de code public n'est mentionnée dans le manuscrit fourni. Les datasets et documents récupérés viennent de releases publiques (Self-RAG d'Asai et al., 2023). Le matériel décrit (4 × RTX 4090 24 Go, bfloat16) est accessible. Les hyperparamètres essentiels sont fournis. Cependant, les prompts exacts des cinq agents ne figurent pas dans le corps de l'article — seule l'Annexe C donne des descriptions textuelles, insuffisantes pour reproduction stricte. Sans publication des prompts complets, reproduire les chiffres au pourcent près est improbable.</p>
+
+<h2>Impact et applications</h2>
+<p>L'impact pratique est modéré. Le gain de quelques points sur des benchmarks QA standards, au prix d'un facteur 7 sur le coût, est difficile à justifier en production. Le pattern proposé — décomposer le filtrage RAG en perspectives complémentaires — peut inspirer des architectures de production, mais les preuves apportées ne tranchent pas la question de savoir si une décomposition à 3 agents est optimale par rapport à 2 ou 5.</p>
+<p>Pour les praticiens RAG agentic, le travail confirme une intuition désormais répandue (multi-agent filtering > single-agent filtering) sans apporter de borne théorique ni d'analyse fine du compromis qualité/latence/coût.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>MASS-RAG s'inscrit directement dans la lignée de MAIN-RAG (Chang et al., 2024) et plus largement des travaux sur le filtrage de contexte (Wang et al., 2023b ; Xu et al., 2023 ; Hwang et al., 2024). La filiation est explicite et honnête. Le positionnement face à MA-RAG (Nguyen et al., 2025) ou aux approches de query decomposition est mentionné mais non comparé empiriquement.</p>
+<p>Une référence absente notable : les travaux sur l'auto-consistance (self-consistency, Wang et al., 2022) qui partagent la philosophie d'agréger plusieurs traces de raisonnement, et auraient constitué un baseline naturel à coût comparable.</p>
+
+<h3>Tableau récapitulatif des scores de robustesse</h3>
+<table border="1" cellpadding="8" cellspacing="0">
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>3</td><td>Question claire mais incrémentale ; reformulation d'un problème connu.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Protocole standard, mais backbones hétérogènes et coût ignoré dans les comparaisons.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>Benchmarks publics de taille décente (1 172 à plusieurs milliers d'exemples).</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Métriques classiques (accuracy, EM, ROUGE, MAUVE), mais aucun test statistique.</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Pas d'intervalles de confiance, pas de seeds multiples, sélection de sous-ensembles circulaire pour ECR.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Datasets et matériel publics ; prompts complets absents, code non référencé.</td></tr>
+<tr><td>Transparence sur les limites</td><td>2</td><td>Section Limitations générique ; ignore le coût ×7 et la non-supériorité du Synthesis Agent dans plusieurs configurations.</td></tr>
+<tr><td>Impact / nouveauté</td><td>2</td><td>Extension incrémentale de MAIN-RAG ; pas de borne théorique ni de pattern radicalement nouveau.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale indépendante : 2.5 / 5</strong> — travail empirique correct mais incrémental, dont la portée est limitée par l'absence de tests statistiques, l'occultation du coût computationnel et une discussion des limites trop superficielle pour un papier qui revendique le SOTA.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

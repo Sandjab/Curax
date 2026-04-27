@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autoreason: Self-Refinement That Knows When to Stop — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Autoreason: Self-Refinement That Knows When to Stop</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un modèle se relit, il se dégrade</h2>
+
+<p>Demandez à un LLM de critiquer son propre texte, puis de le réécrire. Recommencez quinze fois. Le résultat sera presque toujours pire que la version initiale. C'est le constat brutal posé par <strong>Autoreason</strong>, un travail récent de Nous Research signé SHL0MS. Sur des tâches d'écriture créative, le modèle Haiku 3.5 a vu ses sorties dégradées sous le niveau d'un simple premier jet après une boucle classique de critique-révision. Pas amélioré. <em>Détérioré</em>.</p>
+
+<p>Cette découverte contredit une intuition tenace de l'écosystème agentique : faire boucler un modèle sur lui-même pour qu'il s'améliore. La pratique est partout, des chaînes ReAct aux agents qui s'auto-corrigent. Sauf que les preuves empiriques sont mitigées, et Autoreason explique pourquoi. Les auteurs proposent une architecture qui, au lieu de pousser le modèle à toujours réviser, le force à choisir entre trois options dont l'une est <em>ne rien changer</em>. Le résultat : 42 sur 42 au scrutin Borda pour Haiku 3.5, là où chaque baseline classique s'effondre.</p>
+
+<h2>Trois mécanismes qui sabotent l'auto-révision</h2>
+
+<p>L'article identifie trois pathologies structurelles qui condamnent les boucles de raffinement naïves.</p>
+
+<p>La première, c'est le <strong>biais de prompt</strong>. Si vous demandez à un modèle « trouve les problèmes de ce document », il va trouver des problèmes. Même si le document est bon. Le modèle hallucine des défauts pour obéir à l'instruction, une forme de comportement sycophante où l'adhésion au prompt prime sur l'évaluation honnête. Personne ne dit « ce texte est très bien, je n'ai rien à critiquer ».</p>
+
+<p>La deuxième pathologie, c'est le <strong>scope creep</strong>. Chaque passe de révision allonge, restructure, ajoute du détail. Pourquoi ? Parce que les modèles ET les juges souffrent d'un biais de verbosité bien documenté : les sorties plus longues sont préférées, indépendamment de leur qualité. Une révision qui ajoute trois paragraphes sera jugée meilleure qu'une révision qui en supprime un, même si la version courte est plus précise.</p>
+
+<p>La troisième, c'est l'<strong>absence de retenue</strong>. Quand on demande à un modèle de réviser un texte, il révise. Toujours. Même si on lui dit « sois conservateur ». L'instruction de modifier écrase systématiquement les garde-fous. Combinés, ces trois mécanismes garantissent une dérive progressive : à chaque passe, le texte s'éloigne un peu plus de sa version initiale, vers le pire.</p>
+
+<h2>Un tournoi à trois candidats</h2>
+
+<p>L'idée centrale d'Autoreason tient en une phrase : « ne rien faire » doit être une option de premier rang. Concrètement, chaque itération produit non pas une, mais trois versions concurrentes :</p>
+
+<ul>
+<li><strong>A</strong> — la version actuelle, inchangée (l'incumbent)</li>
+<li><strong>B</strong> — une révision adversariale, produite après une critique fraîche</li>
+<li><strong>AB</strong> — une synthèse qui combine les meilleurs éléments de A et B</li>
+</ul>
+
+<p>Un panel de trois juges fraîchement instanciés (sans historique de session, sans connaissance du processus de génération) évalue ces trois candidats à l'aveugle, avec étiquettes randomisées. Le scrutin Borda attribue 3, 2 et 1 points selon le rang. Si A perd, il est remplacé. S'il gagne deux fois de suite, la boucle se termine.</p>
+
+<p>L'élégance du dispositif tient à la séparation stricte des rôles. Le critique ne propose jamais de fixes. L'auteur B ne voit pas l'historique de génération. Le synthétiseur reçoit A et B avec des étiquettes brouillées : il ignore lequel est l'incumbent. Et les juges ne partagent rien avec les générateurs. Cette discipline empêche la contamination par les biais qui ont produit les candidats.</p>
+
+<p>Une analogie utile : pensez à une rédaction de magazine où l'auteur, le critique et le rédacteur en chef sont trois personnes différentes, et où le comité éditorial qui tranche n'a jamais lu les versions précédentes. Si la nouvelle version n'est pas franchement meilleure, on garde l'ancienne. Par défaut, le statu quo gagne.</p>
+
+<h3>Pourquoi k=2 et pas k=1 ?</h3>
+
+<p>Les auteurs ont testé le seuil de convergence. À k=1 (une seule victoire suffit), 94% des runs voient le « gagnant » déplacé à la passe suivante : la décision était bruitée. À k=3, 24% des trajectoires ne convergent jamais. Le sweet spot est à k=2 : 100% de convergence, en moyenne 3,9 passes. Au-delà, on continue à dépenser du compute sans gain de qualité — un panel de 7 juges a préféré la sortie convergée à k=2 plutôt que celle à k=4 par 6 voix contre 1.</p>
+
+<h2>Le résultat qui surprend : ça marche surtout au milieu</h2>
+
+<p>Les expériences couvrent cinq tiers de modèles : Llama 3.1 8B, Gemini Flash, Haiku 3.5, Haiku 4.5, Sonnet 4. La courbe d'efficacité d'Autoreason n'est <em>pas monotone</em>. Elle culmine au milieu et s'effondre aux deux bouts.</p>
+
+<p>Pour <strong>Haiku 3.5</strong> (environ dix fois moins cher que Sonnet 4), le verdict est sans appel : 42/42 sur trois tâches d'écriture, score parfait. Au passage, les baselines de raffinement réduisent le texte initial de 60 à 70%. Le modèle, incapable de juger ses propres modifications, supprime du contenu utile à chaque itération. Autoreason, lui, fait grandir les sorties de manière contrôlée parce que le panel rejette les passes qui suppriment de la valeur.</p>
+
+<p>Pour <strong>Llama 8B</strong>, la méthode ne fonctionne pas vraiment : le modèle est trop faible pour générer des alternatives suffisamment différentes. Le tournoi n'a rien à arbitrer. Pour <strong>Sonnet 4.6</strong> sur tâches non contraintes, autre échec : le modèle est si fort que ses synthèses dominent systématiquement, l'incumbent ne survit jamais, et la boucle ne converge pas. Sur 50 passes, A ne gagne que 12% du temps.</p>
+
+<p>Le cas le plus parlant est <strong>Haiku 4.5</strong>, qui marque la transition. Sur 150 problèmes de programmation compétitive (CodeContests), Autoreason gagne 4 points de pourcentage sur les tests visibles — mais perd cet avantage entièrement sur les tests cachés. Le modèle est désormais assez fort pour s'auto-évaluer pendant la révision sans dégradation systématique. Critique-and-revise, qui détruisait Haiku 3.5, ne nuit plus à Haiku 4.5. La fenêtre où Autoreason apporte de la valeur s'est refermée.</p>
+
+<h2>Ce que disent les chiffres sur le code</h2>
+
+<p>Le terrain de la programmation compétitive offre une vérification objective : un test passe ou ne passe pas. Sur Sonnet 4.6, Autoreason atteint 77% de réussite sur les tests cachés contre 73% pour un single-pass — un gain de 4 points. Sur Sonnet 4, l'écart monte à 5 points (64% vs 59%) et la différence devient statistiquement significative au test de McNemar (p=0,041).</p>
+
+<p>Le mécanisme exact intéressera les ingénieurs : Autoreason n'aide pas le modèle à réussir du premier coup. Les trois stratégies résolvent à peu près le même nombre de problèmes en première tentative (~83 sur 150). La différence se fait dans la <strong>récupération après échec</strong>. Sur 53 problèmes ratés au premier essai par les deux méthodes, Autoreason en sauve 33 (62%) contre 23 pour le single-pass (43%).</p>
+
+<p>Là où critique-and-revise pattern-matche sur le message d'erreur et corrige superficiellement, Autoreason force une analyse structurée : pourquoi l'approche a-t-elle échoué ? Quelles alternatives sont possibles ? Quels cas limites ai-je manqués ? Cette analyse explicite avant la révision est ce qui distingue un debug réfléchi d'un sparadrap réflexe. Critique-and-revise overfit aussi davantage : sur les problèmes durs, 32% de ses solutions passent les tests visibles mais échouent sur les cachés, contre 22-23% pour les autres méthodes.</p>
+
+<h2>Les conditions qui font tenir l'édifice</h2>
+
+<p>L'article identifie quatre conditions sous lesquelles Autoreason fonctionne. Aucune n'est triviale.</p>
+
+<p>D'abord, <strong>la vérification externe</strong> : il faut une capacité d'évaluation que le modèle générateur n'a pas. C'est le panel de juges, ou la suite de tests pour le code. Sans signal externe, le modèle s'enferme dans ses propres biais.</p>
+
+<p>Ensuite, <strong>le scope contraint</strong>. La même méthode (Sonnet 4.6) finit dernière sur une tâche ouverte et première sur une tâche contrainte à 500 mots. Quand l'espace d'amélioration est borné — par un nombre de mots, des faits fixes, un format imposé — la dérive est mécaniquement limitée. Sur les tâches ouvertes, critique-and-revise et harsh-critic violent constamment les contraintes de longueur (jusqu'à 2773 mots sur des tâches à 500-600 mots), confirmant que le raffinement sans évaluation externe échappe à tout contrôle.</p>
+
+<p>Troisième condition, <strong>le raisonnement structuré</strong> : analyser explicitement pourquoi quelque chose a échoué avant de tenter une correction. C'est ce qui sépare Autoreason de critique-and-revise dans les expériences code.</p>
+
+<p>Enfin, <strong>un espace de décision suffisant</strong>. Sur trois tâches contraintes avec Sonnet 4.6, Autoreason gagne le pitch startup et la politique d'usage IA, mais perd le post-mortem d'incident. La raison : un post-mortem a essentiellement une bonne structure (chronologique), et le tournoi adversarial n'a rien à arbitrer entre des alternatives qui devraient toutes ressembler à la même chose.</p>
+
+<h2>Les ablations qui clarifient le mécanisme</h2>
+
+<p>Les auteurs ont décortiqué chaque composant. Sans la révision adversariale B, le système converge en 2 passes vers une sortie effondrée. Sans la synthèse AB, il converge en 3 passes mais à un plateau de qualité plus bas. Le tournoi à trois candidats n'est pas décoratif : c'est ce qui maintient une pression compétitive durable.</p>
+
+<p>L'ablation des juges est aussi instructive. Remplacer les juges Sonnet par des juges Haiku ne détruit pas l'avantage d'Autoreason — le score baisse de 23 à 20,7 mais reste au-dessus du single-pass à 18,3. La structure du tournoi (candidats randomisés, panel multiple, tiebreak conservateur) apporte une valeur indépendante de la qualité des juges. Des juges forts amplifient l'effet, mais ne sont pas strictement nécessaires.</p>
+
+<p>Une autre amélioration gratuite : ajouter « think step by step about each version » au prompt du juge réduit la convergence d'un facteur 3 sur la tâche 1. Forcer le juge à articuler ses raisons avant de classer agit comme un débiaiser : il devient plus difficile de se laisser hypnotiser par la verbosité.</p>
+
+<h2>Ce que ça change pour qui déploie des LLM</h2>
+
+<p>La leçon pratique d'Autoreason est inconfortable pour les architectures agentiques actuelles. Beaucoup de pipelines de production reposent sur des boucles « générer puis raffiner » avec un seul agent. Sur les modèles de classe Haiku, ces boucles dégradent silencieusement les sorties. Le développeur voit une chaîne qui tourne, des logs qui défilent, des tokens qui se consomment, et croit obtenir de la valeur. En réalité, le système produit une version pire que sa première tentative.</p>
+
+<p>Trois recommandations actionnables émergent. Si vous travaillez avec un modèle de milieu de gamme (Haiku 3.5, Gemini Flash, et dans une moindre mesure Sonnet 4), Autoreason apporte un gain mesurable qu'aucune baseline ne peut égaler — au prix d'un coût compute environ 6 fois supérieur par passe. Si vous travaillez avec un modèle frontier (Sonnet 4.6, Haiku 4.5), concentrez-vous sur des contraintes de scope explicites et du raisonnement structuré, plutôt que sur des panels de juges. Et si vous travaillez avec un modèle faible (Llama 8B et en dessous), investissez dans la qualité de génération en amont — aucune architecture de raffinement ne sauvera un modèle qui ne sait pas générer d'alternatives diversifiées.</p>
+
+<p>L'observation la plus contre-intuitive concerne best-of-N. Sur Haiku, échantillonner 6 sorties indépendantes et garder la meilleure produit un score plus bas qu'un seul single-pass (7 vs 17 sur la tâche pitch). Sans structure d'évaluation robuste, la diversité brute introduit du bruit, pas du signal. Autoreason Haiku bat best-of-6 Haiku de 8 points en moyenne au coût compute égal.</p>
+
+<h2>Une fenêtre qui se déplace</h2>
+
+<p>Le résultat le plus profond d'Autoreason est peut-être philosophique. La méthode existe pour combler l'écart entre la capacité de génération d'un modèle et sa capacité d'auto-évaluation. Cet écart n'est pas constant : il dépend du modèle, et il se réduit avec chaque génération. Haiku 4.5 est à peu près au niveau où Sonnet 4 se trouvait il y a un an. Le sweet spot d'Autoreason se déplace mécaniquement vers le haut au fur et à mesure que les modèles progressent.</p>
+
+<p>Ce qui était le frontier hier est le mid-tier d'aujourd'hui. Le code écrit pour orchestrer Sonnet 4 avec Autoreason donnera des gains marginaux dans douze mois quand Sonnet 5 saura s'auto-évaluer aussi bien que les juges externes le faisaient. La leçon généralisable n'est pas « utilisez Autoreason », mais « auditez régulièrement où se trouve l'écart génération-évaluation pour les modèles que vous déployez, et adaptez votre architecture en conséquence ».</p>
+
+<p>Quelques questions restent ouvertes. La validation par juges humains aveugles n'a pas été conduite sur les tâches d'écriture — toutes les évaluations qualitatives reposent sur des préférences de LLM, qui partagent eux-mêmes des biais. Les expériences se concentrent sur la famille Anthropic, ce qui limite la généralisation à GPT, Gemini ou Llama frontier. La notion de « scope » reste descriptive plutôt qu'opérationnelle : combien de contraintes faut-il pour qu'une tâche soit « contrainte » ? Les auteurs proposent des proxies (nombre de contraintes explicites, variance du nombre de mots, décisivité des juges) sans en formaliser un test.</p>
+
+<p>Le code et les données sont disponibles sur <strong>github.com/NousResearch/autoreason</strong>. Pour quiconque construit aujourd'hui des pipelines agentiques avec auto-révision, c'est probablement la lecture la plus utile du semestre — moins pour la recette à appliquer que pour le diagnostic clinique du raffinement naïf qu'elle livre.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

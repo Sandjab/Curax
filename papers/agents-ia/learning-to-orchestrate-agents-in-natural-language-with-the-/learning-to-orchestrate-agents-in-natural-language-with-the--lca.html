@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning to Orchestrate Agents in Natural Language with the Conductor — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Learning to Orchestrate Agents in Natural Language with the Conductor</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le Conductor répond à un problème pratique du déploiement multi-modèles : aucun LLM frontalier n'est universellement optimal, et les workflows agentiques restent largement conçus à la main. Les auteurs proposent un méta-modèle de 7 milliards de paramètres entraîné par renforcement pour produire, en langage naturel, des plans d'orchestration complets — sous-tâches verbales, identifiants de modèles workers, et listes d'accès définissant la topologie de communication entre étapes.</p>
+<p>L'hypothèse centrale est qu'un petit modèle peut, via reward shaping minimal et GRPO, découvrir des stratégies de coordination dépassant les pipelines multi-agents conçus manuellement (MoA, MASRouter, RouterDC, Smoothie). Le travail s'inscrit dans la lignée DeepSeek-R1 sur le RL pour le raisonnement, mais déplace l'objet du raisonnement : ce n'est plus la résolution directe, c'est le pilotage d'autres modèles.</p>
+
+<h2>Méthodologie</h2>
+<p>Le Conductor part d'un checkpoint Qwen2.5-7B et est entraîné par GRPO sur 200 itérations, avec batch de 256 (4 questions × 64 rollouts), taux d'apprentissage cosine 1e-6, sans pénalité KL et sans synchronisation du modèle de référence. Le pool de workers comprend 7 modèles hétérogènes : GPT-5, Claude Sonnet 4, Gemini 2.5 Pro, Qwen3-32B (deux modes), DeepSeek-R1-Distill-Qwen-32B, Gemma3-27B-instruct.</p>
+<p>Le dataset d'entraînement agrège 960 problèmes issus de MATH, MMLU, RLPR et LiveCodeBench V1. La récompense est binaire-progressive : 0 si format de sortie non parsable, 0.5 si workflow correctement formaté mais réponse fausse, 1 si réponse correcte. Le format impose trois listes Python parallèles (model_id, subtasks, access_list) extraites après le chain-of-thought.</p>
+<p>Deux extensions sont étudiées : entraînement avec sous-ensembles aléatoires d'agents (k ≤ n) pour l'adaptation au pool disponible, et auto-référence récursive permettant au Conductor de se sélectionner comme worker, créant un nouvel axe de test-time scaling.</p>
+
+<h2>Résultats principaux</h2>
+<p>Le Conductor 7B obtient 99.4 sur MATH500, 94.1 sur MMLU, 83.93 sur LiveCodeBench V6, 93.3 sur AIME25 et 87.5 sur GPQA-Diamond, dépassant GPT-5 sur tous les benchmarks rapportés (Table 1). La moyenne 77.27 surpasse GPT-5 (74.78) et Gemini 2.5 Pro (70.97) en setting "unconstrained".</p>
+<p>En setting contraint (4096 tokens, raisonnement minimal), le Conductor atteint 72.35 de moyenne contre 64.20 pour Gemini 5×self-reflection et 64.52 pour GPT-5 5×self-reflection. La longueur moyenne des workflows reste à 3 étapes malgré une limite de 5, suggérant une efficacité émergente sans régularisation explicite.</p>
+<p>L'extension récursive ajoute un gain notable sur BigCodeBench (37.8 → 40.0), où GPT-5 sous-performe (33.8) ; le Conductor réalloue alors ses appels vers Claude et Gemini après observation. L'ablation de scale (3B vs 7B) montre une convergence sur la même distribution d'agents mais un écart de prompt engineering qui creuse la performance finale.</p>
+
+<h2>Discussion et limites</h2>
+<p>La force du papier tient à la généralité du framework : le langage naturel comme medium de coordination supprime les contraintes des routeurs apprenant dans des espaces discrets ou des templates fixes. La démonstration empirique est convaincante sur la diversité des benchmarks couverts.</p>
+<p>Plusieurs angles morts méritent attention. D'abord, l'évaluation finale repose sur 30 questions pour AIME25 et 148 pour BigCodeBench — les écarts de quelques points absolus peuvent refléter du bruit, malgré les 16 répétitions. Les barres d'erreur de Table 1 sont absentes, ce qui empêche tout test de significativité face à GPT-5.</p>
+<p>Ensuite, la comparaison avec les baselines multi-agents (MoA, MASRouter) est désavantageuse pour ces dernières : elles sont conçues pour des pools moins hétérogènes et disposent d'une expressivité moindre. Le Conductor bénéficie aussi des derniers modèles fermés au prix de l'API, ce que les auteurs reconnaissent dans la discussion éthique.</p>
+<p>L'étude de l'effet du dataset d'entraînement est légère : 960 problèmes pour entraîner un orchestrateur de modèles frontières est étonnamment faible, et la robustesse à des distributions de tâches très différentes reste peu testée hors des trois benchmarks OOD choisis. Le risque d'overfitting aux idiosyncrasies des workers utilisés (versions précises de GPT-5, Claude Sonnet 4) n'est pas évalué : le Conductor pourrait dégrader fortement si les workers sont remplacés par des versions ultérieures aux comportements distincts.</p>
+<p>Enfin, les ablations sur le rôle des few-shot examples (Annexe B.2) montrent que le conditionnement OOD améliore les performances, ce qui suggère que les few-shot servent autant à conditionner la distribution générative qu'à fournir des stratégies — une dépendance qui mériterait une caractérisation plus rigoureuse.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code source et les poids du modèle sont annoncés comme disponibles dans un dépôt anonymisé. Les hyperparamètres d'entraînement (200 itérations, GRPO, AdamW, β=0, KL=0) sont détaillés en Annexe A. Les configurations des workers (températures, budgets de raisonnement) sont précisées.</p>
+<p>Deux freins persistent : la dépendance à des modèles propriétaires fermés (GPT-5, Claude, Gemini) dont les versions évoluent et dont les coûts d'API rendent la reproduction onéreuse ; l'absence de seeds explicites et la présence de stochasticité d'évaluation à 16 répétitions, qui sera difficile à répliquer fidèlement.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport principal est conceptuel : démontrer que la coordination multi-agents peut émerger d'un RL end-to-end sans scaffolding humain. C'est un déplacement non trivial du problème de conception (humain) vers un problème d'optimisation (RL).</p>
+<p>Pour la pratique, le Conductor offre un schéma concret aux équipes déployant des systèmes multi-LLM : un méta-modèle entraînable de petite taille peut amplifier un parc de workers hétérogènes. La récursivité comme nouvel axe de test-time scaling est une idée que d'autres équipes vont probablement reprendre.</p>
+<p>Les limites en termes de coût d'inférence et de dépendance aux APIs propriétaires restent réelles. Le cas d'usage le plus immédiat est probablement l'orchestration de modèles open-source spécialisés dans des domaines verticaux (biologie, robotique), évoqué en discussion finale.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans trois lignées convergentes. La première est le RL pour le raisonnement (DeepSeek-R1, GRPO, RLPR), dont le Conductor étend le paradigme à la délégation via API calling plutôt qu'à l'auto-raisonnement direct.</p>
+<p>La deuxième est la coordination multi-agents apprise (GPTSwarm de Zhuge et al., MASRouter, RouterDC, Smoothie). La distinction principale tient à l'expressivité : ces approches apprennent dans des espaces structurés (graphes, classifieurs), alors que le Conductor utilise le langage naturel comme medium ouvert. Le gain empirique observé suggère que cette flexibilité est exploitée par le RL.</p>
+<p>La troisième est le test-time scaling (chain-of-thought étendu, self-consistency, parallel reasoning de Pan et al. 2025). Le Conductor récursif ajoute un axe orthogonal : la profondeur d'orchestration plutôt que la longueur de la trace de pensée.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Problème clairement posé, pertinent et reformulé sous un angle original (RL pour la coordination linguistique).</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Protocole solide avec setting contraint et non-contraint, ablations multiples ; comparaisons baseline parfois désavantageuses pour les concurrents.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Dataset d'entraînement de 960 problèmes ; benchmarks d'évaluation petits (30 pour AIME25, 148 pour BigCodeBench), 16 répétitions partiellement compensatoires.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Benchmarks reconnus, accuracy bien définie, mais absence de tests de significativité statistique sur Table 1.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Risque de contamination des benchmarks par les workers fermés non évalué ; few-shot examples influençant fortement les résultats sans caractérisation complète.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code et poids partagés, hyperparamètres détaillés ; dépendance aux APIs commerciales et versions de modèles fermés limite la réplication exacte.</td></tr>
+<tr><td>Transparence des limitations</td><td>3</td><td>Quelques limites mentionnées (coût économique, dépendance aux modèles frontières) ; faiblesse statistique et risque d'overfitting au pool peu discutés.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Démonstration originale et marquante que la coordination multi-agents émerge du RL end-to-end ; récursion auto-référentielle introduit un nouvel axe de scaling.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

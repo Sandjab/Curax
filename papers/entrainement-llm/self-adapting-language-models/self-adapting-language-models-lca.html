@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Adapting Language Models — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Self-Adapting Language Models</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les LLM pré-entraînés restent statiques après leur entraînement initial : intégrer de nouvelles connaissances ou maîtriser une tâche inédite passe par du finetuning brut sur les données disponibles ou par de l'in-context learning. Les auteurs partent d'une analogie pédagogique : un étudiant ne mémorise pas un cours en relisant le polycopié tel quel, il le réécrit, le condense, le reformule. SEAL propose d'équiper les LLM de cette capacité d'auto-restructuration des données.</p>
+<p>La question centrale est précise : un LLM peut-il apprendre à générer ses propres données de finetuning de manière à maximiser ses gains de performance après mise à jour des poids ? Le problème s'inscrit dans la perspective du « data wall » projeté par Villalobos et al. (2028), où la croissance par accumulation de texte humain s'épuise et où la qualité de la génération synthétique devient le levier principal.</p>
+
+<h2>Méthodologie</h2>
+<p>SEAL s'articule en deux boucles imbriquées. La boucle interne applique une mise à jour SFT (avec LoRA) sur le modèle à partir d'un « self-edit » généré, puis évalue la performance sur la tâche cible. La boucle externe utilise cette performance comme récompense pour entraîner la politique de génération de self-edits par renforcement.</p>
+<p>Les auteurs ont testé GRPO et PPO mais les ont jugés instables. Ils retiennent ReSTEM, équivalent à un échantillonnage par rejet suivi d'un SFT sur les seuls self-edits ayant produit une amélioration. Une approximation clé : la récompense dépend de θ (puisque θ est mis à jour vers θ′ avant évaluation), mais elle est traitée comme fixe dans le calcul du gradient — un stop-gradient pragmatique mais théoriquement bancal.</p>
+<p>Deux instanciations sont étudiées. <strong>Incorporation de connaissances</strong> : sur SQuAD, le self-edit prend la forme d'une liste d'« implications » dérivées d'un passage. Le modèle (Qwen2.5-7B) est ensuite finetuné sur ces implications puis évalué en QA sans le passage. <strong>Apprentissage few-shot</strong> : sur ARC, le self-edit spécifie un ensemble d'augmentations et d'hyperparamètres (learning rate, epochs, fonction de perte). Le modèle (Llama-3.2-1B-Instruct) est adapté via TTT puis évalué.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur SQuAD en single-passage avec LoRA, SEAL atteint 47,0 % de précision contre 33,5 % pour le finetuning brut sur le passage et 39,7 % pour les implications générées par le modèle de base sans entraînement RL. SEAL dépasse même les implications générées par GPT-4.1 (46,3 %), ce qui constitue le résultat le plus marquant : un modèle 7B entraîné par RL produit de meilleures données synthétiques pour son propre apprentissage qu'un modèle frontière.</p>
+<p>En continued pretraining (n=200), SEAL obtient 58,2 % contre 59,4 % pour GPT-4.1 — légère infériorité. À n=2067, l'écart se creuse en faveur de GPT-4.1 (49,2 % vs 46,4 %). La généralisation au régime CPT existe mais reste imparfaite.</p>
+<p>Sur ARC, SEAL atteint 72,5 % de réussite contre 20 % sans entraînement RL et 0 % en ICL. L'oracle TTT humain plafonne à 100 %, indiquant une marge encore importante.</p>
+<p>L'analyse qualitative (Figure 5) montre que le RL pousse vers des self-edits plus longs et plus atomiques, distillant le passage en faits élémentaires plus facilement absorbables par le finetuning.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs reconnaissent trois limites majeures, ce qui mérite d'être salué. <strong>Oubli catastrophique</strong> : la Figure 6 montre une dégradation progressive sur les tâches antérieures lorsque le modèle reçoit une séquence d'éditions, sans mécanisme dédié de rétention. <strong>Coût calculatoire</strong> : chaque évaluation de self-edit prend 30 à 45 secondes (finetuning + inférence), rendant la boucle inutilisable à grande échelle sans optimisation. Une session ReSTEM sur SQuAD demande environ 6 heures sur 2×H100 pour 50 passages. <strong>Évaluation contextuelle</strong> : la méthode suppose que chaque contexte est apparié à une tâche d'évaluation explicite, ce qui empêche de l'appliquer à des corpus non étiquetés.</p>
+<p>Plusieurs faiblesses méthodologiques restent sous-discutées. Le sous-ensemble ARC retenu (11 tâches d'entraînement, 8 d'évaluation) a été explicitement filtré pour être résoluble par TTT optimal sur Llama-3.2-1B-Instruct : c'est une sélection biaisée qui invalide toute prétention de généralisation à ARC dans son ensemble. La taille de l'échantillon ARC est trop petite pour des conclusions statistiquement robustes.</p>
+<p>Le passage de la boucle interne par TTT introduit un biais d'optimisation : la récompense récompense des éditions qui marchent <em>pour la tâche d'évaluation spécifique</em>, ce qui ressemble à du test-time tuning déguisé en méta-apprentissage. La distinction avec un overfit de second ordre n'est pas creusée.</p>
+<p>L'expérience B.10 sur la « proxy reward » est intrigante : un grader GPT-4.1 selon une rubrique manuelle atteint 45,6 % en 5 minutes contre 47,0 % en 6 heures pour la récompense « vraie ». Si la proxy reward devient compétitive, l'argument central de SEAL (apprendre directement de la performance downstream) s'affaiblit considérablement.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code et le site projet sont publics (jyopari.github.io/posts/seal). Les hyperparamètres LoRA, les espaces de recherche, les prompts utilisés et le prompt de grading GPT-4.1 sont explicitement listés en annexe. Les datasets (SQuAD, ARC) sont publics. Trois seeds par configuration sont utilisées pour les expériences SQuAD. Le grader automatisé (GPT-4.1) introduit une dépendance à un modèle propriétaire et une variance non quantifiée, mais le prompt est fourni.</p>
+
+<h2>Impact et applications</h2>
+<p>SEAL ouvre concrètement la voie à des modèles agentiques capables de mettre à jour leurs poids après interaction, plutôt que de dépendre exclusivement du contexte ou de bases vectorielles externes. L'idée d'un générateur de données synthétiques méta-entraîné pour produire des corpus de pré-entraînement entiers est plausible et attaque frontalement le problème du data wall.</p>
+<p>Les applications immédiates se situent dans l'incorporation continue de connaissances (papiers récents, documentation technique, mémoire long-terme d'agents). À court terme, le coût calculatoire interdit un déploiement sur des corpus volumineux. À moyen terme, la synergie avec le chain-of-thought (mise à jour des poids déclenchée pendant le raisonnement) évoquée en discussion mérite l'investigation.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>SEAL se situe au croisement de la génération de données synthétiques (Yang et al., Maini et al., Park et al. New News), du test-time training (Sun et al., Akyürek et al.), du méta-apprentissage (Schmidhuber, Finn et al.) et du self-training par RL (STaR, ReSTEM, RLAIF). Le rapprochement le plus direct est <em>Synthetic Continued Pretraining</em> de Yang et al. (Entigraph) : la comparaison conduite en B.9 montre que SEAL et Entigraph (pairs+triples) sont équivalents à n=200 et qu'Entigraph dépasse SEAL à n=2067 (48,6 vs 46,4). Le gain net de l'apprentissage par RL sur des heuristiques structurées bien conçues n'est donc pas écrasant.</p>
+<p>La comparaison avec Generative Adapter (Chen et al.) est plus contrastée : Generative Adapter est meilleur en single-passage (66,8 vs 47,0) mais s'effondre en CPT (28,0 vs 58,2). Les architectures hypernétwork et les approches par génération de données paramétrisent l'adaptation différemment, et SEAL se distingue par sa flexibilité (réutilisation des données, modèle de base agnostique).</p>
+<p>La filiation avec Hu et al. (2023) sur le méta-apprentissage de l'adaptation en ligne et avec Sun et al. (Transformer², 2025) sur les modulations de poids spécifiques à la tâche est claire. La contribution propre de SEAL est d'utiliser la capacité générative existante du modèle plutôt qu'un module externe, ce qui simplifie l'architecture mais exige le coût d'un finetuning par rollout.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Question claire, originale, adressant un verrou identifié (data wall, adaptation continue).</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Deux domaines complémentaires, baselines pertinentes (incluant GPT-4.1), ablations multiples (B.7 à B.11). Le choix de ReSTEM après échec de GRPO/PPO est documenté.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>SQuAD à n=2067 raisonnable, mais ARC limité à 11+8 tâches filtrées pour solvabilité. Pas d'intervalles de confiance systématiques sur les résultats principaux.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Précision QA et taux de réussite ARC, métriques standard. Grading par GPT-4.1 standard mais introduit une dépendance à un modèle propriétaire.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Multiples seeds, séparation train/eval. Mais sélection ARC explicitement biaisée vers la solvabilité, et risque d'overfit à la tâche d'évaluation peu discuté.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, hyperparamètres détaillés, prompts fournis. Compute requis (2×H100, 6h par run) reste un frein matériel.</td></tr>
+<tr><td>Transparence sur les limites</td><td>5</td><td>Section limitations explicite couvrant oubli catastrophique, coût et dépendance à l'évaluation appariée. Annexes B.6 à B.11 publient des résultats nuancés.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Cadre conceptuellement neuf, accepté à NeurIPS 2025, ouvre une ligne de recherche sur l'auto-adaptation par génération de données.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 4,0 / 5.</strong> Contribution méthodologique réelle, expériences honnêtes et limites clairement assumées. Les principaux points faibles tiennent à la sélection biaisée du sous-ensemble ARC, au coût calculatoire qui restreint la portée pratique, et au fait qu'une heuristique structurée (Entigraph) atteint des performances comparables à grande échelle, ce qui questionne le rapport coût/bénéfice du RL.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hyperloop Transformers — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Hyperloop Transformers</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le travail s'attaque à la frontière performance-mémoire des modèles de langage pour les déploiements edge et on-device, où la RAM disponible (8 à 16 Go sur smartphone, dont une fraction seulement pour le ML) impose une contrainte d'empreinte mémoire que les architectures cloud-first comme les MoE ignorent. La question posée est précise : comment rapprocher la qualité d'un Transformer dense d'une architecture à paramètres réduits, sans payer un surcoût de calcul significatif ?</p>
+<p>La proposition combine deux briques existantes : les Transformers bouclés en stratégie « middle-cycle » (begin / middle bouclé / end) introduits par Bae et al. (2025), et les hyper-connexions manifold-constrained (mHC) de Xie et al. (2026). L'innovation tient dans l'application des hyper-connexions au niveau de la boucle plutôt qu'à chaque couche, et dans une simplification de la matrice de transition Hres (diagonale dépendante des données, sigmoïde, en lieu et place du Sinkhorn-Knopp doublement stochastique).</p>
+
+<h2>Méthodologie</h2>
+<p>Trois échelles testées (240M, 1B, 2B paramètres pour le baseline non-bouclé ; 136M, 579M, 991M pour les variantes bouclées), entraînées sur FineWeb-Edu avec un budget de 2,5× le ratio compute-optimal de Chinchilla. Tokenizer Llama-2, AdamW (β₁=0,9 ; β₂=0,95), warmup linéaire et décroissance cosinus, batch de 524K tokens. Quatre architectures comparées : Transformer vanilla, mHC, Looped, Hyperloop.</p>
+<p>Le protocole évalue (a) la perplexité sur 50M tokens hold-out FineWeb-Edu, (b) l'accuracy sur 11 benchmarks downstream (ARC, COPA, HellaSwag, LAMBADA, OpenBookQA, PIQA, RACE, SciQ, WinoGrande), (c) la sensibilité à la quantification post-entraînement INT4 via GPTQ adapté (agrégation des activations sur toutes les itérations bouclées pour l'estimation Hessian), (d) le throughput d'entraînement sur 8×H100 NVLink. Les hyperparamètres sont volontairement non-tunés pour l'architecture proposée, ce qui durcit le test.</p>
+<p>Les ablations couvrent le nombre de boucles (2 à 6), la structure de répartition des couches, le nombre de flux résiduels parallèles n (de 2 à 10), la fréquence d'application des hyper-connexions (de chaque couche à toutes les 12), la paramétrisation de Hres (identité, Sinkhorn, diagonale), et une comparaison frontale avec une variante LoRA des Transformers récursifs relâchés (Bae et al., 2024).</p>
+
+<h2>Résultats principaux</h2>
+<p>Hyperloop Transformer surpasse les baselines appariés en profondeur sur les trois échelles avec environ 50% des paramètres : perplexité 14,40 vs 14,65 à 240M/136M ; 9,65 vs 10,19 à 1B/579M ; 8,49 vs 8,60 à 2B/991M. Le surcoût en paramètres par rapport au Looped pur est de 150-300K seulement.</p>
+<p>L'avantage persiste sous quantification INT4 (8,59 vs 8,71 à la plus grande échelle), réfutant l'hypothèse selon laquelle les modèles bouclés seraient pénalisés par la quantification du fait du sur-entraînement effectif des couches partagées. Sur les tâches downstream agrégées, Hyperloop atteint 54,59% d'accuracy moyenne contre 52,77% pour le Transformer dense à 2B.</p>
+<p>Les ablations confirment la robustesse du choix de design : appliquer les hyper-connexions au niveau de la boucle (PPL 14,40) bat à la fois l'application chaque couche (14,45) et chaque 12 couches (14,63). La paramétrisation diagonale dépendante des données surpasse les variantes identité (14,61) et Sinkhorn (14,59). LoRA sur les couches bouclées améliore marginalement le Looped (14,77 avec rang 32, soit +4M paramètres) sans rejoindre Hyperloop.</p>
+<p>L'analyse interne apporte un argument mécanistique : les représentations Hyperloop présentent une similarité cosinus moyenne inter-boucles plus faible que le Looped vanilla (0,872 vs 0,915 à 579M), confirmant que les hyper-connexions relâchent la contrainte de partage strict. L'analyse logit lens montre par ailleurs un alignement supérieur des flux résiduels avec l'espace vocabulaire, ouvrant la possibilité d'inférence en early-exit.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'échelle reste académique. 2B paramètres en non-bouclé et 100B tokens d'entraînement maximal sont en deçà des régimes de production (LLaMA3-8B sur 15T tokens, OLMo3-7B sur 6T). Les auteurs reconnaissent ouvertement cette limite et fournissent une expérience de sur-entraînement (240M sur 100B tokens, soit 400 tokens/paramètre) qui montre que l'avantage du Hyperloop diminue mais reste compétitif (12,19 vs 12,15 pour le Transformer vanilla). Le décalage à 100B tokens est ténu et n'est pas significativement supérieur au baseline, ce qui mérite d'être noté.</p>
+<p>L'évaluation downstream porte sur des tâches relativement saturées au-delà de 1B paramètres et n'inclut pas de benchmarks de raisonnement long (GSM8K, MATH, MMLU complet). Pour une architecture qui revendique des bénéfices sur le raisonnement bouclé, l'absence de ces évaluations est regrettable.</p>
+<p>Le throughput d'entraînement est correctement mesuré mais l'inférence n'est pas profilée : pour un papier ciblant l'edge/on-device, la latence d'inférence sur matériel mobile (CPU ARM, NPU) constituerait l'argument décisif et fait défaut.</p>
+<p>L'ablation sur le nombre de flux parallèles n s'arrête à 10 et montre des rendements décroissants rapides (14,43 pour n=2, 14,35 pour n=10). L'écart est faible, ce qui questionne l'utilité réelle du paramètre n au-delà de la motivation théorique.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les hyperparamètres sont intégralement listés en Annexe A (dimension 1024/2048, 16 têtes, RoPE base 10000, batch 256×2048, lr 4×10⁻⁴, β=(0,9 ; 0,95), weight decay 0,1, gradient clipping 1,0). Le dataset FineWeb-Edu et le tokenizer Llama-2 sont publics. La modification du GPTQ pour les couches bouclées est décrite verbalement.</p>
+<p>Aucun lien vers du code public n'est fourni dans le texte, ce qui est un manque pour un travail architectural revendiquant simplicité et transposabilité. La description algorithmique est suffisante pour une réimplémentation par un lecteur expert, mais l'absence de release ouverte freinera l'adoption et la vérification indépendante.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport pratique le plus tangible vise le déploiement on-device : un modèle 2B paramètres équivalent en qualité à un baseline 4B sous quantification INT4 réduit l'empreinte mémoire d'un facteur 2, ce qui peut faire passer un modèle de la non-installabilité à l'installabilité sur smartphone. Le surcoût d'inférence négligeable (les hyper-connexions ne s'appliquent qu'entre boucles, et la matrice diagonale est triviale) renforce cet argument.</p>
+<p>Pour la recherche, l'analyse de similarité cosinus inter-boucles fournit une grille interprétative utile pour les futurs travaux sur les architectures récurrentes en profondeur. Le découplage entre application au niveau couche vs niveau boucle est un résultat non trivial qui contredit l'intuition « plus d'hyper-connexions = mieux ».</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans la convergence récente entre Transformers bouclés (Dehghani 2018, ALBERT, Saunshi 2025, Geiping 2025, Bae 2024-2025, Prairie 2026) et schémas de connexion résiduelle enrichis (Hyper-Connections de Zhu 2025a, mHC de Xie 2026, DenseFormer, MUDDFormer, DeepCrossAttention, Attention Residuals de Kimi 2026). La contribution est incrémentale mais bien identifiée : combiner les deux courants au point de connexion le moins coûteux, avec une simplification de Hres.</p>
+<p>Comparé aux Mixture-of-Recursions de Bae et al. (2025) qui allouent un nombre de boucles variable par token, et à Geiping et al. (2025) qui scalent le test-time compute via le nombre de boucles, Hyperloop ne propose pas de calcul adaptatif. C'est un choix défendable (simplicité, throughput d'entraînement préservé) mais qui laisse sur la table une dimension de scaling explorée par la concurrence.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Question pratique précise (frontière paramètre-performance), motivation edge/on-device claire et chiffrée.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trois échelles, baselines pertinents (vanilla, mHC, Looped), ablations systématiques sur tous les choix de design.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>50M tokens hold-out adéquats pour la perplexité ; arrêt à 2B paramètres et 100B tokens en deçà des régimes de production.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Perplexité + 11 benchmarks downstream + INT4 + throughput. Manque l'inférence sur cible mobile.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Hyperparamètres non-tunés pour l'architecture proposée (durcit le test). Calibration GPTQ identique entre modèles.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Hyperparamètres complets, dataset public ; aucun lien code, modification GPTQ décrite verbalement seulement.</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Limite d'échelle assumée et testée empiriquement (overtraining 100B), zone grise honnêtement signalée.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Combinaison incrémentale de deux briques récentes ; résultat non trivial sur la fréquence optimale d'hyper-connexion ; pas de release ouverte.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning is Forgetting: LLM Training as Lossy Compression — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Learning is Forgetting: LLM Training as Lossy Compression</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le pré-entraînement des grands modèles de langage reste mal caractérisé du point de vue représentationnel. Les auteurs reformulent ce processus comme une compression à perte au sens de la théorie de l'information : un LLM apprend en oubliant tout ce qui n'est pas pertinent pour la prédiction du token suivant, par analogie avec MP3 ou JPEG qui suppriment ce que l'œil ou l'oreille ne perçoivent pas. La cible théorique est la borne du goulot d'étranglement informationnel (Information Bottleneck, IB) introduite par Tishby et collaborateurs, étendue ici aux Transformers entraînés sur des trillions de tokens.</p>
+<p>Le papier répond à trois questions : les LLM compressent-ils optimalement leurs représentations ? Quelle information survit à cette compression ? Quelles structures représentationnelles déterminent la performance aval ?</p>
+
+<h2>Méthodologie</h2>
+<p>Le verrou technique central est l'estimation de l'entropie de Shannon sur des espaces latents continus à grande échelle. Les approches antérieures (discrétisation par dimension chez Shwartz-Ziv &amp; Tishby, clustering chez Voita) ne passent pas l'échelle d'un modèle 32B à 64 couches et 5120 dimensions. Les auteurs adoptent l'estimateur <em>soft entropy</em> de Conklin (2025) : normalisation des embeddings sur la sphère unité, échantillonnage de <em>n</em> ancres uniformes, assignation soft via softmax de produits scalaires, agrégation en distribution catégorielle. Une calibration de la température basée sur des bornes Amos sur les fonctions de Bessel modifiées rend les estimations comparables entre dimensionnalités.</p>
+<p>Les informations mutuelles sont calculées avec back-off n-gramme (token, bigramme, trigramme, quadgramme) sur 10 000 échantillons de C4 et Tulu, avec longueur de contexte 512. La famille OLMo2 (1B, 7B, 32B) sert pour les trajectoires de pré-entraînement grâce à ses checkpoints intermédiaires. La généralisation s'appuie sur 47 à 75 modèles open-weights de 6 familles, évalués sur 6 benchmarks (MMLU Pro, BBH, Math LVL5, IFEval, GPQA, MuSR). La métrique d'optimalité est définie comme le ratio I(Y;Z) / I(X;Z), distance à la borne linéaire I(X;Z) = I(Z;Y).</p>
+
+<h2>Résultats principaux</h2>
+<p>OLMo2 7B suit la trajectoire en deux phases prédite par l'IB : expansion de l'information avec la cible, puis compression de l'information sur l'entrée à mesure que la perte sature. La transition compression/expansion coïncide avec le plateau de la cross-entropy sur C4. Les modèles plus petits (1B) complètent la phase d'expansion mais oscillent loin de la borne sans jamais l'atteindre, suggérant un seuil paramétrique pour atteindre une compression optimale à un niveau de complexité donné.</p>
+<p>Sur 75 modèles open-weights de 6 familles, les représentations convergent toutes près de la borne IB, et autour du même point — ce qui suggère une structure informationnelle commune indépendante des recettes d'entraînement. L'optimalité corrèle avec la performance agrégée (r = 0.52, p &lt; 0.001), la complexité au niveau token corrèle négativement (r = -0.38, p = 0.006), l'expressivité seule ne corrèle pas (r = 0.08). L'information de préférence calculée sur Tulu prédit fortement la performance aval (r = 0.76, p &lt; 0.001).</p>
+<p>Une analyse par n-gramme montre que la majorité de l'information du modèle encode du contexte local (token à quadgramme), et que les meilleurs modèles allouent moins de capacité au token et plus aux niveaux contextuels supérieurs. La compression optimale de C4 prédit math, raisonnement et factualité, mais pas IFEval — l'instruction-following est prédit par l'information de préférence, qui augmente principalement durant le post-training.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le cadre est élégant et le résultat de convergence inter-familles est frappant. Plusieurs réserves sérieuses subsistent. Premièrement, la borne utilisée I(X;Z) = I(Z;Y) est l'inégalité de traitement des données et non la vraie frontière IB pour la distribution conjointe p(X,Y) ; les auteurs le reconnaissent en note de bas de page mais cela limite l'interprétation de "l'optimalité" : être proche de cette borne n'est pas équivalent à être sur la frontière IB réelle.</p>
+<p>Deuxièmement, le calcul numérique de la vraie borne IB échoue au-delà de 50 000 tokens de vocabulaire, et tous les modèles open-weights testés se situent à I(X;Z) normalisée ≤ 0.15 — bien en dessous du point de saturation, ce qui rend la borne linéaire approximativement valide mais non vérifiée à l'échelle réelle. Troisièmement, l'estimation d'entropie sous-estime structurellement la vraie entropie d'un espace vectoriel (Paninski) ; les auteurs admettent que leurs nombres ne reflètent pas l'entropie absolue, seulement des comparaisons relatives à données fixées.</p>
+<p>Quatrièmement, les estimations quadgrammes sont visiblement bruitées par rareté, certains points apparaissant au-dessus de la borne. Cinquièmement, le travail est observationnel : les corrélations entre optimalité et performance, même contrôlées par le nombre de paramètres en partial Spearman, ne démontrent pas que la compression cause la généralisation. La conclusion forte selon laquelle l'optimalité pourrait servir de critère d'arrêt ou de sélection de checkpoint reste à valider expérimentalement, ce que les auteurs explicitent comme travail futur.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est public sur GitHub (hcoxec/soft_h). Tous les modèles et datasets sont publics sous licences ODC-By et Apache 2.0. Les hyperparamètres de l'estimateur (m = 100 ancres, calibration de température) sont documentés en appendice avec robustesse testée à m = 50 et sur trois distributions (C4, Tulu, MMLU). La procédure de back-off conditionnel et l'estimation des informations mutuelles partielles sont détaillées formellement (équations 8 à 10). Les ressources de calcul sont précisées en appendice H.2. La reproductibilité est de niveau élevé pour un papier théorique-empirique de cette envergure.</p>
+
+<h2>Impact et applications</h2>
+<p>Le travail offre un cadre unifié pour interpréter les LLM au niveau du modèle entier, complémentaire à l'interprétabilité mécaniste qui se concentre sur circuits et neurones individuels. Les implications pratiques esquissées — critère d'arrêt fondé sur la distance à la borne, sélection de checkpoint par optimalité ou par information de préférence en un seul forward-pass plutôt qu'une suite complète de benchmarks — sont opérationnellement attractives si elles se confirment. La distinction empirique entre ce que le pré-entraînement encode (compression de C4) et ce que le post-training ajoute (information de préférence) clarifie le rôle respectif des phases d'entraînement.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier prolonge directement Tishby &amp; Zaslavsky (2015) et Shwartz-Ziv &amp; Tishby (2017) — qui validaient l'IB sur MNIST et des FFN — vers les Transformers à l'échelle LLM. Il répond aux critiques de Saxe et al. (2019) et Goldfeld et al. (2019) sur la généralité des deux phases en montrant que celles-ci tiennent dans un régime fondamentalement différent (sequence modeling, single-epoch, milliards de tokens). Le rapprochement avec l'hypothèse de la représentation platonicienne est implicite dans le résultat de convergence inter-familles. L'approche se distingue de Delétang et al. (2023) qui étudient les LLM comme compresseurs sans pertes en contexte, alors qu'ici c'est l'entraînement lui-même qui est analysé comme compression à perte. Le lien avec les lois d'échelle de Kaplan et al. (2020) est explicite via le seuil paramétrique observé pour la compression effective.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>5</td><td>Cadre IB appliqué aux LLM à grande échelle, problématique théorique forte et originale</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trajectoires de pré-entraînement + comparaison cross-familles, design solide mais observationnel</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>47 à 75 modèles open-weights, 10 000 samples C4, mais quadgrammes bruités par sparsité</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Estimateur soft entropy calibré, mais borne IB approximée par I(X;Z)=I(Z;Y) au lieu de la vraie frontière</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Partial Spearman avec nombre de paramètres en covariable, robustesse hyperparamètres testée</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Code GitHub public, modèles et datasets sous licences ouvertes, hyperparamètres documentés</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Limites de la borne, sous-estimation d'entropie et sparsité quadgramme reconnues, validation expérimentale du critère d'arrêt repoussée à un travail futur</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Première application opérationnelle de Rate Distortion Theory à l'échelle des LLM modernes</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

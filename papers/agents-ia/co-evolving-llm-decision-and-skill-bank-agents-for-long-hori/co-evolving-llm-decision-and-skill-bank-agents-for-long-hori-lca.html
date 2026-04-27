@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Co-Evolving LLM Decision and Skill Bank Agents for Long-Horizon Tasks — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Co-Evolving LLM Decision and Skill Bank Agents for Long-Horizon Tasks</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les environnements interactifs à long horizon exposent une faiblesse persistante des LLM agentiques : l'incapacité à découvrir, conserver et réutiliser des compétences structurées entre épisodes. Wu et collègues posent deux questions explicites. Faut-il apprendre conjointement la banque de skills et la politique de décision (Q1) ? Quelles propriétés rendent une banque de skills utile à la décision (Q2) ? La motivation est claire : sans co-évolution, la politique et la banque dérivent vers des distributions d'états incompatibles, ce que confirment ensuite les ablations.</p>
+<p>Le cadre formel reprend le MDP standard mais enrichit l'expérience d'un état d'intention latent <em>z<sub>t</sub></em> et d'un skill actif <em>s<sub>t</sub></em>. Chaque skill est encodé comme un protocole structuré : <strong>Summary</strong>, <strong>Pre-condition</strong>, <strong>Plan</strong>, <strong>Success/Abort Criteria</strong> et <strong>Contract</strong>. Cette interface explicite permet la requête, la vérification et la mutation des skills sans réentraîner le backbone.</p>
+
+<h2>Méthodologie</h2>
+<p>COS-PLAY articule deux agents. L'agent décisionnel <em>A<sub>D</sub></em> exécute trois sous-politiques : récupération de skill (π<sub>θ</sub><sup>skill</sup>), mise à jour d'intention (π<sub>θ</sub><sup>int</sup>) et exécution d'action (π<sub>θ</sub><sup>act</sup>). L'agent de banque <em>A<sub>S</sub></em> suit un pipeline en quatre étapes : proposition de frontières heuristiques, segmentation par décodage Viterbi avec correspondance aux contrats existants, apprentissage de contrats par consensus de prédicats, puis maintenance via cinq opérations (refine, materialize, merge, split, retire).</p>
+<p>L'optimisation utilise GRPO avec adaptateurs LoRA spécialisés : deux pour l'agent décisionnel, trois pour l'agent de banque. L'ablation sur Candy Crush (Tableau 6) montre qu'un LoRA fusionné par agent dégrade les performances de 22,6 % par rapport à la version stage-specific, ce qui justifie la décomposition fonctionnelle.</p>
+<p>Le démarrage à froid s'appuie sur 60 trajectoires générées par GPT-5.4 puis SFT sur Qwen3-8B. Cette dépendance à un modèle frontier comme enseignant relativise la prétention à l'apprentissage "from unlabeled rollouts" affichée dans l'abstract : la connaissance procédurale initiale est distillée d'un LLM propriétaire.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur les quatre jeux solo (2048, Tetris, Candy Crush, Super Mario), COS-PLAY obtient une récompense moyenne de 924,4 contre 717,4 pour GPT-5.4, soit +28,8 % en moyenne arithmétique (l'article annonce 25,1 % en moyenne par jeu). Le gain est massif sur 2048 (1589 vs 1126) et Tetris (511 vs 458). Sur les jeux sociaux multi-joueurs, COS-PLAY reste compétitif avec Gemini-3.1-Pro et GPT-OSS-120B sur Avalon (39 % vs 42 %) et dépasse Gemini-3.1-Pro de 8,8 % sur Diplomacy (2,96 vs 2,72 SC).</p>
+<p>L'ablation est convaincante. Les variantes SFT+1st Skill et SFT+Final Skill (sans co-évolution) sous-performent systématiquement, parfois en dessous du Qwen3-8B brut. Le résultat soutient l'hypothèse centrale : ce n'est ni le RL seul, ni les skills seuls, mais l'alignement continu entre politique et banque qui produit le gain.</p>
+<p>L'analyse de réutilisabilité (Tableau 2) révèle une distribution non triviale : indices de Gini entre 0,498 (Candy Crush) et 0,718 (2048), nombre moyen d'instances par skill entre 12,7 et 49,2. Les skills sont effectivement réutilisés, pas seulement mémorisés. La Figure 3 montre une banque qui se stabilise autour de 55-70 skills actifs sur Diplomacy malgré 121 skills découverts au total, attestant que la curation merge/split/retire fonctionne.</p>
+
+<h2>Discussion et limites</h2>
+<p>Trois faiblesses méritent d'être pointées sans euphémisme. D'abord, l'évaluation repose sur 16 rollouts par jeu solo et 10 par joueur en multi : les intervalles de confiance à 95 % sont larges (par exemple ±192 sur 2048, ±200 sur Tetris), et les écarts entre certaines lignes du Tableau 1 ne sont pas statistiquement significatifs. Ensuite, les expériences sociales utilisent GPT-5.4 comme adversaire et GPT-5-mini durant l'entraînement : les performances de COS-PLAY sont conditionnées à une distribution d'opposants spécifique et à des versions d'API non figées, comme l'admettent les auteurs en Annexe A.</p>
+<p>Le mode d'échec sur Diplomacy (Figure 9) expose un biais d'action systémique : l'action #1 est sélectionnée dans 85 % des cas, et 90 % dans les épisodes en échec. La structure phasée empêche l'effondrement (min=3 SC contre 1 SC pour GPT-5.4) mais ne résout pas la pauvreté du space d'actions exploré par l'adaptateur d'action.</p>
+<p>L'argument central — la co-évolution comme alignement politique-banque — est soutenu par les ablations, mais l'attribution causale reste partielle. Il manque une analyse contrefactuelle où la banque finale serait recouplée à une politique fraîche pour isoler l'effet "alignement" de l'effet "qualité absolue de la banque".</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est annoncé sur GitHub (wuxiyang1996/COS-PLAY) avec scripts GRPO, configurations LoRA, wrappers d'environnement et templates de prompts. Les hyperparamètres clés sont en Annexe C, les fonctions de récompense en Annexe F. Reste un trou structurel : les expériences multi-joueurs dépendent d'API propriétaires versionnées (GPT-5.4, GPT-5-mini, Gemini-3.1-Pro, Claude-4.6-Sonnet). Les auteurs reconnaissent que la réplication numérique exacte ne sera pas garantie. La distillation initiale depuis GPT-5.4 ajoute une dépendance qui n'est pas tracée précisément (60 trajectoires par jeu, sans diff de prompts ni seeds publics).</p>
+
+<h2>Impact et applications</h2>
+<p>Le framework propose une réponse opérationnelle au plateau du RL agentique : plutôt que mettre à l'échelle le compute ou les démonstrations humaines, il construit une mémoire procédurale structurée et auto-curée. La granularité du contrat (added/deleted predicates avec taux de pass vérifié) rapproche les skills d'une spécification logicielle, ce qui ouvre la voie à des audits automatiques de comportement agent.</p>
+<p>Le résultat sur Diplomacy avec 8B paramètres est intéressant pour le déploiement de petits modèles spécialisés : la combinaison "tracking d'état structuré + skills réutilisables" supplée partiellement la masse paramétrique pour le raisonnement social long-horizon. La perte minimale sur Math-500 (-1,8 %) et MMLU-Pro (-0,8 %) après co-évolution suggère que l'adaptation ne provoque pas d'oubli catastrophique sur 25 itérations.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>COS-PLAY se distingue de Voyager (Wang et al., 2023), SAGE (Wang et al., 2025a) et SkillRL (Xia et al., 2026) par le couplage explicite décision/banque dans une boucle unique optimisée par GRPO, au lieu d'une augmentation runtime ou d'une banque figée. Le rapprochement avec les travaux sur la mémoire procédurale (ProcMEM, CASCADE) est honnête : COS-PLAY apporte la dimension co-évolutive et la vérification explicite des contrats, là où ces travaux opèrent souvent sur pipelines fixes.</p>
+<p>Le framework reste tributaire des limites des skills textuels : pas d'ancrage multi-modal, dépendance aux résumés d'état, accumulation d'erreurs sur trajectoires longues. Les auteurs identifient eux-mêmes l'extension multi-modale comme prochaine étape, ce qui correspond à la trajectoire générale du domaine vers les world models incarnés.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Q1 et Q2 formulées explicitement, ancrage théorique clair sur le couplage politique-banque.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Six environnements, ablations multiples, comparaison avec quatre LLM frontier, breakdowns par rôle/puissance.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>16 rollouts solo et 10 par joueur multi : intervalles de confiance larges, certains écarts non significatifs.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Récompenses natives des benchmarks, win rate, supply centers, Gini de réutilisation, taux de pass de contrat.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Adversaires GPT-5.4/GPT-5-mini introduisent une dépendance à un LLM propriétaire ; pas d'analyse de variance inter-seeds détaillée.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Code annoncé, prompts et hyperparamètres documentés, mais expériences sociales liées à des API versionnées non figées.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Limitations multi-modales reconnues, mode d'échec "stuck in support loop" analysé qualitativement (Figure 9).</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier framework couplant explicitement décision LLM et pipeline agentique de découverte/raffinement de skills via GRPO.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

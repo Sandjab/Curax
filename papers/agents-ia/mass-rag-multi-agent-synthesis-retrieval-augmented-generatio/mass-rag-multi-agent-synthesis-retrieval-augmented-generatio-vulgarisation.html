@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MASS-RAG: Multi-Agent Synthesis Retrieval-Augmented Generation — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>MASS-RAG: Multi-Agent Synthesis Retrieval-Augmented Generation</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un seul cerveau ne suffit plus à lire les bonnes sources</h2>
+
+<p>Sur le benchmark ARC-Challenge, qui teste la capacité de raisonnement scientifique d'une IA, MASS-RAG fait grimper la précision de 61,9 % à 87,3 % avec exactement le même modèle Llama3 et la même base documentaire. Plus de 25 points d'écart, sans réentraîner quoi que ce soit. La différence tient uniquement à la façon dont l'information récupérée est traitée avant d'arriver au générateur.</p>
+
+<p>Cette publication des équipes de Beijing Institute of Technology et Tsinghua s'attaque à une faille bien connue des systèmes RAG (Retrieval-Augmented Generation), ces architectures qui branchent un modèle de langage sur une base documentaire externe pour qu'il réponde sans halluciner. Le problème : quand le moteur de recherche ramène un mélange de documents pertinents, partiellement pertinents et hors sujet, le modèle générateur s'embrouille. Les auteurs proposent une solution structurelle, et leurs résultats remettent en cause une intuition partagée par beaucoup d'ingénieurs : ajouter un seul agent filtreur intelligent suffirait à nettoyer le contexte. Visiblement non.</p>
+
+<h2>Le bruit documentaire, talon d'Achille du RAG</h2>
+
+<p>Un système RAG classique fonctionne en deux temps. Un retriever cherche les documents les plus proches de la question dans une base, puis un LLM lit ces documents et formule une réponse. C'est l'architecture qui sous-tend la plupart des assistants d'entreprise actuels, des chatbots techniques aux outils de support juridique.</p>
+
+<p>Le hic, c'est que les retrievers ne sont jamais parfaits. Pour une question donnée, le top-10 des documents remontés contient typiquement deux ou trois passages utiles, quelques sources tangentielles, et plusieurs documents qui partagent juste quelques mots-clés avec la requête. Le LLM doit alors trier le bon grain de l'ivraie tout en formulant sa réponse. Plusieurs travaux ont montré qu'il échoue souvent à cet exercice : il se laisse distraire par des informations plausibles mais hors sujet, ou rate l'évidence enfouie au milieu d'un long passage.</p>
+
+<p>L'approche dominante pour corriger ce défaut consistait jusqu'ici à insérer un agent intermédiaire — souvent appelé <em>judge</em> ou <em>filter</em> — dont le rôle est d'éliminer les documents non pertinents avant de les passer au générateur. C'est l'idée du framework MAIN-RAG publié en 2024, considéré comme l'état de l'art. Les auteurs de MASS-RAG identifient une limite à cette approche : un agent filtreur unique adopte forcément une perspective unique sur ce qu'est une preuve pertinente. Il filtrera bien certaines questions, moins bien d'autres.</p>
+
+<h2>Trois lecteurs valent mieux qu'un</h2>
+
+<p>L'idée centrale de MASS-RAG tient en une analogie : si vous demandez à trois assistants différents de préparer un dossier sur un sujet, l'un va vous résumer les documents, le second va surligner les passages clés au mot près, et le troisième va vous écrire une note expliquant comment les pièces s'articulent. Ces trois livrables ne sont pas redondants. Ils éclairent la même question sous des angles complémentaires, et un quatrième collaborateur — celui qui prendra la décision finale — disposera d'une matière bien plus riche que s'il n'avait reçu qu'une seule synthèse.</p>
+
+<p>Concrètement, le système instancie trois agents filtreurs spécialisés, tous basés sur le même modèle de langage mais pilotés par des instructions distinctes :</p>
+
+<ul>
+<li>Le <strong>Summarizer</strong> condense les documents en gardant la substance liée à la requête, en mode abstractif. Il reformule.</li>
+<li>L'<strong>Extractor</strong> copie textuellement les phrases ou fragments qui supportent une réponse possible, sans paraphraser. Si la preuve existe sous forme explicite, il la conserve telle quelle.</li>
+<li>Le <strong>Reasoner</strong> cherche les liens implicites entre plusieurs documents, ces inférences qu'aucune phrase ne formule directement mais que la mise en regard rend visibles.</li>
+</ul>
+
+<p>Vient ensuite, en option, un <strong>Answer Agent</strong> qui produit une réponse candidate à partir de chacun des trois filtres. On obtient alors trois réponses candidates qui peuvent diverger. Enfin, un <strong>Synthesis Agent</strong> compare ces hypothèses ou ces preuves filtrées et tranche pour produire la réponse finale.</p>
+
+<p>L'ensemble du pipeline fonctionne <em>training-free</em> : aucun fine-tuning, aucune donnée d'entraînement supplémentaire, juste des prompts spécialisés qui contraignent la sortie de chaque agent. C'est une propriété précieuse en pratique, car elle rend la méthode immédiatement transposable à n'importe quel modèle de base — Llama 2, Llama 3, Mistral, Qwen 3 sont tous testés.</p>
+
+<h2>Une étude de cas révélatrice</h2>
+
+<p>Un exemple tiré de l'annexe illustre bien la mécanique. Question posée : <em>« Quel a été le premier club de football britannique à remporter la Coupe d'Europe ? »</em></p>
+
+<p>Le Summarizer et l'Extractor répondent tous deux que Manchester United fut le premier club anglais à gagner la compétition en 1968 — vrai, mais à côté de la question. Le Reasoner, lui, identifie la phrase enfouie ailleurs dans le corpus : Celtic a été le premier club <em>britannique</em> en 1967, avant Manchester United. Le Synthesis Agent reçoit les trois lectures, repère la nuance entre <em>britannique</em> et <em>anglais</em>, et tranche correctement pour Celtic.</p>
+
+<p>Aucun des trois filtreurs n'aurait suffi seul. C'est précisément le point que les auteurs cherchent à démontrer empiriquement.</p>
+
+<h2>Les chiffres qui font la différence</h2>
+
+<p>L'évaluation porte sur quatre benchmarks aux profils différents. TriviaQA et PopQA testent la question-réponse factuelle (date, nom, lieu). ARC-Challenge évalue le raisonnement scientifique à choix multiples. ASQA cible les questions ambiguës dont la réponse demande une rédaction longue intégrant plusieurs faits.</p>
+
+<p>Sur Llama 3 8B avec dix documents récupérés, MASS-RAG affiche 76,7 % sur TriviaQA contre 74,1 % pour MAIN-RAG, 64,2 % contre 64,0 % sur PopQA, 78,7 % contre 61,9 % sur ARC-Challenge, et 47 % contre 39,2 % sur ASQA. L'écart se creuse particulièrement quand le raisonnement compte (ARC-Challenge) ou quand la réponse exige d'agréger plusieurs morceaux de preuve dispersés (ASQA).</p>
+
+<p>Comparé à Self-RAG sur Llama 2 7B — un système qui, lui, a été spécifiquement <em>entraîné</em> à mieux gérer le RAG — la version sans entraînement de MASS-RAG fait mieux : 68,6 % contre 66,4 % sur TriviaQA, 72,2 % contre 67,3 % sur ARC-Challenge, et 36,2 % contre 30,0 % sur ASQA. Une méthode prompt-only qui dépasse une méthode fine-tunée, c'est rare et c'est commercialement intéressant.</p>
+
+<p>Plus subtil : les auteurs construisent un sous-ensemble de questions où la preuve est capturée par <em>exactement un seul</em> des trois filtreurs. Ils mesurent ensuite combien de questions chaque agent gère seul. Résultat : les trois filtreurs couvrent bien des sous-ensembles distincts. Aucun n'est dominant, aucun n'est négligeable. Cela valide expérimentalement le pari fondateur de l'architecture : ces rôles sont véritablement complémentaires, pas redondants.</p>
+
+<h2>Une nuance importante sur l'Answer Agent</h2>
+
+<p>L'étude d'ablation sur l'Answer Agent — celui qui génère trois réponses candidates avant la synthèse — révèle un effet contre-intuitif. Sur les questions factuelles courtes (TriviaQA, PopQA), l'activer améliore les résultats. Sur les questions à réponse longue (ASQA), il les dégrade légèrement (47 % avec, 48 % sans pour Llama 3). Sur les QCM (ARC-Challenge), il est carrément désactivé car les options A/B/C/D ne portent aucune information sémantique exploitable.</p>
+
+<p>L'explication tient à la nature des tâches. Engager le modèle dans une réponse précoce sous chaque vue de preuve aide quand il faut comparer des hypothèses concurrentes (qui est le compositeur ?). Cela nuit quand la réponse finale doit assembler des faits hétérogènes en un texte synthétique : la commitment précoce ferme prématurément l'espace des reformulations possibles. Cette flexibilité — pouvoir activer ou désactiver le composant selon le type de tâche — est un argument d'industrialisation que les auteurs mettent en avant.</p>
+
+<h2>Le coût caché de la qualité</h2>
+
+<p>Personne ne l'évoque dans le résumé, mais les chiffres sont en annexe : MASS-RAG avec Answer Agent coûte sept appels au LLM par question (les trois filtreurs, les trois réponses candidates, la synthèse). Sans Answer Agent, on tombe à quatre. Un RAG classique en demande un seul.</p>
+
+<p>Pour un déploiement à grande échelle, multiplier par quatre ou sept le coût d'inférence n'est pas anodin. À l'échelle d'un assistant d'entreprise traitant 100 000 requêtes par jour, on passe d'un budget calcul tenable à un budget significatif. Les auteurs ne discutent pas explicitement la latence, mais l'architecture autorise un parallélisme partiel : les trois filtreurs peuvent tourner en parallèle, idem pour les trois Answer Agents. La latence de bout en bout reste donc raisonnable, deux à trois fois celle d'un RAG classique plutôt que sept.</p>
+
+<p>La question pratique devient alors : quels cas d'usage justifient ce surcoût ? Les auteurs montrent que l'écart se creuse principalement sur les tâches difficiles — raisonnement, agrégation de preuves multiples, questions ambiguës. Pour un assistant qui répond à des questions simples (« Quelle est la date de péremption de ce produit ? »), un RAG standard reste probablement le meilleur choix. Pour un copilote juridique, scientifique ou financier qui doit synthétiser plusieurs sources contradictoires, les 25 points d'ARC-Challenge changent la donne.</p>
+
+<h2>Ce que ça change pour les architectes RAG</h2>
+
+<p>Au-delà des benchmarks, ce travail propose un changement de mentalité sur la conception des pipelines RAG. La tentation naturelle, quand un système ne marche pas, est de chercher un meilleur retriever, un meilleur modèle de base, ou un fine-tuning adapté. Les auteurs montrent qu'on peut gagner beaucoup en restructurant simplement la phase de traitement des preuves entre la récupération et la génération.</p>
+
+<p>Cette logique de décomposition par rôle rejoint plusieurs tendances actuelles : les architectures multi-agents type AutoGen ou CrewAI, les workflows DSPy qui orchestrent plusieurs appels LLM avec des contraintes différentes, ou les approches type chain-of-verification où un modèle vérifie sa propre réponse. MASS-RAG se distingue en appliquant cette philosophie spécifiquement à l'étape de filtrage des preuves, là où le RAG classique passe sans transformation.</p>
+
+<p>Pour un ingénieur qui construit aujourd'hui un système RAG en production, plusieurs questions pratiques émergent. Faut-il vraiment trois agents filtreurs ou peut-on en garder deux ? Les auteurs suggèrent que les trois sont indispensables car chacun couvre des questions distinctes, mais la composition optimale dépend probablement du domaine. Les rôles peuvent-ils être instanciés sur des modèles différents — un petit modèle rapide pour le Summarizer, un modèle plus puissant pour le Reasoner ? Le papier ne traite pas ce point, mais l'architecture s'y prête naturellement et permettrait d'optimiser le coût.</p>
+
+<h2>Les questions encore ouvertes</h2>
+
+<p>MASS-RAG laisse plusieurs pistes inexplorées que la communauté va probablement creuser dans les mois qui viennent.</p>
+
+<p>D'abord, la question du <strong>nombre et de la nature des rôles</strong>. Les trois agents choisis (Summarizer, Extractor, Reasoner) viennent d'une intuition raisonnable mais pas d'une recherche systématique. On peut imaginer un agent <em>contrarian</em> qui cherche les preuves contradictoires, un agent <em>citation-tracer</em> qui privilégie les sources primaires, un agent <em>recency-aware</em> qui pondère par fraîcheur de l'information. Trouver l'ensemble optimal de rôles pour un domaine donné devient un nouveau problème d'ingénierie.</p>
+
+<p>Ensuite, la <strong>question de l'apprentissage</strong>. Le système est entièrement training-free, ce qui est sa force commerciale, mais aussi probablement une limite sur le plafond de performance. Entraîner conjointement les agents filtreurs pour qu'ils se spécialisent davantage, ou entraîner le Synthesis Agent à mieux arbitrer entre eux, pourrait pousser les résultats encore plus loin. Les auteurs eux-mêmes mentionnent cette extension en perspective.</p>
+
+<p>Enfin, le <strong>passage à l'échelle des contextes longs</strong>. Les expériences se font avec dix documents récupérés. Que se passe-t-il quand le système doit traiter cinquante documents, ou un corpus entier d'entreprise via une approche RAG hiérarchique ? L'architecture multi-agent reste-t-elle bénéfique, ou les modèles à fenêtre longue type Gemini 2 Pro la rendent-elle obsolète ? La réponse n'est pas évidente : les modèles à grande fenêtre souffrent eux aussi du fameux <em>lost in the middle</em>, et la décomposition par rôles pourrait précisément les aider à mieux exploiter les contextes longs.</p>
+
+<p>MASS-RAG ne révolutionne pas le RAG. Il rappelle quelque chose de plus utile : dans des architectures où chaque maillon compte, structurer le travail intermédiaire avec plusieurs perspectives spécialisées rapporte souvent plus que d'optimiser un seul composant à fond. C'est une leçon que les développeurs d'agents IA, qu'ils travaillent sur du RAG, du code ou de la recherche autonome, vont rencontrer encore et encore dans les architectures de demain.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

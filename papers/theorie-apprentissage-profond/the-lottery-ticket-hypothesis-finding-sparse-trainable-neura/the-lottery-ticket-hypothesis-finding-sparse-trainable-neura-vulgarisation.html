@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Un billet gagnant caché dans le réseau</h2>
+
+<p>Un réseau de neurones moderne peut perdre 90% de ses connexions sans perdre une once de précision. Le constat est connu depuis les années 1990 et il a alimenté toute une industrie de la compression : modèles allégés pour smartphones, inférence accélérée, économie d'énergie. Mais une question gênante restait sans réponse. Si 90% du réseau est inutile une fois entraîné, pourquoi ne pas entraîner directement la version réduite ?</p>
+
+<p>La réponse empirique était brutale : ça ne marche pas. Une architecture clairsemée entraînée depuis zéro plafonne à une précision inférieure à celle obtenue en entraînant le réseau dense puis en l'élaguant. Comme si la grosseur initiale était un ingrédient indispensable, pas un simple gaspillage à corriger après coup.</p>
+
+<p>En 2019, Jonathan Frankle et Michael Carbin du MIT publient à ICLR un article qui retourne le problème. Leur thèse, qu'ils baptisent <strong>Lottery Ticket Hypothesis</strong>, propose une lecture nouvelle : un grand réseau aléatoirement initialisé contient déjà, à la naissance, un petit sous-réseau parfaitement entraînable. Encore faut-il savoir le débusquer.</p>
+
+<h2>Le paradoxe de l'élagage</h2>
+
+<p>Quand on entraîne un réseau de neurones, des millions de paramètres convergent vers des valeurs adaptées à la tâche. Une fois l'entraînement terminé, beaucoup de ces paramètres sont quasi nuls : ils ne contribuent presque plus rien à la prédiction. L'élagage par magnitude consiste à supprimer ces poids faibles. Le réseau résultant est plus léger, plus rapide, et conserve une précision quasi identique.</p>
+
+<p>Le problème surgit dès qu'on essaie de réutiliser cette architecture clairsemée pour un nouvel entraînement. On garde la même structure de connexions, on remet des valeurs aléatoires, on relance l'apprentissage. Résultat : le réseau apprend plus lentement et atteint une précision finale plus faible. Plus on élague, plus l'écart se creuse.</p>
+
+<p>La sagesse populaire en déduisait que les petits réseaux sont structurellement difficiles à entraîner. Manque de capacité, optimisation moins bien conditionnée, gradients trop instables. Frankle et Carbin partent d'une intuition différente : et si le problème ne venait pas de la taille, mais de l'initialisation ?</p>
+
+<h2>La recette pour trouver un billet gagnant</h2>
+
+<p>Le protocole expérimental tient en quatre étapes. On initialise un réseau dense avec des poids aléatoires, qu'on note soigneusement. On entraîne le réseau à fond. On supprime les poids les plus faibles, ce qui produit un masque sur les connexions survivantes. Et voici le geste central : on réinitialise les poids restants à leur valeur originale, celle d'avant l'entraînement.</p>
+
+<p>Le sous-réseau ainsi obtenu est ce que les auteurs appellent un <em>billet gagnant</em>. Il a la structure de connexions du réseau élagué, mais avec les valeurs de naissance des poids qui ont survécu. Une analogie fonctionne bien : imaginez un loto où des millions de tickets sont distribués au hasard à la naissance du réseau. L'entraînement révèle après coup quels tickets étaient gagnants. Plutôt que de jeter le carnet, les chercheurs récupèrent les bons numéros à leur état d'origine.</p>
+
+<p>L'élagage peut se faire en une passe ou de manière itérative. La version itérative donne de meilleurs résultats : on entraîne, on coupe une fraction (typiquement 20% par tour), on réinitialise les survivants, et on recommence. Au bout de plusieurs cycles, il ne reste qu'une fraction minuscule du réseau initial.</p>
+
+<blockquote>Un réseau densément initialisé contient un sous-réseau qui, entraîné isolément, atteint la précision du réseau complet en un nombre comparable d'itérations.</blockquote>
+
+<p>Pour vérifier que la magie vient bien de l'initialisation et non de la structure seule, les auteurs ajoutent un test critique. Ils prennent le même masque de connexions, mais ré-attribuent des poids aléatoires neufs aux survivants. Si la structure suffisait, ce réseau devrait apprendre aussi bien. Il ne le fait pas. Il s'effondre exactement comme dans la sagesse populaire : apprentissage plus lent, précision finale plus basse.</p>
+
+<h2>Ce que disent les chiffres</h2>
+
+<p>Les expériences couvrent trois familles d'architectures sur deux jeux de données classiques. Lenet sur MNIST, des variantes de VGG (Conv-2, Conv-4, Conv-6) sur CIFAR-10, et plus tard VGG-19 et ResNet-18.</p>
+
+<p>Sur Lenet, un billet gagnant à 21% de la taille originale atteint le critère d'arrêt précoce 38% plus rapidement que le réseau complet, avec une précision de test supérieure de 0,3 point. À 13,5% des poids, l'avantage en précision atteint son maximum. Le réseau ne retombe au niveau de l'original qu'autour de 3,6% des paramètres.</p>
+
+<p>Sur les architectures convolutionnelles, le pattern se répète plus fortement. Conv-2 trouve un billet gagnant à 8,8% de sa taille qui apprend 3,5 fois plus vite. Conv-4 gagne 3,5 points de précision à 11,1% des poids. Tous trois restent au-dessus de la précision originale tant qu'il leur reste plus de 2% des paramètres. Pour un praticien, c'est l'équivalent d'un réseau cinquante fois plus petit qui généralise mieux.</p>
+
+<p>L'effet sur la généralisation mérite qu'on s'y attarde. À l'arrêt précoce, la précision d'entraînement et la précision de test montent en parallèle. Mais à la fin de l'entraînement, presque tous les réseaux atteignent 100% de précision sur les données d'apprentissage. L'écart entre train et test se creuse alors selon la sparsité : les billets gagnants généralisent mieux que le réseau dense initial. Les auteurs y voient une <em>colline d'Occam</em>, où un modèle ni trop riche ni trop pauvre trouve le bon compromis.</p>
+
+<h2>Quand la recette se grippe</h2>
+
+<p>La méthode rencontre ses limites sur les architectures profondes modernes. Pour VGG-19 (20 millions de paramètres) et ResNet-18 entraînés à leur taux d'apprentissage habituel de 0,1, l'élagage itératif échoue. Les sous-réseaux extraits ne battent pas une réinitialisation aléatoire. Le ticket gagnant semble s'évaporer.</p>
+
+<p>Deux ajustements rétablissent la propriété. D'abord, l'élagage global plutôt que par couche : on compare les magnitudes de tous les poids convolutionnels ensemble, ce qui évite que les premières couches (peu de paramètres) deviennent un goulot d'étranglement quand on coupe au même taux que les dernières (plusieurs millions). Ensuite, le warmup linéaire du taux d'apprentissage. En montant progressivement de 0 jusqu'à la valeur cible sur 10 000 à 20 000 itérations, l'élagage retrouve des billets gagnants — sur VGG-19 jusqu'à 1,5% des poids, sur ResNet-18 jusqu'à 11,8%.</p>
+
+<p>Pourquoi le taux d'apprentissage compte autant ? Les auteurs ne tranchent pas. L'hypothèse plausible est que des gradients trop violents en début d'entraînement perturbent le signal qui révèle les bons sous-réseaux. Le warmup laisse à l'optimiseur le temps de s'installer dans une géométrie qui rend le ticket lisible.</p>
+
+<h2>L'initialisation comme inductive bias caché</h2>
+
+<p>La partie la plus intrigante du papier reste théorique. Pourquoi un sous-ensemble de poids tirés au hasard à la naissance du réseau serait-il, sans qu'on les ait vus, particulièrement bien placé pour apprendre une tâche donnée ?</p>
+
+<p>Une première hypothèse aurait été que les poids gagnants sont déjà proches de leur valeur finale après entraînement. Les expériences montrent l'inverse : ces poids bougent davantage que les autres pendant l'apprentissage. Le bénéfice ne vient donc pas d'une proximité avec l'optimum, mais d'un emplacement favorable dans le paysage de perte. Les billets gagnants atterrissent dans une région où la descente de gradient est efficace.</p>
+
+<p>Frankle et Carbin formulent une <strong>conjecture du loto</strong> qu'ils ne prouvent pas mais qui réorganise la lecture du sur-paramétrage. Si les grands réseaux sont plus faciles à entraîner, ce n'est pas seulement parce qu'ils ont plus de capacité. C'est parce qu'ils contiennent davantage de tickets potentiels. Plus on tire de combinaisons, plus la probabilité d'en avoir une bonne grimpe. La descente de gradient stochastique ne fait que sélectionner et entraîner ce sous-réseau bien initialisé, le reste suit comme un bagage encombrant.</p>
+
+<p>Cette lecture rejoint des travaux théoriques plus récents sur les bornes de généralisation pour les réseaux compressibles. Si un réseau peut être réduit drastiquement sans perte, c'est qu'il représente une hypothèse plus simple qu'il n'y paraît, et qui doit donc mieux généraliser.</p>
+
+<h2>Pourquoi ça change les choses</h2>
+
+<p>Pour l'ingénierie ML, la conséquence pratique la plus directe concerne les coûts d'entraînement. Si on savait identifier les billets gagnants tôt, sans avoir besoin d'entraîner d'abord le gros réseau, on pourrait diviser par dix ou plus les budgets de calcul. La méthode actuelle reste coûteuse — il faut entraîner et élaguer le réseau dense plusieurs fois pour atteindre les versions les plus comprimées. Mais elle prouve l'existence de la cible. Reste à trouver un raccourci.</p>
+
+<p>Pour la conception d'architectures, le résultat suggère que les bonnes structures ne sont pas conçues, mais découvertes. Plutôt que d'imaginer à la main des réseaux compacts comme MobileNet ou SqueezeNet, on pourrait laisser des grands modèles s'auto-révéler leurs propres versions efficaces. L'idée d'un transfert de billets gagnants entre tâches reste à explorer mais s'inscrit naturellement dans cette logique.</p>
+
+<p>Pour la théorie de l'apprentissage profond, l'hypothèse fournit un angle d'attaque concret sur le mystère du sur-paramétrage. Les réseaux modernes ont systématiquement plus de paramètres que d'exemples d'entraînement, ce qui devrait les condamner au sur-apprentissage selon la théorie classique. Le loto offre une explication mécanique : le réseau se comporte effectivement comme un modèle plus simple, celui du sous-réseau gagnant, le reste agit comme une réserve d'options non exercées.</p>
+
+<h2>Les questions encore ouvertes</h2>
+
+<p>Le papier reconnaît ses limites avec une honnêteté qu'on aimerait voir plus souvent. Les expériences se cantonnent à de la classification d'images sur MNIST et CIFAR-10. ImageNet, le NLP, les modèles de génération restent hors champ. L'élagage itératif demande d'entraîner le réseau quinze fois ou plus, ce qui devient impraticable au-delà d'une certaine échelle.</p>
+
+<p>L'élagage non structuré utilisé dans le papier produit des matrices creuses qui ne sont pas accélérées par les bibliothèques GPU standard. On gagne en paramètres mais pas forcément en temps de calcul réel. La piste de l'élagage structuré — couper des canaux ou des filtres entiers — demande à être explorée dans le cadre du loto.</p>
+
+<p>La question scientifique centrale reste pendante : qu'est-ce qui distingue mathématiquement un billet gagnant ? Les auteurs observent que les distributions d'initialisation des poids survivants deviennent bimodales (forts en valeur absolue, des deux côtés de zéro) et asymétriques selon les couches. Mais réinitialiser de nouveau depuis cette distribution observée ne suffit pas à recréer la propriété. La position relative des poids dans l'architecture compte autant que leur amplitude individuelle.</p>
+
+<p>Depuis 2019, la littérature autour du Lottery Ticket Hypothesis a explosé. Des travaux ont montré que les billets gagnants sont parfois transférables entre tâches, que des variantes existent où la réinitialisation se fait à un point précoce de l'entraînement plutôt qu'à zéro, et que la propriété peut s'étendre à BERT et aux Transformers. D'autres ont contesté la généralité de l'hypothèse sur les très grands modèles. Le débat reste vivant, mais l'idée a déjà reconfiguré la manière dont la communauté pense la relation entre taille, initialisation et apprenabilité d'un réseau de neurones.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

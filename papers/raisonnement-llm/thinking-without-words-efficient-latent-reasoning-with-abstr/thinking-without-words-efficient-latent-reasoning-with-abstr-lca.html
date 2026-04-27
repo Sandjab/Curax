@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thinking Without Words: Efficient Latent Reasoning with Abstract Chain-of-Thought — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Thinking Without Words: Efficient Latent Reasoning with Abstract Chain-of-Thought</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le raisonnement par chaîne de pensée verbalisée (CoT) est devenu le mécanisme dominant pour les tâches de raisonnement complexes des LLM, mais il alourdit la latence d'inférence et peut être infidèle au calcul réel du modèle. Ramji, Naseem et Fernandez Astudillo posent une question simple : peut-on remplacer ces longues rationalisations textuelles par une courte séquence de tokens discrets abstraits sans dégrader la performance finale ?</p>
+<p>La réponse proposée prend la forme d'Abstract Chain-of-Thought (Abstract-CoT), un mécanisme purement post-entraînement qui introduit un vocabulaire réservé de tokens distinguables (M = 64 dans la configuration principale) servant de bloc-notes latent. Le travail se positionne entre deux extrêmes : le CoT verbal lisible mais coûteux, et le raisonnement implicite (Coconut, CODI) opérant en espace continu.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline comporte deux étapes. La première est une boucle de policy iteration en warm-up alternant deux phases sur trois itérations. En SFT bottlenecked, le modèle reçoit le CoT verbal mais un masque d'attention bloc empêche la réponse d'attendre directement le CoT — elle ne peut accéder qu'aux tokens abstraits, forçant ces derniers à servir de goulot d'étranglement informationnel (inégalité du data processing : I(C; Y | X, Z) ≤ I(C; H_Z | X, Z)). En self-distillation, les CoT verbaux sont jetés et le modèle s'entraîne sur ses propres séquences abstraites générées en décodage contraint.</p>
+<p>La seconde étape applique GRPO avec décodage contraint sur le vocabulaire abstrait, en utilisant gpt-oss-20b comme reward model génératif pour gérer les tâches non vérifiables. La régularisation KL porte à la fois sur la distribution abstraite et sur la distribution de réponse.</p>
+<p>Les expériences couvrent trois familles de modèles instruct (Qwen3-4B, Qwen3-8B, Granite 4.0 Micro 3B, plus Qwen3-32B en annexe) et cinq benchmarks (MATH-500, AlpacaEval-LC-2.0, HotpotQA, AIME'25, GPQA-Diamond). Les données proviennent de Dolci-Think-SFT et Dolci-Think-RL (600k échantillons sous-échantillonnés).</p>
+
+<h2>Résultats principaux</h2>
+<p>Abstract-CoT (Warm-up + RL) égale ou dépasse la baseline SFT+RL verbal sur la plupart des configurations, tout en réduisant drastiquement les tokens : 10,4–11,6× sur MATH-500, 1,9–2,2× sur AlpacaEval, 4,0–4,3× sur HotpotQA. Sur Qwen3-8B, Abstract-CoT atteint 90,8 % d'accuracy sur MATH-500 (vs 92,6 % pour SFT+RL) avec 144 tokens contre 1671. Sur AlpacaEval, il dépasse SFT+RL (60,8 vs 58,4).</p>
+<p>L'ablation cold-start (RL seul sans warm-up) sous-performe systématiquement le modèle de base, démontrant que le warm-up d'embeddings est une condition nécessaire. Les pause tokens, malgré une longueur similaire, dégradent la performance — corroborant les résultats antérieurs sur la nécessité d'un pré-entraînement dédié pour les filler tokens.</p>
+<p>Une observation émergente intéressante : la distribution d'usage du vocabulaire abstrait converge vers une loi de puissance type Zipf après RL, avec un token dominant (TOKEN_F sur Qwen3-8B). Les ablations de taille de vocabulaire (M de 1 à 512) montrent un plateau autour de M = 64. Les analyses de permutation et de troncature indiquent une compositionnalité apprise : Abstract-CoT dégrade moins que CoT verbal lors de la troncature à 32 tokens (-6,0 vs -11,8 sur MATH-500), suggérant une représentation plus compacte par construction.</p>
+
+<h2>Discussion et limites</h2>
+<p>La principale faiblesse réside dans la qualité de l'évaluation sur tâches non vérifiables. AlpacaEval-LC repose sur LLM-as-judge, et le reward model d'entraînement est lui-même un LLM (gpt-oss-20b) — risque circulaire d'optimisation pour les biais du juge. Les auteurs ne discutent pas explicitement ce point.</p>
+<p>L'écart sur les benchmarks reasoning-intensive (AIME'25 : 24,4 vs 25,6 ; GPQA-Diamond : 50,5 vs 51,5) reste petit mais constant en faveur du CoT verbal sur les tâches les plus difficiles. Le gain en tokens sur AIME (2,7×) est par ailleurs nettement plus modeste que sur MATH-500, signalant que les tâches à long horizon nécessitent encore des traces longues — limitation reconnue par les auteurs.</p>
+<p>L'interprétabilité du vocabulaire appris reste un angle mort. La loi de puissance émergente est suggestive mais ne donne pas de sémantique aux tokens. Les exemples qualitatifs en annexe juxtaposent simplement séquence abstraite et réponse, sans démontrer une correspondance concept-token interprétable.</p>
+<p>Le coût d'entraînement n'est pas chiffré finement : 8 H100 pour SFT, jusqu'à 32 H100 pour RL sur 1M épisodes représente un budget conséquent qui mérite d'être comparé à Stepwise Internalization (22 itérations) plus rigoureusement.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les datasets utilisés (Dolci-Think-SFT-7B, Dolci-Think-RL-7B) sont publics sur HuggingFace, tout comme les modèles de base (Qwen3, Granite-4.0-Micro). Le prompt complet du reward model figure en annexe B. En revanche, aucun lien vers un repository de code n'est visible dans le texte, ce qui limite la reproduction exacte du pipeline (masques d'attention bloc, contraintes de décodage, hyperparamètres GRPO complets).</p>
+<p>Les ablations couvrent neuf tailles de vocabulaire, trois variantes de la méthode, quatre tailles de troncature, et le scaling à 32B — ce qui est rigoureux pour valider la robustesse des conclusions.</p>
+
+<h2>Impact et applications</h2>
+<p>Abstract-CoT propose un middle ground exploitable industriellement : compression substantielle de la latence d'inférence sans pré-entraînement supplémentaire. Le mécanisme est compatible avec n'importe quel modèle instruct existant, ce qui en fait une stratégie de post-training réaliste pour des déploiements coût-sensibles.</p>
+<p>L'angle interpretabilité-monitorabilité (cité Korbak et al. 2025) est ambivalent : Abstract-CoT supprime la lisibilité humaine du raisonnement, ce qui complique l'audit safety mais introduit une interface structurée et bornée potentiellement plus analysable que des hidden states continus.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail se distingue clairement de Coconut (Hao et al. 2025) et CODI (Shen et al. 2025) qui opèrent en espace continu, et de Token Assorted (Su et al. 2025) qui mélange tokens latents et tokens textuels via quantification vectorielle. La spécificité d'Abstract-CoT est de rester entièrement dans l'espace discret avec un vocabulaire entièrement nouveau, sans reconstruction d'un teacher CoT — ce qui autorise théoriquement l'exploration de chemins de raisonnement non textuels.</p>
+<p>Par rapport à Stepwise Internalization (Deng et al. 2024) et aux approches de CoT pruning par RL (ThinkPrune, AdaCoT, L1), la différence opératoire majeure est l'espace d'action : optimisation sur un codebook contraint plutôt que sur la longueur de texte libre, contournant la fragilité du contrôle de longueur en langage naturel.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>5</td><td>Question claire, originale et bien motivée</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Pipeline en deux étapes solide, masques bloc bien justifiés théoriquement</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>Cinq benchmarks, trois familles de modèles, échelles 3B-32B</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>LLM-as-judge sur AlpacaEval, reward model LLM en entraînement</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Six baselines comparées mais risque circulaire reward/évaluation non discuté</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Datasets publics, pas de code visible, hyperparamètres partiels</td></tr>
+<tr><td>Transparence sur les limites</td><td>4</td><td>Limites discutées, ablations exhaustives en annexe</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Approche post-training-only originale dans l'espace discret pur</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

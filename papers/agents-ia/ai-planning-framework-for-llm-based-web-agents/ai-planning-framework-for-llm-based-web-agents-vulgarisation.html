@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Planning Framework for LLM-Based Web Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AI Planning Framework for LLM-Based Web Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA oublie ce qu'il était venu faire</h2>
+
+<p>Demandez à un agent web propulsé par un LLM de réserver un vol avec escale, comparer trois hôtels et envoyer le récapitulatif par email. Dans un cas sur deux, l'agent réussira la première étape, naviguera correctement pendant huit ou neuf actions, puis fera quelque chose d'inattendu : cliquer sur un bouton qui n'a rien à voir, répéter la même action trois fois, ou conclure la tâche alors qu'il manque la moitié du résultat. Pourquoi ?</p>
+
+<p>Orit Shahnovsky et Rotem Dror, chercheuses à l'Université de Haifa, viennent de publier un travail qui s'attaque frontalement à cette question. Leur diagnostic est inattendu : on ne sait pas vraiment <em>comment</em> ces agents planifient, donc on ne sait pas <em>pourquoi</em> ils échouent. Et tant qu'on évalue leurs performances avec un simple score binaire « tâche réussie / tâche ratée », on passe à côté de l'essentiel.</p>
+
+<p>Leur article propose trois choses : un cadre théorique qui relie les agents LLM aux algorithmes de planification classiques que l'on enseignait avant le deep learning, cinq nouvelles métriques qui mesurent la <em>qualité du chemin parcouru</em>, et un jeu de données de 794 trajectoires humaines de référence sur le benchmark WebArena. Avec ces outils, elles montrent que deux agents qui obtiennent à peu près le même taux de réussite peuvent en fait avoir des comportements radicalement différents, et qu'on a longtemps choisi des architectures à l'aveugle.</p>
+
+<h2>Le problème : des boîtes noires qui se prennent pour des planificateurs</h2>
+
+<p>Avant l'ère des LLM, l'IA savait planifier. Pas dans le sens flou actuel, mais au sens technique : étant donné un état initial, un état but, et un ensemble d'actions possibles, calculer une séquence valide pour atteindre le but. C'est tout un domaine — la planification automatique — avec des décennies de littérature, des algorithmes formels comme A* ou GraphPlan, des langages dédiés comme PDDL.</p>
+
+<p>Puis les LLM sont arrivés et ont tout balayé. Un agent web moderne ne « cherche » plus dans un graphe d'états : il regarde la page, raisonne en langage naturel, propose une action, l'exécute, regarde la nouvelle page, recommence. Cette boucle marche étonnamment bien. Mais elle pose deux problèmes sérieux.</p>
+
+<p>Le premier, c'est le <strong>context drift</strong>. Au fil des étapes, l'objectif initial s'éloigne dans la fenêtre de contexte du modèle, dilué par les observations successives, les résultats intermédiaires, les erreurs corrigées. L'agent finit par répondre aux dernières instructions plutôt qu'à la question de départ. Si vous avez déjà vu un assistant LLM oublier la consigne initiale après dix tours de conversation, c'est exactement ce phénomène, transposé à un agent autonome qui ne peut pas vous demander de répéter.</p>
+
+<p>Le second problème, c'est la <strong>décomposition incohérente</strong>. Face à une tâche multi-étapes, l'agent doit la découper en sous-tâches sensées. Quand il se trompe, par exemple en oubliant qu'il faut changer le mode de transport avant de calculer un itinéraire, il s'engage dans une séquence d'actions techniquement correctes mais qui ne mènent nulle part.</p>
+
+<p>Ces deux échecs sont liés à la <em>stratégie de planification</em> de l'agent, pas à la qualité du modèle sous-jacent. Or les benchmarks actuels — WebArena, MiniWoB++, Mind2Web — mesurent uniquement le succès final. Si l'agent récupère quatre éléments sur les cinq demandés, c'est zéro point. S'il termine la tâche en répétant cinq fois la même action inutile avant de tomber sur la bonne, c'est un succès. Cette myopie évaluative cache complètement la dynamique réelle de l'agent.</p>
+
+<h2>Trois familles d'agents, trois algorithmes ressuscités</h2>
+
+<p>La première contribution des chercheuses tient en une analogie qui change la perspective. Elles montrent que les architectures d'agents LLM modernes correspondent presque exactement à trois algorithmes classiques de parcours de graphe.</p>
+
+<p>Les <strong>agents Step-by-Step</strong>, qui regardent l'état courant, choisissent une action, puis réévaluent, fonctionnent comme un parcours en largeur (BFS). À chaque étape, ils explorent un seul niveau de profondeur. C'est l'approche de WebArena, de Mind2Web, de la plupart des frameworks ReAct. Avantage : feedback immédiat de l'environnement, capacité à s'adapter à l'imprévu. Inconvénient : aucune vision d'ensemble, vulnérabilité maximale au context drift.</p>
+
+<p>Les <strong>agents Tree Search</strong> maintiennent un arbre des états explorés et utilisent une fonction de valeur pour décider quelle branche développer en priorité. C'est un best-first search guidé par une heuristique. Plus coûteux, plus robuste, mais nécessite une bonne fonction de valeur — ce qui dans un environnement web est loin d'être évident.</p>
+
+<p>Les <strong>agents Full-Plan-in-Advance</strong> génèrent un plan complet avant d'exécuter quoi que ce soit, puis suivent ce plan étape par étape. C'est conceptuellement une descente en profondeur (DFS) dans le graphe d'actions. Curieusement, presque personne n'avait implémenté cette stratégie pure pour le web. Les chercheuses l'ont donc construite elles-mêmes, et c'est cette implémentation qu'elles comparent à WebArena.</p>
+
+<p>L'analogie n'est pas qu'une jolie métaphore. Elle prédit les modes de défaillance. Un agent BFS doit bien gérer le context drift parce qu'il n'a pas de garde-fou structurel. Un agent DFS doit bien gérer la divergence : si la page rencontrée à l'étape 7 ne correspond pas à ce que prévoyait le plan, il faut tout replanifier ou échouer. Un agent Tree Search dépend critiquement de la qualité de sa fonction de valeur. Trois architectures, trois pathologies.</p>
+
+<h2>Cinq métriques pour voir au-delà du binaire</h2>
+
+<p>Si l'on veut comprendre vraiment ce qui se passe, mesurer le succès final ne suffit plus. Les chercheuses définissent cinq métriques qui regardent la trajectoire entière.</p>
+
+<p>Le <strong>Step Success Rate</strong> mesure la proportion d'étapes humaines de référence que l'agent reproduit sémantiquement. Si un humain résout la tâche en sept étapes et que l'agent reproduit cinq d'entre elles dans son chemin, le score est de 5/7. Pour comparer deux trajectoires, elles utilisent un LLM-as-a-judge qui évalue si deux actions ont la même intention, malgré des formulations différentes.</p>
+
+<p>Le <strong>Recovery Rate</strong> évalue la capacité de l'agent à revenir sur le bon chemin après s'en être écarté. Quand il dévie, repart-il dans la bonne direction quelques étapes plus tard, ou s'enfonce-t-il dans un cul-de-sac ?</p>
+
+<p>Le <strong>Repetitiveness Rate</strong> traque les actions répétées à l'identique : symptôme classique d'un agent bloqué qui clique trois fois sur le même bouton parce qu'il ne comprend pas pourquoi rien ne se passe.</p>
+
+<p>L'<strong>Element Accuracy Rate</strong> compare ce que l'agent dit vouloir faire dans sa phase de raisonnement avec ce qu'il fait réellement. C'est un écart fascinant : un agent peut écrire « je vais cliquer sur le bouton 522 » et exécuter une action complètement différente, ou rien du tout, à cause d'un format de sortie mal respecté.</p>
+
+<p>Le <strong>Partial Success Rate</strong> récompense les succès partiels sur les tâches multi-éléments. Si la tâche demande la liste des États voisins du Connecticut et que l'agent en trouve un sur trois, le score est de 1/3 plutôt que zéro.</p>
+
+<p>Pour rendre ces métriques exploitables, il fallait des trajectoires humaines de référence. Les chercheuses ont donc résolu manuellement 794 des 812 tâches de WebArena en notant chaque clic, chaque saisie, chaque navigation. C'est probablement la partie la moins glamour du papier et l'une des plus utiles : ce dataset annoté devient une ressource publique pour toute la communauté.</p>
+
+<h2>Résultats : deux agents, deux profils opposés</h2>
+
+<p>Les chiffres bruts donnent l'impression d'un match nul. L'agent Step-by-Step (WebArena) atteint 38,41 % de réussite globale, l'agent Full-Plan-in-Advance 36,29 %. Deux points d'écart, presque rien.</p>
+
+<p>Les métriques fines racontent une autre histoire. L'agent Step-by-Step domine largement sur le suivi de la trajectoire humaine : 82 % de Step Success Rate contre 58 % pour le planificateur. Il récupère mieux après une déviation (36 % contre 31 %) et produit des trajectoires plus courtes (15 étapes en moyenne contre 20 pour le planificateur, alors que les humains résolvent en 8 étapes).</p>
+
+<p>L'agent Full-Plan-in-Advance, lui, écrase la métrique d'Element Accuracy : 89 % contre 82 %. Quand il décide de cliquer sur un élément, il l'exécute correctement bien plus souvent. Il répète aussi moins ses actions. La discipline du plan préétabli paie sur la rigueur d'exécution, mais coûte cher dès qu'il faut s'adapter.</p>
+
+<p>Par domaine, les écarts sont parlants. L'agent planificateur fait mieux sur Reddit et l'e-commerce (+4 % chacun), deux environnements à la structure très prévisible : un produit a un titre, un prix, un bouton « Ajouter au panier », point. Sur GitLab, le CMS et OpenStreetMap, où l'état des pages dépend du contenu généré ou de processus asynchrones, l'agent Step-by-Step reprend l'avantage.</p>
+
+<p>Le cas de la tâche 82 illustre parfaitement le mode d'échec du planificateur. La consigne demande de calculer un trajet à pied du MIT à Harvard, puis en voiture jusqu'à l'aéroport. L'humain voit immédiatement que le mode de transport par défaut n'est pas « à pied » et clique pour le changer. Le plan généré par l'agent omet complètement cette étape : le LLM a supposé, à partir de ses connaissances générales, que tous les modes étaient disponibles simultanément. Le plan est élégant, cohérent, et faux.</p>
+
+<h2>Implications : choisir son agent comme on choisit un algorithme</h2>
+
+<p>La conclusion pratique est tranchante. Il n'existe pas de meilleure architecture d'agent web dans l'absolu. Le choix dépend de la nature de l'environnement et des contraintes de l'application.</p>
+
+<p>Pour les <strong>environnements dynamiques</strong> — pipelines DevOps, dashboards de monitoring, portails médicaux où les éléments dépendent de données serveur — l'approche Step-by-Step est mieux adaptée. La capacité à observer chaque nouvel état avant d'agir compense largement le risque de context drift. Un agent qui prévoit tout à l'avance dans un environnement imprévisible va dérailler à la première surprise.</p>
+
+<p>Pour les <strong>environnements rigides</strong> — workflows ERP, systèmes de gestion de contenu, tunnels d'achat e-commerce standardisés — l'approche Full-Plan-in-Advance prend le dessus. La structure prévisible permet de générer un plan correct, et la discipline du plan évite les distractions (pop-ups promotionnels, menus surchargés). C'est aussi un avantage pour les contextes réglementés où la traçabilité du processus compte autant que le résultat : un plan préétabli est auditable.</p>
+
+<p>L'autre implication touche directement les équipes qui développent des agents en production. Si vous évaluez votre agent uniquement avec un taux de succès, vous êtes aveugle à des comportements pourtant catastrophiques en pratique. Un agent qui répète vingt fois la même action avant d'aboutir consomme des tokens et du temps. Un agent qui ne récupère jamais ses erreurs ne tiendra pas en environnement réel. Un agent dont le plan diverge systématiquement de l'exécution est un cauchemar à débugger.</p>
+
+<p>Les cinq métriques proposées sont implémentables avec un LLM-as-a-judge. Elles ne nécessitent pas un dataset humain pour <em>chaque</em> tâche — la trajectoire de référence peut être produite par un agent réputé fiable, ou même par un humain expert sur un sous-ensemble représentatif. Toute équipe qui pousse un agent en prod devrait pouvoir intégrer au moins Element Accuracy et Repetitiveness Rate dans sa CI.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Le travail laisse plusieurs questions ouvertes, et les chercheuses sont honnêtes sur les limites. Leur agent Full-Plan-in-Advance n'a pas été optimisé pour la performance : c'est une preuve de concept, pas un système de production. Une vraie implémentation devrait probablement combiner les paradigmes — générer un plan initial, mais autoriser une replanification dynamique quand l'état observé diverge significativement de l'état attendu. C'est ce que font les humains, et c'est aussi ce que faisaient les meilleurs systèmes de planification classique des années 2000 avec les approches « plan-then-execute-then-replan ».</p>
+
+<p>La famille Tree Search, mappée au best-first search, est mentionnée dans la taxonomie mais peu explorée empiriquement. C'est probablement la voie la plus prometteuse à terme : exploration multi-branches guidée par une fonction de valeur, à condition d'apprendre à construire cette fonction. Les approches récentes utilisant la verbalisation de plusieurs chemins de raisonnement par le LLM lui-même pour produire des scores comparatifs sont une piste sérieuse.</p>
+
+<p>La généralisation au-delà du web mérite aussi attention. Les chercheuses suggèrent que leur taxonomie s'applique à la robotique, à l'automatisation GUI, aux agents multimodaux. C'est plausible : la distinction entre planifier-puis-exécuter, explorer-en-largeur, et chercher-avec-heuristique précède largement l'IA générative. Voir la même grille de lecture émerger des deux côtés — planification symbolique d'avant 2020 et agents LLM d'aujourd'hui — suggère que ces structures cognitives sont fondamentales, indépendamment de la technologie sous-jacente.</p>
+
+<p>Reste enfin la question de l'évaluation à grande échelle. Annoter 794 trajectoires à la main a pris du temps. Pour passer à 10 000 ou 100 000 tâches, il faudra automatiser la production des trajectoires de référence — probablement avec des agents experts validés ponctuellement par des humains. La boucle se referme : pour évaluer rigoureusement les agents, on aura besoin d'autres agents, eux-mêmes évalués rigoureusement. C'est moins inquiétant qu'il n'y paraît, à condition de garder un ancrage humain sur les benchmarks fondateurs.</p>
+
+<p>Le mérite principal de ce travail est ailleurs. En reconnectant la nouvelle vague des agents LLM à des décennies de recherche sur la planification, il rappelle que le déluge de papiers sur les architectures d'agents n'a pas inventé un nouveau monde. Il a redécouvert, avec d'autres outils, les mêmes structures. Savoir cela ne diminue pas l'intérêt des LLM. Cela donne au contraire le vocabulaire qui manquait pour discuter sérieusement de leurs choix de conception.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

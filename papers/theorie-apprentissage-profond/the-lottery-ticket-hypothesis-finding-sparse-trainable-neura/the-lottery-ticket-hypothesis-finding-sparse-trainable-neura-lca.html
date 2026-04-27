@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le pruning de réseaux de neurones supprime jusqu'à 90% des paramètres d'un réseau entraîné sans dégradation de précision. Une question évidente se pose alors : pourquoi ne pas entraîner directement l'architecture sparse résultante pour accélérer aussi l'entraînement ? L'expérience contemporaine (Han et al. 2015, Li et al. 2016) répondait que ces architectures sparses sont plus difficiles à entraîner depuis zéro et atteignent une précision inférieure.</p>
+<p>Frankle et Carbin renversent cette intuition. Ils formulent <strong>l'hypothèse du ticket gagnant</strong> : un réseau dense f(x; θ₀) contient un sous-réseau f(x; m⊙θ₀) qui, entraîné isolément avec son <em>initialisation d'origine</em>, atteint la précision du réseau complet en au plus le même nombre d'itérations, avec ‖m‖₀ ≪ |θ|. La clé est l'initialisation : ce sont les poids initiaux qui ont gagné la loterie, pas seulement la structure.</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole expérimental est limpide :</p>
+<ul>
+<li>Initialiser aléatoirement f(x; θ₀)</li>
+<li>Entraîner j itérations jusqu'à θⱼ</li>
+<li>Élaguer p% des poids de plus faible magnitude → masque m</li>
+<li><strong>Réinitialiser les poids survivants à leurs valeurs θ₀ d'origine</strong> (l'innovation centrale)</li>
+</ul>
+<p>Le pruning itératif répète ce cycle n fois en élaguant p^(1/n)% par tour. Le pruning est non structuré et magnitude-based, par couche pour Lenet et Conv-2/4/6, global pour VGG-19 et Resnet-18. La connexion vers la sortie est élaguée à moitié du taux des autres couches.</p>
+<p>Les architectures testées couvrent un spectre raisonnable : Lenet-300-100 sur MNIST, Conv-2/4/6 (variantes VGG réduites), VGG-19 et Resnet-18 sur CIFAR10. Optimiseurs : Adam, SGD, SGD+momentum, avec dropout, weight decay, batchnorm. La métrique de vitesse d'apprentissage est l'itération de loss minimal sur validation (early-stopping).</p>
+<p>Le contrôle clé est la <strong>réinitialisation aléatoire</strong> : conserver le masque m mais ré-échantillonner θ'₀ ∼ Dθ. Si la structure seule suffisait, les performances seraient préservées ; si l'initialisation compte, elles s'effondrent.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur Lenet/MNIST, les tickets gagnants représentent 21% des poids et atteignent l'early-stopping 38% plus tôt que le réseau complet, avec une précision test supérieure de 0.3 point. Le ticket reste fonctionnel jusqu'à Pm = 3.6%. Réinitialisé aléatoirement à Pm = 21%, le ticket apprend 2.51x plus lentement et perd 0.5 point de précision.</p>
+<p>Sur Conv-2/4/6, le pattern s'amplifie : early-stopping 3.5x plus rapide pour Conv-2 (Pm = 8.8%), gain de précision jusqu'à 3.5 points. Tous trois restent au-dessus de leur précision originale tant que Pm > 2%.</p>
+<p>Sur les architectures profondes (VGG-19, Resnet-18), le résultat se nuance : <strong>le pruning itératif ne trouve pas de tickets gagnants au taux d'apprentissage standard</strong>. À learning rate 0.1 sur VGG-19, les sous-réseaux pruned ne battent pas le réseau dense ni la réinitialisation aléatoire. Il faut soit baisser le learning rate (0.01), soit ajouter un warmup linéaire (k = 10000-20000) pour récupérer le pattern. À VGG-19 avec warmup, des tickets sont identifiés jusqu'à Pm = 1.5%.</p>
+<p>L'expérience de réinitialisation supporte l'hypothèse : la structure seule ne suffit pas, l'initialisation est nécessaire pour l'efficacité. L'analyse des distributions d'initialisation (Annexe F) montre que les poids survivants ont des magnitudes initiales bimodales asymétriques — résultat artefactuel attendu du pruning par magnitude, mais que les auteurs creusent honnêtement.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs sont transparents sur les bornes de leur démonstration. Trois limites majeures sont reconnues explicitement :</p>
+<ul>
+<li><strong>Tâches restreintes</strong> : MNIST et CIFAR10 uniquement. Aucune validation sur ImageNet, NLP, ou tâches complexes. La généralité de l'hypothèse reste conjecturale.</li>
+<li><strong>Coût computationnel</strong> : le pruning itératif requiert 15+ entraînements consécutifs, rendant l'approche peu pratique en l'état.</li>
+<li><strong>Architectures profondes fragiles</strong> : la nécessité du warmup et d'un learning rate réduit pour Resnet-18 et VGG-19 suggère que la procédure n'est pas robuste. Au taux 0.1 standard de Resnet-18, aucun ticket gagnant n'est identifiable, même avec warmup.</li>
+</ul>
+<p>L'expérience de réinitialisation depuis la distribution Dm des tickets (Annexe F.3) est instructive : ré-échantillonner depuis la distribution des poids survivants n'aide pas. Ce n'est donc pas la distribution marginale des magnitudes qui compte, mais la <em>combinaison spécifique</em> structure-initialisation. Cette finesse écarte une explication triviale.</p>
+<p>Une limite épistémologique non discutée par les auteurs : le pruning par magnitude introduit un biais de sélection vers les poids initialement grands ou ayant beaucoup bougé (Annexe F.5). Les "tickets gagnants" identifiés sont donc co-définis avec la procédure d'extraction. Une procédure différente identifierait potentiellement d'autres sous-réseaux.</p>
+<p>La "Lottery Ticket Conjecture" (SGD chercherait activement et entraînerait un sous-ensemble de poids bien initialisés) n'est pas testée empiriquement et reste spéculative.</p>
+
+<h2>Reproductibilité</h2>
+<p>L'article fournit des descriptions détaillées des architectures (Figure 2), des hyperparamètres (Annexes G et H exhaustives sur learning rates, optimiseurs, taux de pruning, distributions d'initialisation, tailles de réseau), et des protocoles d'early-stopping. Les expériences reposent sur 3 à 15 essais selon les configurations, avec barres d'erreur min/max. Le code n'est pas explicitement référencé dans le texte fourni, mais l'article a depuis donné lieu à de multiples reimplémentations open-source. L'usage d'architectures et datasets standards (Lenet, VGG, Resnet, MNIST, CIFAR10) facilite la réplication.</p>
+<p>Les barres d'erreur min/max plutôt qu'écarts-types ou intervalles de confiance restent un choix discutable pour quantifier la variabilité réelle.</p>
+
+<h2>Impact et applications</h2>
+<p>L'article a engendré une littérature considérable depuis 2019 : extensions à ImageNet (Frankle et al. 2020 — "Linear Mode Connectivity and the Lottery Ticket Hypothesis"), à BERT et au NLP, à la transférabilité inter-tâches des tickets, à l'identification précoce des tickets sans pruning itératif (Early-Bird tickets, Strong Lottery Ticket Hypothesis de Ramanujan et al.).</p>
+<p>L'impact théorique dépasse le pruning : l'article reformule la question de la sur-paramétrisation des réseaux profonds en termes d'espace de recherche de sous-réseaux entraînables. Il suggère que la facilité d'entraînement des grands réseaux vient de la richesse combinatoire des tickets potentiels, pas de l'expressivité brute.</p>
+<p>Applications pratiques limitées par la sparsité non structurée incompatible avec le hardware standard. Les auteurs reconnaissent cette limite et orientent vers le pruning structuré comme travail futur.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article s'inscrit dans une lignée allant de LeCun et al. (Optimal Brain Damage, 1990) à Han et al. (2015) sur le pruning par magnitude. La rupture conceptuelle vient de Liu et al. (2019, "Rethinking the Value of Network Pruning"), avec qui Frankle et Carbin dialoguent directement : Liu et al. trouvent que les réseaux pruned se réentraînent depuis aléatoire, Frankle et Carbin nuancent en montrant que cela tient jusqu'à un seuil de sparsité, au-delà duquel l'initialisation d'origine devient nécessaire.</p>
+<p>Le rapprochement avec le Filter Lottery de Cohen et al. (2016) et avec les bornes de généralisation pour réseaux compressibles (Zhou et al. 2018, Arora et al. 2018) est explicite et pertinent. La connexion à Du et al. (2019) sur la convergence SGD en régime sur-paramétré ouvre un pont entre théorie d'optimisation et architecture sparse.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table border="1" cellpadding="6" cellspacing="0">
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Question claire, originale, formalisée mathématiquement avec une hypothèse falsifiable.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Protocole rigoureux avec contrôle par réinitialisation aléatoire. Comparaison one-shot vs itératif. Quelques zones d'ombre sur la robustesse aux choix d'hyperparamètres pour les réseaux profonds.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>3 à 15 essais par configuration. Barres min/max plutôt qu'IC. Suffisant pour les patterns observés mais limite la quantification fine de la variance.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Itération d'early-stopping et précision test sont des métriques pertinentes et bien définies. Le proxy "loss minimal validation" est justifié en Annexe C.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>L'expérience de réinitialisation aléatoire est le bon contrôle. La sparsité aléatoire (Annexe E) est un contrôle additionnel pertinent. Manque une discussion du biais inhérent au pruning par magnitude.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Hyperparamètres, architectures et protocoles documentés exhaustivement. Datasets standards. Code non explicitement fourni dans le texte.</td></tr>
+<tr><td>Transparence sur les limitations</td><td>5</td><td>Section 6 dédiée et explicite. Limites reconnues : datasets restreints, coût computationnel, fragilité sur réseaux profonds, sparsité non structurée.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Hypothèse nouvelle, formulée précisément, qui a engendré une littérature substantielle et reformulé la compréhension de la sur-paramétrisation.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 4.5/5</strong> — Article fondateur dont la rigueur empirique et la clarté conceptuelle compensent la portée expérimentale limitée. La fragilité documentée sur Resnet-18/VGG-19 (besoin de warmup) tempère l'universalité revendiquée mais n'invalide pas le résultat central sur Lenet et Conv-2/4/6.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

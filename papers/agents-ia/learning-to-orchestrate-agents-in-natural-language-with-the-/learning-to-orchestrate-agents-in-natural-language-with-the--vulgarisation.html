@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning to Orchestrate Agents in Natural Language with the Conductor — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Learning to Orchestrate Agents in Natural Language with the Conductor</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un petit modèle dirige les géants</h2>
+
+<p>Un modèle de 7 milliards de paramètres bat GPT-5, Gemini 2.5 Pro et Claude Sonnet 4 sur les benchmarks de raisonnement les plus difficiles. Le truc ? Il ne résout aucun problème lui-même. Il distribue le travail aux trois autres et les fait collaborer.</p>
+
+<p>C'est l'idée derrière le <strong>Conductor</strong>, présenté par Sakana AI à ICLR 2026. Plutôt que d'entraîner un nouveau modèle géant à raisonner mieux, les chercheurs ont entraîné un petit modèle à devenir un excellent chef d'orchestre. Sur LiveCodeBench, le Conductor atteint 83,9 % de réussite, contre 82,9 % pour GPT-5 seul. Sur AIME25, l'examen de mathématiques le plus redouté des États-Unis, il monte à 93,3 % contre 90,8 % pour le meilleur modèle individuel. Sur GPQA Diamond, ces questions de niveau doctorat impossibles à googler, il atteint 87,5 %.</p>
+
+<p>Ces écarts paraissent modestes en pourcentage. Ils correspondent en réalité à un saut de génération entre o3 et GPT-5 sur ces mêmes benchmarks.</p>
+
+<h2>Le problème : aucun LLM n'est bon partout</h2>
+
+<p>Demandez à GPT-5 de coder un problème LeetCode complexe : il excelle. Demandez-lui de respecter scrupuleusement les contraintes de formatage de BigCodeBench : il échoue parfois là où Claude ou Gemini réussissent. Claude Sonnet 4 brille sur la génération de code structuré mais peine sur le code compétitif. Gemini domine le raisonnement scientifique. DeepSeek-R1 distillé écrase le math pour son coût.</p>
+
+<p>Aucun modèle ne règne sur tout. Et chacun a des dizaines de paramètres cachés : budget de raisonnement, mode <em>thinking</em>, prompts système, stratégies de <em>self-refinement</em>. Les workflows agentiques qui exploitent ces forces complémentaires sont aujourd'hui conçus à la main, péniblement, par des ingénieurs qui passent des semaines à tester des combinaisons. C'est la sauce secrète des produits IA commerciaux comme Cursor ou Amazon Q.</p>
+
+<p>Les approches précédentes pour automatiser cette coordination — MASRouter, Mixture-of-Agents, RouterDC — fonctionnent comme des aiguilleurs. Elles apprennent à classer une question puis à la rediriger vers un modèle ou une topologie figée, choisie dans un menu prédéfini. Le problème : ces routeurs ne peuvent pas inventer une nouvelle stratégie. Ils ne peuvent pas dire à un modèle <em>« planifie d'abord, en pseudocode, puis demande au suivant d'optimiser pour la complexité O(n log n) »</em>. Leur vocabulaire est limité à un classifieur.</p>
+
+<h2>La méthode : un chef d'orchestre qui parle</h2>
+
+<p>L'astuce du Conductor : il ne classe rien. Il écrit. Sa sortie, c'est trois listes Python en langage naturel.</p>
+
+<p>Imaginez que vous arriviez devant un problème de code complexe. Le Conductor produit une réponse comme celle-ci : <em>« Modèle 2, conçois un algorithme efficace pour compter les sous-tableaux complets. Modèle 0, implémente cet algorithme en Python en utilisant la solution du modèle 2. »</em> Les trois listes décrivent qui parle (les identifiants des modèles workers), ce qu'on lui demande (les sous-tâches en langage naturel), et qui voit quoi (les listes d'accès, qui contrôlent quels messages précédents chaque worker reçoit dans son contexte).</p>
+
+<p>Cette structure permet n'importe quelle topologie : chaîne séquentielle, arbre parallèle, vote majoritaire, planification suivie d'exécution puis de vérification. Le Conductor décide tout, y compris le prompt envoyé à chaque worker. Il fait du <em>prompt engineering</em> dynamique, adapté à chaque problème.</p>
+
+<h3>Comment l'apprend-il ?</h3>
+
+<p>Par renforcement, sans aucun exemple humain de bonne stratégie. Les chercheurs partent d'un modèle Qwen2.5-7B. Ils lui donnent 960 problèmes difficiles couvrant maths, code, sciences naturelles. Pour chaque problème, le Conductor produit 64 plans différents. Chaque plan est exécuté : les workers suivent les instructions, et la réponse finale est comparée à la vérité.</p>
+
+<p>Si le plan donne la bonne réponse, récompense de 1. Sinon, 0,5 si le format est correct, 0 si le format est cassé. C'est tout. L'algorithme GRPO — celui popularisé par DeepSeek-R1 — ajuste le modèle pour produire plus de plans qui marchent.</p>
+
+<p>Pas de KL régularisation, pas de modèle de référence, pas d'imitation de stratégies humaines. Seulement la récompense. L'entraînement converge en 200 itérations sur 2 GPU H100. Ridiculement bon marché par rapport à un fine-tuning classique.</p>
+
+<p>Le résultat est édifiant. Au début de l'entraînement, le Conductor produit des sous-tâches sensées mais naïves. Vers la fin, il a découvert tout seul des stratégies sophistiquées : utiliser un planificateur dédié, demander aux workers d'expliciter leur raisonnement pour aider le suivant, organiser des rounds de débat où plusieurs modèles attaquent indépendamment puis un dernier vérifie. Aucune de ces stratégies n'a été codée par un humain.</p>
+
+<h2>Résultats : le pouvoir du collectif</h2>
+
+<p>Les chiffres parlent d'eux-mêmes. Sur sept benchmarks couvrant le code, les maths et les sciences, le Conductor à 7B obtient une moyenne de 77,3 %. GPT-5 seul plafonne à 74,8 %. Gemini 2.5 Pro à 71,0 %. Claude Sonnet 4 à 65,7 %.</p>
+
+<p>Plus impressionnant encore : la comparaison à coût égal contre les approches multi-agents existantes. Sur le même pool de 7 workers, Mixture-of-Agents fait 62,1 % de moyenne, MASRouter 56,9 %, RouterDC 52,4 %. Le Conductor monte à 72,4 %, tout en utilisant <strong>moins d'appels API</strong> que ses concurrents — environ 3 étapes de workflow en moyenne, contre 5 ou plus pour les baselines coûteuses.</p>
+
+<p>Cette efficacité n'est pas un détail. Sur MMLU, le Conductor consomme en moyenne 735 tokens de sortie par question pour 0,9 cent. La même question en consensus 5x avec GPT-5 coûte 1,38 cent pour 1376 tokens, et donne un score inférieur. Sur la métrique performance par centime, le Conductor obtient un ratio de 103, contre 66 pour GPT-5 en consensus. Plus performant, moins cher.</p>
+
+<h3>Une intelligence du dosage</h3>
+
+<p>Le Conductor a appris à doser son effort selon la difficulté. Sur MMLU — du QCM factuel — il se contente souvent d'un ou deux workers. Sur LiveCodeBench, il déploie systématiquement 3 ou 4 étapes : un planificateur, un implémenteur, un vérificateur. Cette adaptation émerge purement du signal de récompense, sans qu'on lui ait jamais expliqué qu'un problème de code mérite plus d'attention qu'une question de culture générale.</p>
+
+<p>Détail amusant relevé par les auteurs : pour LiveCodeBench, le Conductor a découvert que Gemini et Claude sont d'excellents planificateurs de haut niveau, mais que GPT-5 écrit le meilleur code optimisé. Il les fait donc planifier ensemble puis confie l'implémentation finale à GPT-5. Cette répartition rôle-modèle bat largement la stratégie inverse — qu'il a essayée tôt dans l'entraînement avant de l'abandonner.</p>
+
+<h3>Quand on remplace le Conductor par GPT-5</h3>
+
+<p>L'ablation la plus parlante : les chercheurs remplacent leur Conductor entraîné par GPT-5 ou Gemini 2.5 Pro avec le même prompt système, et leur demandent d'orchestrer eux-mêmes les autres modèles. Score final : 70 % et 71,6 %. Le Conductor 7B entraîné fait 75,6 %.</p>
+
+<p>Pourquoi ? GPT-5 et Gemini ont des biais a priori sur les capacités des autres modèles, biais qui ne reflètent pas la réalité. Ils sur-utilisent Claude pour LiveCodeBench (où il est faible) ou GPT-5 pour BigCodeBench (où il échoue sur le formatage). Sans phase d'entraînement, sans signal de récompense pour corriger ces erreurs, ils restent enfermés dans leurs préjugés. Le Conductor, lui, a appris en se trompant.</p>
+
+<h2>Implications : un nouveau levier économique</h2>
+
+<p>Pour quiconque construit des produits IA, ce travail change la donne sur trois plans.</p>
+
+<p><strong>Le coût.</strong> Une équipe qui n'a pas le budget pour appeler Gemini 2.5 Pro à chaque requête peut désormais composer avec des modèles open-source. Les chercheurs ont fine-tuné une variante du Conductor sur des pools aléatoires de modèles. Résultat : restreint aux seuls modèles open-source, le Conductor surpasse Claude Sonnet 4 (utilisé seul) de presque 10 %. La performance ne dépend plus uniquement du fond du pool, mais de la capacité à combiner.</p>
+
+<p><strong>La flexibilité.</strong> Le même Conductor s'adapte à n'importe quel sous-ensemble de workers. Vous voulez exclure les API payantes pour un déploiement on-premise sensible ? Restreignez le pool aux modèles ouverts. Vous avez une licence Anthropic mais pas OpenAI ? Le Conductor reconfigurera ses workflows. Cette généralisation s'obtient en quelques heures de fine-tuning supplémentaire.</p>
+
+<p><strong>L'orchestration comme compétence transférable.</strong> Les workflows agentiques manuels qui peuplent aujourd'hui les outils Cursor, Copilot, Amazon Q sont coûteux à maintenir. Chaque nouveau modèle force une refonte. Avec un Conductor, l'ajout d'un modèle se traduit par un fine-tuning court qui apprend ses forces relatives. La courbe de maintenance s'aplatit considérablement.</p>
+
+<p>Ce qui frappe surtout, c'est la démonstration qu'un modèle de 7B suffit. Pas besoin d'un GPT-5 pour orchestrer GPT-5. Une fois la stratégie de coordination apprise, elle se généralise à des tâches inédites — AIME25, GPQA, BigCodeBench — sans réentraînement. La connaissance encodée n'est pas la résolution de problèmes, c'est la cartographie des compétences relatives entre modèles.</p>
+
+<h2>Pour aller plus loin : la récursion comme nouvel axe de scaling</h2>
+
+<p>L'extension la plus surprenante du papier concerne la <strong>récursion</strong>. Les chercheurs autorisent le Conductor à se sélectionner lui-même comme worker. Quand il fait ce choix, après avoir vu le résultat de sa première stratégie, il peut concevoir une nouvelle stratégie pour corriger ou améliorer la réponse.</p>
+
+<p>Sur BigCodeBench, où GPT-5 sous-performe contre toute attente, cette récursion fait gagner 2 points supplémentaires au Conductor — passant de 37,8 à 40,0. Plus intéressant : l'analyse des appels montre que dans les rounds récursifs, le Conductor redistribue activement le travail vers Claude et Gemini, ayant constaté la défaillance de GPT-5 au premier round. Il apprend en temps réel, dans le contexte de l'inférence.</p>
+
+<p>Cette récursion ouvre un nouvel axe de scaling au moment de l'inférence, complémentaire à la longueur du chain-of-thought. Plus on autorise de récursions, plus le Conductor peut affiner. Le compromis coût-performance devient un curseur que l'utilisateur tourne selon son besoin.</p>
+
+<h3>Les questions ouvertes</h3>
+
+<p>Plusieurs pistes restent à explorer. Que se passe-t-il si on remplace le Conductor 7B par un Conductor 32B ou 70B ? Les premières expériences avec un modèle 3B montrent qu'il converge sur la même sélection d'agents que le 7B, mais que ses sous-tâches sont moins finement formulées. Le scaling du Conductor lui-même est donc une piste prometteuse, distincte du scaling des workers.</p>
+
+<p>Que se passe-t-il avec des workers non-textuels ? Les auteurs évoquent l'extension à AlphaFold pour la biologie, ou à des modèles vision-langage-action pour la robotique. Le langage naturel comme interface universelle d'orchestration permettrait de combiner des expertises radicalement hétérogènes.</p>
+
+<p>Comment éviter la dépendance économique aux modèles propriétaires ? Le travail démontre qu'on peut beaucoup gagner en composant des modèles ouverts, mais les meilleures performances reposent encore sur GPT-5, Claude et Gemini. Si le Conductor devient un standard, l'enjeu géopolitique des API frontières ne fera que s'amplifier.</p>
+
+<p>Le code est public, les poids du modèle aussi. Pour une fois, un saut de performance comparable à une nouvelle génération de modèle ne nécessite pas un cluster de plusieurs millions de dollars. Il nécessite 2 GPU H100 pendant quelques heures, et l'idée d'apprendre à un petit modèle à demander de l'aide intelligemment.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

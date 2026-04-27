@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autoreason: Self-Refinement That Knows When to Stop — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Autoreason: Self-Refinement That Knows When to Stop</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le raffinement itératif par LLM est largement supposé améliorer les sorties, mais les preuves empiriques sont contradictoires. Les auteurs identifient trois modes d'échec structurels : le <strong>biais de prompt</strong> (un prompt critique fait halluciner des défauts), le <strong>scope creep</strong> (chaque passe étend le périmètre via le biais de verbosité des juges) et l'<strong>absence de retenue</strong> (les modèles refusent rarement de modifier). Ces trois mécanismes garantissent une dégradation progressive.</p>
+<p>La proposition <em>autoreason</em> reformule chaque itération comme un choix à trois branches : l'incumbent A inchangé, une révision adversariale B, et une synthèse AB. Des agents frais sans historique de prompt arbitrent en aveugle par décompte Borda, faisant du « ne rien faire » une option de premier rang. L'objectif explicite : combler l'écart entre capacité de génération et capacité d'auto-évaluation, plus large sur les modèles intermédiaires.</p>
+
+<h2>Méthodologie</h2>
+<p>Le harness sépare quatre rôles, chacun joué par un agent frais isolé : Critic (identifie des problèmes sans proposer de correctifs), Author B (révise sur base de la critique), Synthesizer (combine A et B avec étiquettes randomisées) et Judge Panel (3 juges in-loop, 7 pour comparaisons finales). Convergence à k=2 victoires consécutives de l'incumbent, choix calibré sur 17 trajectoires (k=1 termine prématurément dans 94% des cas, k=3 ne converge pas dans 24%).</p>
+<p>Températures fixées à 0.8 pour les auteurs et 0.3 pour les juges, sans ablation formelle. Les expériences couvrent cinq tâches de rédaction subjective, 150 problèmes CodeContests stratifiés par difficulté, cinq paliers de modèles (Llama 3.1 8B, Gemini 2.0 Flash, Haiku 3.5, Haiku 4.5, Sonnet 4 et 4.6) et des ablations sur le nombre de juges, l'agrégation, les composants et le biais de longueur.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur les tâches de rédaction itératives à 15 passes, autoreason gagne 3 tâches sur 5 (Borda moyen 27.8/35) contre critique-and-revise (22.4) et harsh critic (22.0). Les juges chain-of-thought triplent la vitesse de convergence sans changement architectural.</p>
+<p>L'effet de capacité du modèle est non monotone : Haiku 3.5 obtient un score parfait 42/42 sur trois tâches tandis que ses baselines de raffinement dégradent les sorties sous le single-pass non raffiné (critique-and-revise tombe à 16.3 vs 33.7). Sur Sonnet 4.6 en tâche non contrainte, autoreason chute en dernière position (Borda 7) car la synthèse AB domine systématiquement et empêche la convergence — phénomène corrigé par contrainte de scope (le même modèle remonte premier sur tâches contraintes : 30, 26, 31).</p>
+<p>Sur CodeContests, autoreason mène de 3-4 points sur Sonnet 4.6 (77% private vs 73% single-pass) et de 5-6 points sur Sonnet 4. Le mécanisme est la <strong>récupération après échec initial</strong> : sur 53 problèmes échoués au premier essai, autoreason en récupère 33 vs 23 pour single-pass (McNemar p=0.041, Cohen's h=0.32). Critique-and-revise surajuste aux tests visibles (32% sur les problèmes difficiles). Sur Haiku 4.5, l'avantage privé s'évanouit (60% pour toutes les stratégies) malgré +4pp en visible : le modèle a franchi le seuil d'auto-évaluation suffisante.</p>
+<p>L'évaluation à longueur contrôlée (troncature à 1465 mots) confirme que les gains ne sont pas un artefact de verbosité : autoreason gagne 21/28 comparaisons appariées, perdant uniquement face au baseline conservatif. L'ablation par composant montre que sans la révision B ou sans la synthèse AB, le tournoi s'effondre en 2-3 passes.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs assument quatre conditions de succès : vérification externe, périmètre contraint, raisonnement structuré, espace de décision suffisant. Ils reconnaissent ne pas pouvoir isoler la contribution causale de chacune avec le design expérimental actuel — honnêteté méthodologique appréciable.</p>
+<p>Les limites principales sont assumées explicitement : (1) une seule famille de modèles (Anthropic), limitant la généralisation ; (2) évaluation des tâches subjectives par juges LLM uniquement, sans validation humaine en aveugle ; (3) significativité statistique non testée à l'échelle agrégée pour la plupart des comparaisons code, seul le test de récupération apparié atteint p=0.041 ; (4) le concept de « scope » reste descriptif (budget mots, faits fixés) plutôt qu'opérationnellement formalisé. L'annexe E propose des proxies (nombre de contraintes, variance de longueur, décisivité des juges) mais reconnaît leur caractère post-hoc.</p>
+<p>Le coût compute est ~6× par passe versus baselines simples, partiellement compensé par le fait qu'autoreason utilise le compute « défensivement » (refus de régressions) tandis que critique-and-revise@90 dégrade en dessous de sa version 15 passes.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code, les prompts, les sorties expérimentales et les matériaux d'évaluation humaine en aveugle sont publics sur github.com/NousResearch/autoreason. L'annexe D détaille les identifiants de modèles précis, les hyperparamètres (température, max_tokens), le parsing des sorties juges, la randomisation des étiquettes et les critères d'arrêt. Les prompts exacts (Critic, Author B, Synthesizer, Judge baseline et CoT, baselines) figurent en annexe A. Reproductibilité de niveau exemplaire pour un preprint d'industrie.</p>
+
+<h2>Impact et applications</h2>
+<p>Le résultat le plus actionnable est le diagnostic du <strong>generation-evaluation gap</strong> comme variable structurante : la valeur d'un dispositif d'auto-raffinement dépend de l'écart entre la capacité du modèle à produire des candidats divers et sa capacité à les départager. Ce cadre explique pourquoi le même prompt peut améliorer Haiku 3.5 et dégrader Sonnet 4.6, et pourquoi Haiku 4.5 marque une transition observable empiriquement.</p>
+<p>Pour les déploiements réels, la recommandation pratique est claire : sur les modèles mid-tier (où vit l'essentiel de l'usage cost-conscious), autoreason apporte des gains qu'aucune baseline de raffinement n'égale ; sur les modèles frontière, privilégier les contraintes de scope et le raisonnement structuré ; sur les modèles faibles, investir d'abord dans la qualité de génération. Les juges CoT devraient être le défaut (gain 3× gratuit).</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail étend autoresearch de Karpathy aux domaines subjectifs et complète Self-Refine [Madaan et al. 2023] en y ajoutant le mécanisme de détection de régression qui lui manque. Il quantifie empiriquement la thèse de Huang et al. 2023 (« les LLM ne peuvent pas s'auto-corriger sans feedback externe ») via l'expérience CodeContests. L'analogie avec PSRO [Lanctot et al. 2017] est revendiquée comme lâche, sans prétention de garanties théoriques de la théorie des jeux ou du vote — modestie épistémique appropriée. La comparaison avec Verdict [Kalra & Tang 2025] est testée empiriquement et négative : la vérification hiérarchique confirme la préférence locale mais ne détecte pas le drift trajectoriel. Le rapprochement avec DSPy positionne le panel de juges comme signal d'optimisation au niveau output plutôt que prompt.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Diagnostic clair des modes d'échec structurels du self-refinement, problème réel et bien motivé.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Triple validation (rédaction, code, scaling), ablations systématiques (composants, juges, agrégation, longueur), contrôle best-of-N.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>5 tâches de rédaction insuffisantes pour conclusions générales, 150 problèmes code corrects, multi-seed n=3 limité.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Borda LLM-as-judge dominant pour rédaction (biais systématiques admis), tests objectifs CodeContests apportent du contrepoids.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Étiquettes randomisées, agents frais, juges en aveugle, évaluation à longueur contrôlée, ablation des juges.</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Code public, prompts complets, identifiants de modèles précis, hyperparamètres documentés.</td></tr>
+<tr><td>Transparence des limites</td><td>5</td><td>Section limitations honnête, conditions présentées comme hypothèses, single-model-family explicitement reconnu.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Cadre conceptuel utile (generation-evaluation gap) mais s'inscrit dans une lignée existante (autoresearch, Self-Refine).</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

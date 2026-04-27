@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thinking Without Words: Efficient Latent Reasoning with Abstract Chain-of-Thought — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Thinking Without Words: Efficient Latent Reasoning with Abstract Chain-of-Thought</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les modèles de langage apprennent à penser sans mots</h2>
+
+<p>Un modèle de langage qui résout un problème de mathématiques produit aujourd'hui des centaines, parfois des milliers de tokens de raisonnement avant de donner sa réponse. Sur le benchmark MATH-500, le modèle Qwen3-8B après fine-tuning génère en moyenne 1671 tokens par problème. Chaque token coûte du temps de calcul, de la latence, et de l'énergie. Les chercheurs d'IBM Research AI viennent de proposer une alternative radicale : remplacer ces longues chaînes de raisonnement verbal par des séquences courtes de symboles abstraits, sans signification linguistique. Le résultat est troublant. Le modèle obtient des performances équivalentes, parfois supérieures, en utilisant jusqu'à 11,6 fois moins de tokens.</p>
+
+<p>L'article <em>Thinking Without Words: Efficient Latent Reasoning with Abstract Chain-of-Thought</em> de Keshav Ramji, Tahira Naseem et Ramón Fernandez Astudillo s'attaque à un paradoxe central de l'IA générative actuelle. Pour bien réfléchir, les modèles doivent verbaliser leur raisonnement étape par étape. Mais cette verbalisation explose les coûts d'inférence et n'est même pas garantie d'être fidèle à ce que le modèle calcule réellement. Et si le langage naturel n'était pas le bon support pour le raisonnement machine ?</p>
+
+<h2>Le problème : la verbalisation coûte cher et ment parfois</h2>
+
+<p>La technique du <strong>Chain-of-Thought</strong> (CoT) a transformé les capacités de raisonnement des grands modèles de langage. L'idée est simple : plutôt que de demander la réponse directement, on demande au modèle de dérouler son raisonnement étape par étape avant de conclure. Cette pratique, popularisée en 2022, a permis des gains massifs sur les problèmes mathématiques, le raisonnement logique et la résolution de questions complexes.</p>
+
+<p>Le coût est cependant brutal. Un modèle qui pense à voix haute génère des traces de raisonnement qui peuvent atteindre 9000 tokens sur des problèmes difficiles comme AIME. À chaque token correspond un passage forward dans le réseau de neurones, donc du temps GPU. Pour les applications déployées en production, cette verbosité se traduit directement en facture cloud et en latence utilisateur. Lors de l'entraînement par renforcement, où le modèle génère des milliers de variantes pour apprendre, la consommation devient prohibitive.</p>
+
+<p>Un second problème, moins visible mais plus dérangeant, concerne la <strong>fidélité</strong> de ces raisonnements verbalisés. Plusieurs travaux ont montré que ce que le modèle écrit dans sa chaîne de pensée ne correspond pas toujours à ce qu'il calcule réellement en interne. Le modèle peut produire un raisonnement apparemment cohérent qui justifie a posteriori une réponse arrivée par d'autres chemins. La verbalisation devient alors une mise en scène plutôt qu'une fenêtre sur le calcul.</p>
+
+<p>Enfin, l'expérience DeepSeek-R1-Zero a révélé un fait contre-intuitif : un modèle peut atteindre des performances de raisonnement excellentes en mélangeant les langues dans ses chaînes de pensée, en produisant un texte parfois illisible pour un humain. La performance et la lisibilité sont séparables. Cette observation a ouvert une question pratique. Si la lisibilité humaine n'est pas nécessaire, pourquoi continuer à payer le coût du langage naturel ?</p>
+
+<h2>La méthode vulgarisée : un alphabet privé pour penser</h2>
+
+<p>Les chercheurs proposent d'introduire dans le vocabulaire du modèle un ensemble de tokens entièrement nouveaux, qu'ils appellent <em>tokens abstraits</em>. Concrètement, on ajoute 64 symboles inventés au tokeniseur, nommés <code>&lt;TOKEN_A&gt;</code>, <code>&lt;TOKEN_B&gt;</code> et ainsi de suite. Ces tokens n'ont aucun sens linguistique. Ils ne correspondent à aucun mot, aucune syllabe, aucun concept préexistant. Le modèle est ensuite entraîné à les utiliser comme une sorte de bloc-notes interne avant de produire sa réponse finale.</p>
+
+<p>Plutôt qu'écrire <em>« Étape 1 : je pose l'équation. Étape 2 : je factorise. Étape 3 : j'applique la formule quadratique »</em>, le modèle produit une séquence du type <code>&lt;TOKEN_R&gt; &lt;TOKEN_C&gt; &lt;TOKEN_M&gt; &lt;TOKEN_BA&gt; &lt;TOKEN_Q&gt;</code> entre deux délimiteurs <code>&lt;beginabstract&gt;</code> et <code>&lt;endabstract&gt;</code>, puis enchaîne avec sa réponse. Le raisonnement existe toujours, mais il est compressé dans un alphabet privé que le modèle a inventé pour son usage personnel.</p>
+
+<h3>Le problème du démarrage à froid</h3>
+
+<p>Une difficulté majeure se présente immédiatement. Ces tokens nouveaux ont des embeddings initialisés au hasard. Pour le modèle, ils ne signifient rien. Si on lance simplement un entraînement par renforcement en espérant que le modèle découvre tout seul comment les utiliser, ça ne fonctionne pas. Les expérimentations montrent que cette approche dite <em>cold-start RL</em> produit des résultats inférieurs au modèle de base, sans aucune amélioration.</p>
+
+<p>L'astuce des chercheurs est un protocole en deux étapes qu'ils appellent <strong>warm-up par itération de politique</strong>. L'idée tient en une analogie simple. Imaginez quelqu'un qui apprend à prendre des notes ultra-courtes pendant un cours magistral. Au début, on lui donne le cours complet et ses notes en parallèle, en lui demandant de reformuler le cours uniquement à partir de ses notes condensées. Le système est forcé de faire passer toute l'information utile par le canal étroit des notes. Une fois cette compétence acquise, on retire le cours complet et la personne doit produire ses notes directement à partir de l'énoncé seul. Puis on recommence.</p>
+
+<p>Techniquement, la première phase s'appelle <em>bottlenecked SFT</em>. Le modèle voit l'énoncé, la chaîne de raisonnement verbale complète, ses tokens abstraits, et la réponse finale. Mais un masque d'attention soigneusement conçu force la réponse finale à ne lire que les tokens abstraits, jamais le raisonnement verbal. Ce dernier sert uniquement à façonner les représentations internes des tokens abstraits. La théorie de l'information assure que toute dépendance entre la question et la réponse doit nécessairement passer par ce goulot d'étranglement.</p>
+
+<p>La seconde phase, dite de <em>self-distillation</em>, jette le raisonnement verbal et entraîne le modèle à produire directement sa séquence abstraite à partir de l'énoncé. Ces deux phases s'alternent sur trois itérations. Une fois ce warm-up terminé, on lance une phase d'apprentissage par renforcement classique avec GRPO, où un modèle de récompense (gpt-oss-20b dans leurs expériences) note la qualité des réponses produites.</p>
+
+<h2>Résultats clés : performances équivalentes, dix fois moins de tokens</h2>
+
+<p>Les chiffres sont parlants. Sur MATH-500, Qwen3-8B avec Abstract-CoT atteint 90,8% de précision contre 92,6% pour la version SFT+RL classique. Une différence minime. Mais le modèle utilise 144 tokens en moyenne au lieu de 1671. C'est un facteur 11,6 de réduction. Sur AlpacaEval, qui mesure la qualité du suivi d'instructions générales, Abstract-CoT obtient un win-rate de 60,8% contre 58,4% pour la baseline verbale, en utilisant moitié moins de tokens. Sur HotpotQA, qui teste le raisonnement multi-étapes, le score F1 atteint 58,8% contre 58,1%, avec quatre fois moins de tokens.</p>
+
+<p>Les bénéfices se confirment sur les benchmarks plus difficiles. Sur GPQA-Diamond, qui contient des questions de niveau doctorat en sciences, Abstract-CoT atteint 50,5% de précision contre 51,5% pour la baseline verbale, avec une compression de 7,9x sur les tokens. Sur AIME 2025, compétition de mathématiques élite, le modèle obtient 24,4% contre 25,6%, avec environ 2,7 fois moins de tokens.</p>
+
+<p>Les chercheurs ont validé la méthode sur trois familles de modèles : Qwen3-8B, Qwen3-4B et Granite 4.0 Micro. Les résultats se reproduisent. Une expérience supplémentaire avec Qwen3-32B confirme que la technique passe à l'échelle sur des modèles plus grands.</p>
+
+<h3>Une « langue de raisonnement » qui émerge</h3>
+
+<p>L'observation la plus fascinante de l'article concerne ce qui se passe pendant l'entraînement par renforcement. Au départ, les 64 tokens abstraits sont utilisés à fréquence à peu près uniforme. Au fil de l'entraînement, la distribution dérive vers une <strong>loi de puissance</strong>, un pattern statistique qu'on retrouve dans toutes les langues humaines : quelques mots très fréquents, beaucoup de mots rares. C'est la fameuse loi de Zipf qui décrit la distribution des mots dans n'importe quel corpus textuel.</p>
+
+<p>Un token spécifique, <code>&lt;TOKEN_F&gt;</code>, devient massivement dominant. Les chercheurs interprètent cela comme l'émergence d'un vocabulaire structuré où certains symboles fonctionnent comme des concepts génériques réutilisables, tandis que d'autres sont réservés à des situations spécifiques. Le modèle a inventé sa propre langue de raisonnement, sans qu'on lui ait jamais demandé.</p>
+
+<p>Pour vérifier que cette langue avait une véritable structure compositionnelle, les chercheurs ont mené des tests de permutation. Ils prennent une séquence de tokens abstraits générée par le modèle, mélangent l'ordre des tokens, et lui demandent de produire une réponse à partir de cette version permutée. Si la séquence n'avait aucun sens, l'ordre ne devrait pas changer le résultat. Or les performances chutent de 4 à 8 points sur MATH-500. La grammaire interne existe.</p>
+
+<h2>Implications pratiques : repenser le coût de l'inférence</h2>
+
+<p>La signification industrielle de ce travail est directe. Une compression d'un facteur dix sur les tokens de raisonnement transforme l'économie du déploiement des modèles de raisonnement. Pour un service qui traite des millions de requêtes par jour avec des modèles de raisonnement, la facture cloud se voit divisée d'autant. La latence perçue par l'utilisateur passe de plusieurs secondes à des temps quasi-instantanés.</p>
+
+<p>Le bénéfice est plus marquant encore lors de l'entraînement par renforcement. Cette phase exige de générer des milliers de variantes par requête pour évaluer différentes politiques. Si chaque variante coûte dix fois moins en compute, la phase RL devient soudainement abordable pour des laboratoires plus modestes. La barrière à l'entrée pour développer ses propres modèles de raisonnement baisse mécaniquement.</p>
+
+<p>Un point souvent négligé concerne la <strong>robustesse à la troncature</strong>. Si on coupe brutalement le raisonnement à 32 tokens, un modèle entraîné en CoT verbal voit ses performances s'effondrer de 11,8 points sur MATH-500. Abstract-CoT ne perd que 6 points. Le modèle ayant appris à raisonner dans un format compact, il dégrade plus gracieusement quand on lui impose des contraintes de budget. Pour les applications avec contraintes de temps de réponse fortes, c'est un avantage considérable.</p>
+
+<h3>La question délicate de l'auditabilité</h3>
+
+<p>Tout n'est pas rose. Un raisonnement verbalisé en français ou en anglais reste lisible par un humain. Si le modèle dérape, prend une décision biaisée, ou produit un raisonnement spurieux, on peut le détecter. Les tokens abstraits ferment cette fenêtre. Personne ne peut lire <code>&lt;TOKEN_F&gt; &lt;TOKEN_BA&gt; &lt;TOKEN_M&gt;</code> et dire <em>« attention, le modèle est en train de faire une erreur de logique »</em>.</p>
+
+<p>Cette question de la <strong>monitorabilité du Chain-of-Thought</strong> est devenue centrale dans la recherche sur la sécurité des IA. Plusieurs équipes, dont des chercheurs d'Anthropic, OpenAI et DeepMind, ont récemment publié un appel commun à préserver cette propriété de lisibilité. Les chaînes de pensée constituent l'un des rares mécanismes d'audit dont nous disposons sur ce que ces systèmes sont en train de calculer. Abstract-CoT propose un compromis intéressant : la trace existe, elle est de longueur bornée, elle est analysable statistiquement (les chercheurs montrent qu'on peut étudier les distributions de tokens, les permutations, les troncatures), mais elle n'est pas directement lisible.</p>
+
+<p>Les auteurs reconnaissent ce compromis. Ils argumentent que dans des contextes où la lisibilité humaine n'est pas requise (calculs numériques internes, traitement par lots automatisés, services techniques), le gain en efficacité justifie cette opacité. Pour des applications à fort enjeu (médecine, justice, éducation), une approche hybride mêlant tokens verbaux et abstraits semble plus prudente.</p>
+
+<h2>Pour aller plus loin : les questions ouvertes</h2>
+
+<p>Plusieurs pistes de recherche émergent naturellement de ce travail. La première concerne la <strong>structure hiérarchique</strong> du vocabulaire abstrait. Pour l'instant, les 64 tokens sont indépendants et symétriques. On peut imaginer une architecture où certains tokens fonctionnent comme des « sous-routines » réutilisables, encapsulant des étapes de raisonnement courantes. Cette modularité pourrait permettre des vocabulaires beaucoup plus grands, jusqu'à des milliers de symboles, avec une efficacité préservée.</p>
+
+<p>Une seconde question concerne l'<strong>adaptation au budget</strong>. Le modèle actuel utilise une longueur de séquence fixe (jusqu'à 128 tokens). Des problèmes triviaux n'ont pas besoin de tant. Des problèmes complexes pourraient en nécessiter davantage. Apprendre au modèle à allouer dynamiquement son budget de raisonnement selon la difficulté perçue est un axe naturel d'extension.</p>
+
+<p>L'<strong>interprétabilité mécaniste</strong> de cette langue émergente reste à explorer. Les chercheurs montrent qu'une distribution Zipfienne s'installe et que des effets compositionnels existent, mais que représentent réellement ces tokens ? Y a-t-il un token pour « commencer une déduction », un autre pour « inverser une hypothèse », un autre pour « combiner deux résultats » ? Une analyse fine pourrait transformer cette boîte noire en un dictionnaire compréhensible, et donc résoudre partiellement le problème d'auditabilité.</p>
+
+<p>La généralisation entre tâches mérite aussi attention. Le modèle entraîné développe une langue spécifique à son entraînement. Que se passe-t-il quand on l'applique à un domaine inconnu ? Les tokens conservent-ils leur sémantique implicite ? Faut-il un vocabulaire universel ou des vocabulaires spécialisés par domaine ? Les expériences couvrent les mathématiques, le suivi d'instructions et la question-réponse multi-saut, mais le code, le dialogue et le raisonnement scientifique pourraient révéler des comportements différents.</p>
+
+<p>Enfin, la convergence entre cette ligne de recherche et les approches de <em>raisonnement continu</em> comme Coconut ou CODI pose une question architecturale plus profonde. Faut-il rester dans l'espace discret des tokens, basculer vers des représentations vectorielles continues, ou combiner les deux ? Abstract-CoT défend la voie discrète parce qu'elle est plus stable à entraîner et plus facile à analyser. D'autres laboratoires défendent les espaces continus pour leur expressivité supérieure. Le bon compromis n'est pas tranché.</p>
+
+<p>Le travail d'IBM Research signale au minimum que la verbalisation en langage naturel n'est qu'un point de design parmi d'autres pour les modèles de raisonnement. Pendant trois ans, l'industrie a optimisé cette approche en supposant qu'elle était nécessaire. Elle ne l'est pas. Un alphabet privé de 64 symboles, appris en post-training à partir d'un modèle déjà instruit, suffit à reproduire la performance avec un dixième du coût. Ce résultat va probablement déclencher une vague d'expérimentations chez tous les acteurs qui paient leurs factures GPU à la fin du mois.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

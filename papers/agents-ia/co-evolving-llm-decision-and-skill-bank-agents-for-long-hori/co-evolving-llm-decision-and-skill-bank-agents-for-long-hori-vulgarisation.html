@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Co-Evolving LLM Decision and Skill Bank Agents for Long-Horizon Tasks — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Co-Evolving LLM Decision and Skill Bank Agents for Long-Horizon Tasks</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA apprend ses propres recettes en jouant</h2>
+
+<p>Un modèle de 8 milliards de paramètres bat GPT-5.4 de 25% sur des jeux comme Tetris, 2048 ou Super Mario Bros. La performance est suspecte tant l'écart de taille est massif : GPT-5.4 pèse plusieurs centaines de fois plus lourd. Le truc tient en une idée simple : au lieu de faire raisonner un gros cerveau à chaque coup, les chercheurs ont appris à un petit modèle à se constituer son propre carnet de recettes au fil des parties, puis à piocher dedans quand il doit décider.</p>
+
+<p>L'article, signé par une équipe associant l'Université du Maryland, l'USC et Mohamed bin Zayed University of AI, s'appelle COS-PLAY. Il propose un cadre où deux agents coopèrent : l'un joue, l'autre observe et range des compétences réutilisables dans une bibliothèque. Les deux s'améliorent en boucle. Le résultat tient sur un GPU domestique et soulève une question sérieuse pour toute l'industrie : faut-il vraiment des modèles toujours plus gros, ou faut-il surtout leur donner une mémoire procédurale propre ?</p>
+
+<h2>Pourquoi les LLM échouent sur les tâches longues</h2>
+
+<p>Un grand modèle de langage est excellent pour répondre à une question isolée. Lui demander de jouer 200 coups d'affilée à Tetris, c'est une autre affaire. À chaque coup, le modèle redécouvre le contexte, oublie ce qui a marché, refait les mêmes erreurs. Les récompenses arrivent tard — on ne sait pas qu'on a pris une mauvaise décision avant trente coups plus loin. Et le modèle n'a aucun moyen de capitaliser : la partie suivante repart à zéro.</p>
+
+<p>Les chercheurs résument le diagnostic ainsi : les LLM manquent d'un mécanisme pour <em>découvrir, conserver et réutiliser</em> des compétences structurées d'une partie à l'autre. C'est exactement ce qu'un joueur humain fait sans y penser. Au bout de dix parties de 2048, vous avez intégré des heuristiques : « toujours garder la plus grosse case dans un coin », « ne pas swiper vers le haut sauf urgence ». Ces règles ne sont écrites nulle part, mais elles guident chaque décision.</p>
+
+<p>Les approches précédentes contournaient le problème de deux manières. Soit on entraînait le modèle pendant des milliers d'épisodes avec du renforcement classique — coûteux et instable. Soit on lui injectait des compétences rédigées par des humains ou distillées d'un modèle plus puissant — efficace mais peu généralisable. COS-PLAY explore une troisième voie : laisser l'agent extraire ses compétences tout seul à partir de ses propres rollouts non annotés.</p>
+
+<h2>Deux agents qui se parlent</h2>
+
+<p>Le système se compose de trois éléments : un agent décideur, un agent gestionnaire de compétences, et la bibliothèque de compétences elle-même. Imaginez un cuisinier débutant et son chef. Le débutant cuisine, le chef regarde ce qui a marché, et range chaque technique réussie dans un carnet de recettes. La fois suivante, le débutant consulte le carnet avant de se lancer.</p>
+
+<p>L'agent décideur fait trois choses à chaque étape. Il regarde l'état du jeu. Il interroge la bibliothèque pour récupérer une ou plusieurs compétences pertinentes (« stabiliser la pile en Tetris », « explorer les frontières en Diplomacy »). Il met à jour son intention courante — une phrase qui résume son objectif immédiat — puis exécute une action concrète, conditionnée par cette compétence active.</p>
+
+<p>L'agent gestionnaire entre en scène après chaque épisode. Il découpe la trajectoire en segments cohérents, identifie les passages qui ressemblent à des compétences déjà connues, repère ceux qui révèlent des comportements nouveaux, et met à jour la bibliothèque. Une compétence qui n'a jamais servi est retirée. Deux compétences trop proches sont fusionnées. Une compétence trop large est scindée en plusieurs.</p>
+
+<h3>Anatomie d'une compétence</h3>
+
+<p>Chaque compétence stockée n'est pas un bout de code, mais un petit document structuré avec cinq champs. Le <strong>résumé</strong> dit à quoi sert la compétence. La <strong>précondition</strong> décrit quand elle s'applique. Le <strong>plan</strong> esquisse la séquence d'étapes. Les <strong>critères de succès et d'abandon</strong> indiquent quand arrêter. Le <strong>contrat</strong> liste les changements d'état que la compétence est censée produire.</p>
+
+<p>L'exemple du papier en Diplomacy est parlant. Une compétence baptisée EXPLORE contient en substance : « But : reconnaître les frontières et tester les intentions des voisins. Quand : début de partie ou perte de visibilité. Comment : observer, évaluer, s'engager. Succès : au moins trois intentions de voisins classifiées. Abandon : attaque sur les centres de départ. Contrat : ajout d'informations frontalières, suppression d'intentions inconnues. »</p>
+
+<p>Cette structure imite la manière dont les humains transmettent un savoir-faire dans un manuel. Elle a un avantage technique majeur : elle est requêtable. Quand l'agent décideur demande « quelles compétences correspondent à mon état actuel ? », le système compare les préconditions et les contrats aux observables du jeu. Pas besoin d'embeddings flous : une partie du matching est purement symbolique.</p>
+
+<h2>Le pipeline de découverte</h2>
+
+<p>L'agent gestionnaire travaille en quatre étapes pour transformer une partie de jeu en compétences exploitables. La logique mérite d'être détaillée, parce que c'est là que se joue la véritable innovation.</p>
+
+<p><strong>Proposition de frontières.</strong> Sur les vingt coups d'une partie, où sont les transitions ? Le système calcule un score local pour chaque pas de temps, en cherchant des signaux comme un changement de prédicat (« Italie devient hostile »), une bascule d'intention (« scout border » devient « take Serbia »), un pic de récompense, ou un passage entre exécution d'action et sélection de compétence. Les pas de temps avec un score élevé deviennent des candidats de coupure.</p>
+
+<p><strong>Inférence de segmentation.</strong> Parmi ces candidats, lesquels gardent ? Le système choisit le sous-ensemble qui décrit le mieux la trajectoire comme une suite de segments cohérents. Chaque segment est ensuite comparé aux compétences existantes : si l'overlap est fort, on lui colle l'étiquette correspondante. Sinon, on le marque comme nouvelle compétence potentielle.</p>
+
+<p><strong>Apprentissage des contrats.</strong> Pour chaque compétence, le système agrège les changements d'état observés à travers toutes ses instances. Seuls les effets <em>consensuels</em> — qui apparaissent dans la majorité des cas — sont conservés. Un effet rare est traité comme du bruit. Le contrat final est ensuite vérifié : il ne sera intégré à la bibliothèque que si son taux de succès dépasse un seuil.</p>
+
+<p><strong>Maintenance.</strong> Cinq opérations possibles : raffiner un contrat existant, matérialiser une compétence émergente du buffer, fusionner deux quasi-doublons, scinder une compétence trop hétérogène, retirer une compétence inutilisée. C'est de la curation continue, pas un dump automatique.</p>
+
+<h2>Les chiffres qui comptent</h2>
+
+<p>Sur six environnements de jeu, COS-PLAY adapté à un Qwen3-8B obtient en moyenne 25,1% de récompense en plus que GPT-5.4 sur les jeux solo. À 2048, il marque 1589 points contre 1126 pour GPT-5.4. À Tetris, 510 contre 458. Sur Super Mario Bros, 948 contre 752. L'écart n'est pas marginal et reste stable sur 16 évaluations par jeu.</p>
+
+<p>Sur les jeux multi-joueurs sociaux comme Avalon (déduction sociale) et Diplomacy (négociation et alliances), le tableau est plus nuancé. COS-PLAY perd 1% de taux de victoire à Avalon contre Gemini 3.1 Pro, mais gagne 8,8% sur Diplomacy. Pour un modèle 15 fois plus petit, c'est remarquable.</p>
+
+<p>Le chiffre qui intéresse les ingénieurs : <strong>25 itérations d'entraînement</strong> suffisent. Là où les approches RL classiques en demandent des centaines, COS-PLAY converge vite. Le coût d'adaptation à un nouveau jeu reste donc compatible avec un cycle de développement réaliste.</p>
+
+<p>Côté réutilisabilité, les nombres révèlent aussi quelque chose d'intéressant. Sur Diplomacy, la bibliothèque finale contient 64 compétences réparties en 5 catégories, avec en moyenne 6,52 clauses par compétence. Le coefficient de Gini des instances (0,52) indique une distribution équilibrée : les compétences sont réutilisées, pas accumulées comme des trophées. Sur 121 compétences découvertes au total, 53 ont été retirées par le mécanisme de curation. La bibliothèque active reste autour de 55-70 compétences, signe que le système trie activement.</p>
+
+<h2>Pourquoi la co-évolution change la donne</h2>
+
+<p>L'étude d'ablation est probablement la partie la plus pédagogique du papier. Les chercheurs ont testé chaque ingrédient isolément. Un agent SFT sans compétences ? 409 points de moyenne. Un agent SFT avec la première bibliothèque figée ? 465. Un agent GRPO sans compétences ? 359. Un agent GRPO avec une bibliothèque obsolète ? 305. Le pipeline complet : 924.</p>
+
+<p>La leçon est claire. Aucun composant pris seul ne fait l'affaire. Les compétences sans entraînement adapté restent du décor. L'entraînement sans compétences est instable face à des récompenses parcimonieuses. Une bibliothèque figée pendant que la politique évolue devient un poids mort, parce que les compétences récupérées ne correspondent plus à la distribution d'états visités. Le secret tient dans le fait que la politique et la bibliothèque <em>bougent ensemble</em>.</p>
+
+<p>Cette logique éclaire un débat plus large sur les agents IA. La tentation est de penser une bibliothèque de compétences comme un asset statique qu'on construit une fois pour toutes. COS-PLAY montre que c'est précisément le mauvais cadre. Les compétences utiles dépendent du niveau du joueur. Un débutant a besoin d'heuristiques basiques, un expert de patterns avancés. Si la bibliothèque ne suit pas, elle freine l'agent au lieu de l'aider.</p>
+
+<h2>Une analyse qualitative qui parle</h2>
+
+<p>L'article inclut une comparaison étape par étape entre GPT-5.4 et COS-PLAY sur Diplomacy joué dans le rôle de l'Autriche. GPT-5.4 fonce sur les Balkans dès le premier tour : il atteint 5 centres de ravitaillement au coup 2, puis stagne pendant 13 tours sans en gagner un seul. Il jongle entre 8 étiquettes d'intention différentes (« Pressure Serbia », « Secure Balkan », « Defensive Line »…) qui se chevauchent toutes.</p>
+
+<p>COS-PLAY, lui, passe ses quatre premiers tours en mode EXPLORE : il bouge ses pions pour <em>tester</em> les intentions des voisins avant de s'engager. Il rate la première vague de centres mais récolte de l'information. Au coup 5, le système bascule mécaniquement vers SETUP. Au coup 11, vers DEFEND. Une compétence de coordination navale (F APU S F ION) revient 12 fois sur 20 coups : c'est un pattern stable que l'agent a appris à exploiter.</p>
+
+<p>Résultat à la fin : COS-PLAY finit aussi à 7 centres, mais sans jamais en perdre un seul. GPT-5.4, dans 27% des parties, voit ses positions s'effondrer parce que sa compétence « Defensive Line » reste active 12 à 15 coups d'affilée sans plan de récupération. Le squelette temporel imposé par les compétences agit comme un garde-fou : il empêche l'agent de s'enferrer dans une stratégie qui ne marche pas.</p>
+
+<h2>Ce que ça change pour la pratique</h2>
+
+<p>Trois implications concrètes pour les équipes qui construisent des agents IA.</p>
+
+<p>D'abord, la taille du modèle de base n'est pas l'unique levier. Un Qwen3-8B avec une bibliothèque de compétences vivante surpasse des modèles frontier sur des tâches longues. Pour beaucoup d'applications réelles — agents de support, automatisation de workflows, contrôle de robots — un petit modèle bien équipé d'une mémoire procédurale peut suffire. Le coût d'inférence en est divisé par dix ou plus.</p>
+
+<p>Ensuite, l'architecture des skills devient un objet de design à part entière. Le format proposé (résumé, précondition, plan, critères, contrat) ressemble à ce que Claude Code et d'autres harnesses d'agents commencent à formaliser. Le papier suggère que la structure du skill compte : un blob de texte ne suffit pas, il faut des champs requêtables et un contrat vérifiable.</p>
+
+<p>Enfin, la curation automatique est sous-estimée. Sur 121 compétences découvertes, 53 ont été retirées. Beaucoup d'équipes accumulent des prompts, des outils, des macros, sans jamais nettoyer. COS-PLAY normalise une boucle où ce qui ne sert pas disparaît. C'est le genre d'hygiène que les bibliothèques de skills devraient adopter par défaut.</p>
+
+<h2>Ce qui reste ouvert</h2>
+
+<p>Le papier reconnaît plusieurs limites. Toutes les observations sont converties en états textuels structurés. Pour des environnements visuels riches — un agent qui contrôle une interface web, un robot qui analyse une caméra — cette compression perd de l'information. L'extension multi-modale est annoncée comme la prochaine étape.</p>
+
+<p>Le transfert entre domaines reste à prouver. Une compétence apprise sur Diplomacy est-elle utile sur Avalon ? Les chiffres suggèrent que non : les bibliothèques sont entraînées par jeu. La question de savoir si certaines compétences abstraites (« coordonner deux unités », « tester l'intention d'un adversaire ») peuvent migrer entre tâches reste largement ouverte.</p>
+
+<p>Une autre piste concerne le mode d'échec dominant de COS-PLAY : la stagnation. Dans 5 épisodes sur 28, l'agent reste coincé à 3 centres parce qu'il sélectionne toujours la même action de soutien. Le filet de sécurité fonctionne — il ne perd rien — mais l'exploration s'enraye. Trouver un signal de diversité d'action, sans casser la stabilité que les compétences apportent, sera un équilibre délicat.</p>
+
+<p>Plus largement, COS-PLAY illustre une tendance que beaucoup d'équipes commencent à percevoir. Les progrès des agents ne viendront pas seulement de modèles plus gros, mais de structures externes — mémoires, bibliothèques, contrats — qui leur donnent une continuité d'apprentissage entre épisodes. Le pari est que cette architecture devienne aussi standard, dans cinq ans, que l'attention l'est devenue dans le transformer.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

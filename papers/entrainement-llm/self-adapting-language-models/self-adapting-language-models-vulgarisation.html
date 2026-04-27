@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Adapting Language Models — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Self-Adapting Language Models</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un modèle de langage apprend à se réécrire lui-même</h2>
+
+<p>33,5 % de bonnes réponses avant entraînement, 47 % après. Entre les deux, le modèle n'a pas vu une seule donnée annotée par un humain. Il a écrit ses propres notes de cours, s'est entraîné dessus, et a vérifié seul si ces notes l'avaient rendu plus performant. C'est l'expérience décrite dans <em>Self-Adapting Language Models</em>, publiée à NeurIPS 2025 par une équipe du MIT.</p>
+
+<p>L'idée tient en une phrase : transformer un LLM figé après son pré-entraînement en un système capable de modifier ses propres poids en réponse à de nouvelles informations. Pas via un module externe, pas via un réseau auxiliaire — directement à travers ce que le modèle sait déjà faire de mieux : générer du texte.</p>
+
+<h2>Le mur de la donnée et l'inertie des modèles</h2>
+
+<p>Un grand modèle de langage moderne sort de l'usine avec ses centaines de milliards de paramètres figés. Quand on veut lui apprendre quelque chose de nouveau — un fait récent, une compétence métier, une terminologie spécialisée — on a deux options. Soit on glisse l'information dans la fenêtre de contexte à chaque requête (in-context learning), soit on procède à un fine-tuning sur des données préparées par des humains. Aucune des deux ne ressemble à de l'apprentissage continu réel.</p>
+
+<p>Le problème devient plus aigu quand on regarde les chiffres de Villalobos et al. : à ce rythme, les modèles frontière auront avalé l'intégralité du texte humain disponible sur le web d'ici 2028. Le réservoir de données fraîches va s'assécher. Continuer à scaler exigera autre chose qu'empiler des téraoctets de Common Crawl supplémentaires.</p>
+
+<p>La piste explorée par les auteurs s'inspire d'une observation banale du comportement humain. Un étudiant qui prépare un examen ne relit pas passivement le manuel. Il prend des notes, reformule, dessine des schémas, transforme l'information brute dans un format adapté à son propre cerveau. Cette assimilation active n'a aucun équivalent dans le pipeline d'entraînement classique d'un LLM.</p>
+
+<h2>Le défi : apprendre à apprendre à partir de soi-même</h2>
+
+<p>Donner à un modèle la capacité de générer ses propres données d'entraînement n'est pas nouveau. Plusieurs travaux récents l'ont fait, en demandant au modèle de produire des reformulations, des implications logiques ou des paires question-réponse à partir d'un texte source, puis en faisant du fine-tuning sur ce contenu synthétique. Les gains sont réels mais limités : la qualité de ces données dépend entièrement du prompt utilisé et des heuristiques de génération, qui sont fixes et choisies à la main.</p>
+
+<p>La question posée par les auteurs va plus loin : peut-on entraîner un modèle à <em>découvrir lui-même</em> la meilleure façon de transformer une information avant de l'avaler ? Pas un prompt fixe imposé par l'humain, mais une stratégie de réécriture optimisée pour le succès final.</p>
+
+<p>Le verrou technique tient en deux points. D'abord, un modèle qui décide comment se réécrire choisit ses propres données d'entraînement — toute erreur de jugement se propage dans ses poids. Ensuite, le signal de récompense est lent et coûteux : pour savoir si une reformulation est bonne, il faut effectivement entraîner le modèle dessus puis le tester sur une tâche aval. Trente à quarante-cinq secondes par évaluation, contre quelques millisecondes pour un signal RLHF classique.</p>
+
+<h2>SEAL : deux boucles imbriquées</h2>
+
+<p>L'architecture proposée, baptisée SEAL (Self-Adapting LLMs), s'organise autour de deux boucles d'optimisation imbriquées.</p>
+
+<p>La boucle interne ressemble à ce qu'on connaît déjà du test-time training. Le modèle reçoit un nouveau contenu — un passage de texte, des exemples few-shot — et produit ce que les auteurs appellent un <strong>self-edit</strong> : une génération en langage naturel qui décrit comment se mettre à jour. Pour un passage factuel, ce sera une liste d'implications dérivées du texte. Pour une tâche ARC (raisonnement abstrait), ce sera un fichier de configuration qui spécifie quelles augmentations de données appliquer, quel taux d'apprentissage utiliser, combien d'époques d'entraînement effectuer. Le modèle s'entraîne ensuite sur ce self-edit via un fine-tuning léger basé sur LoRA, et on évalue le résultat sur la tâche cible.</p>
+
+<p>La boucle externe est celle qui change tout. Le score obtenu en aval devient le signal de récompense d'une procédure d'apprentissage par renforcement. Si le self-edit a amélioré les performances, sa génération est renforcée ; sinon, elle est ignorée. Au fil des itérations, le modèle apprend à produire des reformulations de plus en plus utiles à son propre apprentissage.</p>
+
+<p>Pour stabiliser l'entraînement, les auteurs ont écarté les méthodes RL classiques type PPO ou GRPO, qu'ils ont trouvées instables dans ce contexte. Ils utilisent ReSTEM, une approche plus simple qui s'apparente à du <em>filtered behavior cloning</em> : on génère plusieurs candidats, on garde uniquement ceux qui marchent, on fait du fine-tuning supervisé dessus. Pas d'optimisation directe d'un avantage, juste une boucle EM (expectation-maximization) qui renforce ce qui fonctionne.</p>
+
+<h3>Une analogie pour le mécanisme</h3>
+
+<p>Imaginez un étudiant qui dispose d'un manuel et d'un examen. Il essaie cinq façons de prendre des notes : un résumé linéaire, une liste de questions-réponses, un schéma conceptuel, des exemples pratiques, des analogies. Il étudie chaque version, passe l'examen cinq fois, et observe laquelle lui a donné les meilleurs résultats. La fois suivante, sur un autre chapitre, il favorise le format gagnant. Petit à petit, il développe un style de prise de notes qui maximise ses chances de réussir l'évaluation. SEAL fait la même chose, sauf que l'étudiant et le manuel sont le même modèle.</p>
+
+<h2>Deux terrains d'expérimentation</h2>
+
+<p>Les auteurs valident leur cadre sur deux tâches volontairement différentes.</p>
+
+<h3>Incorporation de connaissances</h3>
+
+<p>Le banc d'essai est SQuAD, mais utilisé dans une variante exigeante : on retire le passage du contexte au moment de répondre. Le modèle doit avoir véritablement intégré l'information dans ses poids, pas se contenter de la lire à la volée.</p>
+
+<p>Les résultats sont parlants. Sur Qwen2.5-7B, le modèle de base répond correctement à 32,7 % des questions. Un fine-tuning brut sur le passage original donne 33,5 % — quasiment aucun gain. Quand on entraîne sur des implications synthétiques générées par GPT-4.1, on monte à 46,3 %. Et SEAL, après deux itérations de RL, atteint 47 %. Un modèle de 7 milliards de paramètres dépasse GPT-4.1 sur sa propre capacité à générer des données d'apprentissage utiles, parce qu'il a optimisé cette génération pour son architecture spécifique.</p>
+
+<p>Le gain est encore plus visible sur Qwen2.5-3B. Le ratio d'amélioration apportée par le RL (par rapport au self-edit naïf) augmente avec la taille du modèle : 1,75× à 3B, 2,04× à 7B. Indice possible que le mécanisme se renforce avec la capacité du modèle de base.</p>
+
+<h3>Apprentissage few-shot sur ARC</h3>
+
+<p>Le second domaine est ARC-AGI, le benchmark de raisonnement abstrait conçu par François Chollet. Sur un sous-ensemble de tâches solvables sous configuration optimale, les baselines donnent : 0 % en in-context learning pur (Llama-3.2-1B-Instruct n'arrive à rien sans adaptation), 20 % avec un self-edit non entraîné par RL, 100 % avec la configuration humaine optimale. SEAL atteint 72,5 %. Pas l'oracle, mais un saut de 52 points qui prouve que le modèle peut apprendre à configurer son propre pipeline d'adaptation — choisir les augmentations, fixer le learning rate, décider du nombre d'époques.</p>
+
+<h2>Ce que ça change concrètement</h2>
+
+<p>Plusieurs implications méritent d'être pesées sérieusement.</p>
+
+<p>D'abord, sur la frontière de la donnée. Si un modèle peut transformer un corpus existant en données d'entraînement plus efficaces que ce que produit un autre modèle dix fois plus gros, l'équation économique de l'entraînement change. On peut imaginer des SEAL spécialisés dans la génération de corpus de pré-entraînement synthétique, optimisés pour l'apprentissage et non pour la lisibilité humaine.</p>
+
+<p>Ensuite, sur les agents. Un système agentique passe par des interactions prolongées avec un environnement et des utilisateurs. Aujourd'hui, ces interactions ne se traduisent pas en apprentissage durable — la mémoire d'un agent reste cantonnée à sa fenêtre de contexte ou à un système RAG externe. SEAL ouvre une troisième voie : après une interaction significative, l'agent synthétise un self-edit qui déclenche une mise à jour de poids. Sa personnalité, ses connaissances, ses préférences acquises se gravent dans ses paramètres, exactement comme l'expérience structure progressivement un cerveau humain.</p>
+
+<p>Enfin, sur la cohabitation avec le raisonnement chain-of-thought. Les modèles de raisonnement actuels génèrent de longues traces internes pour résoudre un problème, puis oublient tout. SEAL suggère une combinaison : un modèle pourrait, en plein raisonnement, déclencher une mise à jour de ses propres poids — soit pour stabiliser une trajectoire qui marche, soit pour internaliser après coup les insights découverts pendant la chaîne de pensée. Le raisonnement et l'apprentissage cessent d'être deux phases distinctes.</p>
+
+<h2>Les limites assumées par les auteurs</h2>
+
+<p>Le papier ne masque pas trois faiblesses sérieuses.</p>
+
+<p>L'<strong>oubli catastrophique</strong> reste entier. Quand on enchaîne des self-edits sur des passages successifs, les performances sur les premiers passages se dégradent visiblement. SEAL n'optimise pas pour la rétention, et les expériences le montrent : la dégradation est progressive mais réelle. Plusieurs pistes existent — reward shaping pour pénaliser les régressions, contraintes de null-space, superposition représentationnelle — mais aucune n'est intégrée dans cette première version.</p>
+
+<p>Le <strong>coût de calcul</strong> de la boucle RL est une autre limite, structurelle celle-ci. Là où un signal de récompense classique (préférence humaine, vérification de pattern) prend une fraction de seconde, chaque self-edit de SEAL exige un fine-tuning complet plus une évaluation. Trente à quarante-cinq secondes. Multiplié par les centaines de candidats nécessaires pour entraîner la politique, on atteint vite plusieurs heures sur 2×H100 pour un seul round. Les auteurs ont expérimenté un proxy reward basé sur une rubrique notée par GPT-4.1 — 5 minutes au lieu de 6 heures, performance comparable (45,6 % contre 47 %). Une piste à creuser, au prix d'une perte d'autonomie.</p>
+
+<p>L'<strong>hypothèse d'une tâche aval</strong> reste contraignante. SEAL suppose que chaque contexte arrive avec une évaluation explicite : un passage avec ses questions, des démonstrations few-shot avec leur entrée test. Pour passer à un corpus non annoté — un livre brut, un fil de conversation — il faudrait que le modèle génère lui-même les questions d'évaluation à partir du contenu en contexte. La piste est mentionnée, pas encore implémentée.</p>
+
+<h2>Ce qui reste à explorer</h2>
+
+<p>Plusieurs questions ouvertes structurent la suite naturelle de ces travaux.</p>
+
+<p>La première touche au passage à l'échelle. Les expériences présentées portent sur des modèles de 1B à 7B paramètres. Rien ne garantit que les gains se maintiennent — ou s'amplifient — sur des modèles de 70B ou 400B. Les indices sur Qwen 3B versus 7B sont encourageants, mais l'extrapolation reste à faire.</p>
+
+<p>La seconde concerne le découplage générateur / apprenant. Le papier discute brièvement une formulation maître-élève : un modèle enseignant entraîné par RL pour produire les meilleures données possibles à un modèle élève distinct. Cette séparation lèverait plusieurs contraintes — pas besoin que le générateur ait la même architecture que l'apprenant, possibilité de spécialiser un seul SEAL pour servir un parc de modèles déployés.</p>
+
+<p>La troisième touche à l'apprentissage continu réel. Pour qu'un agent vive et apprenne sur des semaines ou des mois, il faut résoudre l'oubli catastrophique tout en gardant la plasticité. La combinaison de SEAL avec des techniques type AlphaEdit (édition contrainte au null-space) ou avec un mécanisme de mémoire à plusieurs vitesses est une piste évidente mais non triviale.</p>
+
+<p>Reste enfin une question philosophique qui flotte au-dessus de l'article. Un modèle qui décide quoi apprendre, comment se réécrire, et qui s'auto-modifie en réponse à de nouvelles données déplace le curseur de l'autonomie computationnelle. Les garde-fous habituels — alignement par RLHF, contrôle des données d'entraînement, traçabilité des modifications — supposent qu'un humain reste dans la boucle d'écriture des poids. SEAL ne casse pas ces garde-fous : la boucle externe est toujours pilotée par une fonction de récompense choisie. Mais le code et les outils existent, et leur trajectoire mérite d'être suivie de près.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

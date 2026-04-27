@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning is Forgetting: LLM Training as Lossy Compression — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Learning is Forgetting: LLM Training as Lossy Compression</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <body>
+<h2>Quand apprendre, c'est oublier</h2>
+
+<p>Un fichier MP3 pèse dix fois moins qu'un enregistrement audio brut. La raison est simple : il jette toutes les fréquences que l'oreille humaine ne perçoit pas. Un JPEG fait pareil avec les nuances de couleurs trop subtiles pour notre œil. Cette compression dite "avec perte" ne cherche pas à tout garder — elle garde ce qui sert.</p>
+
+<p>Une équipe de chercheurs de Princeton et Cohere, emmenée par Henry Conklin, vient de publier à ICLR 2026 un article qui défend une thèse provocante : les grands modèles de langage (LLM) fonctionnent exactement de la même manière. GPT, Llama, Claude, Gemini ne mémorisent pas leurs données d'entraînement. Ils les compressent. Et au cours de cet entraînement, ils oublient activement tout ce qui ne sert pas à prédire le prochain token. Mieux : la qualité de cette compression prédit la performance du modèle sur les benchmarks, avec une corrélation impressionnante (r = 0,76 sur 47 modèles).</p>
+
+<p>Cette idée déplace le regard. Au lieu de voir un LLM comme une bibliothèque géante qui aurait avalé Internet, on le voit comme un compresseur intelligent qui aurait appris à distinguer le signal du bruit. Et ce déplacement change beaucoup de choses sur la façon dont on peut comprendre, comparer et améliorer ces modèles.</p>
+
+<h2>Le défi : ouvrir la boîte noire à grande échelle</h2>
+
+<p>Comprendre comment fonctionne un LLM moderne reste un problème ouvert. Quand on a affaire à des dizaines de milliards de paramètres entraînés sur des trilliards de tokens, les méthodes classiques d'interprétabilité touchent leurs limites.</p>
+
+<p>Deux grandes approches dominent. La première traite le modèle comme un sujet de psycholinguistique : on lui pose des questions, on observe ses réponses, on essaie d'inférer sa structure interne depuis son comportement. La seconde, l'interprétabilité mécaniste, dissèque le modèle circuit par circuit, attention head par attention head, pour reconstituer comment il calcule. Anthropic et d'autres ont fait des progrès remarquables avec les sparse autoencoders, qui tentent d'identifier des correspondances entre des neurones et des concepts précis.</p>
+
+<p>Ces méthodes sont précieuses mais elles ont un défaut commun : elles regardent les morceaux. Or un système distribué complexe — et un LLM en est l'exemple parfait — ne s'explique pas bien comme la somme de ses parties. Le tout fait quelque chose que les morceaux ne suffisent pas à décrire. Conklin et ses coauteurs proposent donc de regarder le modèle dans sa globalité, à travers le prisme d'une théorie déjà bien établie : la théorie de l'information de Claude Shannon, et plus précisément le <em>goulot d'étranglement informationnel</em> (Information Bottleneck).</p>
+
+<p>Cette théorie a été formulée dès 2015 par Naftali Tishby pour les réseaux de neurones profonds. Elle prédit qu'un réseau qui apprend traverse deux phases. D'abord il enrichit ses représentations en absorbant de l'information sur ses cibles. Puis il les compresse, en jetant tout ce qui n'est pas utile à la prédiction. La théorie avait été vérifiée sur de petits réseaux entraînés sur MNIST, le jeu de données canonique des chiffres manuscrits. Personne n'avait encore réussi à la tester sur un Transformer entraîné à grande échelle.</p>
+
+<h2>La méthode : mesurer la compression d'un modèle de 32 milliards de paramètres</h2>
+
+<p>Le verrou technique est le suivant : pour vérifier si un modèle compresse, il faut mesurer la quantité d'information que ses représentations internes contiennent à propos des entrées et des sorties. Cette mesure, l'<strong>information mutuelle</strong>, est en théorie bien définie. En pratique, l'estimer dans un espace à 5120 dimensions, sur 64 couches, à 150 instants différents de l'entraînement, c'est une autre histoire.</p>
+
+<p>Les méthodes classiques discrétisent l'espace en cases (binning) puis comptent. Sur MNIST, ça passe. Sur un Transformer moderne, ça réclamerait des téraoctets de mémoire vive. Les approches par clustering (k-means) sont plus économes mais demandent plusieurs passes sur les données et ne peuvent pas s'utiliser en ligne pendant l'entraînement.</p>
+
+<p>Les auteurs s'appuient sur un estimateur récent, le <em>soft entropy estimator</em>, qui contourne le problème avec une astuce élégante. On normalise chaque représentation pour la projeter sur la surface d'une sphère unitaire. On échantillonne ensuite quelques centaines de points au hasard sur cette même sphère. Pour chaque représentation, on calcule sa similarité avec chacun de ces points et on applique un softmax. Résultat : chaque vecteur devient une distribution de probabilité sur les points de référence. Et calculer l'entropie d'une telle distribution est trivial.</p>
+
+<p>L'analogie qui aide : imaginez que vous voulez décrire la diversité d'une foule sans pouvoir interroger chaque personne. Vous placez quelques points de repère dans la salle ("près de la fenêtre", "près du bar", "au centre") et vous mesurez à quel point chaque personne est proche ou loin de chacun. Si tout le monde se concentre autour d'un seul point, la foule est peu diverse. Si les gens sont répartis uniformément, elle est très diverse. Le soft entropy estimator fait exactement cela, en haute dimension, avec un paramètre de température calibré pour rester comparable d'un modèle à l'autre.</p>
+
+<p>Avec cet outil, l'équipe analyse la trajectoire d'entraînement de la famille OLMo2 (Allen Institute), disponible en checkpoints intermédiaires de 1B, 7B et 32B paramètres. Elle étend ensuite l'analyse à 75 modèles open-weights de 6 familles différentes : Llama, Gemma, Mistral, Qwen, Pythia, Smol LM2.</p>
+
+<h2>Résultats : la compression est universelle, mais inégale</h2>
+
+<p>La trajectoire d'entraînement du modèle OLMo2 7B colle remarquablement bien à la prédiction théorique. Au début, le modèle <em>expand</em> ses représentations pour absorber un maximum d'information sur les cibles. Puis, à mesure que la perte se stabilise, il bascule en phase de compression : il jette de l'information sur les entrées tout en préservant sa capacité à prédire. Cette transition arrive précisément au moment où la loss commence à plafonner. Le modèle termine son pré-entraînement très près de la borne théorique de compression optimale.</p>
+
+<p>Premier résultat marquant : <strong>la taille compte, et le seuil est haut</strong>. Le modèle de 7 milliards de paramètres atteint la compression optimale. Le 32B aussi. Mais le modèle de 1 milliard, malgré ses 4 trilliards de tokens d'entraînement, n'y arrive pas. Il complète la phase d'expansion mais oscille ensuite, incapable de comprimer efficacement. Les modèles plus petits encore (100M, 400M de la famille Smol LM2) échouent encore plus tôt. Cela rejoint les fameuses scaling laws : sous un certain seuil de paramètres, le modèle n'a tout simplement pas assez de "place" pour organiser intelligemment ce qu'il a vu.</p>
+
+<p>Deuxième résultat : <strong>tous les modèles convergent vers le même point</strong>. Quand on place 75 modèles de familles différentes sur le plan information, ils se concentrent dans une même zone, alignés le long de la frontière d'optimalité. Llama, Mistral, Qwen, Gemma — entraînés avec des données différentes, des recettes différentes, des architectures différentes — finissent par compresser de la même façon. C'est une forme de convergence évolutive : le langage naturel et l'objectif de prédiction du token suivant imposent une même structure aux représentations apprises.</p>
+
+<p>Troisième résultat, le plus exploitable : <strong>la qualité de la compression prédit la performance</strong>. Sur 47 modèles évalués sur six benchmarks majeurs (MMLU-Pro, BBH, Math Level 5, IFEval, GPQA, MuSR), le ratio expressivité/complexité — qui mesure à quel point le modèle est proche de la compression optimale — corrèle significativement avec les scores (r = 0,52, p < 0,001). Mieux encore, la quantité d'information liée aux préférences humaines présente dans le modèle prédit la performance avec une corrélation de 0,76. Et le coût de calcul de cette mesure est dérisoire comparé à faire tourner une suite complète de benchmarks.</p>
+
+<p>Quatrième observation, plus subtile : les modèles encodent surtout du <strong>contexte local</strong>. Quand on décompose l'information par taille de fenêtre (token seul, bigramme, trigramme, quadgramme), on voit que la majorité du signal vient de fragments courts. Les modèles plus grands consacrent proportionnellement plus de leur capacité à représenter le contexte (bigrammes et au-delà) et moins aux tokens isolés. Et c'est précisément ce déplacement — moins de tokens isolés, plus de contexte — qui distingue les modèles performants des autres.</p>
+
+<h2>Pourquoi cela compte pour la pratique</h2>
+
+<p>Cette grille de lecture déplace plusieurs débats du domaine.</p>
+
+<p>D'abord, elle réconcilie les LLM avec une longue tradition de théorie de l'apprentissage. Depuis cinquante ans, on sait que la compression sous-tend l'apprentissage humain et l'inférence statistique. Le rasoir d'Ockham, l'inférence bayésienne, la complexité de Kolmogorov, le compromis biais-variance : tous ces cadres convergent vers l'idée qu'apprendre, c'est trouver la représentation la plus simple compatible avec les données. Voir un LLM comme un compresseur quasi-optimal le replace dans cette continuité, plutôt que d'en faire une boîte noire mystérieuse.</p>
+
+<p>Ensuite, elle ouvre des usages concrets pour les praticiens. Si la distance à la borne d'optimalité prédit la performance, on tient un <strong>critère d'arrêt</strong> pour le pré-entraînement : on peut arrêter quand le modèle cesse de se rapprocher de la borne, plutôt que de brûler du compute en aveugle. On tient aussi un <strong>critère de sélection de checkpoint</strong> : choisir celui qui est le mieux compressé, ou celui qui contient le plus d'information sur les préférences. Ces deux usages reviennent à remplacer une évaluation coûteuse sur des dizaines de benchmarks par une seule passe forward sur quelques milliers d'exemples génériques. À l'échelle où s'entraînent les frontier labs, cela représente des sommes considérables.</p>
+
+<p>Troisième implication : le post-training fait quelque chose de différent du pré-training. Les analyses sur les familles Llama et Gemma montrent que les modèles post-entraînés (RLHF, DPO et autres techniques d'alignement) contiennent significativement plus d'information liée aux préférences que leurs versions pré-entraînées, sans que leur compression globale change beaucoup. Cela suggère une division du travail nette : le pré-training apprend la structure sémantique du langage, le post-training y greffe une orientation vers les préférences humaines. C'est une description plus précise que les formules vagues sur "l'alignement".</p>
+
+<p>Quatrième point, qui touche au débat sur les <em>capacités émergentes</em> : la performance sur le suivi d'instructions (IFEval) ne corrèle pas avec la qualité de compression de C4, un dump générique d'Internet. En revanche, elle corrèle fortement avec la quantité d'information de préférence. Les performances sur les maths, le raisonnement, la connaissance factuelle, elles, dépendent bien de la qualité de compression du corpus d'entraînement. Cela donne une lecture précise de ce que chaque phase d'entraînement apporte, et peut guider l'allocation des budgets entre pré-training, mid-training et post-training.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Cette approche pose plus de questions qu'elle n'en résout, et c'est ce qui la rend intéressante.</p>
+
+<p>La première question concerne la généralité du résultat. Les corrélations sont fortes mais établies sur 47 modèles d'une même époque. Tiendront-elles pour des architectures sensiblement différentes (modèles de diffusion textuelle, mixture of experts à très grande échelle, modèles multimodaux) ? Le mécanisme de compression observé reflète-t-il quelque chose d'universel sur l'apprentissage du langage, ou bien un biais des Transformers ?</p>
+
+<p>Deuxième question, méthodologique : l'estimation de la borne théorique d'optimalité reste approximative. Les auteurs reconnaissent qu'à grande échelle, le calcul numérique exact de cette borne devient intractable et ils utilisent une approximation linéaire. Affiner cette estimation pourrait changer quantitativement les conclusions, même si la tendance qualitative semble robuste à plusieurs vérifications de robustesse.</p>
+
+<p>Troisième piste, la plus excitante en pratique : peut-on utiliser ces mesures comme <em>signal pendant l'entraînement</em> et pas seulement comme outil d'analyse a posteriori ? Imaginez un loop d'entraînement qui surveille en temps réel la trajectoire dans le plan information, détecte le moment où la phase de compression commence à patiner, et ajuste le learning rate, le scheduler ou la composition du dataset en conséquence. Les auteurs annoncent vouloir tester ces usages, et c'est probablement là que se jouera la prochaine étape.</p>
+
+<p>Enfin, l'analogie avec la cognition humaine mérite d'être prise au sérieux. Si l'apprentissage chez l'humain et l'apprentissage chez les LLM relèvent tous deux d'une compression avec perte guidée par un objectif, alors les outils d'information théorique pourraient devenir un langage commun pour comparer les deux. On pourrait quantifier en quoi un humain compresse différemment d'un modèle, sur quels types d'information il est plus ou moins efficace, et tester empiriquement les théories bayésiennes de la cognition à l'aune de ce que font les machines. Le pont entre sciences cognitives et machine learning, esquissé depuis longtemps, gagne ici un instrument concret.</p>
+
+<p>Le titre de l'article résume tout : <em>Learning is Forgetting</em>. Apprendre, c'est oublier. Oublier ce qui ne sert pas, garder l'essentiel, et organiser cet essentiel de la façon la plus économe possible. Les LLM ne sont pas devenus performants en mémorisant Internet. Ils le sont devenus en apprenant à compresser Internet de la bonne manière. Et maintenant, pour la première fois, on a les outils pour mesurer cette compression à l'échelle où elle se joue.</p>
+</body>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
