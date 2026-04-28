@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mixture-of-Depths Attention — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Mixture-of-Depths Attention</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le scaling en profondeur des Transformers se heurte à un problème connu : la dilution d'information. Les features informatives produites dans les couches superficielles sont progressivement écrasées par les mises à jour résiduelles successives, rendant difficile leur récupération en couches profondes. Les auteurs reformulent un bloc Transformer selon une grille <em>read, operate, write</em> et identifient l'espace de design entre <strong>depth residual</strong> (compression d'historique en un seul tenseur), <strong>depth dense</strong> à la DenseFormer (concaténation lossless mais coût quadratique en profondeur) et leur proposition intermédiaire, <strong>depth attention</strong>, qui lit l'historique de profondeur via attention data-dependent.</p>
+<p>La contribution centrale, <strong>Mixture-of-Depths Attention (MoDA)</strong>, fusionne attention séquentielle et attention en profondeur sous un unique softmax. Chaque tête d'attention voit conjointement les KV de la couche courante et les KV {K<sub>i</sub>, V<sub>i</sub>}<sub>i=0..l-1</sub> au même indice de token issus des couches précédentes. Cette approche se positionne comme alternative aux hyper-connections et à DenseFormer en gardant un coût compatible avec les régimes LLM modernes.</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole expérimental suit la recette OLMo2 sur 400B tokens, en bfloat16, batch global 1024, contexte 4096, optimiseur AdamW. Deux échelles sont testées (700M et 1,5B paramètres), avec GQA group size G=2 et largeur D=1024. Les ablations utilisent FineWeb-Edu sur des modèles de 24 et 48 couches.</p>
+<p>L'évaluation combine perplexité d'entraînement, perplexité de validation par domaine sur 10 corpus (C4, ICE, m2d2-s2orc, Pile, Wiki-text, Books, Common Crawl, peS2o, Reddit, Stack) et 10 benchmarks downstream (PiQA, HellaSwag, WinoGrande, OpenBookQA, BoolQA, SciQ, COPA, MMLU, ARC-E, ARC-C). Les ablations couvrent les variantes d'injection KV (sequence seule, depth-attention reuse, FFN-side projection, attn-side projection supplémentaire), les configurations pre-norm vs post-norm et le scaling en couches.</p>
+<p>Le second pilier méthodologique concerne le kernel. Trois optimisations s'empilent : layout flash-compatible avec axe profondeur aplati, layout chunk-aware regroupant les requêtes par blocs de taille C, et indexation group-aware exploitant le partage de base-time entre G requêtes adjacentes sous GQA. Le kernel Triton fusionne attention séquentielle et profondeur sous un même online-softmax.</p>
+
+<h2>Résultats principaux</h2>
+<p>À 1,5B paramètres, MoDA améliore la moyenne sur 10 tâches downstream de 62,28 à 64,39 (+2,11 points) et la perplexité moyenne par domaine de 13,67 à 13,47, avec un gain observé sur les dix corpus. Les gains les plus marqués apparaissent sur WinoGrande (+2,37), ARC-C (+4,35), BoolQA (+3,73) et OpenBookQA (+2,80). À 700M, le gain moyen downstream est de +1,76 et la PPL passe de 15,61 à 15,46.</p>
+<p>L'ablation sur les variantes MoDA (Tab. 3) clarifie ce qui paie : réutiliser les KV de la couche d'attention précédente comme depth-KV apporte +1,17 sur l'average downstream à coût quasi nul (+0,12 % FLOPs) ; ajouter une projection KV côté FFN apporte +0,77 supplémentaire ; ajouter une projection KV dédiée côté attention apporte +0,10 pour 36M paramètres en plus, signal d'une saturation.</p>
+<p>Côté efficacité, le kernel atteint 97,3 % du temps de FlashAttention-2 à T=65536 et G=8, avec un overhead qui décroît de 25,86 % à 2,73 % quand T croît de 4K à 64K. L'ablation des optimisations kernel donne un speedup cumulé de 1458× sur la baseline PyTorch naïve, dont 4,31× pour la seule indexation group-aware.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'overhead en profondeur est asymétrique : à T fixé, doubler L de 64 à 256 fait passer l'overhead relatif MoDA de 8,59 % à 30,52 %. Cette asymétrie est cohérente avec la nature du mécanisme mais met en évidence que MoDA n'est pas un drop-in gratuit pour les architectures très profondes. Les auteurs reconnaissent ce point et esquissent en discussion un mécanisme de buffer borné de slots depth-KV sans le valider expérimentalement.</p>
+<p>Le périmètre expérimental reste modeste pour des affirmations sur le « depth scaling » : 700M et 1,5B, soit deux ordres de grandeur en dessous des modèles de production actuels. Aucune extrapolation n'est faite vers 7B+ ni vers des contextes >4K en entraînement. Les gains observés (~2 points downstream, ~0,2 PPL) sont réels mais incrémentaux et restent dans la marge de bruit habituelle pour des comparaisons mono-seed.</p>
+<p>Aucun multi-seed n'est rapporté, ce qui empêche d'évaluer la variance des résultats. La comparaison se limite à OLMo2 ; DenseFormer, Hyper-Connections et mhc sont cités mais non comparés empiriquement, ce qui est une faiblesse pour une publication revendiquant l'occupation d'un point efficace dans l'espace des designs depth-aware.</p>
+<p>L'observation sur la réduction du <em>attention sink</em> est intéressante mais reste qualitative (heatmaps Fig. 5) sans métrique quantitative. Le claim sur la combinaison MoDA+post-norm s'appuie sur les ablations 48 couches uniquement.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est annoncé sur GitHub (hustvl/MoDA). La recette d'entraînement réutilise OLMo2, dont les datasets sont publics. Les configurations sont décrites précisément : largeur, têtes, GQA group size, learning rate schedule, optimiseur. L'algorithme du kernel est donné en pseudo-code détaillé (Alg. 1). Les expériences d'efficacité sont reproductibles sur A100 avec les paramètres indiqués. Manquent les checkpoints entraînés et les seeds utilisées, ce qui limite la reproductibilité bit-exacte.</p>
+
+<h2>Impact et applications</h2>
+<p>MoDA s'inscrit dans une tendance plus large d'architectures qui revisitent la connectivité inter-couches (DenseFormer, Hyper-Connections, Virtual Width Networks). Sa contribution distinctive est la fusion sequence + depth dans un softmax unique, ce qui simplifie l'intégration dans les stacks d'attention modernes. L'effort kernel est sérieux et fait la différence pratique : sans l'optimisation chunk + group-aware, le mécanisme serait inutilisable à l'échelle.</p>
+<p>L'applicabilité immédiate concerne les pré-entraînements LLM cherchant à exploiter mieux la profondeur sans payer le coût quadratique des connections denses. La discussion sur les buffers bornés de slots est la voie naturelle vers le scaling industriel mais reste prospective.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail se positionne entre trois lignées. La lignée résiduelle (He et al., DeepNet) traite l'optimisation mais pas la dilution. La lignée densification (DenseNet, DenseFormer, hyper-connections, mhc) traite la dilution mais paie en paramètres O(L²D²). La lignée attention dynamique sur la profondeur, dont MoDA fait partie, propose un compromis data-dependent à coût réduit. Comparé à hyper-connections (Zhu et al., ICLR 2025), MoDA mutualise davantage avec l'attention séquentielle existante, ce qui est plus parcimonieux en paramètres mais réduit la flexibilité de pondération inter-couches. L'absence de comparaison empirique avec ces voisins directs est le principal angle mort du papier.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème de dilution clairement posé, motivation architecturale solide.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Recette OLMo2 standard, ablations structurées, comparaison à parameters/FLOPs équivalents.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>700M et 1,5B uniquement ; pas de seeds multiples ; claim « depth scaling » sous-dimensionné.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>10 benchmarks downstream + 10 corpus de validation, métriques standard du domaine.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Baseline more-parameter (38 couches) pour neutraliser l'argument paramètres ; ablations cumulatives propres.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code annoncé, recette publique, pseudo-code kernel complet ; manquent checkpoints et seeds.</td></tr>
+<tr><td>Transparence sur les limites</td><td>3</td><td>Mémoire et profondeur extrême discutées en section 6, mais aucun benchmark vs DenseFormer/hyper-connections.</td></tr>
+<tr><td>Impact / nouveauté</td><td>4</td><td>Unification softmax sequence+depth originale, kernel sérieux ; nouveauté incrémentale dans une lignée active.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

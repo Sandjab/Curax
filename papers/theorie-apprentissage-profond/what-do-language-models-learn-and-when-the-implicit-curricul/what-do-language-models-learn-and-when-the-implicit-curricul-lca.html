@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What Do Language Models Learn and When? The Implicit Curriculum Hypothesis — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>What Do Language Models Learn and When? The Implicit Curriculum Hypothesis</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les lois d'échelle prédisent l'évolution de la perte de validation avec le compute, mais ne disent rien sur <em>quelles</em> compétences un modèle acquiert ni <em>quand</em>. Liu et collègues attaquent ce point aveugle en formulant l'<strong>Implicit Curriculum Hypothesis</strong> : durant le pré-entraînement, les compétences émergent dans un ordre compositionnel stable d'un modèle à l'autre, et cet ordre est lisible dans les représentations internes.</p>
+<p>L'enjeu pratique est concret. Un run de pré-entraînement coûte des millions de dollars et n'est monitoré que par la cross-entropy agrégée ou des benchmarks composites comme MMLU et GSM8k, dont les échecs sont opaques. Les auteurs cherchent un instrument de diagnostic plus fin, ancré dans une décomposition tâche par tâche.</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole repose sur 91 tâches : 53 élémentaires (copie, casse, morphologie, traduction, retrieval factuel, arithmétique simple, opérations logiques, FRCT psychométriques) et 38 compositionnelles construites par chaînage explicite des élémentaires (par exemple <code>gerund_upper</code> = transformation gérondive puis majuscules). Cette construction garantit que les prérequis compositionnels sont connus exactement.</p>
+<p>Neuf modèles open-weight de quatre familles (Pythia 410M-12B, OLMo-2 1B-13B, OLMo-3 7B, Amber et CrystalCoder de LLM360) sont évalués sur environ 20 checkpoints intermédiaires couvrant le premier trillion de tokens d'entraînement. L'émergence est définie comme le premier checkpoint dépassant un seuil d'exactitude absolu (θ = 0,5 ou 0,8), et comparée à une définition relative (fraction de la performance maximale).</p>
+<p>Pour H3, les auteurs extraient des <em>function vectors</em> par activation du résiduel ou agrégation de têtes d'attention identifiées par causal indirect effect. La similarité représentationnelle alimente une régression ridge à noyau RBF qui prédit la trajectoire d'apprentissage d'une tâche compositionnelle laissée de côté à partir de ses voisines dans l'espace FV.</p>
+
+<h2>Résultats principaux</h2>
+<p>L'ordre d'émergence est remarquablement consistant : la corrélation de Spearman moyenne entre les 45 paires de modèles atteint ρ = 0,81 (intervalle 0,64-0,93) sous seuil absolu à 80 %. La copie émerge en premier, suivie des manipulations de chaînes simples, de la résolution de coréférence basique, des transformations morphologiques, puis des tâches dépendantes de connaissances (traduction, capitales) et enfin de l'arithmétique multi-étapes et du raisonnement complexe.</p>
+<p>54 des 76 paires composite-prérequis respectent l'ordre attendu (composite après ses parents). 19 inversions faibles et 3 fortes sont observées, ces dernières impliquant toutes la tâche <code>first_letter</code>, ce qui suggère que cette opération n'est pas vraiment atomique pour les modèles.</p>
+<p>La consistance s'effondre sous seuil relatif (ρ moyen à 0,52), ce que les auteurs interprètent par le fait qu'un seuil absolu capture le moment où un circuit devient fonctionnel, alors qu'un seuil relatif est biaisé par la performance maximale du modèle.</p>
+<p>La prédiction par leave-one-out atteint un R² moyen de 0,68 à 0,84 selon le modèle, avec un MAE entre 0,068 et 0,195 sur l'échelle 0-1. Restreindre la base aux seules tâches élémentaires dégrade systématiquement la qualité (ΔMAE moyen +0,135), révélant un goulot compositionnel : les trajectoires des composites partagent une structure que leurs élémentaires ne capturent pas seuls.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs reconnaissent que leurs tâches élémentaires ne sont pas les véritables unités minimales de calcul du modèle — la dépendance ≺ reflète le design, non une affirmation sur les primitives internes. Les inversions observées valident cette prudence.</p>
+<p>Une faiblesse plus structurelle : le panel de neuf modèles partage des biais d'entraînement communs (corpus en anglais dominant, architectures Transformer décodeur, objectif de prédiction du prochain token). La consistance de l'ordre d'émergence pourrait refléter cette convergence d'écosystème plutôt qu'une loi profonde du deep learning. La comparaison avec des architectures réellement divergentes (SSM, MoE, Mamba) manque.</p>
+<p>Le seuil absolu fixé à 80 % d'exactitude est arbitraire et choisi post-hoc parce qu'il produit des résultats plus consistants que le seuil relatif. Cette décision est défendue théoriquement mais reste une forme de calibration dépendante des données.</p>
+<p>Les FRCT psychométriques (Educational Testing Service, 1976) sont intégrés sans justification approfondie de leur transposabilité aux LLM, et plusieurs tâches comme <code>textfrct:RL3</code> ou <code>textfrct:V5</code> n'émergent jamais sur certains modèles, biaisant les corrélations de rangs en queue de distribution.</p>
+
+<h2>Reproductibilité</h2>
+<p>Données et code sont publiquement disponibles sur GitHub (<code>KaiserWhoLearns/ElementalTask</code>). Les modèles utilisés sont tous open-weight avec checkpoints intermédiaires accessibles. Les hyperparamètres de fonction vectors sont tabulés par modèle (Table 11). Les seuils, la procédure de smoothing gaussien (σ = 1,0), les paramètres de régression ridge sont explicités. Les annexes E à H fournissent les trajectoires complètes par modèle et les prédictions LOO individuelles. La reproductibilité expérimentale est l'un des points forts du travail.</p>
+
+<h2>Impact et applications</h2>
+<p>Trois retombées concrètes se dessinent. <strong>Monitoring de pré-entraînement</strong> : la suite de tâches peut servir de batterie diagnostique pour détecter si un modèle développe ses capacités en avance ou en retard sur une trajectoire attendue, complémentaire aux courbes de loss. <strong>Décisions de mixture de données</strong> : si certaines compétences émergent toujours dans un ordre fixe, l'injection ciblée de données peut accélérer ou ralentir des étapes spécifiques. <strong>Interprétabilité prédictive</strong> : la connexion entre géométrie FV et trajectoires fournit un pont entre interprétabilité mécaniste statique et dynamique d'entraînement.</p>
+<p>L'utilité opérationnelle dépend cependant de la transposition à des tâches downstream réelles, non testée ici. Prédire l'émergence de <code>gerund_upper</code> est moins critique que prédire celle du raisonnement multi-étape sur GSM8k.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail unifie quatre fils théoriques : la quantization hypothesis de Michaud et al. (2023), le simplicity bias de Saxe, Nakkiran et Shah, les graphes de dépendance de skills de Chen et al. (2023b), et la framework de fonction vectors de Todd et al. (2024). La contribution propre tient au passage du théorique à l'empirique multi-modèles, et au lien fort entre représentations internes et trajectoires d'apprentissage via la prédiction LOO — un cran au-dessus de la simple corrélation observée dans les travaux antérieurs.</p>
+<p>Comparé à Kangaslahti et al. (2025) sur les « hidden breakthroughs » et à Mishra et al. (2025) sur les dynamiques mathématiques, ce papier élargit la grille d'analyse à une taxonomie compositionnelle systématique. Il complète aussi van der Wal et al. (2025) sur la stabilité des phases d'apprentissage à travers les seeds en démontrant la stabilité inter-familles.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Hypothèse claire, originale, formalisée mathématiquement en trois sous-hypothèses testables.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Protocole solide multi-modèles avec tâches construites pour garantir la dépendance compositionnelle ; seuil absolu choisi post-hoc.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>9 modèles, 4 familles, 91 tâches, ~20 checkpoints par modèle ; couverture honorable mais homogène (Transformers décodeurs uniquement).</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Spearman, R², MAE, exact-match ; métriques appropriées mais sensibilité au seuil non explorée systématiquement.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Pas de contrôle explicite du chevauchement potentiel entre données de pré-entraînement et tâches d'évaluation ; biais d'écosystème (anglais, Transformer) non quantifié.</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Code et données publics, modèles open-weight, hyperparamètres tabulés, annexes exhaustives.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Limites du seuil relatif et de l'atomicité des tâches discutées ; biais d'architecture commune sous-estimé.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier travail à connecter empiriquement géométrie représentationnelle et trajectoires d'apprentissage via prédiction LOO sur plusieurs familles.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

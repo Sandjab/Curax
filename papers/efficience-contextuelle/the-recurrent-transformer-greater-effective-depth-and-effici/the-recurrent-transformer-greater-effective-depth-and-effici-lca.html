@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Recurrent Transformer: Greater Effective Depth and Efficient Decoding — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Recurrent Transformer: Greater Effective Depth and Efficient Decoding</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les Transformers traitent les positions en parallèle mais restent structurellement peu profonds dans le temps : à la couche ℓ, la position t attend des paires clé-valeur calculées depuis les représentations de la couche ℓ−1. La profondeur effective d'interaction entre deux positions est donc bornée par le nombre de couches empilées. Des résultats de complexité de circuits (Merrill et al. 2022, Liu et al. 2023) montrent que cette limitation a des conséquences représentationnelles concrètes, notamment l'incapacité à simuler certains automates finis avec une profondeur bornée.</p>
+<p>Les auteurs proposent le Recurrent Transformer (RT), une modification minimale : à chaque couche, les paires clé-valeur persistantes exposées aux positions futures sont calculées depuis la sortie de la couche elle-même, et non depuis son entrée. La récurrence est isolée par couche, ce qui distingue cette approche du Feedback Transformer (mémoire partagée inter-couches) et du TransformerFAM (mémoire bornée). L'objectif annoncé est triple : augmenter la profondeur effective par couche, conserver la mémoire par-token sans plafond, et préserver un coût de décodage standard.</p>
+
+<h2>Méthodologie</h2>
+<h3>Architecture</h3>
+<p>À chaque position i, deux types de paires clé-valeur sont calculées. Une paire temporaire (k_i^temp, v_i^temp) issue de l'entrée x_i sert uniquement à résoudre la circularité de l'auto-attention au pas courant. Une paire persistante (k_i, v_i) est ensuite calculée depuis la sortie z_i et stockée pour les positions futures. Les matrices de projection K, V sont partagées entre les deux usages.</p>
+
+<h3>Garanties théoriques</h3>
+<p>Le théorème 1 établit qu'un RT de largeur 3d' simule exactement un Transformer de largeur d' (en absence de RMSNorm), via un découpage de l'embedding en trois blocs disjoints (carry, live, scratch). Le facteur 3 plutôt que 2 est nécessaire pour permettre l'empilement de couches sans corruption du bloc carry. Une condition d'attention concentrée locale permet à RT d'implémenter une récurrence token-à-token de type RNN.</p>
+<p>Le théorème 4.1 analyse la stabilité du gradient dans un cadre simplifié (attention uniforme, une couche, sans normalisation) et montre que ∂z_k/∂x_1 se décompose sur des chemins de longueurs r=1...k pondérés par les nombres de Stirling non signés. Le terme r=1 reproduit le gradient d'un Transformer vanille ; les termes r>1 fournissent des chemins multi-sauts additionnels qui ne génèrent pas de gradient explosif tant que la valeur propre maximale de αV reste inférieure à 1.</p>
+
+<h3>Algorithme de tuilage</h3>
+<p>L'observation clé est que toutes les requêtes {q_i} d'une couche sont disponibles dès l'entrée x, même si les paires clé-valeur persistantes sont révélées séquentiellement. L'algorithme exploite ceci en propageant la contribution de chaque tuile de KV nouvellement disponible à un bloc de requêtes futures, en utilisant les statistiques softmax en ligne de Rabe-Staats et FlashAttention. La taille de tuile au pas t est la plus grande puissance de 2 divisant t. Le trafic HBM passe de Θ(N²) à Θ(N log N), l'intensité arithmétique effective de Θ(1) à Θ(N/log N).</p>
+
+<h3>Protocole expérimental</h3>
+<p>Pré-entraînement sur C4 à deux échelles (150M et 300M paramètres non-embedding), pour 1× Chinchilla tokens (≈3-6B), batch size 512, séquences de 512 tokens, optimiseur Adam, embeddings positionnels ALiBi, codebase OLMo-2. Comparaison à profondeur variable (6 et 12 couches) avec largeur ajustée pour conserver le nombre de paramètres. Diagnostic synthétique sur la suite MAD (Poli et al. 2024) et la tâche de copie (Jelassi et al. 2024) à une couche. Évaluation downstream sur 6 QCM (PIQA, HellaSwag, ARC-Easy, OpenBookQA, SciQ, Winogrande) en cross-entropy sur la réponse correcte.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur le modèle 300M, RT-12 atteint 2.867 de cross-entropy validation contre 2.896 pour Transformer-12 (Δ=−0.029), et RT-6 atteint 2.860 contre 2.917 pour Transformer-6 (Δ=−0.057). RT à 6 couches égale ou dépasse Transformer à 12 couches, validant l'hypothèse d'un meilleur compromis profondeur-largeur. La réduction de profondeur à qualité égale diminue le cache KV d'environ 30%.</p>
+<p>Sur les tâches MAD, RT à une couche surpasse significativement Transformer à une couche sur copie, fuzzy/noisy in-context recall et selective copying ; les deux échouent au niveau séquence sur compression mais RT conserve un avantage au niveau token (Appendice E.1).</p>
+<p>Le débit d'entraînement de RT-12 est 42k tokens/sec contre 132k pour Transformer-12, soit un coût d'entraînement environ 3× supérieur. L'utilisation de CUDA Graphs réduit la latence par couche d'un facteur 4-7× selon la batch size, indiquant que le surcoût initial vient majoritairement de l'overhead CPU de dispatch des kernels plutôt que du calcul intrinsèque.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'évaluation s'arrête à 300M paramètres et 1× Chinchilla, échelle nettement inférieure aux modèles de production. L'extrapolation du gain Δ-CE à plus grande échelle reste spéculative ; les auteurs reconnaissent explicitement que les lois d'échelle peuvent différer pour cette architecture. Une seule graine d'entraînement semble utilisée par configuration, sans intervalles de confiance sur les écarts de cross-entropy rapportés.</p>
+<p>Le coût de calcul à l'entraînement (3× plus lent) rend la comparaison à iso-FLOPS défavorable à RT. La justification implicite est le gain au décodage via un cache KV plus petit, mais aucune mesure de latence de décodage optimisée n'est fournie — les auteurs la reportent à des travaux futurs. Le débit dépend critiquement de la batch size effective vue par les MLPs (B=512), contrainte structurelle des architectures récurrentes en temps qui interdit la gradient accumulation usuelle.</p>
+<p>Les résultats downstream sont mitigés : sur 6 tâches, les accuracies sont proches du hasard (Winogrande à 50%, autres à 6-7% au-dessus du hasard), ce qui limite la portée des comparaisons. La métrique CE sur la réponse correcte est défendue (lissage à petite échelle) mais ne remplace pas une évaluation robuste à plus grande capacité.</p>
+<p>L'analyse théorique de stabilité du gradient porte sur un cadre extrêmement simplifié (une couche, attention uniforme, sans RMSNorm) et ne couvre pas le régime entraîné réel. L'ablation RMSNorm (Appendice E.2) montre une dégradation significative sans normalisation des projections KV, indiquant que la stabilité empirique repose lourdement sur ce composant.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est disponible publiquement sur GitHub (geniucos/recurrent-transformer). Les hyperparamètres principaux (largeur, nombre de têtes, learning rate, β₂, schedule) sont fournis en Appendice D. L'implémentation s'appuie sur OLMo-2 et PyTorch sans kernels CUDA personnalisés ; la reproductibilité est donc accessible à toute équipe disposant d'une H100. L'absence de seeds multiples et l'absence de scripts d'évaluation downstream complets sont des manques modérés.</p>
+
+<h2>Impact et applications</h2>
+<p>L'idée centrale — déplacer le calcul des KV persistantes vers la sortie de couche — est élégante et minimalement invasive sur le code Transformer existant. Le bénéfice principal vise le décodage long-contexte sur matériel limité en bande passante : un cache KV réduit de 30% libère mémoire et trafic HBM, deux ressources critiques en inférence batch. Le compromis profondeur-largeur favorise aussi la parallélisation par tensor parallelism.</p>
+<p>L'algorithme de tuilage exact est une contribution réutilisable au-delà de RT : il étend l'approche Flash Inference au cas où les requêtes sont disponibles tôt mais les KV sont révélés causalement, schéma applicable à d'autres architectures à dépendance séquentielle bornée.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail se distingue clairement du Feedback Transformer (Fan et al. 2020), qui partage une mémoire inter-couches et bloque l'optimisation du tuilage car les requêtes des couches supérieures dépendent de feedback non encore calculé. Il diffère du TransformerFAM (Hwang et al. 2024) par la conservation d'une mémoire par-token non bornée plutôt qu'un état compressé de taille fixe — propriété nécessaire à la simulation exacte d'un Transformer (théorème 1) et à la résolution de la tâche de copie (impossible pour les modèles à mémoire bornée).</p>
+<p>Par rapport aux SSMs (Mamba, S5, RWKV, Retentive Network), RT préserve la mémoire par-token et donc la capacité de copie exacte, au prix d'un cache KV non borné. Le positionnement assumé est intermédiaire entre attention pleinement parallèle et calcul d'état purement récurrent. Les arguments empiriques (synthétiques MAD, copie) confirment cette niche, mais la comparaison directe à Mamba/S5 à paramètres et données équivalents manque dans le papier.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>4</td><td>Motivation théorique claire (limites de profondeur en TC0), proposition architecturale bien circonscrite.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Baselines parametre-matched corrects, mais pas de comparaison directe aux SSMs concurrents ni d'évaluation à iso-FLOPS.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Deux échelles (150M, 300M), 1× Chinchilla seulement, une seule graine apparente, batch size unique.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Cross-entropy validation rigoureuse, MAD pertinent pour la profondeur effective, CE downstream choisie pour le lissage à petite échelle.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Paramètres égalisés, ablation RMSNorm, comparaison de débits transparente.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, hyperparamètres complets, base OLMo-2 standard. Manque les seeds et logs détaillés.</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Coût d'entraînement 3× annoncé, expériences limitées à un seul GPU explicitement reportées, optimisation kernel laissée en travaux futurs.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Modification architecturale simple avec gain mesurable, algorithme de tuilage réutilisable, gain au décodage validé conceptuellement mais pas mesuré.</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

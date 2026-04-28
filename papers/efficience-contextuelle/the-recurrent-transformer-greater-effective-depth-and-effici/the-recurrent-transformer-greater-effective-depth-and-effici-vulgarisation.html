@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Recurrent Transformer: Greater Effective Depth and Efficient Decoding — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Recurrent Transformer: Greater Effective Depth and Efficient Decoding</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un Transformer apprend à se parler à lui-même</h2>
+
+<p>Un modèle de langage de 300 millions de paramètres avec seulement 6 couches qui bat son équivalent à 12 couches. Voilà le résultat qui ouvre l'article d'Oncescu et ses collègues de Harvard, publié en avril 2026. Le gain n'est pas anecdotique : à qualité égale, le cache mémoire utilisé pendant la génération diminue d'environ 30%, ce qui se traduit directement par une inférence plus rapide et moins coûteuse. La recette tient en une modification minuscule de l'architecture standard, mais ses conséquences touchent au cœur de ce qui rend les Transformers à la fois puissants et limités.</p>
+
+<p>Les Transformers dominent le traitement du langage depuis 2017. Leur force réside dans le parallélisme : tous les tokens d'une séquence sont traités simultanément, ce qui exploite à merveille les GPU modernes. Mais cette force cache une faiblesse structurelle que les auteurs nomment <em>profondeur temporelle insuffisante</em>. Comprendre cette faiblesse, et la manière élégante dont les chercheurs la corrigent, demande de plonger dans la mécanique interne d'une couche d'attention.</p>
+
+<h2>Le défi : la profondeur trompeuse des Transformers</h2>
+
+<p>Dans un Transformer classique, chaque couche fonctionne ainsi : pour chaque token de la séquence, on calcule une <em>requête</em>, une <em>clé</em> et une <em>valeur</em>. Les tokens postérieurs peuvent ensuite consulter les clés et valeurs des tokens antérieurs via le mécanisme d'attention. Empilez 24 couches, et vous obtenez 24 niveaux de raisonnement.</p>
+
+<p>Sauf que cette profondeur est en partie illusoire. Au sein d'une même couche, le token en position 100 attend des informations calculées à partir du token en position 5 — mais il s'agit d'informations <em>brutes</em>, qui n'ont subi qu'une seule passe d'attention. Pour qu'une information « rebondisse » plusieurs fois entre deux positions éloignées, il faut empiler des couches. Or chaque couche supplémentaire coûte cher : plus de paramètres, plus de mémoire pour le cache KV pendant l'inférence, plus de latence à chaque token généré.</p>
+
+<p>Des résultats théoriques (Merrill et al., Liu et al.) montrent que cette profondeur bornée a des conséquences concrètes : certaines classes de calculs, comme la simulation de certains automates finis, exigent une profondeur qui croît avec la longueur de la séquence. Les Transformers, par construction, ne peuvent pas s'adapter à cette exigence.</p>
+
+<p>Les RNN classiques, eux, possèdent une profondeur temporelle illimitée : l'information se propage de token en token de manière séquentielle. Mais cette propagation séquentielle souffre de deux maux : la disparition ou l'explosion des gradients, qui rend l'apprentissage instable, et l'incapacité à exploiter le parallélisme des GPU. Sans oublier que les RNN compriment tout l'historique dans un état de taille fixe — un goulot d'étranglement qui les rend incapables de tâches aussi simples que copier une longue séquence.</p>
+
+<p>L'enjeu, c'est donc d'inventer une architecture qui combine ces deux mondes : profondeur temporelle des RNN, mémoire complète et parallélisme des Transformers, sans hériter des faiblesses des uns ou des autres.</p>
+
+<h2>L'idée : faire boucler chaque couche sur elle-même</h2>
+
+<p>La modification proposée par les auteurs tient en une phrase. Dans un Transformer standard, la clé et la valeur stockées en position <em>i</em> sont calculées à partir de l'<em>entrée</em> de la couche en cette position. Dans le Recurrent Transformer, elles sont calculées à partir de la <em>sortie</em> de la couche en cette position.</p>
+
+<p>Une analogie aide à saisir la différence. Imaginez une réunion en table ronde où chaque participant intervient à tour de rôle. Dans le mode Transformer classique, quand un participant prend la parole, les suivants peuvent consulter ce qu'il a dit en arrivant — sa note préparatoire, en quelque sorte. Dans le mode Recurrent Transformer, ils consultent ce qu'il a dit <em>à la fin de son tour</em>, après qu'il ait lui-même écouté tous ceux qui sont passés avant lui et intégré leurs apports. La différence change tout : chaque intervention reflète déjà une digestion partielle de la discussion.</p>
+
+<p>Cette circularité pose un problème évident : pour calculer la sortie en position <em>i</em>, on a besoin d'attendre les sorties précédentes, qui ont elles-mêmes attendu les leurs. La couche devient séquentielle dans la dimension temporelle, alors que sa force initiale était précisément le parallélisme.</p>
+
+<p>Les auteurs résolvent cette tension par deux astuces. D'abord, ils introduisent une <strong>paire clé-valeur temporaire</strong> calculée depuis l'entrée du token courant, utilisée uniquement pour l'attention de ce token, puis jetée. Cela permet à chaque position de produire une attention bien définie sans dépendre circulairement d'elle-même. Ensuite, la paire clé-valeur <em>persistante</em>, calculée depuis la sortie, est stockée et exposée aux tokens suivants.</p>
+
+<p>Chaque couche maintient ainsi sa propre mémoire récurrente, indépendante des autres couches. C'est ce qui distingue cette approche du Feedback Transformer (Fan et al., 2020), qui utilisait une mémoire partagée à travers la profondeur. La séparation par couche n'est pas qu'un détail esthétique : elle conditionne tout l'algorithme d'efficacité qui suit.</p>
+
+<h3>Le problème du débit mémoire et la solution par tuilage</h3>
+
+<p>Une implémentation naïve du Recurrent Transformer pendant l'entraînement souffre d'un défaut majeur. Les clés et valeurs persistantes apparaissent une à une, séquentiellement. Pour chaque nouveau token, l'attention doit lire toutes les paires précédemment calculées en mémoire haute bande passante (HBM). Le ratio entre opérations arithmétiques et octets transférés tombe à environ 1 — un régime catastrophique sur des GPU H100, conçus pour exécuter des centaines d'opérations par octet lu.</p>
+
+<p>L'observation clé des auteurs : pendant l'entraînement, <strong>toutes les requêtes sont disponibles dès le départ</strong>. Seules les clés et valeurs apparaissent progressivement. On peut donc, dès qu'une nouvelle paire est calculée, la propager immédiatement vers plusieurs requêtes futures plutôt qu'une seule.</p>
+
+<p>L'algorithme de tuilage qui en découle s'inspire de Flash Inference et de FlashAttention. Le principe : organiser le calcul en blocs de taille croissante, pour qu'une paire clé-valeur chargée en mémoire rapide serve à mettre à jour les accumulateurs de plusieurs requêtes avant d'être évincée. Le coût en transferts mémoire passe de quadratique en N² à N log N, où N est la longueur de la séquence. Concrètement, pour une séquence de 2000 tokens, la latence passe d'environ 2500 ms (implémentation naïve) à un comportement quasi-linéaire — un facteur d'accélération qui rend l'architecture entraînable en pratique.</p>
+
+<p>Cette gymnastique mathématique est exacte : le résultat numérique est identique à celui d'une attention causale standard, aux erreurs d'arrondi flottant près. Pour maintenir la stabilité numérique de la softmax sur des morceaux successifs, les auteurs réutilisent la technique du <em>online softmax</em> (Rabe et Staats, 2021) : on garde un maximum courant, un normalisateur courant et un numérateur courant, qu'on rafraîchit à chaque nouveau bloc.</p>
+
+<h2>Résultats : moins de couches, meilleurs scores</h2>
+
+<p>Les expériences principales se déroulent sur le corpus C4, avec des modèles de 150 et 300 millions de paramètres entraînés sur environ 3 milliards de tokens (régime Chinchilla 1×). Le tableau central de l'article est limpide. Pour le modèle 300M :</p>
+
+<ul>
+<li>Transformer 12 couches (largeur 1408) : entropie croisée de validation 2.896</li>
+<li>Transformer 24 couches (largeur 1024) : 2.892</li>
+<li>Recurrent Transformer 12 couches (largeur 1408) : 2.867</li>
+<li>Recurrent Transformer 6 couches (largeur 2048) : 2.860</li>
+</ul>
+
+<p>Le Recurrent Transformer à 6 couches surpasse le Transformer à 24 couches, à nombre de paramètres égal. La récurrence par couche permet bien de troquer la profondeur contre la largeur. Sur les benchmarks aval (PIQA, HellaSwag, ARC Easy, OpenBookQA, SciQ, Winogrande), mesurés en entropie croisée sur la bonne réponse, le Recurrent Transformer surpasse systématiquement les baselines Transformer.</p>
+
+<p>Les diagnostics synthétiques de la suite MAD enrichissent le tableau. Sur des tâches comme la copie de séquences, le rappel en contexte ou la copie sélective, une seule couche de Recurrent Transformer obtient des précisions au niveau de la séquence proches de 100% là où une seule couche de Transformer plafonne près de 0%. Ces tâches isolent précisément la capacité d'un modèle à exécuter du calcul itératif intra-couche, et confirment que le mécanisme fait ce qu'il prétend faire.</p>
+
+<p>Côté stabilité d'entraînement, les auteurs développent une analyse théorique reposant sur les chemins d'influence dans le graphe de calcul. Ils montrent que, contrairement aux RNN classiques, le Recurrent Transformer combine deux types de chemins : des chemins directs à un saut (l'attention standard d'un token à un autre) et des chemins multi-sauts (passant par plusieurs paires clé-valeur intermédiaires). La normalisation RMS appliquée avant le calcul des clés et valeurs persistantes contrôle l'amplification des chemins longs. Un théorème explicite, dans un cadre simplifié, montre qu'aucune explosion de gradient n'est attendue à l'initialisation tant qu'une condition simple sur la matrice des valeurs est respectée.</p>
+
+<p>L'ablation de la normalisation RMS est éloquente : sans elle, l'apprentissage devient instable au-delà d'un taux d'apprentissage de 1e-3, alors qu'avec, des valeurs jusqu'à 1e-2 restent stables. Le détail compte.</p>
+
+<h2>Pourquoi cette architecture intéresse l'industrie</h2>
+
+<p>Les bénéfices à l'entraînement sont significatifs, mais c'est à l'inférence que l'enjeu économique devient palpable. Quand un modèle de langage génère du texte token par token, le goulot d'étranglement n'est presque jamais le calcul brut : c'est le débit mémoire. Le cache KV — les clés et valeurs accumulées depuis le début de la génération — doit être relu intégralement à chaque nouveau token. Plus ce cache est gros, plus la génération ralentit et plus la mémoire GPU sature.</p>
+
+<p>Réduire le nombre de couches d'un facteur 2 tout en augmentant la largeur de √2 garde le nombre de paramètres constant, mais divise la taille du cache KV par √2 environ — soit la baisse de 30% mesurée par les auteurs. Pour un déploiement à grande échelle, cela se traduit en :</p>
+
+<ul>
+<li>Plus de requêtes traitées simultanément sur un même GPU, donc un coût par token plus faible</li>
+<li>Une latence par token réduite dans le régime mémoire-borné, qui domine l'inférence des LLM</li>
+<li>Une meilleure parallélisation par tenseur, plus efficace sur largeur que sur profondeur</li>
+</ul>
+
+<p>Le Recurrent Transformer se positionne donc comme une architecture orientée inférence. Le coût se paye à l'entraînement : le débit reste inférieur à celui d'un Transformer classique (42k tokens/seconde contre 132k pour 12 couches en 300M), même avec l'algorithme de tuilage. Pour les acteurs qui entraînent une fois et déploient à grande échelle — c'est-à-dire la quasi-totalité du marché — ce compromis penche du bon côté.</p>
+
+<p>Un autre aspect mérite attention : la taille de batch critique. Les auteurs se heurtent à une contrainte fondamentale des architectures récurrentes en temps. Le MLP de chaque couche ne traite plus tous les tokens d'un coup, mais un par un, ce qui rend l'intensité arithmétique du MLP linéaire en la taille de batch. Pour rester compute-bound, il faut des batches d'au moins 512 séquences. Combiné à la mémoire d'activations nécessaire au backward, cela impose des techniques de checkpointing agressives. Les auteurs notent que la structure du calcul permet une recomputation parallélisable, ce qui atténue le surcoût.</p>
+
+<h2>Pour aller plus loin : les questions ouvertes</h2>
+
+<p>Plusieurs aspects méritent d'être creusés avant un déploiement à l'échelle des modèles frontières. D'abord, les expériences plafonnent à 300M de paramètres et 3 milliards de tokens. La validité du compromis profondeur-largeur à l'échelle de modèles à plusieurs milliards de paramètres reste à démontrer. Les lois de scaling pourraient se déformer : les architectures qui gagnent à petite échelle ne gagnent pas toujours à grande échelle.</p>
+
+<p>Ensuite, les auteurs n'ont pas testé de noyaux CUDA optimisés. Toute leur implémentation utilise PyTorch et torch.compile, avec CUDA Graphs pour masquer la latence de dispatch. Une implémentation kernel-level pourrait réduire encore les surcoûts d'entraînement et déplacer la frontière du compromis.</p>
+
+<p>Une variante prometteuse mentionnée en discussion : la récurrence par blocs. Plutôt que d'appliquer la récurrence token par token, on l'applique sur des blocs de quelques dizaines de tokens, ce qui permet de retrouver davantage de parallélisme tout en conservant une partie de la profondeur temporelle additionnelle. Le curseur entre profondeur récurrente et vitesse d'entraînement devient ajustable.</p>
+
+<p>Enfin, l'extension naturelle vers le décodage spéculatif et les architectures hybrides (Mamba, RWKV) reste ouverte. Le Recurrent Transformer occupe une position intermédiaire entre l'attention pleinement parallèle et les modèles à espace d'états bornés. Cette position pourrait inspirer des architectures hybrides où certaines couches récurrentes par construction côtoient des couches d'attention standard, chacune jouant le rôle pour lequel elle est la mieux taillée.</p>
+
+<p>Un point philosophique mérite mention. Depuis 2017, l'évolution des architectures de séquence a oscillé entre deux pôles : le Transformer pur, qui sacrifie la profondeur temporelle pour le parallélisme, et les modèles récurrents, qui font le choix inverse. Les architectures à espace d'états comme Mamba ont tenté la synthèse en compactant l'historique dans un état de taille fixe — une voie qui se heurte au théorème de copie démontré par Jelassi et al. : aucun modèle à mémoire bornée ne peut copier une séquence arbitrairement longue. Le Recurrent Transformer propose une autre synthèse : garder la mémoire complète des Transformers, mais lui ajouter de la profondeur récurrente intra-couche. La voie semble assez féconde pour mériter qu'on l'explore au-delà de ce premier proof of concept.</p>
+
+<p>Le code est disponible sur GitHub (geniucos/recurrent-transformer). À ceux qui construisent des LLM à coûts d'inférence contraints — la quasi-totalité des équipes en production — l'expérience vaut probablement le détour.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

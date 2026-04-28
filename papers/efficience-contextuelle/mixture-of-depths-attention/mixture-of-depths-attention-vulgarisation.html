@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mixture-of-Depths Attention — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Mixture-of-Depths Attention</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les modèles oublient ce qu'ils savaient déjà</h2>
+
+<p>Un modèle de langage à 48 couches reçoit une question. Le mot-clé décisif est repéré dès la couche 5, sous une forme nette. Trente-cinq couches plus tard, ce signal s'est dilué dans la trajectoire du flux résiduel, écrasé par les milliers de mises à jour intermédiaires. La couche finale doit prendre une décision, mais elle ne dispose plus que d'une version brouillée de ce que les couches profondes avaient pourtant identifié avec précision.</p>
+
+<p>Ce phénomène a un nom dans la littérature : la dilution d'information. Il explique pourquoi empiler plus de couches dans un Transformer ne donne pas, en pratique, les gains qu'on attend en théorie. L'équipe de ByteDance Seed et de l'Université Huazhong vient de proposer une réponse architecturale : <strong>Mixture-of-Depths Attention</strong>, ou MoDA. L'idée tient en une phrase : permettre à chaque couche d'aller relire activement ce que les couches précédentes ont écrit, comme on consulte des notes de réunion au lieu de se fier à sa mémoire.</p>
+
+<p>Sur un modèle de 1,5 milliard de paramètres entraîné avec la recette OLMo2, MoDA améliore la performance moyenne sur 10 benchmarks de 2,11 points pour un surcoût en calcul de 3,7%. Le détail technique vaut le détour, parce qu'il révèle comment l'architecture des LLM peut encore progresser sans grossir.</p>
+
+<h2>Le problème : pourquoi les couches profondes oublient</h2>
+
+<p>L'architecture Transformer standard repose sur les connexions résiduelles introduites par ResNet en 2016. Le principe est simple : chaque couche prend l'état caché précédent, le modifie un peu, et ajoute le résultat à l'entrée. Cette addition répétée stabilise l'apprentissage des réseaux profonds. Sans elle, les gradients s'évanouiraient et l'entraînement échouerait.</p>
+
+<p>Le revers est moins discuté. Cette mécanique additive compresse toute l'histoire des calculs précédents dans un seul tenseur de taille fixe. Imaginez 48 personnes qui doivent toutes écrire leur message sur la même feuille de papier en se passant la feuille. La feuille a une taille finie. Plus on avance, plus les premiers messages deviennent illisibles, recouverts par les contributions suivantes. Les caractéristiques pertinentes formées dans les couches superficielles finissent diluées dans le bruit accumulé.</p>
+
+<p>Plusieurs équipes ont tenté de corriger ce défaut. L'approche DenseNet, transposée aux Transformers (DenseFormer, par exemple), connecte chaque couche à toutes les couches précédentes. Le problème : le coût en paramètres explose en O(L²D²) où L est la profondeur et D la largeur. Pour un modèle à 48 couches et 4096 dimensions, on parle de plusieurs milliards de paramètres ajoutés rien qu'à cause des connexions denses. Personne ne peut se le permettre à l'échelle des LLM modernes.</p>
+
+<p>D'où la question centrale du papier : peut-on conserver la richesse d'une connectivité dense sans en payer le prix ?</p>
+
+<h2>La méthode : transformer la profondeur en mémoire consultable</h2>
+
+<p>Les auteurs partent d'une analogie simple. Le mécanisme d'attention, qui a fait le succès des Transformers, permet à un token de regarder dynamiquement n'importe quel autre token de la séquence. C'est un mécanisme de récupération sélective : chaque mot décide à quels autres mots prêter attention selon le contexte.</p>
+
+<p>Pourquoi ne pas appliquer le même principe à la dimension de profondeur ? Au lieu de subir passivement l'agrégation par addition résiduelle, chaque couche pourrait choisir activement quelles informations aller chercher dans les couches précédentes.</p>
+
+<p>Concrètement, MoDA stocke à chaque couche une paire clé-valeur (K, V) pour chaque token. Quand la couche L traite le token à la position t, elle peut interroger non seulement les autres positions de la séquence à la couche L (l'attention classique), mais aussi les paires (K, V) du token t à toutes les couches précédentes 0, 1, 2, ..., L-1. Le tout passe à travers une seule opération softmax unifiée, ce qui permet au modèle de répartir librement son attention entre l'axe séquentiel et l'axe profondeur.</p>
+
+<p>Trois points méritent d'être détaillés.</p>
+
+<h3>La géométrie de la mémoire profonde</h3>
+
+<p>Pour un token donné, la mémoire profonde est verticale : ce sont les versions successives du même token au fil des couches. Le token à la position 7 à la couche 35 peut consulter la version qu'il avait à la couche 12, à la couche 20, et ainsi de suite. C'est une mémoire d'évolution interne, distincte de l'attention séquentielle qui regarde latéralement les autres tokens.</p>
+
+<h3>Le softmax unifié</h3>
+
+<p>Une option naïve consisterait à faire deux attentions séparées (séquentielle puis profonde) et à les combiner après coup. Les auteurs choisissent de fusionner les deux dans une unique opération softmax. Le modèle calcule d'un seul coup la distribution de probabilité sur l'ensemble {KV séquentiels + KV profonds} et compare directement la pertinence relative des deux sources. Cette unification donne un espace de représentation cohérent et permet au modèle d'arbitrer dynamiquement.</p>
+
+<h3>Réutilisation des projections</h3>
+
+<p>Le détail malin : MoDA ne crée pas de nouvelles matrices de projection pour les requêtes en profondeur. Il réutilise celles de l'attention séquentielle. Seules les clés et valeurs en profondeur nécessitent de petites projections supplémentaires (groupées grâce à GQA, le Grouped Query Attention). Résultat : le surcoût en paramètres est marginal, là où l'approche dense classique aurait fait exploser le budget.</p>
+
+<h2>Le défi caché : faire tourner ça vite sur un GPU</h2>
+
+<p>Une bonne idée algorithmique ne sert à rien si elle divise par dix la vitesse d'entraînement. Or, l'implémentation naïve de MoDA en PyTorch souffre d'un défaut majeur : l'accès aux états historiques de profondeur est non contigu en mémoire. Pour chaque requête, le GPU doit aller chercher des fragments éparpillés dans la HBM (la mémoire principale), ce qui détruit le débit.</p>
+
+<p>Les auteurs ont donc retravaillé l'implémentation à un niveau qui rappelle FlashAttention. Trois optimisations s'empilent.</p>
+
+<p>D'abord, ils aplatissent le cache de profondeur en un seul axe contigu de longueur T × L (séquence × nombre de couches). Chaque requête accède à une plage continue, ce qui rend les lectures compatibles avec les noyaux de type FlashAttention. Cette seule modification fait passer le temps d'exécution de 2128 ms à 13 ms sur un test contrôlé, soit un facteur 162.</p>
+
+<p>Ensuite, le layout chunk-aware. Plutôt que de balayer toute la profondeur pour chaque requête, ils découpent la séquence en chunks et associent à chaque chunk une zone de profondeur locale. L'utilisation effective des données chargées passe de 1/T à 1/C, où C est la taille du chunk. Le temps tombe à 6,3 ms.</p>
+
+<p>Enfin, l'indexation group-aware exploite la structure de GQA. Comme G requêtes consécutives partagent la même tête clé-valeur, elles peuvent réutiliser les mêmes blocs de profondeur. L'utilisation effective grimpe à G/C. Le temps final atteint 1,46 ms, soit un gain de 1458× par rapport à la version PyTorch naïve.</p>
+
+<p>Au final, le noyau MoDA atteint 97,3% de l'efficacité de FlashAttention-2 sur des séquences de 64K tokens. Le surcoût pour la couche supplémentaire de récupération en profondeur devient négligeable à mesure que la séquence s'allonge.</p>
+
+<h2>Les résultats : des gains qui tiennent à l'échelle</h2>
+
+<p>L'évaluation porte sur des modèles de 700M et 1,5B paramètres entraînés sur 400 milliards de tokens du dataset OLMo2. Quelques chiffres se détachent.</p>
+
+<p>Sur le modèle 1,5B, MoDA fait passer la moyenne sur 10 benchmarks downstream de 62,28 à 64,39 (+2,11 points). Les gains se concentrent sur les tâches de raisonnement et de connaissance : ARC-Challenge passe de 42,47 à 46,82 (+4,35), BoolQA de 63,61 à 67,34 (+3,73), WinoGrande de 63,22 à 65,59 (+2,37). MMLU progresse de 1,86 point, ce qui est inhabituel pour une simple modification architecturale à budget de paramètres comparable.</p>
+
+<p>Côté perplexité, les améliorations sont distribuées sur l'ensemble des 10 domaines de validation testés (C4, ICE, S2ORC, Pile, Wikipedia, Books, Common Crawl, peS2o, Reddit, Stack). La moyenne passe de 13,67 à 13,47 sur le 1,5B. Aucun domaine ne régresse, ce qui est rare quand on touche à l'architecture.</p>
+
+<p>Une étude d'ablation montre où vient le gain. Ajouter simplement la mémoire profonde en réutilisant les KV existants apporte +1,17 point sur la moyenne downstream pour un surcoût en FLOPs de 0,12%. Ajouter une projection KV pour les couches FFN améliore encore de 0,77 point. En revanche, ajouter une projection KV séparée pour la profondeur dans les couches d'attention ne donne que +0,10 point pour 36M paramètres supplémentaires : saturation.</p>
+
+<p>Une découverte secondaire mérite mention : MoDA fonctionne mieux avec post-norm qu'avec pre-norm, alors que la plupart des architectures modernes ont migré vers pre-norm. Sur un modèle 48 couches, le passage à post-norm avec MoDA fait baisser la perte de validation de 3,3759 à 3,3653, là où pre-norm sans MoDA stagnait à 3,3800. Les auteurs ne cachent pas leur surprise et signalent ce résultat comme une piste à creuser.</p>
+
+<h3>Un effet collatéral : moins d'attention sink</h3>
+
+<p>L'analyse des cartes d'attention révèle un phénomène inattendu. Les modèles Transformer classiques développent des "attention sinks" : quelques tokens (souvent les premiers de la séquence) absorbent une fraction disproportionnée de la masse d'attention, sans rapport avec leur contenu sémantique. C'est un comportement parasite qui dégrade la qualité du modèle en long contexte.</p>
+
+<p>Avec MoDA, une partie de cette masse d'attention parasite migre vers les slots de profondeur, qui semblent capter de l'information réellement utile. Le mécanisme n'a pas été conçu pour ça, mais il améliore la répartition probabiliste de l'attention. Les auteurs préfèrent rester prudents et qualifient cet effet de piste à étudier.</p>
+
+<h2>Pourquoi ça compte au-delà du papier</h2>
+
+<p>L'industrie des LLM a beaucoup investi sur la croissance de la largeur (plus de paramètres par couche) et de la longueur de contexte. La profondeur est restée un parent pauvre, en partie parce que les gains marginaux sont plus difficiles à obtenir et les coûts d'optimisation plus élevés. MoDA propose une voie pour rouvrir cette dimension.</p>
+
+<p>Le surcoût de 3,7% en FLOPs pour 2,11 points de gain moyen est un excellent rapport. Pour mettre en perspective : passer de Llama 2 7B à Llama 2 13B représente environ 85% de FLOPs supplémentaires pour des gains downstream du même ordre de grandeur. Une optimisation architecturale qui apporte autant pour quelques pour cent change le calcul économique.</p>
+
+<p>Le second point est l'efficacité matérielle. Beaucoup d'idées architecturales prometteuses meurent en production parce qu'elles cassent les noyaux optimisés. Les auteurs ont fait l'effort d'écrire un noyau Triton fusionné qui s'aligne sur les contraintes des GPU modernes (SM, Tensor Cores, hiérarchie HBM/SRAM). Le code est prévu pour être publié sur GitHub. Ce niveau de soin facilite l'adoption.</p>
+
+<p>Troisième point : la compatibilité avec GQA. La plupart des modèles modernes utilisent Grouped Query Attention pour réduire la taille du cache KV en inférence. MoDA s'y intègre proprement, et profite même de la structure de groupes pour optimiser l'accès aux KV en profondeur. C'est l'inverse d'une optimisation académique qui marche en isolation : MoDA s'empile sur les pratiques actuelles.</p>
+
+<h2>Pour aller plus loin : ce qui reste ouvert</h2>
+
+<p>Les auteurs reconnaissent eux-mêmes plusieurs limites.</p>
+
+<p>Le coût mémoire du cache KV de profondeur grossit linéairement avec le nombre de couches. Pour un modèle à 48 couches, cela revient à multiplier par 48 la taille du cache d'attention. À l'échelle d'un trillion de paramètres et de contextes de plusieurs millions de tokens, ce coût devient prohibitif. La section discussion propose une piste : un buffer de slots borné de taille S, où S est très inférieur à L. Soit on garde les couches les plus récentes (sliding window), soit on garde les plus pertinentes selon une politique d'évaluation. Aucune des deux options n'a été testée empiriquement.</p>
+
+<p>Le retour du post-norm est l'autre énigme. Pourquoi MoDA bénéficie-t-il davantage de post-norm que de pre-norm, alors que la communauté avait tranché en faveur du second pour des raisons de stabilité ? L'hypothèse intuitive est que post-norm produit des états cachés plus diversifiés en magnitude entre couches, ce qui rend la mémoire profonde plus informative. Mais c'est de la spéculation.</p>
+
+<p>L'évaluation s'arrête à 1,5B paramètres. Les lois d'échelle peuvent réserver des surprises : un mécanisme qui aide à 1,5B peut saturer à 70B, ou au contraire se renforcer. Les auteurs annoncent vouloir étendre à des tailles industrielles, mais le papier ne fournit pas encore ces résultats.</p>
+
+<p>Enfin, MoDA est présenté comme architecture-agnostic. Les auteurs suggèrent son application aux modèles multimodaux et aux modèles du monde, où les Transformers se généralisent. La question de savoir si la dilution d'information est un problème aussi central dans ces régimes reste ouverte.</p>
+
+<p>Le papier ne révolutionne pas le Transformer. Il rappelle plutôt qu'on a probablement laissé de la performance sur la table en se concentrant trop exclusivement sur la largeur et la longueur de contexte. La profondeur, considérée comme un terrain stagnant, peut redevenir un axe de progrès si on la couple à des mécanismes de récupération dynamique. C'est une leçon utile à un moment où la course aux paramètres bute sur des rendements décroissants.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
