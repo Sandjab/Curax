@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le harness — l'ensemble du scaffolding entourant un modèle de langage (system prompt, outils, middleware, mémoire, sub-agents) — détermine désormais une part substantielle des performances des agents de coding sur des tâches longues. Sa conception manuelle reste coûteuse, peu scalable et difficile à étudier scientifiquement. Les auteurs formalisent une question opérationnelle : un agent d'évolution peut-il faire évoluer de manière stable l'ensemble des composants d'un harness, et non plus le seul prompt ?</p>
+<p>Leur thèse centrale identifie l'observabilité, et non la capacité du modèle évolueur, comme le goulot d'étranglement. AHE (Agentic Harness Engineering) instrumente trois étapes — édition de composants, inspection de trajectoires, prise de décision — par trois piliers d'observabilité appariés.</p>
+
+<h2>Méthodologie</h2>
+<p>Le harness s'instancie sur le framework NexAU, qui expose sept types de composants éditables comme fichiers découplés à des points de montage fixes. La graine NexAU0 est volontairement minimale : un seul outil shell, aucun middleware, skill ni sub-agent. Cette austérité élimine la contamination de l'attribution : tout gain doit être gagné contre des rollouts mesurés.</p>
+<p>La boucle externe comporte six phases (Algorithme 1) : rollout (k=2 par tâche), nettoyage des traces, attribution du manifeste précédent et rollback des éditions rejetées, distillation par l'Agent Debugger en corpus probatoire stratifié, édition par l'Evolve Agent avec nouveau manifeste, commit git. Chaque édition s'accompagne d'une prédiction auto-déclarée (tâches qu'elle devrait corriger, tâches à risque de régression), vérifiée au tour suivant contre les deltas observés. Le verdict transforme chaque édition en contrat falsifiable, et les contrats invalidés sont annulés au niveau du fichier.</p>
+<p>Trois rôles partagent un même modèle de base (GPT-5.4 high) pour isoler le gain au harness lui-même et non à la capacité de l'analyseur ou de l'éditeur. Des contraintes de contrôlabilité bloquent les raccourcis qu'un auto-modifieur non contraint exploiterait : verifier, tracer et configuration LLM en lecture seule.</p>
+
+<h2>Résultats principaux</h2>
+<p>Dix itérations font passer pass@1 sur Terminal-Bench 2 de 69,7 % à 77,0 %, dépassant Codex-CLI (71,9 %) ainsi que les baselines auto-évolutives ACE (68,9 %) et TF-GRPO (72,3 %). Le gain n'est pas monotone — la courbe présente quatre pics — ce que les auteurs imputent honnêtement à une cécité aux régressions (voir RQ3b).</p>
+<p>Le harness gelé transfère à SWE-bench-verified : succès agrégé supérieur à NexAU0 avec 12 % de tokens en moins, et 32 % de moins qu'ACE. En transfert cross-modèle, cinq bases sur cinq enregistrent un gain positif (+2,3 à +10,1 pp), avec les gains les plus marqués sur les modèles les plus faibles (deepseek-v4-flash, gemini-3.1-flash-lite). Cette tendance suggère que le harness encode des patterns de coordination que les modèles moins capables exploitent davantage.</p>
+<p>L'ablation par composant révèle une asymétrie diagnostique : mémoire à long terme (+5,6 pp), outils (+3,3 pp) et middleware (+2,2 pp) portent chacun le gain seuls, tandis que le system prompt seul régresse (−2,3 pp). La structure factuelle transfère ; la stratégie en prose ne transfère pas.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le verrou empirique se situe dans la prédiction des régressions. La précision et le rappel des prédictions de fixes (33,7 % et 51,4 %) sont environ 5× au-dessus du baseline aléatoire, mais ceux des prédictions de régressions plafonnent à environ 2× le hasard. L'agent peut justifier pourquoi une édition devrait aider, mais ne peut nommer fiablement les tâches qu'elle est sur le point de casser. Cette cécité explique mécaniquement la non-monotonie de la courbe d'évolution.</p>
+<p>Les composants interagissent de manière non-additive : la somme des gains mono-composant (+11,1 pp) excède le gain plein (+7,3 pp), et la mémoire seule dépasse AHE complet sur la tranche Hard. L'optimisation de l'agrégat dominé par 55 tâches Medium pousse vers un compromis qui sacrifie partiellement le gain Hard.</p>
+<p>L'évaluation repose sur un seul benchmark cible (Terminal-Bench 2), une seule campagne d'évolution, et k=2 rollouts par tâche — insuffisant pour estimer une variance sérieuse sur 89 tâches dont 4 seulement en tranche Easy. Aucun intervalle de confiance n'est rapporté. Le couplage timeout/budget à GPT-5.4 high constitue un risque de généralisation que les auteurs reconnaissent. Le coût computationnel d'une campagne (~32 heures) reste comparé qualitativement plutôt que quantifié face aux baselines.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est publié sur GitHub (china-qijizhifeng/agentic-harness-engineering) et l'annexe B reproduit littéralement les prompts critiques (Evolve Agent, Agent Debugger, Code Agent seed). L'infrastructure d'exécution est documentée (sandbox E2B, dispatcher Harbor, tracer Langfuse, concurrence 16). Une étude de cas (annexe C) trace quatre trajectoires précises avec diff de manifeste. Les principales lacunes : pas de seed unique pour les rollouts, pas de variance reportée, et pas de coût en dollars/tokens pour une campagne complète.</p>
+
+<h2>Impact et applications</h2>
+<p>AHE déplace utilement le débat sur l'auto-amélioration des agents : plutôt que de modifier les poids du modèle, l'agent externalise son expérience dans des artefacts éditables, inspectables et transférables. La découverte que la valeur réside dans les outils, le middleware et la mémoire — pas dans le prompt — est un résultat actionnable pour les ingénieurs de harness, et explique rétrospectivement les limites des approches prompt-only (ACE, GEPA, ExpeL).</p>
+<p>Le mécanisme du change manifest comme contrat falsifiable est une contribution méthodologique réutilisable hors du contexte coding. Le pattern « auto-prédiction vérifiée au tour suivant » offre un substrat d'attribution mesurable pour toute boucle d'auto-évolution.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail se distingue de trois lignées : (1) les méthodes d'optimisation prompt-only (DSPy, GEPA, ACE, Reflexion, ExpeL) qui n'ouvrent pas le scaffolding aux édits ; (2) les approches d'évolution de structure programme (Voyager skill libraries, ADAS, AlphaEvolve, AFlow) qui restent confinées à un type de composant ; (3) Meta-Harness [15] qui partage l'objectif mais via une approche end-to-end différente. AHE revendique l'évolution conjointe de l'ensemble des composants comme un tout combinatoire, position défendable empiriquement par l'ablation montrant la complémentarité fonctionnelle des couches.</p>
+<p>L'argument épistémologique sous-jacent — l'observabilité comme pivot de conception — résonne avec la « bitter lesson of agent harnesses » de Zunic citée par les auteurs, et avec les principes d'ingénierie de contexte d'Anthropic.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>4</td><td>Question opérationnelle bien formulée, pivot conceptuel (observabilité) clairement identifié</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trois RQ articulées, baselines pertinentes, ablation par composant, transfert cross-benchmark et cross-modèle</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>89 tâches dont 4 Easy, k=2 rollouts, une seule campagne, aucune réplication ni intervalle de confiance</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>pass@1 et tokens/trial bien définis, convention conservatrice (timeouts comptés en échec), Succ/Mtok en annexe</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Modèle partagé entre rôles pour isoler le gain harness, contraintes de contrôlabilité bloquant les raccourcis, seed minimal anti-contamination</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, prompts intégralement reproduits en annexe, infrastructure documentée ; absence de seeds explicites</td></tr>
+<tr><td>Transparence sur les limites</td><td>4</td><td>Section Limitations honnête, RQ3b discute la cécité aux régressions, non-additivité reconnue</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier framework joint multi-composants, mécanisme du change manifest réutilisable, résultats actionnables sur la localisation du gain</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

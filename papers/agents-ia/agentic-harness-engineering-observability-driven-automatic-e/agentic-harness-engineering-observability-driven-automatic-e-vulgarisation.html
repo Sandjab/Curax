@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand l'agent compte moins que son atelier</h2>
+
+<p>Sur Terminal-Bench 2, un benchmark qui mesure la capacité d'un agent IA à résoudre des tâches longues en ligne de commande, le score est passé de 69,7% à 77,0% en dix itérations. Modèle identique. Code de l'agent inchangé. Seul l'environnement autour du modèle a évolué — et il a évolué tout seul, sous le pilotage d'un autre agent IA.</p>
+
+<p>Cette publication de chercheurs de Fudan, Pékin et Shanghai Qiji Zhifeng s'attaque à un constat embarrassant : les progrès récents des agents de code (Claude Code, Codex CLI, OpenHands, Aider) tiennent autant au modèle qu'à la machinerie qui l'entoure. Cette machinerie a un nom, <em>harness</em>, et personne ne sait vraiment l'optimiser de manière systématique.</p>
+
+<h2>Le harness, ce maillon faible qu'on ne sait pas industrialiser</h2>
+
+<p>Un harness, c'est tout ce qui sépare le modèle de langage de l'environnement réel. Le prompt système qui dicte le comportement. Les outils que le modèle peut invoquer (lire un fichier, lancer un test, exécuter une commande shell). Les middlewares qui interceptent et reformatent les échanges. Les compétences réutilisables stockées comme du savoir-faire. La mémoire long-terme qui survit aux sessions.</p>
+
+<p>Prenez deux harness différents avec le même GPT-5.4 derrière, vous obtenez des écarts de 25 points sur le même benchmark. Le harness opencode plafonne à 47,2%. Codex grimpe à 71,9%. Même modèle, même tâches, deux mondes.</p>
+
+<p>Comment optimise-t-on un harness aujourd'hui ? À la main. Un ingénieur lit des milliers de traces d'exécution, repère les motifs d'échec récurrents, modifie le prompt système, ajuste un outil, ajoute un garde-fou. Méthode artisanale, lente, coûteuse, difficile à reproduire. Le pire : impossible à étudier scientifiquement, parce que les améliorations se diluent dans des dizaines de micro-décisions qu'on ne peut pas isoler.</p>
+
+<p>L'idée évidente serait de confier ce travail à un autre agent IA. Mais les tentatives existantes (ACE, TF-GRPO, GEPA) ne touchent qu'au prompt ou à un playbook textuel. Elles ne touchent jamais aux outils, aux middlewares, à la structure même du système. Pourquoi ? Parce qu'un agent évolutionnaire face à une stack <em>tightly-coupled</em> de plusieurs milliers de lignes ne sait pas où agir, ni si son edit a fonctionné.</p>
+
+<h2>Trois piliers d'observabilité pour rendre l'évolution traçable</h2>
+
+<p>La proposition des auteurs s'appelle Agentic Harness Engineering, ou AHE. Le pari central : ce n'est pas la capacité de l'agent évolutionnaire qui bloque, c'est l'observabilité du système qu'il est censé modifier. Donnez-lui un espace d'action explicite, des preuves structurées, et un mécanisme pour vérifier ses paris, il converge.</p>
+
+<h3>Premier pilier — exposer les composants comme des fichiers</h3>
+
+<p>Plutôt qu'une stack monolithique, AHE s'appuie sur le framework NexAU qui sépare sept types de composants en sept fichiers distincts : prompt système, descriptions d'outils, implémentations d'outils, middlewares, compétences, sous-agents, mémoire long-terme. Chaque type vit à un emplacement fixe. Chaque modification devient un commit Git unitaire, donc réversible avec une granularité fine.</p>
+
+<p>L'analogie qui marche : c'est la différence entre un moteur scellé et un moteur dont chaque pièce est démontable. Quand un motif d'échec se manifeste, on peut le rattacher à une pièce précise au lieu de fouiller dans 500 lignes de prompt en prose libre.</p>
+
+<h3>Deuxième pilier — distiller des millions de tokens en un dossier de preuves</h3>
+
+<p>Une trace d'exécution d'un agent de code peut faire dix millions de tokens. Aucun agent évolutionnaire ne peut consommer ça directement. Les auteurs utilisent un Agent Debugger qui transforme chaque trace en un environnement navigable de fichiers : chaque message de l'agent devient un fichier, chaque tâche reçoit un rapport d'analyse de cause racine, et un document de synthèse global agrège l'ensemble.</p>
+
+<p>L'agent évolutionnaire entre par cette synthèse, descend vers les rapports détaillés, puis ne consulte les traces brutes qu'en dernier recours pour vérifier une hypothèse. La pile passe de dix millions de tokens à environ dix mille consommables.</p>
+
+<h3>Troisième pilier — chaque modification est un contrat falsifiable</h3>
+
+<p>Voici le mécanisme le plus original. Quand l'agent évolutionnaire modifie un composant, il doit écrire un manifeste qui déclare : voici les tâches que je m'attends à corriger, et voici les tâches que je risque de casser. Ce manifeste est versionné. Au tour suivant, le système croise les prédictions avec les vrais résultats des évaluations. Si la prédiction tient, l'edit est conservé. Si elle échoue, l'edit est annulé automatiquement au niveau du fichier.</p>
+
+<p>Chaque modification n'est plus une rationalisation a posteriori, c'est un contrat vérifié par les faits. L'évolution ne dégénère plus en essais-erreurs sans mémoire.</p>
+
+<h2>Ce que ça donne sur le banc d'essai</h2>
+
+<p>Le score initial part d'un harness délibérément pauvre : un seul outil shell, zéro middleware, zéro compétence, zéro mémoire. C'est volontaire — un harness déjà optimisé fausserait l'attribution des gains.</p>
+
+<p>Au bout de dix itérations sur Terminal-Bench 2, le pass@1 monte à 77,0%. Le harness humain Codex-CLI plafonne à 71,9%. Les baselines auto-évolutives ACE et TF-GRPO restent en dessous, à 68,9% et 72,3%. Sur la difficulté Hard, AHE talonne Codex de 3 points seulement, et un seul de ses composants (la mémoire long-terme injectée seule dans le harness initial) suffit à dépasser Codex sur cette tranche.</p>
+
+<p>Le test de transfert est plus parlant encore. On gèle le harness obtenu et on le rebalance sur SWE-bench-verified, un benchmark complètement différent (500 tâches de résolution de bugs sur sept dépôts open-source). Sans ré-évolution, AHE devient le meilleur score agrégé tout en consommant 12% de tokens en moins que la baseline. Sur les deux dépôts les plus complexes (Django, Sphinx-doc), les gains sont les plus marqués — c'est la structure du harness qui transfère, pas une optimisation locale au benchmark d'origine.</p>
+
+<p>Deuxième test de transfert : on rebalance le même harness sur cinq autres modèles de base. Gains de +2,3 à +10,1 points selon le modèle. Le pattern intéressant : plus le modèle de base est faible, plus le gain est important. DeepSeek-V4-Flash gagne +10,1 points. Qwen-3.6-Plus gagne +6,3. GPT-5.4 medium ne gagne que +2,3. Lecture des auteurs : un modèle puissant retrouve les bons patterns de coordination dans son prompt à chaque appel ; un modèle plus faible s'appuie sur la structure pré-encodée que le harness lui apporte.</p>
+
+<h2>Le grand enseignement de l'ablation par composant</h2>
+
+<p>Quand les auteurs isolent chaque composant et le glissent dans le harness initial, le résultat est tranché :</p>
+
+<ul>
+<li>Mémoire long-terme seule : <strong>+5,6 points</strong></li>
+<li>Outils seuls : +3,3 points</li>
+<li>Middleware seul : +2,2 points</li>
+<li>Prompt système seul : <strong>−2,3 points</strong></li>
+</ul>
+
+<p>Le prompt système seul régresse. Voilà qui contredit toute l'industrie du prompt engineering. La conclusion des auteurs est sèche : la structure factuelle (outils, middlewares, mémoire) transfère entre tâches et entre modèles. La stratégie en prose, elle, ne transfère pas. Ce qui marche, c'est ce qu'on encode dans du code et des données structurées, pas ce qu'on encode dans des injonctions textuelles.</p>
+
+<p>C'est aussi ce qui explique pourquoi ACE et TF-GRPO, qui ne touchent qu'au prompt, restent en arrière. Ils éditent une couche dont le contenu se réécrit naturellement à chaque appel du modèle. AHE édite des couches dont le comportement s'impose à chaque appel.</p>
+
+<h2>Pourquoi ça compte au-delà du papier académique</h2>
+
+<p>Si vous construisez ou maintenez des agents IA en production, plusieurs choses changent.</p>
+
+<p>D'abord, l'arbitrage prompt-vs-code se renverse. Quand vous découvrez un nouveau motif d'échec, le réflexe consistant à ajouter une ligne au prompt ("attention, vérifie bien que…") est probablement le moins efficace. Coder un middleware qui intercepte le motif, ou ajouter un outil qui rend le bon comportement par défaut, transfère mieux et coûte moins de tokens à l'inférence. Sur SWE-bench, AHE consomme 32% de tokens en moins qu'ACE pour de meilleurs résultats — la prose accumulée dans le prompt se paie à chaque appel du modèle.</p>
+
+<p>Ensuite, l'observabilité devient un sujet d'ingénierie de premier rang, au même titre que le choix du modèle ou la rédaction du prompt. Si vos traces d'agent ne sont pas distillables en un dossier consultable, ni vous ni un agent évolutionnaire ne pourrez en tirer quoi que ce soit. Le coût d'une bonne instrumentation se rentabilise au moment où vous voulez itérer sur le harness.</p>
+
+<p>L'idée du contrat falsifiable est exportable hors du cas des agents de code. Toute modification qu'on effectue sur un système IA pourrait s'accompagner d'une prédiction explicite de son impact, vérifiée à l'évaluation suivante. Les auteurs montrent que cette pratique stabilise l'évolution même quand l'agent qui édite n'est pas plus capable que celui qu'il édite — les deux partagent le même modèle GPT-5.4 dans leurs expériences.</p>
+
+<p>Une troisième implication, plus politique : un harness optimisé encode une sorte d'expérience collective qui survit au modèle sous-jacent. Quand DeepSeek-V4 sort, on ne réécrit pas le harness, on le branche dessus. C'est un actif réutilisable, presque un capital, dans un domaine où l'on a pris l'habitude de jeter le travail à chaque nouvelle génération de modèle.</p>
+
+<h2>Ce qui reste ouvert</h2>
+
+<p>Le résultat le plus inconfortable du papier concerne la fiabilité des prédictions du manifeste. Sur les corrections, l'agent vise juste à environ 5 fois le hasard (précision 33,7%, rappel 51,4%). Sur les régressions, il ne fait que 2 fois mieux que le hasard. L'agent évolutionnaire sait raisonner sur ce qu'un edit va corriger, mais il est largement aveugle aux dégâts collatéraux. C'est ce qui produit les paliers et les rechutes visibles dans la courbe d'évolution.</p>
+
+<p>Combler cet angle mort est sans doute le chantier suivant. Une piste consisterait à tester chaque edit sur un sous-ensemble large de tâches avant de le commiter, ce qui multiplie le coût de calcul. Une autre serait d'apprendre un modèle de risque dédié aux régressions, distinct du raisonnement causal sur les corrections.</p>
+
+<p>Reste aussi la question du périmètre. Les expériences se concentrent sur des tâches en ligne de commande et des résolutions de bugs Python. Rien ne garantit que les patterns de coordination encodés dans les middlewares d'AHE généralisent à des domaines très différents — agents de recherche, agents conversationnels, agents multi-modalité. Les auteurs sont prudents sur ce point dans leurs limitations.</p>
+
+<p>Dernier point ouvert : l'interaction non-additive entre composants. Quand on combine mémoire, outils et middleware, le gain total (+7,3 points) est inférieur à la somme des gains individuels (+11,1). Les composants se marchent sur les pieds, en particulier sur les tâches longues où ils consomment des tours sur des vérifications redondantes. Un agent évolutionnaire conscient de ces interactions, plutôt qu'un agent qui optimise composant par composant, serait probablement plus efficace.</p>
+
+<p>Plus profondément, AHE pose une question qui dépasse l'ingénierie : si un agent IA peut faire évoluer son propre atelier sans toucher à ses paramètres, où s'arrête le test-time learning et où commence l'apprentissage tout court ? Les auteurs y voient une forme d'apprentissage <em>auditable</em>, externalisé dans des fichiers que l'on peut lire, comparer, versionner — par opposition à l'opacité d'un fine-tuning qui modifie des milliards de poids. C'est peut-être l'angle qui mérite le plus d'attention pour la suite.</p>
+
+<p>L'enseignement le plus durable de ce travail tient peut-être en une phrase : un agent IA performant n'est pas un modèle, c'est un atelier. Et un atelier, ça s'industrialise avec les outils du génie logiciel — pas avec ceux du prompt engineering.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

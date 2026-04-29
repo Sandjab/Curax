@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Skill Text to Skill Structure: The Scheduling-Structural-Logical Representation for Agent Skills — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>From Skill Text to Skill Structure: The Scheduling-Structural-Logical Representation for Agent Skills</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les agents IA collectionnent des compétences sans savoir les ranger</h2>
+
+<p>Un fichier <code>SKILL.md</code> de quelques centaines de lignes, du Markdown, des instructions en langage naturel, parfois un peu de YAML : voilà le format dans lequel la majorité des agents IA d'aujourd'hui stockent leurs « compétences ». Une bibliothèque comme celle d'Anthropic ou les dépôts publics qui prolifèrent sur GitHub en contiennent déjà des milliers. Et dans ce désordre, une question devient embarrassante : comment un agent fait-il pour retrouver la bonne compétence au bon moment, et comment un humain peut-il vérifier qu'une compétence téléchargée ne va pas exfiltrer ses identifiants AWS ?</p>
+
+<p>Quatre chercheurs de l'Université de Pékin viennent de proposer une réponse qui mérite l'attention de quiconque construit ou opère des agents en production. Leur travail, intitulé <em>From Skill Text to Skill Structure</em>, introduit un format intermédiaire baptisé SSL — pour <strong>Scheduling-Structural-Logical</strong> — qui transforme ces fichiers texte en graphes typés analysables par machine. Les gains mesurés sont concrets : la précision de recherche de compétences passe de 0,573 à 0,707 sur leur métrique principale, et la détection de risques de sécurité grimpe de 0,744 à 0,787 en F1.</p>
+
+<h2>Le problème : du Markdown qui mélange tout</h2>
+
+<p>Les agents LLM modernes ne se contentent plus d'appeler des API isolées. Ils manipulent des paquets entiers de capacités : un fichier d'instructions, un graphe de contrôle, des contraintes, des appels d'outils, parfois du code exécutable. C'est ce qu'on appelle aujourd'hui une <em>skill</em>. Le format dominant, <code>SKILL.md</code>, ressemble à un manuel d'utilisation : un humain le lit en cinq minutes, comprend ce que la compétence fait, dans quelles conditions l'invoquer, comment elle s'enchaîne. Pratique pour un développeur. Catastrophique pour un système automatisé.</p>
+
+<p>Trois usages en pâtissent particulièrement. D'abord la <strong>découverte</strong> : quand un registre contient des milliers de compétences aux noms et descriptions qui se chevauchent, comment un routeur choisit-il la bonne pour la requête utilisateur ? Ensuite l'<strong>évaluation des risques</strong> : si une compétence tierce demande l'accès au système de fichiers et au réseau, comment savoir avant exécution si elle peut servir de canal d'exfiltration ? Enfin la <strong>réutilisation</strong> : composer plusieurs compétences suppose de connaître précisément leurs interfaces d'entrée et de sortie, ce qui est rarement formalisé dans le texte libre.</p>
+
+<p>Le diagnostic des auteurs est sans équivoque : un seul artefact texte mélange trois choses sémantiquement distinctes. Quand invoquer la compétence, comment elle déroule son travail, et quelles opérations concrètes elle exécute sur quelles ressources. Tant qu'on ne sépare pas ces trois plans, n'importe quel système en aval doit redériver les mêmes faits par lecture du même fichier, encore et encore.</p>
+
+<h2>Trois couches inspirées des sciences cognitives des années 1970</h2>
+
+<p>L'idée centrale de SSL est de décomposer chaque compétence en trois couches reliées entre elles, sous forme d'un graphe JSON typé. Le choix de cette tripartition n'est pas arbitraire : les auteurs s'appuient explicitement sur les travaux de Roger Schank et Robert Abelson, deux pionniers de la représentation des connaissances linguistiques.</p>
+
+<p>La première couche, <strong>Scheduling</strong>, joue le rôle d'une fiche d'identité de la compétence. Elle reprend l'esprit des <em>Memory Organization Packets</em> de Schank : un organisateur orienté vers les buts, qui permet de retrouver la bonne expérience dans une mémoire vaste. On y trouve l'objectif de la compétence, ses tags, sa signature d'intention, ses entrées et sorties attendues, ses dépendances, et quelques signaux grossiers de contrôle de flux (présence de boucles, d'appels d'outils, d'accès à des ressources sensibles). C'est ce qu'un routeur doit consulter pour décider, sans dérouler tout le contenu.</p>
+
+<p>La deuxième couche, <strong>Structural</strong>, représente la compétence comme un graphe de scènes. Chaque scène est une phase d'exécution cohérente : préparation, acquisition de données, raisonnement, action, vérification, récupération sur erreur, finalisation. L'analogie est celle de la <em>Script Theory</em> de Schank et Abelson, qui modélisait les activités stéréotypées (aller au restaurant, prendre un taxi) comme des séquences ordonnées d'événements avec des rôles et des transitions. Une scène a des conditions d'entrée, des conditions de sortie, et des règles de transition vers la scène suivante. Le vocabulaire des types de scène est volontairement fermé : sept catégories, pas une de plus, pour garantir la comparabilité entre compétences.</p>
+
+<p>La troisième couche, <strong>Logical</strong>, descend au niveau des opérations atomiques. Chaque étape logique sélectionne un type d'action dans un inventaire fermé de douze primitives — <code>READ</code>, <code>WRITE</code>, <code>CALL_TOOL</code>, <code>VALIDATE</code>, <code>INFER</code>, <code>TERMINATE</code>, et quelques autres. Elle enregistre ses arguments, ses effets, et surtout sa <em>portée de ressource</em> : mémoire, système de fichiers local, réseau, identifiants, données utilisateur. C'est cette couche qui rend visibles les comportements à risque. L'inspiration vient cette fois de la <em>Conceptual Dependency</em> de Schank, qui décomposait le sens linguistique en structures d'action primitives indépendantes des mots de surface.</p>
+
+<p>Une règle traverse les trois couches : tout ce qui est écrit dans le SSL doit être étayé par une preuve présente dans le document source. Pas d'inférence, pas de spéculation, pas de comportement caché extrapolé. Si la source ne dit rien, le champ reste vide ou marqué comme grossier. C'est une discipline conservatrice qui distingue ce travail d'une simple opération de résumé.</p>
+
+<h2>La méthode : un normalisateur LLM sous contraintes strictes</h2>
+
+<p>Pour passer du <code>SKILL.md</code> au graphe SSL, les auteurs n'ont pas écrit un parseur traditionnel. Ils utilisent un LLM, mais en lui imposant un cadre très rigide. Le prompt fonctionne en quatre passes : extraction de l'enregistrement de niveau compétence, décomposition en deux à cinq scènes macros, expansion de chaque scène en étapes logiques atomiques, puis vérification structurelle.</p>
+
+<p>Cette dernière passe mérite l'attention. La validation distingue les contrôles durs — JSON parseable, identifiants uniques, valeurs d'énumération autorisées, cibles de transition existantes, pointeurs d'entrée valides — des contrôles souples qui vérifient la cohérence des flux de données. Tout ce qui échoue à la validation dure est rejeté et regénéré. Si plusieurs tentatives n'arrivent pas à ancrer un champ dans la source, le normalisateur n'invente rien : il laisse le champ vide. C'est précisément ce refus de combler les trous qui fait la fiabilité du résultat.</p>
+
+<p>Le prompt force également le modèle à produire du JSON brut, sans balises Markdown, sans préambule conversationnel, sans commentaire. Et il restreint chaque vocabulaire à un ensemble fixe : sept types de scène, douze primitives d'action, huit portées de ressource, quatre symboles terminaux de contrôle. Cette austérité a un prix — on perd en expressivité par rapport au texte libre — mais elle garantit que les sorties de différents modèles sur différentes compétences restent comparables.</p>
+
+<h2>Résultats : la structure bat le texte, même quand le texte est complet</h2>
+
+<p>Les auteurs ont construit deux bancs d'essai pour mesurer ce que SSL apporte concrètement. Le premier, <em>Skill Discovery</em>, repose sur 6 184 compétences publiques et 403 requêtes générées automatiquement à partir de 200 compétences sources. La requête mentionne ce que l'utilisateur veut faire, sans nommer la compétence cible. Le système doit la retrouver dans le tas.</p>
+
+<p>Huit configurations sont comparées, en faisant varier ce qui alimente l'embedder. Le pipeline de recherche reste identique : un index FAISS sur des vecteurs Qwen3-Embedding-0.6B normalisés. La métrique principale est le <em>Mean Reciprocal Rank</em>, qui mesure à quelle position moyenne la bonne compétence apparaît.</p>
+
+<p>Le résultat le plus parlant : la description courte seule obtient un MRR de 0,573. Le <code>SKILL.md</code> complet monte à 0,602 — l'ajout de tout le texte aide peu. Mais la description enrichie des champs SSL les plus riches atteint 0,707, soit une amélioration relative de 23 %. Et plus surprenant encore, embarquer le document complet en plus du SSL n'apporte rien : la version <em>SSL-Rich</em> avec description courte bat toutes les variantes basées sur le texte intégral. La structure compacte est un meilleur moteur de recherche que le texte étendu.</p>
+
+<p>Le second banc d'essai, <em>Risk Assessment</em>, utilise 500 compétences notées sur six dimensions de risque : exfiltration de données, comportements destructeurs, escalade de privilèges, exécution dissimulée, abus de ressources, accès aux identifiants. Les étiquettes de référence proviennent d'un panel de trois modèles forts (Gemini 3.1 Pro, Claude Sonnet 4.5, GPT-5) dont on prend la médiane. L'évaluateur testé est DeepSeek-V3.2, qui reçoit différentes vues de la même compétence.</p>
+
+<p>Le score F1 macro passe de 0,744 avec le <code>SKILL.md</code> seul à 0,787 quand on combine <code>SKILL.md</code> et SSL. Le SSL seul fait mieux que le document complet (0,775 contre 0,744). L'analyse par dimension est éclairante : SSL aide surtout sur les risques liés à des opérations explicites comme la destruction d'actifs, l'accès aux identifiants ou l'exfiltration de données. En revanche, sur l'escalade de privilèges, le texte complet reste compétitif. Ces dimensions exigent une interprétation contextuelle plus large que ce que des champs typés peuvent offrir.</p>
+
+<h2>Pourquoi cela compte pour qui construit des agents en production</h2>
+
+<p>Trois implications pratiques sortent de ce travail pour les équipes qui déploient déjà des agents.</p>
+
+<p>D'abord, le format <code>SKILL.md</code> brut a une limite de scalabilité. Tant qu'un registre contient quelques dizaines de compétences, un routeur LLM s'en sort par concaténation et embedding du texte complet. Au-delà du millier, les performances de récupération s'effondrent et le coût en tokens devient prohibitif. SSL fournit une couche d'index intermédiaire qui résout les deux problèmes simultanément.</p>
+
+<p>Ensuite, l'audit de sécurité des compétences tierces devient outillable. Une équipe qui installe une compétence téléchargée peut désormais vérifier programmatiquement, via les portées de ressource déclarées dans la couche logique, si elle touche au réseau, aux identifiants ou au système de fichiers. Cela ne remplace pas une revue humaine pour les cas critiques, mais cela permet de filtrer en amont les compétences manifestement dangereuses, et d'orienter l'attention humaine sur les cas ambigus.</p>
+
+<p>Enfin, SSL ouvre la voie à une <em>composition</em> mécanique de compétences. Quand les contrats d'entrée et de sortie sont typés et explicites, un agent peut chaîner deux compétences en vérifiant la compatibilité, plutôt qu'en pariant sur une interprétation textuelle. C'est un préalable nécessaire à des agents qui assemblent dynamiquement leurs propres pipelines.</p>
+
+<p>Les auteurs sont honnêtes sur un point : SSL ne doit pas remplacer le <code>SKILL.md</code>. Sur les jugements de sévérité plus stricts (seuil ≥ 3), le document complet reste meilleur, parce que l'interprétation du contexte — exemples, garde-fous, modes de défaillance, intentions du concepteur — demande encore la prose originale. SSL est une vue adjacente à la source, pas un substitut.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Le travail laisse plusieurs questions ouvertes que ses auteurs identifient explicitement. La plus structurelle concerne la nature statique de l'analyse. Une compétence qui télécharge dynamiquement du code, construit ses commandes à la volée ou accède à des ressources conditionnellement reste opaque pour SSL. Les auteurs reconnaissent que l'enrichissement par des traces d'exécution serait une suite naturelle, mais cela ouvre tout un autre champ de questions sur l'instrumentation et la confidentialité.</p>
+
+<p>La fidélité du normalisateur est un autre point sensible. Le LLM peut omettre des faits, sur-régulariser le texte source, ou réduire à une catégorie grossière un comportement ambigu. Les auteurs montrent un contre-exemple parlant : une compétence Next.js qui génère du code d'action serveur. Le SSL la classe comme manipulant uniquement la base de code et la mémoire, alors que les actions générées vont effectivement écrire en base de données et appeler des services externes. La représentation capture ce que la compétence <em>fait</em>, pas ce que son code produit.</p>
+
+<p>Sur le plan de la généralisation, le banc d'essai de découverte utilise des requêtes générées automatiquement, ce qui peut surévaluer les méthodes qui s'appuient sur des champs de surface comme les tags et les noms. La résistance de SSL face à des requêtes formulées par de vrais utilisateurs, avec leur ambiguïté et leurs implicites, reste à mesurer. De même, les étiquettes de risque viennent d'un pipeline de votes entre modèles, pas d'un audit d'experts en sécurité offensive.</p>
+
+<p>La piste la plus intrigante est celle évoquée en conclusion : passer de la <em>gestion</em> des compétences à leur <em>utilisation</em> par les agents. SSL pourrait servir non plus seulement à indexer ou à auditer, mais à fournir à un agent en cours d'exécution des points de contrôle, des cues de sélection, des alertes sur les opérations sensibles. Lier les graphes SSL individuels en un graphe de dépendances au niveau du dépôt entier permettrait également de raisonner sur la composition à grande échelle. C'est probablement là que les prochains travaux apporteront le plus de valeur opérationnelle.</p>
+
+<p>Le code, le corpus de 6 184 compétences annotées et les jeux d'évaluation sont publiés sur GitHub sous le dépôt <code>COOLPKU/SSL</code>. Pour qui construit aujourd'hui une infrastructure d'agents, c'est une base de travail solide — et une invitation à ne plus traiter ses compétences comme du texte plat.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
