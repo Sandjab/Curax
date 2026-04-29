@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usable Agent Discovery for Decentralized AI Systems — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Usable Agent Discovery for Decentralized AI Systems</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les infrastructures agentiques à grande échelle exécutent de nombreux agents logiciels co-résidents sur des nœuds physiques découverts via des mécanismes pair-à-pair. Les auteurs partent d'un constat opérationnel : la dichotomie classique entre overlays structurés (Chord, Kademlia, CAN) et non structurés (gossip) repose sur une hypothèse caduque dans le contexte agentique, à savoir que les cibles de la découverte sont les nœuds eux-mêmes. Or un agent peut être correctement référencé tout en étant froid, suspendu ou indisponible, ce qui rend une route correcte inutile du point de vue utilisateur.</p>
+<p>L'article formalise donc un double churn : le churn nœud (pannes, départs, rétablissements affectant la connectivité) et le churn agent (cycle de vie warm/cold/off piloté par la demande). La question centrale : sous quelles conditions opérationnelles un overlay structuré (Kademlia, substrat d'AGNTCY) domine-t-il un overlay gossip (Cyclon+Vicinity), et inversement ? L'objectif explicite n'est pas de désigner un gagnant universel mais de cartographier les régimes.</p>
+
+<h2>Méthodologie</h2>
+<p>L'évaluation s'appuie sur un simulateur événementiel SimPy. Cinq familles expérimentales (E1 stable, E2 churn nœud seul, E3 cooling agent seul, E4 combiné, E5 sensibilité workload) sont déclinées sur une échelle d'intensité (mild, moderate, aggressive, critical). La configuration de référence : 4096 agents logiques sur 2048 hôtes, 50 skills, un skill par agent par défaut, top_k=1, graphe Erdős–Rényi sans perte de paquets, latence de base unitaire.</p>
+<p>Paramètres Kademlia : réplication 3, α=3, taille de bucket 8, TTL de publication 60, période de republish 20. Cyclon+Vicinity : caches 20 et 10 respectivement, shuffle 5 et période 20, TTL logarithmique. Les exécutions principales durent 80 cycles simulés avec cinq répétitions et un warmup de 25 cycles.</p>
+<p>Quatre observables : latence end-to-end (avec décomposition <em>L = L_disc + L_route + L_start</em>), overhead messages, taux de succès <em>S(q,a)</em>, et utilité effective <em>U_Δ</em> mesurant la fraction de requêtes servies sous un budget Δ. Deux sondes diagnostiques ciblées séparent les effets de l'intensité de maintenance et ceux du staleness (routage périmé vs croyance hôte périmée).</p>
+
+<h2>Résultats principaux</h2>
+<p>Les conclusions s'articulent autour de cinq points. Premièrement, l'efficacité structurée n'implique pas la dominance end-to-end : Kademlia paie une facture de maintenance bien supérieure (publication d'index, refresh) alors que le gossip répartit le coût plus uniformément. Les deux familles parcourent des frontières coût-qualité distinctes.</p>
+<p>Deuxièmement, churn nœud et cooling agent stressent le système par des mécanismes différents. Sous churn nœud seul, Kademlia conserve un avantage robuste sur le succès tandis que Cyclon+Vicinity peut devenir plus rapide en latence sous churn agressif. Sous cooling seul, l'écart de succès se compresse voire s'inverse car les démarrages à froid dominent.</p>
+<p>Troisièmement, le régime combiné montre un compromis persistant plutôt qu'une inversion nette : à mild, succès comparable mais gossip plus rapide ; à moderate, Kademlia regagne un avantage modeste ; à aggressive, les deux se dégradent fortement avec Kademlia plus robuste.</p>
+<p>Quatrièmement, U_Δ révèle quand le routage de qualité se convertit en service utile : Kademlia domine sur budgets serrés en régime stable et churn nœud, mais s'aplatit sous cooling agressif où la disponibilité dépend du temps de réveil.</p>
+<p>Cinquièmement, la sondes ciblées suggèrent que les défaillances les plus sévères sous instabilité combinée s'expliquent davantage par du routage périmé que par une perte générique de fraîcheur des croyances hôtes : Kademlia récupère quand la pression cible la croyance hôte, mais reste fragile quand elle cible le routage.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le cadre conceptuel du double churn et la métrique U_Δ représentent l'apport principal. La séparation entre robustesse de routage et utilité du service est conceptuellement saine et opérationnellement pertinente pour les SLO d'infrastructures agentiques.</p>
+<p>Plusieurs limites pèsent sur la portée des conclusions. L'évaluation reste exclusivement simulée : aucun déploiement sur infrastructure réelle (cloud, edge) ne vient valider les phénomènes observés. Le graphe substrat est un Erdős–Rényi sans perte de paquets et avec latence unitaire, ce qui idéalise considérablement les conditions réseau. La taille (2048 hôtes) est modeste pour des prétentions à l'échelle <em>large-scale agentic systems</em>.</p>
+<p>Le choix des baselines est restrictif : Kademlia comme seul représentant structuré et Cyclon+Vicinity comme seul gossip. Aucune comparaison avec des approches hybrides existantes, ni avec des DHT plus récentes optimisées pour le churn. La distribution des skills (un skill par agent dans le cas principal, catalogue de 50 skills) est artificiellement uniforme et ne reflète pas la sparsité réelle des marchés d'agents.</p>
+<p>Les courbes U_Δ ne sont reportées que pour quatre régimes sur dix. Les intervalles de confiance ne sont visibles que sur les sondes ciblées, pas sur les ladders principaux. Aucune analyse statistique formelle (tests, effets de taille) n'est présentée pour étayer les comparaisons. Le terme "reduced-scale" pour l'ablation sémantique reste sous-spécifié.</p>
+<p>Les hyperparamètres des deux overlays (réplication 3 pour Kademlia, caches 20/10 pour Cyclon+Vicinity) sont fixés sans justification ni étude de sensibilité, ce qui ouvre la porte à une critique de tuning asymétrique.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les paramètres principaux des régimes sont tabulés (Tables 1 et 2) et le simulateur SimPy est nommé. Aucun lien vers un dépôt de code, un artefact ou un dataset n'apparaît dans le texte. La configuration des graines aléatoires n'est pas explicitée. La spécification précise du protocole Cyclon+Vicinity utilisé (variant exact, gestion des messages perdus) reste implicite. En l'état, une reproduction indépendante demanderait une réimplémentation complète à partir des descriptions textuelles.</p>
+
+<h2>Impact et applications</h2>
+<p>Le travail s'inscrit dans la continuité d'AGNTCY et de la perspective <em>Internet of AI Agents</em>. La principale contribution exploitable est la métrique U_Δ, qui peut servir d'objectif de contrôle pour des politiques de gestion du cycle de vie des agents (warm pool, prédiction de demande). Les deux pistes ouvertes en conclusion — overlays hybrides structurés/gossip et lifecycle management aligné sur la santé de l'overlay — sont concrètes mais non instanciées.</p>
+<p>Pour les concepteurs de systèmes agentiques décentralisés (annuaires d'agents, marketplaces de skills), la cartographie régime par régime fournit un guide qualitatif : SLO stricts et latences serrées privilégient le structuré, environnements coûts-sensibles avec tolérance à la dégradation gracieuse privilégient le gossip.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article se positionne à l'intersection de trois traditions : les overlays P2P classiques (Chord, CAN, Kademlia), les approches gossip et peer sampling (Demers et al. 1987, Jelasity et al. 2007), et les travaux récents sur les annuaires d'agents (AGNTCY de Muscariello et al. 2025). Le rapprochement avec le serverless via la notion de coût de cold start (Jonas et al. 2019) est judicieux et apporte une perspective inhabituelle dans la littérature P2P.</p>
+<p>La filiation avec les travaux antérieurs des auteurs sur la formation de communautés gossip et le matching approximatif (Baraglia, Dazzi, Mordacchini, Ricci) est revendiquée. La référence à Dean et Barroso sur le <em>tail at scale</em> justifie pertinemment l'intérêt de U_Δ par rapport au succès moyen.</p>
+<p>L'apport théorique reste incrémental : il s'agit d'un cadre d'évaluation et d'une métrique, non d'un nouveau protocole. La nouveauté tient surtout dans la formulation explicite du couplage entre churn d'infrastructure et churn de service, jusqu'ici traités séparément.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Formulation claire et originale du double churn ; pertinence opérationnelle directe pour les infrastructures agentiques.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Plan factoriel cohérent avec ladder progressif, mais simulation pure sur graphe idéalisé sans validation réelle.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>4096 agents sur 2048 hôtes, cinq répétitions par régime ; correct pour une étude exploratoire mais modeste pour des prétentions à l'échelle.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Introduction utile de U_Δ, décomposition de la latence, séparation succès/utilité ; manque de tests statistiques formels.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Graines multiples et IC à 95 % sur les sondes, mais hyperparamètres des baselines fixés sans étude de sensibilité.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Paramètres tabulés mais aucun code public ni artefact mentionné ; réimplémentation requise pour reproduire.</td></tr>
+<tr><td>Transparence des limites</td><td>3</td><td>Cadre exploratoire reconnu, sondes ciblées admises comme étroites, mais limites de la simulation pure peu discutées.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Cadre d'évaluation et métrique U_Δ pertinents, mais pas de nouveau protocole ; les pistes hybrides restent ouvertes.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

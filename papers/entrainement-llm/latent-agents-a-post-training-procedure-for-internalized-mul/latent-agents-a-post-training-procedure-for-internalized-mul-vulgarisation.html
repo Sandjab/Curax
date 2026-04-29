@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Latent Agents: A Post-Training Procedure for Internalized Multi-Agent Debate — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Latent Agents: A Post-Training Procedure for Internalized Multi-Agent Debate</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand trois agents IA tiennent dans un seul</h2>
+
+<p>Faire débattre plusieurs instances d'un grand modèle de langage améliore leurs réponses. C'est devenu une recette connue : on lance trois agents, on les fait critiquer mutuellement leurs raisonnements sur deux ou trois tours, on prend le vote majoritaire, et la précision grimpe. Le problème, c'est la facture. Cette technique consomme des dizaines de milliers de tokens par question, là où un modèle seul en utiliserait quelques centaines. Pour la moindre question d'arithmétique, on génère des transcripts à rallonge avant de produire la réponse finale.</p>
+
+<p>Trois chercheurs de Boston University, John Seon Keun Yi, Aaron Mueller et Dokyun Lee, viennent de proposer une approche qui change la donne. Leur méthode, baptisée IMAD pour <em>Internalized Multi-Agent Debate</em>, distille le débat multi-agents dans un seul modèle. Résultat : les performances tiennent ou dépassent celles du débat explicite, avec jusqu'à 93 % de tokens en moins. Et au-delà du gain d'efficacité, leur travail révèle quelque chose d'inattendu sur la mécanique interne de ces modèles distillés.</p>
+
+<h2>Le coût caché du débat multi-agents</h2>
+
+<p>Reprenons le contexte. Depuis 2023, des travaux comme ceux de Du et al. ont montré qu'on peut réduire les hallucinations et améliorer le raisonnement factuel des LLM en les faisant débattre entre eux. La logique est intuitive : un agent peut se tromper, mais trois agents qui se relisent se corrigent mutuellement. Sur des benchmarks comme GSM8K (problèmes mathématiques) ou MMLU-Pro, le gain est réel.</p>
+
+<p>Sauf que la facture explose. Sur GSM8K avec un Qwen 2.5 7B, le débat à trois agents et deux tours consomme en moyenne 2 320 tokens par question, contre 577 pour un agent seul. Sur des benchmarks plus complexes comme MMLU-Pro, on monte à plus de 8 700 tokens par question pour LLaMA-3.1 8B. À l'échelle de la production, ces facteurs 5 à 16 rendent la technique économiquement difficile à justifier, surtout quand on compare au coût d'un appel direct.</p>
+
+<p>L'idée de distiller plusieurs modèles en un seul existe depuis longtemps, mais les approches précédentes (DebateGPT, par exemple) entraînaient le modèle uniquement sur la réponse finale du débat. Elles perdaient ainsi toute la richesse des échanges intermédiaires, là où se joue justement la valeur ajoutée du raisonnement collaboratif.</p>
+
+<h2>Apprendre la structure, puis l'oublier en surface</h2>
+
+<p>L'astuce de IMAD tient en deux étapes. D'abord, on apprend au modèle à reproduire le format complet d'un débat. Ensuite, on l'incite progressivement à faire le débat « dans sa tête » plutôt que de l'écrire en toutes lettres.</p>
+
+<p>Pour la première étape, les chercheurs ont collecté 944 traces de débats sur des problèmes arithmétiques simples (par exemple <code>91 + 24 × 13 + 45 − 41 × 38</code>). Chaque trace contient les réponses des trois agents sur deux tours, balisées par des marqueurs explicites comme <code>&lt;|Agent 1|&gt;</code>, <code>&lt;|Round 1|&gt;</code> ou <code>&lt;|Consensus|&gt;</code>. Le modèle est ensuite affiné pour reproduire ces traces telles quelles via un apprentissage supervisé classique. À la sortie de cette étape, un seul modèle joue tous les rôles, génère trois « voix » différentes, simule deux tours d'échange et conclut sur un consensus.</p>
+
+<p>La deuxième étape est plus subtile. On utilise du <em>reinforcement learning</em> avec deux signaux opposés. Le premier récompense la présence des balises de structure, le second récompense le fait que la bonne réponse apparaisse dans les <em>n</em> premiers tokens de la sortie. Et ici intervient l'idée centrale : on fait décroître progressivement la longueur autorisée. On part de 2 000 tokens (largement de quoi écrire un débat complet), on descend à 500 (juste de quoi formuler une réponse concise). En parallèle, on fait diminuer le poids de la récompense de format.</p>
+
+<p>L'effet est mécanique. Au début, le modèle peut écrire son débat tranquillement et obtenir les deux récompenses. À mesure que la fenêtre se rétrécit, écrire le débat en toutes lettres devient incompatible avec le fait d'avoir la bonne réponse dans le quota imparti. La seule stratégie viable consiste alors à faire le débat en interne, dans l'espace latent du modèle, puis à produire directement la réponse finale. Une analogie : on apprend à un élève à poser une multiplication à la main, puis on lui demande progressivement de la faire de tête. Le calcul intermédiaire ne disparaît pas, il devient mental.</p>
+
+<h2>Des chiffres qui parlent</h2>
+
+<p>Les résultats sont solides sur trois familles de modèles open-weight (LLaMA-3.1 8B, Qwen 2.5 7B, Mistral Nemo 12B) et trois benchmarks. Sur GSM8K avec LLaMA, IMAD atteint 85,2 % de précision contre 83,0 % pour le débat explicite et 79,9 % pour un agent seul, en consommant 644 tokens par question contre 5 757 pour le débat. Sur Mistral, le gain est plus spectaculaire encore : IMAD passe de 61 % à 80 % sur GSM8K, soit 19 points de mieux que le débat explicite, avec cinq fois moins de tokens.</p>
+
+<p>Un détail mérite l'attention. Le modèle n'a été entraîné que sur des problèmes d'arithmétique. Pourtant, ses performances s'améliorent aussi sur MMLU-Pro (questions à choix multiples, multi-domaines) et sur Big-Bench Hard (raisonnement logique, fallacies). La structure du débat semble transférer une capacité de raisonnement générale, pas une compétence spécifique à l'arithmétique. Les auteurs ont aussi vérifié sur des tâches ouvertes comme la résumé d'articles CNN/Daily Mail : IMAD ne dégrade pas la performance par rapport au modèle de base.</p>
+
+<p>Une observation curieuse au passage : la simple étape d'apprentissage supervisé sur les traces de débat suffit déjà à dépasser le débat explicite sur certains benchmarks. L'explication des auteurs tient debout. Dans un vrai débat multi-agents, chaque agent ne voit les réponses des autres qu'à la fin de chaque tour. Le modèle SFT, lui, voit toute l'histoire à chaque génération de token. Il apprend mieux les relations entre agents et évite certains échecs de coordination que les systèmes multi-agents réels rencontrent.</p>
+
+<h2>Trois agents sous le capot, et on peut les voir</h2>
+
+<p>Les auteurs ne se sont pas arrêtés là. Une fois IMAD entraîné, ils se sont posé une question d'interprétabilité : les trois agents internalisés existent-ils encore comme structures distinctes dans le modèle, ou se sont-ils fondus en un seul raisonnement uniforme ?</p>
+
+<p>Pour répondre, ils ont utilisé une technique appelée <em>activation steering</em>. L'idée : on identifie, dans l'espace d'activation du modèle, des directions vectorielles qui correspondent à un comportement spécifique, puis on ajoute ces vecteurs aux activations pendant l'inférence pour pousser le modèle dans une direction. C'est un peu comme si on appuyait sur un bouton qui modifie l'état d'esprit du modèle sans changer ses poids.</p>
+
+<p>Pour rendre l'expérience plus parlante, ils ont créé un dataset où les trois agents ont des personnalités distinctes : Agent 1 raisonne en chaîne de pensée méthodique, Agent 2 pratique l'auto-critique, Agent 3 décompose les problèmes comme du code avec variables intermédiaires. Après entraînement IMAD, ils extraient un vecteur de pilotage par agent, par contraste entre les activations associées à cet agent et celles des deux autres.</p>
+
+<p>Quand on applique ces vecteurs au modèle IMAD, on retrouve clairement les styles distincts. Avec le vecteur Agent 3 actif, le modèle produit du raisonnement façon programmation, équations alignées, calculs explicites. Avec le vecteur Agent 2, il glisse des phrases d'auto-vérification (« can be verified by recalculating each step »). Mesurés en ROUGE par rapport aux réponses de référence, les modèles IMAD pilotés sont 15 % plus fidèles au style cible que les modèles de base soumis aux mêmes vecteurs. Sur l'agent 3 spécifiquement, le gain monte à 25 %.</p>
+
+<p>Cette différence n'est pas anodine. Elle dit que l'internalisation crée des sous-espaces identifiables, des directions linéairement séparables dans l'espace d'activation qui correspondent à des perspectives de raisonnement distinctes. Le débat n'est pas écrasé, il est compressé.</p>
+
+<h2>Une application qui change la conversation sur la sécurité</h2>
+
+<p>La partie la plus intéressante du papier, à mon sens, vient ensuite. Si on peut isoler des sous-espaces d'agents, on peut aussi en supprimer un volontairement. Les chercheurs ont entraîné un IMAD spécial où l'un des trois agents est explicitement <em>malveillant</em>. Ils ont défini deux variantes de malveillance : un agent « evil » (qui pousse vers des intentions nuisibles ou manipulatrices) et un agent « hallucination » (qui fabrique des faits avec assurance, par exemple en inventant le résumé d'un film qui n'existe pas).</p>
+
+<p>Une fois le modèle entraîné avec cet agent toxique parmi les trois, ils en extraient le vecteur de pilotage et l'appliquent en négatif. Le résultat est éloquent. Sur le trait « evil », IMAD avec pilotage négatif obtient un score d'expression de trait quasi nul (suppression complète) à partir d'un coefficient de −3. Le modèle de base, soumis au même pilotage négatif, garde un score résiduel de 1,01 même à coefficient −5.</p>
+
+<p>Mieux encore, IMAD préserve les performances sur GSM8K même quand on pousse le pilotage à fond. Le modèle de base, lui, s'effondre aux coefficients extrêmes : il perd ses capacités de raisonnement général en même temps qu'on essaie de supprimer un comportement particulier. C'est un problème classique de l'alignement par steering : on ne sait pas couper proprement.</p>
+
+<p>L'hallucination est un cas plus difficile. Les deux modèles montrent une suppression seulement partielle, ce qui suggère que ce comportement est plus distribué dans les représentations du modèle. Mais là encore, IMAD garde sa cohérence (mesurée par la perplexité) là où le modèle de base déraille aux extrêmes.</p>
+
+<h2>Pourquoi ça compte au-delà du papier</h2>
+
+<p>Pour quelqu'un qui déploie des LLM en production, le premier intérêt est évident : économiser 80 à 90 % de tokens sur des tâches de raisonnement, à performance égale ou supérieure, change l'équation économique. Un investissement initial en fine-tuning (6 à 10 heures sur 4 GPU A6000 selon le papier) se rentabilise vite à grande échelle.</p>
+
+<p>Mais le second intérêt est plus profond. Les techniques actuelles d'alignement et de débiaisage des LLM souffrent d'un <em>alignment tax</em> : quand on supprime un comportement, on dégrade les capacités générales. Les travaux de Lin et al. en 2024 ont documenté ce problème pour le RLHF. IMAD propose une voie différente. En structurant volontairement l'entraînement autour de plusieurs « personas », on crée des sous-espaces séparables dans le modèle. Ces sous-espaces deviennent des cibles précises pour le contrôle comportemental, sans dommages collatéraux.</p>
+
+<p>Cette logique pourrait s'étendre. On pourrait imaginer entraîner un modèle de production avec un agent malveillant explicite parmi ses « voix » internalisées, dans le seul but de pouvoir le supprimer ensuite par steering. C'est contre-intuitif : on injecte volontairement le poison pour mieux savoir où il se trouve. Pour les équipes de safety, c'est une approche qui mérite d'être testée à plus grande échelle.</p>
+
+<h2>Ce qui reste ouvert</h2>
+
+<p>Le papier liste honnêtement ses limites. Le dataset d'entraînement est arithmétique et le format de débat est figé à trois agents et deux tours. Les expériences en annexe sur un mélange de tâches plus diverses (GSM8K, BBH, CNN/Daily Mail) montrent que la méthode tient, mais on ne sait pas encore comment elle se comporte avec des architectures de débat plus complexes : hiérarchies, agents spécialisés par rôle (planificateur, exécutant, vérificateur), pools plus grands.</p>
+
+<p>L'effet dépend aussi de la taille du modèle. Les auteurs notent que les modèles plus petits que 7 milliards de paramètres bénéficient peu de l'internalisation. Il y a une capacité minimale en dessous de laquelle compresser plusieurs perspectives dans un même réseau ne fonctionne plus. La frontière exacte n'est pas encore caractérisée.</p>
+
+<p>Sur l'interprétabilité, l'analyse au niveau des sous-espaces d'agents est un premier pas. Une analyse au niveau des circuits — comprendre quelles têtes d'attention et quels MLP portent la trace de chaque agent internalisé — donnerait une vue plus granulaire. Les outils existent (les travaux de Marks et Tegmark sur la géométrie de la vérité, ceux de Miao et Kan sur les circuits discursifs), reste à les appliquer.</p>
+
+<p>Enfin, la question du transfert vers les traits comportementaux naturels (pas injectés volontairement par un agent malveillant) reste ouverte. Si on peut localiser et supprimer un comportement qu'on a soi-même appris au modèle, peut-on faire de même avec les biais qui émergent spontanément du pré-entraînement ? Si la réponse est oui, IMAD ou ses successeurs pourraient devenir un outil standard de l'alignement. Si la réponse est non, on aura quand même appris quelque chose d'utile sur la façon dont les modèles compressent des perspectives multiples — et ce n'est pas rien.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
