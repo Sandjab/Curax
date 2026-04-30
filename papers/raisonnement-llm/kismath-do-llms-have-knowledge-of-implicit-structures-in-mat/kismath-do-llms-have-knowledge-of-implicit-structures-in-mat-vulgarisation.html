@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KisMATH: Do LLMs Have Knowledge of Implicit Structures in Mathematical Reasoning? — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>KisMATH: Do LLMs Have Knowledge of Implicit Structures in Mathematical Reasoning?</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les modèles de langage font semblant de réfléchir</h2>
+
+<p>Demandez à un grand modèle de langage de résoudre un problème de mathématiques en lui ajoutant la phrase magique « réfléchis étape par étape », et ses performances grimpent de 20 à 40 points. Cette technique, appelée <em>chain-of-thought</em> (CoT), est devenue un pilier des modèles de raisonnement modernes comme DeepSeek R1 ou les modèles o1/o3 d'OpenAI. Personne, pourtant, ne sait vraiment ce qui se passe pendant ces longues chaînes de réflexion intermédiaires.</p>
+
+<p>Deux camps s'affrontent dans la communauté scientifique. Le premier soutient que le modèle décompose le problème, résout chaque sous-étape, puis recombine les résultats — une vraie démarche de raisonnement. Le second affirme que les traces de raisonnement ne sont qu'un théâtre élaboré, une « récupération approximative » depuis les connaissances latentes du modèle. Des expériences troublantes alimentent ce second camp : on peut remplacer aléatoirement 50% des nombres dans les exemples d'entraînement sans dégrader les performances. On peut même récompenser des comportements absurdes pendant l'apprentissage par renforcement et améliorer le score final.</p>
+
+<p>Une équipe franco-indienne (ISI Kolkata, IRIT Toulouse, LINAGORA Labs) propose une réponse argumentée à cette controverse. Leur travail, accepté à TACL en janvier 2026, introduit un outil d'analyse fine du raisonnement et un jeu de données baptisé <strong>KisMATH</strong>. Verdict : les modèles raisonnent bien, mais pas tous de la même manière.</p>
+
+<h2>Le problème : démasquer le faux raisonnement</h2>
+
+<p>Le défi scientifique tient en une question : peut-on prouver, sur la base d'observations comportementales, qu'un modèle de langage utilise réellement les étapes intermédiaires qu'il génère pour arriver à sa réponse ? Ou ne fait-il que produire un texte plausible qui décore une réponse trouvée par d'autres moyens ?</p>
+
+<p>Les approches précédentes butaient sur deux écueils. D'un côté, les interventions aléatoires (modifier au hasard une partie du texte) donnent des résultats faibles : si on perturbe trop, le modèle peut quand même retomber sur ses pieds, mais cela ne dit rien sur la structure logique du raisonnement. De l'autre, les analyses manuelles ne tenaient pas l'échelle. Tan, en 2023, avait annoté à la main 27 graphes causaux. Lee et Bogdan, en 2025, en avaient annoté 30 et 10 respectivement. Impossible de tirer des conclusions générales sur 15 modèles différents avec 67 exemples.</p>
+
+<p>Il fallait un moyen automatique d'extraire la structure logique cachée derrière une chaîne de raisonnement, à grande échelle, et un protocole d'intervention chirurgical pour tester cette structure.</p>
+
+<h2>La méthode : transformer une trace de raisonnement en carte routière</h2>
+
+<p>L'idée centrale des auteurs est élégante. Quand un modèle résout un problème de maths, sa trace contient des dizaines d'expressions mathématiques : nombres, formules, équations. Chaque expression dépend logiquement d'autres expressions précédentes. « 4 + 5 = 9 » dépend de « 4 » et de « 5 » qui apparaissent plus haut. Cette toile de dépendances forme un graphe orienté, qu'on peut extraire mécaniquement.</p>
+
+<p>L'algorithme part de la réponse finale et remonte le fil. Il cherche, dans tout le texte précédent, les expressions qui contribuent à cette réponse. Pour chacune, il remonte encore en cherchant les expressions qui l'ont produite. La récursion s'arrête quand on atteint les nombres présents dans l'énoncé original. Le parseur SymPy fait le travail technique de reconnaissance des formules, et un système de correspondance détecte les liens — par exemple, le nombre « 4 » est lié à l'expression « 4+5 » parce que 4 contribue à cette somme.</p>
+
+<p>Le résultat porte un nom : <strong>CCGraph</strong>, pour <em>Causal Chain-of-Thought Graph</em>. C'est un graphe acyclique dirigé qui révèle la structure causale fine de la trace. Imaginez un texte de raisonnement comme une recette de cuisine : le CCGraph est la liste exacte des ingrédients utilisés à chaque étape et de leurs interdépendances.</p>
+
+<p>Les auteurs ont appliqué leur algorithme à 1671 problèmes issus de trois benchmarks classiques : GSM8K (problèmes arithmétiques niveau primaire), MATH500 (mathématiques de niveau lycée et concours) et AIME (olympiades de mathématiques américaines). Les traces de raisonnement ont été générées par OpenAI o3, le modèle le plus performant disponible. Les graphes obtenus contiennent entre 9 et 40 nœuds intermédiaires selon la difficulté du problème, avec des chaînes de 6 à 10 étapes entre la question et la réponse.</p>
+
+<p>Vient ensuite l'instrument de mesure : la <strong>suppression d'attention</strong>. Cette technique, empruntée aux travaux de Bogdan et al. (2025), permet de désactiver chirurgicalement certains tokens dans le calcul d'attention du modèle. Concrètement, on demande au modèle de produire sa réponse, mais en le rendant aveugle à certaines parties de la trace. Si la réponse change beaucoup, c'est que ces parties étaient nécessaires. Si rien ne change, c'est qu'elles étaient décoratives.</p>
+
+<p>Le test décisif consiste à supprimer uniquement les nœuds de raisonnement identifiés par le CCGraph, en laissant intact tout le reste du texte (connecteurs, ponctuation, phrases explicatives). Si la structure causale extraite par l'algorithme correspond à quelque chose de réel dans le modèle, alors cette suppression doit perturber significativement la réponse finale.</p>
+
+<h2>Résultats : oui, les modèles utilisent vraiment leurs propres étapes</h2>
+
+<p>Les chiffres parlent fort. Sur les 15 modèles testés, du petit Gemma 3 1B au massif DeepSeek R1 70B, supprimer les nœuds de raisonnement augmente massivement l'incertitude sur la réponse finale, avec une significativité statistique extrême (p inférieur à 10⁻¹²). Pour DeepSeek R1 70B sur GSM8K, l'entropie de la réponse passe de 0.02 à 3.92 — une multiplication par 200. Le modèle perd littéralement le fil quand on lui retire les expressions mathématiques de sa propre démonstration.</p>
+
+<p>Ce premier résultat établit une condition nécessaire au raisonnement : les étapes intermédiaires sont bien des médiateurs causaux, pas du remplissage. Mais les auteurs vont plus loin avec un second test, plus subtil.</p>
+
+<p>Ils sélectionnent dans chaque CCGraph les chemins les plus longs reliant un nœud de la question à la réponse — les <em>R-paths</em>. Puis ils mesurent la probabilité que le modèle assigne à ce chemin précis lors de la génération, et la comparent à la probabilité de chemins aléatoires de même longueur dans le même texte. Si le modèle « réalise » réellement la structure causale du raisonnement, il doit favoriser les R-paths.</p>
+
+<p>Les distributions obtenues montrent un pic spectaculaire au 100ᵉ percentile pour 14 des 15 modèles testés. Autrement dit, les chemins identifiés par le CCGraph reçoivent presque toujours une probabilité plus haute que les chemins aléatoires. Cela ne peut pas être un hasard : les modèles privilégient bel et bien les transitions logiquement justifiées.</p>
+
+<p>Une découverte plus inattendue concerne la forme des distributions. Deux régimes apparaissent. Le régime « exponentiel » concerne des modèles comme Qwen3 32B : presque tous les chemins de raisonnement sont à très haute probabilité, avec très peu de variance. Le régime « cloche » concerne des modèles comme DeepSeek R1 32B : la majorité des chemins sont à haute probabilité, mais une fraction non négligeable contient des transitions à faible probabilité, des points de bifurcation où le modèle hésite.</p>
+
+<p>Cette différence n'est pas anodine. Les auteurs comparent les deux modèles sur la métrique <em>pass@k</em> — le pourcentage de problèmes résolus correctement quand on échantillonne k réponses différentes. À une seule tentative, les deux modèles sont au coude-à-coude (68% pour Qwen3 32B, 71% pour DeepSeek R1 32B sur AIME). Mais à 10 tentatives, l'écart se creuse : 87% contre 90%. Le modèle « cloche », qui hésite par moments, explore plus de solutions valides.</p>
+
+<p>Une explication possible se trouve dans l'origine des deux modèles. DeepSeek R1 32B est issu d'une distillation depuis le grand modèle DeepSeek R1 671B, ce qui préserve une certaine diversité dans les chemins de raisonnement. Qwen3 32B a subi un entraînement par renforcement avec récompenses vérifiables (RLVR), un processus qui semble produire une forme de surconfiance. Cette observation rejoint des résultats récents montrant que le RLVR peut paradoxalement réduire la capacité d'exploration des modèles.</p>
+
+<h2>Implications pratiques : repenser l'évaluation des modèles de raisonnement</h2>
+
+<p>Pour les équipes qui déploient des modèles de raisonnement en production, ces résultats ont des conséquences concrètes.</p>
+
+<p>D'abord, l'évaluation à coup unique (un seul échantillon par problème) sous-estime les modèles à régime « cloche » et survalorise les modèles à régime « exponentiel ». Si votre application autorise plusieurs essais — vérification croisée, agrégation par vote majoritaire, ré-échantillonnage en cas d'échec — un modèle qui hésite par moments peut être préférable à un modèle ultra-confiant. La métrique <em>pass@1</em> est trompeuse pour ce type d'usage.</p>
+
+<p>Ensuite, le choix entre distillation et RLVR pour le post-entraînement n'est pas neutre. Les auteurs n'affirment pas que l'un est universellement meilleur que l'autre, mais documentent un compromis : la distillation préserve l'exploration, le RLVR optimise la première réponse au détriment de la diversité. Pour une tâche où la qualité moyenne compte plus que la diversité (génération de code en environnement contraint), le RLVR peut suffire. Pour une tâche où l'exploration de solutions alternatives a de la valeur (recherche, mathématiques avancées, debug créatif), la distillation peut donner de meilleurs résultats applicatifs.</p>
+
+<p>Enfin, le travail valide une intuition opérationnelle : les expressions mathématiques dans une trace ne sont pas du vernis. Si vous tronquez un raisonnement pour économiser des tokens, supprimer une étape de calcul intermédiaire dégrade directement la réponse. Sur GSM8K, supprimer uniquement les expressions mathématiques (en gardant le texte naturel) change la première sortie du modèle dans 70% des cas en moyenne, contre seulement 10% pour la suppression du texte naturel. Sur des problèmes plus complexes (MATH500, AIME), les deux types de contenu deviennent à peu près aussi importants — le langage naturel y joue un rôle de structure discursive qui guide l'enchaînement logique.</p>
+
+<p>Cette dernière observation a une portée linguistique. Les chercheurs notent que dans les problèmes complexes, le texte entre les formules contient des connecteurs de discours (« puisque », « donc », « par conséquent ») qui structurent la déduction. Une chaîne d'entités mathématiques ne suffit pas à capter le raisonnement complet ; il faut aussi la grammaire logique qui les relie.</p>
+
+<h2>Pour aller plus loin : ce que KisMATH ne dit pas encore</h2>
+
+<p>Le travail de Saha et ses collègues laisse plusieurs questions ouvertes. La première concerne le périmètre. L'algorithme d'extraction repose sur le parsing symbolique d'expressions mathématiques explicites. Il fonctionne mal sur la géométrie (« soit O le milieu du segment AB »), sur les mathématiques abstraites (« soit H un sous-groupe distingué de G »), et reste hors de portée pour le raisonnement de sens commun. Étendre la méthode à ces domaines demanderait de capturer la sémantique du langage naturel, pas seulement les liens algébriques.</p>
+
+<p>La deuxième question concerne la causalité même. Les auteurs montrent que les nœuds de raisonnement sont des médiateurs nécessaires, mais ils ne caractérisent pas la nature exacte de cette médiation. Le modèle utilise-t-il les expressions intermédiaires pour calculer, ou pour récupérer dans sa mémoire des solutions similaires déjà mémorisées pendant l'entraînement ? La distinction est ténue, et les résultats actuels sont compatibles avec les deux interprétations. Le travail ne tranche donc pas définitivement le débat entre les deux camps évoqués en introduction — il prouve que les étapes comptent, sans prouver qu'elles correspondent à un calcul plutôt qu'à une récupération guidée.</p>
+
+<p>La troisième piste concerne les modèles de très grande taille et les modèles fermés. Les expériences couvrent jusqu'à 70 milliards de paramètres avec des modèles open-weight. La technique de suppression d'attention requiert un accès aux internes du modèle, ce qui exclut les modèles propriétaires les plus puissants. On ne sait donc pas si les conclusions s'étendent à GPT-5, Claude Opus 4.7 ou Gemini 3 Pro.</p>
+
+<p>Le jeu de données KisMATH, distribué sous licence MIT, ouvre néanmoins un terrain de jeu fertile pour la recherche. Les CCGraphs permettent désormais des interventions ciblées plutôt qu'aléatoires : modifier un nœud spécifique, ajouter une arête, supprimer une branche entière. Ce type d'expériences contrôlées apportera probablement plus d'informations sur le raisonnement des modèles que les batteries de tests aveugles utilisées jusqu'à présent.</p>
+
+<p>Une question particulièrement intéressante reste à creuser : si certains modèles génèrent volontairement des points d'incertitude qui favorisent l'exploration, peut-on entraîner cette propriété explicitement ? Les jetons à haute entropie fonctionnent comme des bifurcations contrôlées, des « fourches » dans l'arbre du raisonnement. Apprendre aux modèles à placer ces fourches au bon endroit, plutôt que de les éliminer par optimisation aveugle, pourrait être la prochaine étape vers des systèmes de raisonnement plus robustes.</p>
+
+<p>Pour l'instant, le verdict de KisMATH offre un point d'appui solide : oui, les modèles de langage modernes utilisent leurs propres traces de raisonnement pour produire leurs réponses. La théorie de la « décoration vide » ne tient pas. Mais la qualité de cette utilisation varie selon les modèles et les régimes d'entraînement, et c'est désormais sur ce terrain — la nature précise du raisonnement, pas son existence — que se déplace le débat.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

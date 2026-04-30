@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KisMATH: Do LLMs Have Knowledge of Implicit Structures in Mathematical Reasoning? — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>KisMATH: Do LLMs Have Knowledge of Implicit Structures in Mathematical Reasoning?</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le débat sur le mécanisme du chain-of-thought (CoT) oppose deux camps : ceux qui y voient une décomposition séquentielle authentique du problème, et ceux qui le considèrent comme un simple récupération approximative depuis des connaissances latentes (Kambhampati et al., 2025). Plusieurs travaux récents alimentent le scepticisme : les performances résistent au remplacement aléatoire de 50 % des nombres dans les traces de distillation (Li et al., 2025), aux perturbations des démonstrations in-context (Wang et al., 2023a), et même aux récompenses spécieuses lors du post-training RL (Shao et al., 2025).</p>
+<p>Saha et collègues s'attaquent à cette question en construisant automatiquement des graphes acycliques dirigés (CCGraphs) à partir des traces CoT. Les nœuds sont des expressions mathématiques parsées, les arêtes capturent des dépendances causales fines. L'objectif : tester deux conditions nécessaires au raisonnement véritable — la médiation causale des nœuds intermédiaires entre question et réponse, et l'alignement des distributions internes des LLM sur ces structures.</p>
+
+<h2>Méthodologie</h2>
+<p>L'algorithme d'extraction part du nœud-réponse et se propage récursivement vers l'amont via des correspondances de sous-arbres syntaxiques produits par SymPy. Le graphe résultant est élagué pour ne conserver que les nœuds situés sur un chemin entre une expression de la question et la réponse. Sur environ 40 000 nœuds parsés et 300 000 arêtes, seuls 88 nœuds et 71 arêtes ont nécessité une intervention manuelle, ce qui plaide pour la robustesse de l'algorithmie automatique.</p>
+<p>Les traces CoT sont générées par OpenAI o3 (avec <code>reasoning_effort=medium</code>) en 5-shot, uniquement pour les réponses correctes. Quinze modèles open-weight de 1B à 70B paramètres (familles Gemma 3, Qwen 2.5/3, DeepSeek R1, Llama 3.1/3.3) sont ensuite analysés par deux interventions :</p>
+<ul>
+<li><strong>Suppression d'attention</strong> (Bogdan et al., 2025) sur les tokens des nœuds de raisonnement, mesurée par l'entropie du premier token de la réponse et le test de Kolmogorov-Smirnov à deux échantillons.</li>
+<li><strong>Comparaison de probabilités de chemins</strong> entre R-paths (chemins extraits du CCGraph) et chemins aléatoires de même longueur, via le rang relatif de P(R) parmi M chemins aléatoires.</li>
+</ul>
+<p>Le corpus combine 983 problèmes GSM8K, 384 MATH500 et 304 AIME, après filtrage des énoncés géométriques difficiles à parser symboliquement.</p>
+
+<h2>Résultats principaux</h2>
+<p>La suppression d'attention sur l'ensemble des nœuds de raisonnement provoque une augmentation massive de l'entropie de la réponse (p < 10⁻¹², distance de Kolmogorov entre 0,31 et 1,00 selon les modèles). L'effet est cohérent à travers les trois splits, ce qui établit la médiation causale comme propriété générique. La même intervention restreinte aux R-paths produit un effet quasi-identique sur GSM8K (D_KS entre 0,79 et 0,98).</p>
+<p>L'analyse de probabilités révèle un pic prononcé au 100ᵉ percentile : pour la grande majorité des R-paths, toutes les transitions de tokens sont plus probables que celles de chemins aléatoires de même longueur. Deux régimes émergent — distribution exponentielle (Qwen 3 32B) où chaque chemin de raisonnement est une séquence à haute probabilité, et distribution en cloche (DeepSeek R1 32B) où une minorité de transitions à faible probabilité agissent comme des « forks ». Le second régime corrèle avec une meilleure performance pass@k (90 % vs 87 % à k=10 sur AIME), suggérant que l'incertitude intrinsèque favorise l'exploration. L'observation alimente l'hypothèse que le post-training RLVR (Qwen) écrase l'exploration là où la distillation (DeepSeek) la préserve, en accord avec Yue et al. (2025).</p>
+<p>L'analyse complémentaire « Math All You Need » montre une asymétrie nette sur GSM8K : supprimer les expressions mathématiques change la réponse 70,9 % du temps en moyenne, contre 10,3 % en supprimant le langage naturel. Sur MATH500 et AIME, la différence s'estompe, ce que les auteurs attribuent à la nécessité d'une structure discursive plus riche dans les problèmes complexes.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les conclusions sont prudemment formulées : la médiation causale et l'alignement structural sont des conditions <em>nécessaires</em>, non suffisantes, du raisonnement. Les auteurs ne prétendent pas trancher le débat épistémologique, mais fournissent une infrastructure pour des interventions ciblées qui dépassent les perturbations stochastiques.</p>
+<p>Plusieurs limites méthodologiques méritent d'être pointées. D'abord, l'extraction des CCGraphs repose sur le parsing symbolique de SymPy et exclut donc la géométrie, l'algèbre abstraite et le raisonnement de bon sens — soit une fraction substantielle du raisonnement mathématique réel. Les auteurs reconnaissent cette restriction. Ensuite, les traces sont toutes générées par o3 et seules les réponses correctes sont conservées : on étudie donc le raisonnement réussi d'un seul modèle frontier, pas le comportement intrinsèque des 15 modèles testés. La généralisation aux traces produites par les modèles eux-mêmes (et notamment aux traces erronées) reste à établir.</p>
+<p>L'intervention manuelle sur ~10 % des graphes dégénérés introduit un biais d'expérimentateur, même si les corrections sont catégorisées et limitées (erreurs LaTeX, ponts entre équations et langage naturel). La méthode de comparaison des chemins ne marginalise pas sur les tokens intermédiaires (intractable) et utilise des chemins aléatoires de même longueur comme contrôle — un choix défendable mais qui ne contrôle pas les différences sémantiques entre tokens choisis et évités. Enfin, l'inférence causale repose sur la suppression d'attention, dont les auteurs eux-mêmes citent Bogdan et al. (2025) pour défendre l'absence d'effet hors-distribution, sans validation indépendante.</p>
+
+<h2>Reproductibilité</h2>
+<p>Excellente. Le code, les prompts, les données et les sorties brutes sont publiés sous licence MIT sur <code>espressovi.github.io/KisMATH</code>. Les hyperparamètres sont précisés (T=1, 5-shot identiques pour tous les modèles, 4× A100, ~3000 GPU-heures), les modèles proviennent de HuggingFace, le prompt système est fourni en annexe. Les choix de filtrage (problèmes géométriques, ambigüités GSM8K corrigées) sont documentés. La taille du corpus (1671 problèmes) et la diversité des 15 modèles permettent à un tiers de répliquer ou d'étendre les expériences sans dépendance opaque.</p>
+
+<h2>Impact et applications</h2>
+<p>KisMATH offre un substrat empirique pour ancrer les débats interprétatifs sur le CoT. La méthode passe à l'échelle là où Tan (2023), Lee et al. (2025) et Bogdan et al. (2025) restaient à 10–30 traces annotées manuellement. Le contraste « bell » vs « exponential » et son lien avec la performance pass@k constituent une hypothèse mesurable sur l'effet du RLVR sur l'exploration, qui peut guider le choix de pipelines de post-training. À court terme, le dataset alimentera probablement des travaux sur la fidélité du CoT, la détection des forks à haute entropie (Wang et al., 2025) et l'évaluation des reasoning models. La portée reste limitée à la résolution mathématique formalisable et ne permet pas de conclure sur le raisonnement en domaine ouvert.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article s'inscrit dans la lignée des travaux sur l'interprétabilité du CoT (Lanham et al., 2023 ; Lyu et al., 2023 ; Paul et al., 2024 ; Barez et al., 2020) et étend le cadre causal de Paul et al. (2024) en remplaçant le médiateur atomique par un graphe fin. Il dialogue directement avec Stechly et al. (2024, 2025), Li et al. (2025) et Shao et al. (2025) qui défendent une vision « décorative » du CoT, et avec Wang et al. (2025) sur les tokens à haute entropie. Le rapprochement avec la théorie de la structure discursive (Mann & Thompson, 1987 ; Asher & Lascarides, 2003 ; Knott et al., 2000) en section 6.1 est une contribution conceptuelle moins développée mais prometteuse, qui anticipe l'extension du cadre à des domaines non purement algébriques.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Question centrale clairement formulée, ancrée dans un débat actif et mesurable.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Deux interventions complémentaires (suppression d'attention, comparaison de chemins) avec contrôles statistiques ; dépendance à un seul modèle (o3) pour la génération des traces.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>1671 problèmes et 15 modèles ; AIME (304) reste limité pour des conclusions fortes.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Entropie, distance KS et rang relatif sont défendables ; la non-marginalisation sur les tokens intermédiaires est explicite.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Chemins aléatoires appariés en longueur ; intervention manuelle sur 10 % des graphes documentée mais introduit un biais résiduel.</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Code, données, prompts, hyperparamètres et compute publiés sous MIT.</td></tr>
+<tr><td>Transparence sur les limites</td><td>4</td><td>Limitations explicitées (géométrie exclue, scope du parsing) ; le biais lié à o3 et au filtrage des réponses correctes est moins discuté.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier dataset de cette ampleur avec graphes causaux automatiques ; cadre extensible pour les futures études d'interprétabilité du CoT.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 4,2/5</strong> — Travail empirique sérieux, méthodologie soignée et infrastructure publique de qualité, dont la principale fragilité tient au périmètre restreint (mathématiques parsables symboliquement, traces o3 correctes) plus qu'à des défauts d'exécution.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
