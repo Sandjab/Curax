@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>When to Retrieve During Reasoning: Adaptive Retrieval for Large Reasoning Models — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>When to Retrieve During Reasoning: Adaptive Retrieval for Large Reasoning Models</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le travail s'attaque à un désalignement temporel entre les pipelines RAG classiques et les modèles de raisonnement étendu (LRM) tels que DeepSeek-R1 ou OpenAI o1. Ces modèles produisent des chaînes de pensée de 12 000 à 25 000 tokens dans lesquelles les besoins en connaissances factuelles émergent en cours d'inférence, alors que le paradigme « retrieve-then-generate » suppose une seule étape de récupération avant génération. Les auteurs identifient trois incompatibilités précises avec les méthodes itératives existantes (IRCoT, FLARE, DRAGIN, Self-RAG) : granularité inadaptée (token ou phrase plutôt qu'étape de raisonnement), signaux indisponibles sur les modèles completion-only, et effondrement d'efficacité sur les longues chaînes.</p>
+<p>La question de recherche est claire et délimitée : à quel moment, durant une chaîne de raisonnement, déclencher une récupération externe pour maximiser l'accuracy sous contrainte de coût ? La formulation comme problème de bandit contextuel avec récompense F1 pénalisée par le nombre d'appels et la latence est cohérente avec la littérature.</p>
+
+<h2>Méthodologie</h2>
+<p>ReaLM-Retrieve combine quatre composants apprenants : un segmenteur d'étapes de raisonnement (transformer 3 couches, hidden 256), un score d'incertitude composite RSUS qui agrège confiance verbalisée, entropie de couverture entité et consistance par échantillonnage, une politique d'intervention entraînée par REINFORCE, et un mécanisme d'intégration efficace (compression implicite, cache spéculatif, préservation KV-cache).</p>
+<p>L'évaluation porte sur trois benchmarks multi-hop QA (MuSiQue, HotpotQA, 2WikiMultiHopQA) avec DeepSeek-R1-Distill-Qwen-32B et DeepSeek-R1-671B, plus QwQ-32B-Preview pour la généralisation. Le retriever est ColBERTv2 avec moteur PLAID, k=5 passages. Les comparaisons utilisent paired bootstrap 10 000 itérations avec correction de Bonferroni, 3 seeds aléatoires, et reportent intervalles de confiance à 95%.</p>
+<p>Le choix de RSUS sur la base d'un argument d'overhead (<3% vs 5–20× pour semantic entropy) est justifié, et l'ablation par composant (Table 6) confirme que chaque signal contribue. La séparation entre comportement OOD du segmenteur (Table 1) et performance du système global est une bonne pratique.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur MuSiQue avec R1-32B, ReaLM-Retrieve atteint 71,2% F1 avec 1,8 appels en moyenne contre 65,4% F1 et 3,4 appels pour IRCoT, soit +5,8 points absolus avec 47% d'appels en moins (p<0,01, IC 95% [4,2 ; 7,4]). Sur les trois benchmarks, le gain moyen face au RAG standard est de +10,1 points F1. Avec R1-671B, le gain monte à 77,8% F1 sur MuSiQue (+4,4 vs Search-R1).</p>
+<p>L'analyse par profondeur de raisonnement révèle un pattern intéressant : l'avantage croît avec la complexité (+3,2% sur 2-hop, +5,8% sur 3-hop, +8,4% sur 4-hop), ce qui valide l'hypothèse que la précision du timing compte davantage sur les chaînes longues. La qualité de retrieval elle-même s'améliore (Recall@5 de 81,3% vs 72,6% pour IRCoT), suggérant que RSUS identifie effectivement les moments où la récupération bénéficie le plus.</p>
+<p>Côté efficacité, la réduction du coût par appel (0,66s vs 2,10s en intégration naïve) repose surtout sur le cache spéculatif (37% de hit rate) plutôt que sur la compression implicite ou la préservation KV-cache, dont les contributions individuelles à la F1 sont modestes (<0,5 point chacune).</p>
+
+<h2>Discussion et limites</h2>
+<p>La section limitations est honnête sur plusieurs points faibles. Le gap de 2 à 3 points F1 entre modèles open-weight et completion-only (proxy MLP appris à 0,71 AUROC vs 0,83 pour la confiance verbalisée réelle) est explicitement chiffré. La dégradation sous distribution shift après ≥3 retrievals est mentionnée, mais avec l'argument qu'elle ne concerne que 4,7% des questions de MuSiQue.</p>
+<p>L'évaluation OOD du segmenteur repose sur N=15 traces par benchmark annotées par un seul annotateur, ce qui est insuffisant pour conclure solidement sur la généralisation, même si le report est transparent. La comparaison avec Self-RAG souffre d'une différence de modèle de base (Llama-2-13B), reconnue mais qui limite l'interprétation.</p>
+<p>L'argument que ReaLM-Retrieve réduit le nombre de tokens de raisonnement (9 489 vs 11 284) parce que la récupération « résout des incertitudes » mérite d'être interrogé : il pourrait aussi refléter un biais où le modèle s'arrête plus tôt après injection de contexte, sans gain réel d'accuracy sur les sous-étapes intermédiaires. L'analyse comportementale (42% early resolution, 31% verification, 12% failed retrievals) est descriptive plutôt que causale.</p>
+<p>La discussion sur l'impact de concevoir des méthodes pour modèles completion-only, qui « accepte implicitement un paradigme où les LLM les plus capables sont des produits commerciaux propriétaires », est un effort louable de réflexivité rare dans la littérature SIGIR.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les hyperparamètres clés sont reportés en note de bas de page : (α, β, γ) = (0,40, 0,35, 0,25), seuil de retrieval τ=0,65, seuil de compression τ_rel=0,45. La taille du corpus d'entraînement (2 847 traces annotées, accord inter-annotateur κ=0,78) et les coûts (2 400 GPU-heures sur 8×A100) sont précisés. Les benchmarks utilisés sont publics.</p>
+<p>Aucune mention explicite de release de code ou d'artefacts (modèle de segmentation, politique entraînée, données annotées) n'apparaît dans le texte fourni. Cela limite la réplication directe, malgré la précision des descriptions algorithmiques. Le fait que la politique soit entraînée sur 19 938 exemples avec curriculum λ décroissant rend une réimplementation non triviale.</p>
+
+<h2>Impact et applications</h2>
+<p>Le positionnement comme « nouveau Pareto frontier accuracy/efficiency » pour le retrieval adaptatif sur LRM est défendable au vu des résultats. La cible de déploiement explicite (charges asynchrones à 14,1s de latence : assistants de recherche, analyse documentaire batch, agents multi-étapes) est réaliste et évite les promesses excessives sur le temps réel.</p>
+<p>Les économies énergétiques annoncées (-14% par requête vs IRCoT) restent modestes mais cohérentes avec la réduction du nombre d'appels. La discussion sur les revenus de récompense en production sans labels (feedback utilisateur, self-consistency, vérification NLI de citations) apporte une perspective opérationnelle utile.</p>
+<p>L'orthogonalité revendiquée avec Dynamic Search-R1 (axe « combien récupérer par sous-requête » vs « quand récupérer entre étapes ») et la suggestion de composition sont judicieuses et ouvrent une direction de recherche concrète.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit clairement dans la lignée IRCoT, FLARE, Self-RAG, DRAGIN, Search-R1 et ReARTeR, avec une contribution incrémentale mais bien délimitée : passer de la granularité phrase ou token à la granularité étape de raisonnement. Le différentiel face à Search-R1 (4,4% F1, 25-27% d'appels en moins) est le résultat le plus convaincant pour positionner la nouveauté, car il s'agit d'une comparaison à modèle de base équivalent.</p>
+<p>Le rapprochement avec Adaptive-RAG (décision au niveau de la requête) et Open-RAG (tokens de réflexion) clarifie le positionnement sur l'axe granularité. La revendication que RSUS opère « uniformément sur API completion-only et open-weight » est techniquement vraie mais amoindrie par la baisse de performance sur les premiers.</p>
+<p>Quelques signaux mineurs invitent à la prudence : l'identifiant arXiv (2604.26649) et la date de publication (SIGIR'26 prévu juillet 2026) placent le travail dans une fenêtre temporelle récente où la stabilité des résultats reportés sur des modèles à itération rapide (R1, QwQ) reste à confirmer indépendamment.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien délimité (timing du retrieval dans LRM), formulation formelle convaincante</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trois benchmarks établis, ablations par composant, deux échelles de modèles, généralisation cross-architecture</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Benchmarks publics riches, mais N=15 pour évaluation OOD du segmenteur, 2 847 traces d'entraînement</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>F1, EM, Sup-F1, Recall@5, MRR, latence ; paired bootstrap 10K + Bonferroni + IC 95%</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>3 seeds, Self-RAG comparé avec caveat explicite, mais peu d'analyse causale sur la réduction de tokens</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Hyperparamètres détaillés, modèles open-weight évalués, mais pas de release de code/artefacts mentionnée</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Section limitations exhaustive, failure mode analysis quantifiée, réflexivité sur impact épistémique</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Contribution incrémentale solide sur Search-R1/ReARTeR, granularité étape réellement nouvelle</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

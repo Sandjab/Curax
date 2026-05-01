@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>When to Retrieve During Reasoning: Adaptive Retrieval for Large Reasoning Models — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>When to Retrieve During Reasoning: Adaptive Retrieval for Large Reasoning Models</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>DeepSeek-R1 produit des chaînes de raisonnement de 12 000 à 25 000 tokens. C'est l'équivalent d'un mémoire de 50 pages généré pour répondre à une seule question. Ces modèles dits « de raisonnement » réfléchissent à voix haute, vérifient leurs hypothèses, reviennent en arrière, changent de stratégie. Et pourtant, quand on leur branche un système de recherche documentaire (RAG) pour combler leurs lacunes factuelles, le résultat déçoit.</p>
+
+<p>Le coupable n'est ni le modèle, ni le moteur de recherche. C'est le moment de la requête. Les pipelines RAG actuels récupèrent leurs documents <em>avant</em> que le modèle ne commence à raisonner. Une fois la chaîne lancée, le modèle est seul. S'il découvre au token 8 000 qu'il lui manque une date ou un nom propre, tant pis : il devra deviner, ou hallucinier.</p>
+
+<p>Trois chercheurs de l'Université de Hong Kong proposent ReaLM-Retrieve, un cadre qui injecte la recherche documentaire <em>pendant</em> le raisonnement, au moment précis où le modèle en a besoin. Sur MuSiQue, un benchmark de questions à plusieurs sauts logiques, leur méthode atteint 71,2 % de F1 avec 1,8 requête en moyenne, contre 65,4 % et 3,4 requêtes pour IRCoT, l'approche concurrente. Plus précis, deux fois moins coûteux.</p>
+
+<h2>Le problème : un décalage temporel structurel</h2>
+
+<p>Pour comprendre l'enjeu, il faut saisir ce qui distingue un modèle de raisonnement d'un LLM classique. GPT-4 répond généralement en quelques centaines de tokens, parfois avec un peu de chain-of-thought. DeepSeek-R1, lui, a été entraîné par renforcement à dérouler une vraie réflexion : il pose des sous-questions, teste des hypothèses, se contredit, recommence. Sa chaîne de pensée n'est pas un artefact stylistique mais un calcul.</p>
+
+<p>Cette différence change tout pour la recherche documentaire. Avec un LLM standard, on cherche les bons documents en amont, on les colle dans le prompt, le modèle synthétise. Le RAG classique fonctionne parce que la fenêtre entre la question et la réponse est étroite. Avec un modèle de raisonnement, cette fenêtre s'étire sur plusieurs minutes et plusieurs étapes logiques. Les besoins en information évoluent.</p>
+
+<p>Prenons une question type : « Qui a réalisé le film qui a gagné l'Oscar du meilleur film l'année où le mur de Berlin est tombé ? » Le modèle commence par identifier l'année (1989), navigue ensuite vers le titre du film (Driving Miss Daisy), puis cherche son réalisateur. À chaque saut, un trou de connaissance peut surgir. Récupérer tous les documents pertinents en début de chaîne est impossible : on ne sait pas encore quels seront les sauts.</p>
+
+<p>Les méthodes itératives existantes (IRCoT, FLARE, Self-RAG) ont vu le problème mais l'attaquent au mauvais grain. IRCoT déclenche une recherche après chaque phrase, ce qui devient ruineux sur 25 000 tokens. FLARE surveille les probabilités des tokens pour repérer l'incertitude, mais cette information n'est pas accessible sur les API commerciales comme OpenAI o1. DRAGIN exige l'accès aux états d'attention internes du modèle, donc impossible sur un modèle propriétaire. Self-RAG impose un fine-tuning, exclu sur les modèles fermés.</p>
+
+<h2>La méthode : trois couches qui s'imbriquent</h2>
+
+<p>ReaLM-Retrieve repose sur une intuition simple : le bon grain de décision n'est ni le token, ni la phrase, mais l'étape de raisonnement. Une étape, c'est une unité logique cohérente — typiquement 127 tokens chez DeepSeek-R1, contre 23 pour une phrase. C'est l'équivalent d'un paragraphe argumentatif, pas d'une virgule.</p>
+
+<h3>Découper la chaîne en étapes</h3>
+
+<p>Premier ingrédient : un classificateur léger qui repère les frontières d'étapes dans la sortie du modèle. Il s'appuie sur des marqueurs de discours (« therefore », « however »), des connecteurs logiques, des changements de sujet détectés par similarité d'embeddings, et la ponctuation. Entraîné sur 2 847 traces de raisonnement annotées à la main, il atteint 94,2 % de F1. Détail rassurant : il transfère bien d'un benchmark à l'autre, avec une perte de seulement 1,5 à 3 points.</p>
+
+<h3>Mesurer l'incertitude au bon moment</h3>
+
+<p>Deuxième ingrédient, le RSUS (Reasoning Step Uncertainty Score). À chaque frontière d'étape, le système calcule un score composite à partir de trois signaux complémentaires.</p>
+
+<p>Le premier signal interroge directement le modèle : « Sur une échelle de 0 à 100, à quel point es-tu certain que ta conclusion actuelle est correcte ? » C'est une confiance verbalisée, applicable même sur les modèles boîte noire. Le deuxième signal extrait les entités nommées de l'étape (personnes, lieux, dates) et calcule leur entropie de couverture dans le corpus documentaire : si une entité apparaît dans peu de documents avec des scores éparpillés, elle est probablement mal connue du modèle. Le troisième signal échantillonne trois continuations alternatives et mesure leur accord : un désaccord élevé signale une instabilité du raisonnement.</p>
+
+<p>La force de ce trio tient à son coût : moins de 3 % de surcoût par signal, contre 500 % à 2 000 % pour des méthodes plus sophistiquées comme l'entropie sémantique. Sur des chaînes de 25 000 tokens, ce détail décide de la viabilité du système.</p>
+
+<h3>Décider de chercher, ou pas</h3>
+
+<p>Troisième ingrédient : une politique apprise qui transforme le RSUS en décision binaire. Elle ne regarde pas que le score d'incertitude — elle prend aussi en compte l'historique des recherches passées (le modèle a-t-il déjà été aidé sur ce point ?), le temps écoulé depuis la dernière requête, et la formulation optimale de la requête à envoyer.</p>
+
+<p>Cette politique est entraînée par REINFORCE avec une récompense composite : score F1 final, moins une pénalité pour chaque appel de recherche, moins une pénalité de latence. Le mécanisme d'apprentissage utilise un curriculum : au départ, le système est très puni pour chaque recherche, ce qui force la politique à n'invoquer la documentation qu'en cas d'urgence absolue. Au fil de l'entraînement, la pénalité diminue et la politique apprend à doser.</p>
+
+<p>Détail astucieux pour la formulation des requêtes : les chercheurs ont découvert qu'il vaut mieux reformuler en besoin d'information explicite (« Quelle est la relation de X à Y ? ») plutôt que de copier directement l'étape de raisonnement courante. La requête colle alors à l'intention plutôt qu'au flux de pensée.</p>
+
+<h3>Injecter sans tout casser</h3>
+
+<p>Reste un problème pratique : insérer du contenu récupéré au milieu d'une chaîne de raisonnement risque de la déstabiliser. Trois optimisations rendent l'opération chirurgicale.</p>
+
+<p>La compression implicite ne garde que les phrases vraiment pertinentes des documents récupérés, en les pondérant par leur similarité avec la requête courante. Résultat : 73 % de contexte en moins, 96 % de l'utilité préservée. Le cache spéculatif lance des recherches en parallèle pour les questions probables suivantes, en exploitant les entités mentionnées dans les documents déjà récupérés. Quand une recherche réelle correspond à une recherche déjà préchargée — 37 % du temps — la latence devient nulle. La préservation du KV-cache évite de recalculer l'intégralité du contexte après chaque injection, divisant par 2,1 le temps de premier token.</p>
+
+<p>Au total, le coût par recherche tombe de 2,1 secondes à 0,66 seconde, soit 3,2 fois moins que l'intégration naïve.</p>
+
+<h2>Résultats clés : moins, mais mieux</h2>
+
+<p>Les chiffres parlent d'eux-mêmes sur trois benchmarks de questions à plusieurs sauts. Sur MuSiQue, le plus exigeant (questions à 2-4 sauts), ReaLM-Retrieve passe de 65,4 % à 71,2 % de F1 par rapport à IRCoT, tout en réduisant le nombre de recherches de 3,4 à 1,8. Sur HotpotQA, le score grimpe de 67,9 % à 71,8 %. Sur 2WikiMultiHopQA, de 66,2 % à 69,7 %. Tous ces écarts sont statistiquement significatifs (p < 0,01) avec correction de Bonferroni.</p>
+
+<p>L'amélioration croît avec la complexité de la question. Sur les questions à 2 sauts, l'écart avec IRCoT n'est que de 3,2 points. Sur les questions à 4 sauts, il atteint 8,4 points. Plus le raisonnement est long, plus le timing précis des recherches paie. C'est cohérent avec l'intuition de départ : sur une chaîne courte, peu importe quand on cherche ; sur une chaîne longue, le moment décide.</p>
+
+<p>La qualité des recherches elles-mêmes s'améliore. Sur HotpotQA, ReaLM-Retrieve atteint 81,3 % de Recall@5 contre 72,6 % pour IRCoT. Le pourcentage de recherches « utiles » (au moins un fait pertinent dans le top-5) passe de 71,8 % à 82,4 %. Le système ne cherche pas seulement moins souvent, il cherche mieux quand il le fait.</p>
+
+<p>Côté efficacité système, la latence bout-en-bout tombe à 14,1 secondes contre 18,7 pour IRCoT, soit 25 % de gain. Le modèle génère aussi 16 % de tokens de raisonnement en moins, parce que les recherches bien placées résolvent des incertitudes qui auraient autrement nécessité de longues digressions internes.</p>
+
+<p>L'analyse comportementale révèle trois patterns dominants. Dans 42 % des cas, une recherche précoce résout une lacune et raccourcit la chaîne de 23 %. Dans 31 % des cas, la recherche sert de vérification à mi-parcours et réduit les retours en arrière de 18 %. Dans 12 % des cas, la recherche échoue et allonge la chaîne de 8 % — l'inverse de l'effet recherché, mais une minorité.</p>
+
+<h2>Implications pratiques pour l'industrie</h2>
+
+<p>Le premier impact concret concerne le coût. Sur DeepSeek-R1-671B, ReaLM-Retrieve produit 9 489 tokens en moyenne contre 11 284 pour IRCoT, à tarification de sortie identique. Pour un déploiement traitant un million de requêtes par jour, le gain de 16 % se traduit en milliers de dollars par mois et en réduction proportionnelle de l'empreinte énergétique.</p>
+
+<p>Le deuxième impact concerne la latence. À 14 secondes par requête, ReaLM-Retrieve reste asynchrone : pas adapté à un chatbot conversationnel temps réel, mais parfait pour des assistants de recherche, des analyses documentaires en lot, ou des agents multi-étapes. Les chercheurs identifient explicitement ces cas d'usage et reconnaissent qu'un usage interactif sous 2 secondes exigerait des modèles distillés ou des sorties anticipées.</p>
+
+<p>Le troisième impact concerne la portabilité. Parce que le système ne dépend que des tokens en sortie — pas des logprobs internes ni des états d'attention — il fonctionne aussi bien sur des modèles ouverts (DeepSeek-R1, QwQ) que sur des API fermées (o1). L'écart de performance entre les deux régimes n'est que de 2 à 3 points de F1, ce qui rend la méthode déployable sans renoncer aux modèles propriétaires les plus capables.</p>
+
+<p>Pour les équipes qui construisent aujourd'hui des produits autour des modèles de raisonnement — assistants de recherche scientifique, outils de due diligence, agents juridiques — la leçon est la suivante : ne pas reproduire l'architecture RAG classique. Penser en termes de fenêtres de raisonnement, pas de prompts uniques.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent ouvertes. La première concerne l'apprentissage de bout en bout. ReaLM-Retrieve combine quatre modules entraînés séparément (segmenteur, classificateur de proxy d'incertitude, politique d'intervention, générateur de requêtes). Une approche unifiée, où un seul contrôleur apprendrait toutes ces décisions conjointement, pourrait fermer l'écart résiduel entre signaux observables et signaux internes.</p>
+
+<p>La deuxième concerne les corpus. Quand l'information n'existe tout simplement pas dans la base documentaire — 43 % des échecs viennent de ce cas — le système gaspille 171 millisecondes par requête et risque d'injecter du bruit. Une politique consciente du corpus, capable d'estimer la probabilité de présence d'une information avant de chercher, gommerait une part importante des échecs restants.</p>
+
+<p>La troisième concerne l'extension multimodale. Les benchmarks utilisés portent sur du texte. Mais les vrais cas d'usage en entreprise impliquent souvent des tableaux, des figures, des graphiques. Un modèle de raisonnement qui devrait justifier un calcul à partir d'un rapport financier aurait besoin de récupérer des cellules de tableau spécifiques, pas des paragraphes. La transposition du RSUS aux signaux multimodaux reste à faire.</p>
+
+<p>Une quatrième piste, mentionnée par les auteurs eux-mêmes, vient d'un travail concurrent. Hashemi et al. (Dynamic Search-R1) ont attaqué un axe orthogonal : non pas <em>quand</em> chercher, mais <em>combien de documents</em> récupérer à chaque appel. Combiner les deux — un timing adaptatif avec une profondeur adaptative — permettrait de cumuler les économies. Les deux approches sont compositionnelles par construction.</p>
+
+<p>Enfin, la question de la généralisation. Les expériences portent sur des questions factuelles à plusieurs sauts. Reste à voir si la même architecture tient sur du raisonnement mathématique (où l'incertitude n'est pas factuelle mais logique), sur du code (où la récupération vise des API et des exemples), ou sur des tâches d'agent autonome où le raisonnement et l'action sont entrelacés. Le découpage en étapes et la mesure d'incertitude étape par étape sont des primitives suffisamment générales pour qu'on puisse l'espérer — mais ça reste à démontrer.</p>
+
+<p>Le message de fond du papier dépasse son cadre technique. Les systèmes de recherche documentaire ont longtemps été conçus comme des fournisseurs de contexte avant la génération. ReaLM-Retrieve les repositionne comme des partenaires de raisonnement, sollicités au coup par coup pendant l'inférence. Cette inversion architecturale annonce probablement la prochaine génération d'outils RAG, où le moteur de recherche devient un composant interactif du raisonnement plutôt qu'un tampon en amont.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
