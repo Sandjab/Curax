@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Premier volet d'une serie sur les outils de browser automation pour agents de coding : pourquoi Playwright a gagne (accessibility tree, auto-wait), critique du cout MCP (~15k tokens), et comparatif detaille de dev-browser, Stagehand, Vercel agent-browser, Chrome DevTools MCP, Puppeteer, Patchright, Scrapling, Lightpanda et patterns debug-bridge. L'auteur recommande dev-browser pour la boucle de dev et privilegie l'ecriture directe de code Playwright par l'agent plutot que les serveurs MCP.">
+  <title>Browser Tools for AI Agents — Part 1: Le bas de la stack (Playwright et alternatives)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: rgb(247, 247, 245);
+      color: rgb(55, 53, 47);
+      font-family: -apple-system, "system-ui", "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      line-height: 1.6;
+    }
+    .article-container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 20px 40px;
+    }
+    img { max-width: 100%; height: auto; }
+    
+    figure{margin:2em 0}figure img{display:block;margin:0 auto}figcaption{text-align:center;font-size:0.875em;opacity:0.7}pre{background:rgba(128,128,128,0.1);padding:1em;border-radius:4px;overflow-x:auto}blockquote{border-left:3px solid currentColor;margin-left:0;padding-left:1.5em;opacity:0.85}a{color:#1d9bf0}
+  </style>
+</head>
+<body>
+  <div class="article-container">
+    <article class="crayons-card crayons-article mb-4" id="article-show-container" data-article-id="3554351" data-article-slug="browser-tools-for-ai-agents-part-1-playwright-puppeteer-and-why-your-agent-picked-playwright-k71" data-author-id="613704" data-author-name="Steven Gonsalvez" data-author-username="stevengonsalvez" data-co-author-ids="" data-path="/stevengonsalvez/browser-tools-for-ai-agents-part-1-playwright-puppeteer-and-why-your-agent-picked-playwright-k71" data-pin-path="/stories/feed/pinned_article" data-pinned-article-id="" data-published="true" data-scheduled="false" lang="en">
+          
+          
+
+          <div class="crayons-article__main ">
+              
+  
+
+            <div class="crayons-article__body text-styles spec__body" data-article-id="3554351" id="article-body">
+                <p>The first time I watched an AI agent drive a browser, I laughed. Out loud. Not because it was funny, but because it was so profoundly uncanny. Like watching a toddler who somehow knows how to file taxes. The cursor moved with purpose. It found form fields I would've struggled to locate myself. It waited patiently for a spinner to clear, then clicked a button that hadn't even rendered when the page first loaded.</p>
+
+<p>I sat there with my coffee going cold thinking: how does it know what to click? What is it even <em>seeing</em>?</p>
+
+<p>Turns out, the answer to that question is the entire reason Playwright won the browser automation war for AI agents. And it's not the answer most people expect.</p>
+
+<h2>
+  <a name="what-this-series-covers-and-what-it-doesnt" href="#what-this-series-covers-and-what-it-doesnt">
+  </a>
+  What this series covers (and what it doesn't)
+</h2>
+
+<p>Quick scope check before we crack on. This series is NOT about consumer agentic browsers like Comet, Dia, BrowserOS, ChatGPT Atlas, or Google's Project Mariner. Those are interesting products, but they're for end users browsing the web with AI assistance.</p>
+
+<p>This series is about something more specific: <strong>how does a software developer, working with coding agents, give those agents the right browser tools to build a fully closed loop system?</strong> Research, plan, implement, validate. That whole cycle. And the "validate" bit, in most cases, means checking what a real user would see in a real browser.</p>
+
+<p>That's the lens. Every tool in this four-part series is evaluated through it. Can my agent use this to research a problem, build a solution, and then open a browser to verify it actually works from a user's perspective?</p>
+
+<p>(Native app validation for React Native, Capacitor, or Swift is a separate conversation. We'll get there.)</p>
+
+<p>One thing worth saying upfront: I've tried and used every tool in this series in some form. Not just read the README. Actually ran them, built things with them, hit the walls, found the workarounds. The ones that stuck in my daily workflow are dev-browser (for agent dev loops), Stagehand (for repeated workflows with caching), expect (for closed-loop test validation), and Playwright directly (for anything that needs to live in a CI pipeline). Everything else I've evaluated, formed opinions on, and moved on from or keep in the toolbox for specific situations.</p>
+
+<h2>
+  <a name="playwright-the-main-event" href="#playwright-the-main-event">
+  </a>
+  Playwright: The Main Event
+</h2>
+
+<p>Right. Let's not faff about with history lessons. Playwright won. Every serious AI coding agent, Claude Code, Cursor, GitHub Copilot's agent mode, they all reach for Playwright when they need a browser. The question worth asking is <em>why</em>.</p>
+
+<p>It's not because Playwright is the fastest browser automation tool. It isn't. Puppeteer actually beats it by 15 to 20 percent on raw Chromium tasks because Puppeteer stays closer to the Chrome DevTools Protocol wire, exchanging roughly 11KB of websocket messages where Playwright sends 326KB for the same job. That's a proper gap.</p>
+
+<p>But speed on Chromium isn't the game agents are playing. Agents are playing a reliability and comprehension game. And Playwright absolutely smashes that.</p>
+
+<p><strong>The accessibility tree trick.</strong> This is the bit that matters. When Playwright's MCP server talks to an AI agent, it doesn't send screenshots. It doesn't dump raw HTML. It sends the browser's accessibility tree: a structured, semantic, text-based representation of the page. Roles, labels, states. A "Submit" button is <code>Role: button, Name: Submit</code> regardless of whether the CSS class is <code>btn-primary</code> or <code>xK7_submit_v3_final_FINAL</code>. An accessibility snapshot averages 2 to 5KB. A screenshot of the same page runs 100KB or more. That's a 20x to 50x difference in token cost, and for an agent burning through context windows, that's the whole ballgame.</p>
+
+<p>ARIA roles and labels were designed for screen readers and assistive technology. Turns out they're perfect for AI agents too. Same problem, really: "tell me what's on this page in a way I can act on without seeing it."</p>
+
+<p><strong>Auto-wait.</strong> Playwright waits for elements to be actionable before it tries to interact with them. Assertions retry automatically until conditions are met. No <code>sleep(2000)</code>. No polling loops. No flaky race conditions. For an agent that can't eyeball the page and think "oh, that spinner's still going, I'll wait a sec," this is everything. The agent says "click the checkout button" and Playwright handles the timing. Sorted.</p>
+
+<p><strong>Browser Contexts.</strong> Playwright can spin up isolated browser contexts that share a single browser instance. Different cookies, different storage, different sessions, all running in parallel without stepping on each other. For agents that need to test multi-user flows or run parallel scraping jobs, this is far cheaper than launching separate browser processes.</p>
+
+<p><strong>Multi-browser support.</strong> Chromium, Firefox, WebKit. One API. Puppeteer gives you Chrome and that's it. Selenium gives you everything but slowly. Playwright gives you all three major engines with the same code, and for cross-browser testing that actually matters.</p>
+
+<div class="table-wrapper-paragraph"><table>
+<thead>
+<tr>
+<th>📚 Geek Corner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>The MCP tax vs just writing Playwright</strong>: Playwright MCP is still widely used, and I get why. Microsoft shipped it in March 2025, it works with VS Code, Cursor, Claude Desktop, and GitHub's Copilot has it baked in. Snapshot Mode reads the accessibility tree, Vision Mode uses screenshots. Sounds great on paper. But here's my take: <a href="https://dev.to/blog/death-of-mcp">MCP is a context killer</a>. The Playwright MCP alone burns ~15,000 tokens in tool definitions before your agent has done anything. My strong preference is to skip MCP entirely and let the agent write Playwright code directly. Agents are good at this. They can generate a <code>goto</code>, <code>click</code>, <code>fill</code>, <code>screenshot</code> script in seconds. The code is reusable, testable, and costs ~1,000 tokens instead of 15,000. Microsoft recently shipped <a href="https://github.com/microsoft/playwright-cli" target="_blank" rel="noopener noreferrer">playwright-cli</a> which makes this even cleaner. And if you pair it with a skill (use <code>/skill-creator</code> to build one), you end up with a customised Playwright generation layer for <em>your</em> application: your selectors, your auth flow, your common patterns. That's worth more than any MCP server because it compounds over time. The agent learns your app, not a generic tool schema.</td>
+</tr>
+</tbody>
+</table></div>
+
+<p><strong>Getting started:</strong><br>
+</p>
+
+<div class="highlight js-code-highlight">
+<pre class="highlight shell"><code><span class="c"># MCP (if you must, but see the MCP tax discussion above)</span>
+npx @anthropic-ai/claude-code mcp add playwright <span class="nt">--</span> npx @playwright/mcp@latest
+
+<span class="c"># Better: let your agent write Playwright code directly</span>
+npm <span class="nb">install </span>playwright
+<span class="c"># Or: npx playwright-cli</span>
+
+<span class="c"># Best: build a custom skill with /skill-creator</span>
+<span class="c"># that wraps YOUR app's common Playwright patterns</span>
+</code></pre>
+<div class="highlight__panel js-actions-panel">
+<div class="highlight__panel-action js-fullscreen-code-action">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-on"><title>Enter fullscreen mode</title>
+    <path d="M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z"></path>
+</svg>
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-off"><title>Exit fullscreen mode</title>
+    <path d="M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z"></path>
+</svg>
+
+</div>
+</div>
+</div>
+
+
+
+<p><strong>Feels like:</strong> Playwright is the Swiss Army knife where every blade is sharp. Puppeteer is a really excellent scalpel, but only for one specific material.</p>
+
+<h2>
+  <a name="chrome-devtools-mcp-when-you-need-the-full-inspector" href="#chrome-devtools-mcp-when-you-need-the-full-inspector">
+  </a>
+  Chrome DevTools MCP: When You Need the Full Inspector
+</h2>
+
+<p>Worth calling out separately: <a href="https://github.com/ChromeDevTools/chrome-devtools-mcp" target="_blank" rel="noopener noreferrer">Chrome DevTools MCP</a> (32.9k stars, Google's official MCP server for Chrome) gives agents direct access to Chrome DevTools. 29 tools across six categories: input automation, navigation, emulation, performance tracing, network inspection, and debugging. It's the tool you reach for when your agent needs to do more than just click buttons. Performance profiling, Lighthouse audits, memory snapshots, network request analysis, console log capture with source-mapped stack traces.</p>
+
+<p>The interesting bit is it has a "slim mode" that drops from 29 tools down to 3. Which is a tacit admission that 29 tools is too many to load by default. Same MCP tax problem I keep banging on about.</p>
+
+<p>There's also a performance issue worth flagging. CDP (Chrome DevTools Protocol) feels noticeably sluggish for basic click-and-navigate work compared to Playwright, and there's a proper technical reason for that. CDP simulates OS-level input: when you fire <code>Input.dispatchMouseEvent</code>, Chrome processes it through the full input pipeline (compositor thread, hit-testing, event dispatch, bubbling). It's simulating a real mouse click at the hardware level. Playwright often shortcuts this by injecting JavaScript that calls the element's click handler directly, skipping the compositor entirely.</p>
+
+<p>On top of that, CDP has no auto-wait. You click, and if the element isn't ready, it misses or hits the wrong thing. You end up stacking manual waits (<code>Page.loadEventFired</code>, polling for selectors) which add up fast. Navigation is even worse: <code>Page.navigate</code> fires and then you're listening for separate <code>Page.lifecycleEvent</code> messages. Playwright bundles "navigate and wait until ready" into one call. And if you're using Chrome DevTools MCP specifically, every action goes through an extra hop: agent decides (LLM round-trip), MCP server receives tool call, translates to CDP, Chrome executes, result back through MCP, back to agent. Two network hops on top of the CDP execution.</p>
+
+<p><strong>Getting started:</strong><br>
+</p>
+
+<div class="highlight js-code-highlight">
+<pre class="highlight shell"><code>npx chrome-devtools-mcp@latest
+<span class="c"># No official skill. Consider mcporter to convert to CLI instead.</span>
+</code></pre>
+<div class="highlight__panel js-actions-panel">
+<div class="highlight__panel-action js-fullscreen-code-action">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-on"><title>Enter fullscreen mode</title>
+    <path d="M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z"></path>
+</svg>
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-off"><title>Exit fullscreen mode</title>
+    <path d="M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z"></path>
+</svg>
+
+</div>
+</div>
+</div>
+
+
+
+<p>My honest take: if your agent needs performance profiling or deep debugging (tracing, memory snapshots, network watchers), Chrome DevTools MCP is the right tool for that specific job. But for the 90% case of "navigate, click, fill, screenshot, verify," you're paying a hefty context premium AND getting slower execution for capabilities you won't use. The agent can write a quick Puppeteer script to call <code>Performance.getMetrics()</code> directly via CDP and it'll cost a fraction of the context. Use Chrome DevTools MCP when you genuinely need the full inspector. For everything else, let the agent write the code.</p>
+
+<h2>
+  <a name="devbrowser-the-agentnative-option-i-actually-use" href="#devbrowser-the-agentnative-option-i-actually-use">
+  </a>
+  dev-browser: The Agent-Native Option I Actually Use
+</h2>
+
+<p>So if Playwright is the answer, why do I keep reaching for dev-browser?</p>
+
+<p>dev-browser (by Sawyer Hood) is a different beast. It's not a testing framework. It's not trying to replace Playwright for CI/CD pipelines or regression suites. It's a sandboxed browser automation tool built specifically for AI agents to muck about with web pages during development.</p>
+
+<p>The architecture is clever. It runs scripts in a QuickJS WASM sandbox, meaning your agent's browser automation code has zero access to the host filesystem or network. The scripts use the full Playwright Page API under the hood, including a <code>snapshotForAI()</code> function that does exactly what it sounds like. But the isolation model means your agent can't accidentally <code>rm -rf</code> your home directory while it's trying to click a button.</p>
+
+<p>The benchmarks from the dev-browser-eval suite tell the story:</p>
+
+<div class="table-wrapper-paragraph"><table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Duration</th>
+<th>Cost</th>
+<th>Iterations</th>
+<th>Success</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dev-browser</td>
+<td>3m 53s</td>
+<td>$0.88</td>
+<td>29</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Playwright MCP</td>
+<td>4m 31s</td>
+<td>$1.45</td>
+<td>51</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Playwright Skill</td>
+<td>8m 07s</td>
+<td>$1.45</td>
+<td>38</td>
+<td>67%</td>
+</tr>
+</tbody>
+</table></div>
+
+<p>That's 30% faster and 40% cheaper than Playwright MCP for the same task, with fewer iterations. The agent figures out what it needs to do quicker because the tool was designed for how agents think, not how test engineers think.</p>
+
+<p>But (and this is a proper big but) dev-browser is not the tool for repeatable test suites. It doesn't do assertions the way Playwright does. It doesn't generate CI-friendly reports. It doesn't integrate with your test runner. If you need "run these 200 tests on every PR and fail the build if something breaks," that's Playwright. If you need "let my agent open a browser, poke around, check if the thing I just built actually works," that's dev-browser.</p>
+
+<p>5.3K stars on GitHub. MIT licensed. TypeScript core with a bit of Rust. Active development. I reckon it's going to keep growing because the "agent wants a browser for five minutes during development" use case is massive and Playwright MCP is overkill for it.</p>
+
+<p><strong>Getting started:</strong><br>
+</p>
+
+<div class="highlight js-code-highlight">
+<pre class="highlight shell"><code><span class="c"># Install the tool</span>
+npm <span class="nb">install</span> <span class="nt">-g</span> dev-browser <span class="o">&amp;&amp;</span> dev-browser <span class="nb">install</span>
+
+<span class="c"># The skill is at github.com/SawyerHood/dev-browser/tree/main/skills</span>
+<span class="c"># Copy to your skills directory:</span>
+<span class="nb">cp</span> <span class="nt">-r</span> node_modules/dev-browser/skills/dev-browser ~/.claude/skills/
+
+<span class="c"># Pre-approve: add "Bash(dev-browser *)" to .claude/settings.json</span>
+</code></pre>
+<div class="highlight__panel js-actions-panel">
+<div class="highlight__panel-action js-fullscreen-code-action">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-on"><title>Enter fullscreen mode</title>
+    <path d="M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z"></path>
+</svg>
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-off"><title>Exit fullscreen mode</title>
+    <path d="M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z"></path>
+</svg>
+
+</div>
+</div>
+</div>
+
+
+
+<p><strong>Bottom line:</strong> dev-browser for agent-driven development. Playwright for everything that needs to be repeatable, cross-browser, or in CI.</p>
+
+<h2>
+  <a name="vercel-agentbrowser-tokencheap-timeexpensive-and-heres-why" href="#vercel-agentbrowser-tokencheap-timeexpensive-and-heres-why">
+  </a>
+  Vercel agent-browser: Token-Cheap, Time-Expensive (and Here's Why)
+</h2>
+
+<p>26,200 stars. Written in Rust. And I need to be honest about this one because the marketing and the lived experience don't match.</p>
+
+<p>The pitch is context window efficiency. agent-browser compresses page snapshots using semantic element references (@e1, @e2) instead of full accessibility tree dumps. Vercel claims 93% context reduction, and the token savings are real. A typical snapshot is 200-400 tokens vs Playwright MCP's 15,000 tokens in tool definitions alone. Across a 6-step test, that's 1,364 tokens vs 7,779. You can fit 5.7x more test cycles in the same context budget.</p>
+
+<p>But it feels slow. And after digging into the architecture, I reckon I know why.</p>
+
+<p>The original version was a Rust CLI talking to a Node.js daemon over a unix socket, with Playwright driving Chrome underneath. In v0.20.0 they rewrote the daemon in pure Rust and dropped the Node.js layer entirely. Memory went from 143MB to 8MB, install from 710MB to 7MB, cold start from ~1,002ms to ~617ms. Proper engineering.</p>
+
+<p>The problem is Chrome itself still takes 2-5 seconds to launch on first use. So your realistic first-command wall clock is: 617ms daemon start + 2-5 seconds Chrome launch + page navigation time. Subsequent commands on a warm daemon are 50-100ms, which is fast. But that cold start is a killer in CI or ephemeral environments where every run starts fresh.</p>
+
+<p>There are also real stability issues. GitHub Issue #1113 documents orphaned headless Chrome processes that block normal Chrome from launching. Issue #1101 shows the idle timeout not being respected on Unix/macOS. Issue #1035 shows the daemon hanging on Linux server environments. These aren't edge cases if you're running agents at any scale.</p>
+
+<div class="table-wrapper-paragraph"><table>
+<thead>
+<tr>
+<th>📚 Geek Corner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>The "3.5x faster" claim is about LLM planning, not browser speed.</strong> The Vercel blog post ("We removed 80% of our agent's tools") benchmarked their internal text-to-SQL agent, not browser automation. They went from 15 tools to 2, and task completion dropped from 274.8 seconds to 77.4 seconds. The speedup came from the LLM making fewer decisions per turn (fewer tools = less confusion = faster planning), not from faster browser execution. Sample size was 5 queries, self-selected. Against a lean Playwright setup with 3-5 tools, the speed advantage would likely be negligible. The token savings, however, are genuine and well-measured: 82.5% fewer characters in responses, 37% fewer total tokens per task. Token-cheap and time-cheap are orthogonal problems. Stagehand's caching is the approach that actually reduces wall-clock time, replaying actions at &lt;100ms without calling the LLM at all.</td>
+</tr>
+</tbody>
+</table></div>
+
+<p>No anti-bot capabilities. For protected sites you need Browserbase or similar. Windows has documented socket issues (#398). And there are no independent wall-clock benchmarks from anyone outside Vercel. Every performance number in every blog post traces back to Vercel's own measurements.</p>
+
+<p><strong>Getting started:</strong><br>
+</p>
+
+<div class="highlight js-code-highlight">
+<pre class="highlight shell"><code><span class="c"># Install</span>
+npm <span class="nb">install</span> <span class="nt">-g</span> agent-browser
+<span class="c"># Or: brew install agent-browser</span>
+<span class="c"># Or: cargo install agent-browser</span>
+
+<span class="c"># Official skill at vercel-labs/agent-browser/skills/</span>
+</code></pre>
+<div class="highlight__panel js-actions-panel">
+<div class="highlight__panel-action js-fullscreen-code-action">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-on"><title>Enter fullscreen mode</title>
+    <path d="M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z"></path>
+</svg>
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-off"><title>Exit fullscreen mode</title>
+    <path d="M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z"></path>
+</svg>
+
+</div>
+</div>
+</div>
+
+
+
+<p><strong>Bottom line:</strong> agent-browser is the right choice when your binding constraint is context window size and you can tolerate the wall-clock cost. The token efficiency is real and well-engineered. The speed claims are marketing that conflates LLM planning improvements with browser execution speed. If wall-clock time matters, let the agent write Playwright code directly or use Stagehand's caching.</p>
+
+<h2>
+  <a name="stagehand-playwright-with-a-learning-layer" href="#stagehand-playwright-with-a-learning-layer">
+  </a>
+  Stagehand: Playwright with a Learning Layer
+</h2>
+
+<p>Right. So <a href="https://github.com/browserbase/stagehand" target="_blank" rel="noopener noreferrer">Stagehand</a> (21.8k stars) is Browserbase's TypeScript SDK and it does something properly clever. It wraps Playwright with three AI primitives: <code>act()</code> (do something on the page), <code>extract()</code> (pull structured data out), and <code>agent()</code> (let the LLM figure out a multi-step flow). On paper that sounds like yet another Playwright wrapper. It isn't.</p>
+
+<p>The v3 release dropped the Playwright dependency entirely and went CDP-native. Direct Chrome DevTools Protocol, no middleware. The result is 44% faster than v2 on their benchmarks, and the architecture is cleaner for it. Fewer moving parts, fewer things to break.</p>
+
+<p>But the real trick, the bit that made me sit up, is the caching system. First run: the LLM plans and executes actions, same as any AI browser tool. Stagehand records every action it takes. Subsequent runs: it replays those cached actions at sub-100ms latency <em>without making a single LLM call</em>. Zero tokens burned. That's the economic insight nobody talks about enough. Every other tool in this post charges you LLM inference on every run. Stagehand charges you once, then replays for free. For repetitive workflows (login flows, checkout tests, data extraction pipelines), the cost curve is completely different.</p>
+
+<p>The catch is the business model. The Stagehand SDK itself is MIT licensed, free, use it wherever you like. But Browserbase, the cloud browser infrastructure that makes it dead simple to run at scale (session management, proxy rotation, persistent contexts), that's paid. The SDK works locally with your own Chrome too. You just lose the managed infra. Fair trade, honestly.</p>
+
+<p><strong>Getting started:</strong><br>
+</p>
+
+<div class="highlight js-code-highlight">
+<pre class="highlight shell"><code><span class="c"># Stagehand SDK (quickstart scaffold)</span>
+npx create-browser-app
+
+<span class="c"># Browserbase has 3 official skills: browser, browserbase-cli, functions</span>
+<span class="c"># Install via:</span>
+npx skills add browserbase/skills
+<span class="c"># Or in Claude Code:</span>
+<span class="c"># /plugin marketplace add browserbase/skills</span>
+</code></pre>
+<div class="highlight__panel js-actions-panel">
+<div class="highlight__panel-action js-fullscreen-code-action">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-on"><title>Enter fullscreen mode</title>
+    <path d="M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z"></path>
+</svg>
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-off"><title>Exit fullscreen mode</title>
+    <path d="M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z"></path>
+</svg>
+
+</div>
+</div>
+</div>
+
+
+
+<p><strong>Bottom line:</strong> If you're in TypeScript and you want Playwright-level reliability with an AI layer that actually learns from previous runs, Stagehand is the one to look at. The caching system is the differentiator. First run costs tokens, every subsequent run is basically free.</p>
+
+<h2>
+  <a name="the-still-relevant-section" href="#the-still-relevant-section">
+  </a>
+  The "Still Relevant?" Section
+</h2>
+
+<p>Three tools that come up in every browser automation conversation. Two of them shouldn't, at least not for agent work.</p>
+
+<p><strong>Puppeteer</strong> is still relevant. Full stop. If you're doing Chrome-specific performance work, profiling, coverage reporting, or sending raw CDP commands, Puppeteer is closer to the metal and 15 to 20 percent faster than Playwright on Chromium. Google maintains it. It connects directly to Chrome's DevTools Protocol, and for things like <code>Performance.getMetrics()</code> or network traffic monitoring, that direct CDP access matters. Where it falls short for agents: Chrome only, no accessibility tree abstraction out of the box, and no auto-wait. You're writing the retry logic yourself. For agent work, Playwright is the better pick. For Chrome-specific performance analysis, Puppeteer still earns its keep. About 89K stars on GitHub, Apache 2.0 license, very much alive.<br>
+</p>
+
+<div class="highlight js-code-highlight">
+<pre class="highlight shell"><code>npm <span class="nb">install </span>puppeteer
+<span class="c"># No official skill. Agent writes Puppeteer code directly.</span>
+</code></pre>
+<div class="highlight__panel js-actions-panel">
+<div class="highlight__panel-action js-fullscreen-code-action">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-on"><title>Enter fullscreen mode</title>
+    <path d="M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z"></path>
+</svg>
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-off"><title>Exit fullscreen mode</title>
+    <path d="M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z"></path>
+</svg>
+
+</div>
+</div>
+</div>
+
+
+
+<p><strong>Selenium</strong> is a different story. It's still the most widely deployed browser automation tool in the world, and it's still getting investment (Selenium 5 brings WebDriver BiDi for real-time event streaming). But the WebDriver protocol is an HTTP request-response cycle for <em>every single browser action</em>. Click? HTTP request. Type? HTTP request. Check visibility? HTTP request. That latency overhead adds up fast, and for an agent that might execute hundreds of actions in a session, it's painful. Teams report spending 40 to 70 percent of their automation effort just maintaining existing Selenium tests. For new agent-driven work, I can't recommend it. For legacy enterprise suites that already exist and work, ripping them out is probably not worth the effort either. That's the honest answer.</p>
+
+<p><strong>Cypress</strong> runs inside the browser, not outside it. That's its party trick for developer testing (direct DOM access, time travel debugging, automatic waiting within its own execution model) and it's also the reason it's rubbish for agents. You can't visit different domains in the same test (same-origin policy). You can't run multiple browser instances. You can't easily hook an external LLM into a browser process that the test framework itself is running <em>inside of</em>. Cypress is brilliant for developers writing their own tests interactively. It's architecturally wrong for agents that need to control browsers from the outside. Cypress knows this, incidentally. They're investing in AI features (Cypress Studio AI) but they're about helping humans write Cypress tests, not about letting agents drive browsers.</p>
+
+<h2>
+  <a name="the-dodgy-stuff-stealth-tools" href="#the-dodgy-stuff-stealth-tools">
+  </a>
+  The Dodgy Stuff: Stealth Tools
+</h2>
+
+<p>Sometimes you need to automate a browser and you'd rather the website didn't know about it. I'm not here to judge. Maybe you're scraping your own data from a service that doesn't offer an API. Maybe you're doing competitive research. Maybe you're testing your own anti-bot defences. Whatever. Two tools worth knowing about.</p>
+
+<h3>
+  <a name="patchright-playwright-but-sneaky" href="#patchright-playwright-but-sneaky">
+  </a>
+  Patchright: Playwright, But Sneaky
+</h3>
+
+<p>Patchright is a fork of Playwright with one job: don't get detected as an automated browser.</p>
+
+<p>The core problem it solves is called the Runtime.enable leak. When normal Playwright talks to Chrome, it sends a CDP command called <code>Runtime.enable</code> that lets it manage JavaScript execution contexts. Anti-bot systems from Cloudflare, DataDome, Kasada, and Akamai all specifically look for this command. If they see it, you're flagged as a bot. Game over.</p>
+
+<p>Patchright patches this out. Instead of using Runtime.enable, it executes JavaScript through isolated ExecutionContexts with unknown IDs. The bot detection systems can't see the telltale CDP command because it never fires.</p>
+
+<div class="table-wrapper-paragraph"><table>
+<thead>
+<tr>
+<th>📚 Geek Corner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>The 22 patches</strong>: Patchright applies 22 patches comprising roughly 5,856 lines of modifications to Playwright's source code using AST manipulation. Beyond the Runtime.enable fix, it removes <code>--enable-automation</code> from Chrome's launch flags, adds <code>--disable-blink-features=AutomationControlled</code> to hide <code>navigator.webdriver</code>, and disables Console.enable entirely (trading debugging for stealth). It can also interact with closed Shadow DOM elements using standard locators, which vanilla Playwright can't do. The result passes detection tests from Cloudflare, Kasada, Akamai, Fingerprint.com, and CreepJS. Drop-in replacement for Playwright: same API, same code, just swap the import. Chromium only though. No Firefox, no WebKit. And some Playwright tests fail because the patches change internal behaviour. 2.8K stars, v1.58.0 as of March 2026, implementations in Python, Node.js, and .NET.</td>
+</tr>
+</tbody>
+</table></div>
+
+<p><strong>Getting started:</strong><br>
+</p>
+
+<div class="highlight js-code-highlight">
+<pre class="highlight shell"><code>pip <span class="nb">install </span>patchright  <span class="c"># Python</span>
+npm <span class="nb">install </span>patchright  <span class="c"># Node.js</span>
+<span class="c"># No official skill. Drop-in Playwright replacement, same API.</span>
+</code></pre>
+<div class="highlight__panel js-actions-panel">
+<div class="highlight__panel-action js-fullscreen-code-action">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-on"><title>Enter fullscreen mode</title>
+    <path d="M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z"></path>
+</svg>
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-off"><title>Exit fullscreen mode</title>
+    <path d="M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z"></path>
+</svg>
+
+</div>
+</div>
+</div>
+
+
+
+<h3>
+  <a name="scrapling-the-fullstack-stealth-scraper" href="#scrapling-the-fullstack-stealth-scraper">
+  </a>
+  Scrapling: The Full-Stack Stealth Scraper
+</h3>
+
+<p>Scrapling takes a different approach. Where Patchright patches Playwright to avoid detection, Scrapling builds stealth into the entire request pipeline from the ground up.</p>
+
+<p>It's a Python framework with three fetcher tiers. The basic <code>Fetcher</code> does fast HTTP requests with TLS fingerprint spoofing (it mimics real browser TLS handshakes at the transport layer, which is lower in the stack than anything Playwright touches). The <code>DynamicFetcher</code> uses Playwright/Chrome for pages that need JavaScript rendering. And the <code>StealthyFetcher</code> combines browser automation with anti-detection features to handle Cloudflare Turnstile and similar protections out of the box.</p>
+
+<p>The clever bit is adaptive element tracking. Scrapling learns from website changes and automatically relocates elements when pages update. If a site redesigns its layout, Scrapling adjusts its selectors without you rewriting anything. That's useful for long-running scraping jobs against sites that change frequently.</p>
+
+<p>It also has a built-in MCP server for AI-assisted scraping, so agents can use it directly. 92% test coverage. Full async support. Spider framework with Scrapy-like APIs for concurrent crawling. MIT licensed.</p>
+
+<p><strong>Getting started:</strong><br>
+</p>
+
+<div class="highlight js-code-highlight">
+<pre class="highlight shell"><code>pip <span class="nb">install </span>scrapling
+
+<span class="c"># Official skill:</span>
+clawhub <span class="nb">install </span>scrapling-official
+<span class="c"># Or: npx skills add D4Vinci/Scrapling:main</span>
+</code></pre>
+<div class="highlight__panel js-actions-panel">
+<div class="highlight__panel-action js-fullscreen-code-action">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-on"><title>Enter fullscreen mode</title>
+    <path d="M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z"></path>
+</svg>
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-off"><title>Exit fullscreen mode</title>
+    <path d="M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z"></path>
+</svg>
+
+</div>
+</div>
+</div>
+
+
+
+<p>When would you pick Scrapling over Patchright? If you're doing scraping at scale and need the full pipeline (request management, session rotation, proxy support, adaptive parsing), Scrapling is the more complete package. If you just need Playwright but undetected, Patchright is simpler.</p>
+
+<h2>
+  <a name="lightpanda-the-speed-problem-nobodys-solved-yet" href="#lightpanda-the-speed-problem-nobodys-solved-yet">
+  </a>
+  Lightpanda: The Speed Problem Nobody's Solved Yet
+</h2>
+
+<p>This one needs a proper mention even though I haven't run it in production yet. <a href="https://github.com/lightpanda-io/browser" target="_blank" rel="noopener noreferrer">Lightpanda</a> is building a browser engine from scratch in Zig, specifically optimised for headless automation and AI agents. Not a wrapper around Chromium. Not a fork. A ground-up browser engine designed to be fast.</p>
+
+<p>Why does this matter? Because all my regression test suites run for hours. Even headless Playwright is slow. You're spinning up a full Chromium process with all the rendering overhead, compositor threads, GPU process, extension subsystems. For headless automation where nobody is looking at the screen, 90% of that machinery is dead weight.</p>
+
+<p>Lightpanda claims to be dramatically faster by stripping out everything a headless agent doesn't need. No GPU compositor. No extension runtime. Minimal rendering pipeline. Just the DOM, JavaScript execution, network stack, and the bits you actually test against.</p>
+
+<p>It's early. The engine doesn't support the full web platform yet. Complex SPAs and heavy JS frameworks might hit gaps. But the direction is right. The current approach of "take a browser designed for humans looking at screens and run it without the screen" is fundamentally wasteful for agent workloads. Someone was always going to build a purpose-built headless engine. Worth watching.</p>
+
+<h2>
+  <a name="pinchtab-and-the-two-browser-problems" href="#pinchtab-and-the-two-browser-problems">
+  </a>
+  PinchTab and the Two Browser Problems
+</h2>
+
+<p><a href="https://github.com/pinchtab/pinchtab" target="_blank" rel="noopener noreferrer">PinchTab</a> is a 12MB Go binary that gives AI agents browser control via plain HTTP. Token-efficient (800 tokens per page snapshot vs thousands for screenshots), accessibility-first element references, multi-instance parallel Chrome, headless or headed. Any agent that can make HTTP calls can use it. No MCP needed.</p>
+
+<p>Here's the thing I keep coming back to with tools like PinchTab. There are actually two completely different browser automation problems, and people keep conflating them.</p>
+
+<p><strong>Problem 1: The dev inner loop.</strong> You're engineering. Your agent writes code, you need it to check the result in a browser, confirm something rendered correctly, validate a flow. Speed matters here because you're waiting. The agent is waiting. The tighter this loop, the faster you ship. dev-browser, agent-bridge, PinchTab, and Playwright all serve this use case. PinchTab's token efficiency is nice here but on paper I don't see it making a massive difference to my actual bottleneck, which is Playwright being slow (see Lightpanda above).</p>
+
+<p><strong>Problem 2: Fully agentic task completion.</strong> "Go fill out this waitlist form." "Book these train tickets." "Apply to these 20 job postings." There's no human in the loop. The agent needs to complete the task end-to-end, handle CAPTCHAs, deal with unexpected modals, retry on failure. Speed is secondary. Precision and fault tolerance are everything. You'd rather it takes 30 seconds and succeeds than takes 5 seconds and fails.</p>
+
+<p>For problem 2, Claude for Chrome is still the best fit I've found. It's not the fastest. It's not the most token-efficient. But it runs in your actual browser with your actual cookies and extensions, it handles the weird edge cases that trip up headless tools, and when something goes sideways it recovers better than anything else I've tried. The resilience matters more than the speed when the goal is "complete this task without me watching."</p>
+
+<p>PinchTab is solving problem 1 well. Problem 2 needs a different tool.</p>
+
+<h2>
+  <a name="building-your-own-closed-loop" href="#building-your-own-closed-loop">
+  </a>
+  Building Your Own Closed Loop
+</h2>
+
+<p>Here's a pattern that doesn't get enough airtime. All the tools above launch a <em>separate</em> browser. Playwright spins up a new Chromium instance. dev-browser does the same in a sandbox. agent-browser fires up its own headless Chrome. That's fine for testing and scraping. But for local development, where you've already got your app running in your browser with your auth cookies and your dev server hot-reloading, launching a second browser is bonkers. You're paying 2-5 seconds of cold start to get a browser that doesn't know anything about your running app.</p>
+
+<p>The debug-bridge pattern flips this on its head. Instead of the agent launching a browser, you connect the agent to YOUR already-running browser. CDP over WebSocket. The agent sees your DOM, your console logs, your network requests, in real time. Zero cold start. The app is already there.</p>
+
+<p><strong><a href="https://github.com/stevengonsalvez/agent-bridge" target="_blank" rel="noopener noreferrer">agent-bridge</a></strong> is a WebSocket relay that sits between your AI agent and your running webapp. The architecture is dead simple: <code>Agent &lt;-&gt; CLI Server (localhost:4000) &lt;-&gt; Your Webapp</code>. The agent gets a live feed of UI tree snapshots, DOM state, console output, and network activity. It can send commands back. Bidirectional, real-time, and the agent never needs to launch a browser at all. Change your code, the dev server hot-reloads, and the agent sees the result instantly. Closed loop sorted, no context switching.</p>
+
+<p><strong><a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener noreferrer">OpenClaw browser relay</a></strong> takes a slightly different angle. It's a Chrome extension plus gateway combo. Install the extension in your browser, point it at the gateway, and now external agents can route browser control through it. Works locally or remotely through connected nodes. Handy if you've got a team setup where agents need access to browsers running on different machines.</p>
+
+<p>Why does this pattern beat Playwright MCP for local dev? Let me count the ways. Zero cold start (app already running). Real-time bidirectional visibility (agent sees network requests and console errors as they happen, not after a page load). Token-cheap (structured text, not screenshots, not 15,000 tokens of tool definitions). And you control what's exposed. Bake in your auth flow, your selectors, your common patterns. The agent gets faster at YOUR app specifically.</p>
+
+<p>The contrast with Playwright MCP is stark. Playwright launches a separate browser (2-5s cold start). No visibility into your running dev server. Agent works in isolation from your dev workflow. And you're burning 15,000 tokens in tool definitions before the agent has clicked a single button.</p>
+
+<p>Here's my strong recommendation: in Claude Code, use <code>/skill-creator</code> to wrap your debug-bridge setup into a reusable skill. Codex, Copilot, and other agentic tools have their own equivalent skill creation mechanisms. The point is identical regardless of tool: codify your app's browser patterns (auth flow, common selectors, test scenarios) into something the agent can reuse without you explaining it every session. This compounds over time. The agent gets faster at YOUR app, not just at generic browsing.</p>
+
+<p><strong>Getting started:</strong><br>
+</p>
+
+<div class="highlight js-code-highlight">
+<pre class="highlight shell"><code><span class="c"># agent-bridge</span>
+npm <span class="nb">install</span> <span class="nt">-g</span> agent-bridge
+agent-bridge start <span class="nt">--port</span> 4000
+
+<span class="c"># Add the client snippet to your webapp's dev entry point:</span>
+<span class="c"># &lt;script src="http://localhost:4000/agent-bridge-client.js"&gt;&lt;/script&gt;</span>
+
+<span class="c"># Then build a skill with /skill-creator that wraps</span>
+<span class="c"># your app's common debug-bridge patterns</span>
+</code></pre>
+<div class="highlight__panel js-actions-panel">
+<div class="highlight__panel-action js-fullscreen-code-action">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-on"><title>Enter fullscreen mode</title>
+    <path d="M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z"></path>
+</svg>
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" class="highlight-action crayons-icon highlight-action--fullscreen-off"><title>Exit fullscreen mode</title>
+    <path d="M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z"></path>
+</svg>
+
+</div>
+</div>
+</div>
+
+
+
+<p><strong>Bottom line:</strong> If your main use case is "agent verifies the thing I just built in my already-running app," skip the separate browser entirely. agent-bridge or a debug-bridge pattern gives you a tighter loop, faster feedback, and cheaper token costs than any of the launch-a-browser tools.</p>
+
+<h2>
+  <a name="the-comparison-table" href="#the-comparison-table">
+  </a>
+  The Comparison Table
+</h2>
+
+<div class="table-wrapper-paragraph"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Best For</th>
+<th>Multi-Browser</th>
+<th>Agent-Ready</th>
+<th>Stealth</th>
+<th>Speed</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Playwright</td>
+<td>Testing + Agent automation</td>
+<td>Yes (3 engines)</td>
+<td>Excellent (MCP)</td>
+<td>No</td>
+<td>Fast</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td>Chrome DevTools MCP</td>
+<td>Debugging + Performance profiling</td>
+<td>Chrome only</td>
+<td>Good (29 tools / slim 3)</td>
+<td>No</td>
+<td>Fast</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td>dev-browser</td>
+<td>Agent dev workflows</td>
+<td>Chromium</td>
+<td>Built for it</td>
+<td>No</td>
+<td>Fastest</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>agent-browser</td>
+<td>Token-constrained agents</td>
+<td>Chromium</td>
+<td>Good (CLI)</td>
+<td>No</td>
+<td>Slow (LLM bound)</td>
+<td>OSS</td>
+</tr>
+<tr>
+<td>Puppeteer</td>
+<td>Chrome perf/CDP work</td>
+<td>Chrome only</td>
+<td>Decent</td>
+<td>No</td>
+<td>Fastest (Chrome)</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td>Selenium</td>
+<td>Legacy enterprise suites</td>
+<td>Yes (all)</td>
+<td>Poor</td>
+<td>No</td>
+<td>Slow</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td>Cypress</td>
+<td>Developer interactive testing</td>
+<td>Limited</td>
+<td>Poor</td>
+<td>No</td>
+<td>Fast (in-browser)</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>Stagehand</td>
+<td>AI-augmented Playwright (caching)</td>
+<td>Chromium (CDP)</td>
+<td>Excellent (3 skills)</td>
+<td>No</td>
+<td>Fast (cached: &lt;100ms)</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>agent-bridge</td>
+<td>Local dev closed loop</td>
+<td>Your browser</td>
+<td>Built for it</td>
+<td>No</td>
+<td>Instant (no launch)</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>Patchright</td>
+<td>Anti-detection automation</td>
+<td>Chromium only</td>
+<td>Same as Playwright</td>
+<td>Yes</td>
+<td>Same as Playwright</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td>Scrapling</td>
+<td>Stealth scraping at scale</td>
+<td>Via fetcher tiers</td>
+<td>Yes (MCP)</td>
+<td>Yes</td>
+<td>Varies by fetcher</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>Lightpanda</td>
+<td>Speed-critical headless automation</td>
+<td>Own engine</td>
+<td>Early</td>
+<td>No</td>
+<td>Very fast (claimed)</td>
+<td>AGPL-3.0</td>
+</tr>
+<tr>
+<td>PinchTab</td>
+<td>Token-efficient agent browser control</td>
+<td>Chrome</td>
+<td>Yes (HTTP API)</td>
+<td>No</td>
+<td>Fast</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>Claude for Chrome</td>
+<td>Agentic task completion (forms, bookings)</td>
+<td>Chrome</td>
+<td>Built for it</td>
+<td>No</td>
+<td>Slow (resilient)</td>
+<td>Proprietary</td>
+</tr>
+</tbody>
+</table></div>
+
+<h2>
+  <a name="decision-tree-i-need-browser-automation" href="#decision-tree-i-need-browser-automation">
+  </a>
+  Decision Tree: "I Need Browser Automation"
+</h2>
+
+<p>Start here. What are you actually trying to do?</p>
+
+<p><strong>"I've got agentic systems or augmented engineering building code and I need a closed loop where the agent verifies its own work in a browser."</strong> dev-browser. This is what I use. It's faster and cheaper than Playwright MCP, sandboxed so agent-generated code can't escape, and built specifically for this workflow. The agent writes code, opens a browser, checks it works, moves on. Closed loop sorted.</p>
+
+<p><strong>"I'm building an AI agent that needs to interact with web pages more broadly."</strong> Playwright with MCP. The accessibility tree integration, auto-wait, and cross-browser support make it the right default for general browser automation.</p>
+
+<p><strong>"I need Chrome-specific performance profiling or raw CDP access."</strong> Puppeteer. It's closer to the metal and faster for Chrome-only work.</p>
+
+<p><strong>"We have 10,000 existing Selenium tests and they work."</strong> Keep them. Migrate new work to Playwright. Don't rewrite working tests for the sake of it.</p>
+
+<p><strong>"I'm writing tests interactively as a developer and I want the best DX."</strong> Cypress is still good at this. Just know it won't work for agent-driven automation.</p>
+
+<p><strong>"The website I'm automating has bot detection."</strong> Patchright if you just need Playwright minus the fingerprint. Scrapling if you need the full scraping pipeline with TLS-level stealth.</p>
+
+<p><strong>"I need to scrape at scale with proxy rotation, adaptive selectors, and anti-bot bypass."</strong> Scrapling. It's built for exactly this use case.</p>
+
+<p><strong>"I need an agent to complete a real-world task in a browser without me watching."</strong> Claude for Chrome. Precision and fault tolerance beat speed when the goal is task completion, not development speed.</p>
+
+<p><strong>"My headless test suites are too slow and I need a faster engine."</strong> Keep an eye on <a href="https://github.com/lightpanda-io/browser" target="_blank" rel="noopener noreferrer">Lightpanda</a>. Purpose-built headless engine in Zig. Early but the direction is right.</p>
+
+<h2>
+  <a name="whats-coming-in-part-2" href="#whats-coming-in-part-2">
+  </a>
+  What's Coming in Part 2
+</h2>
+
+<p>Low-level tools are the foundation. But most people building AI agents don't write raw Playwright code. They use frameworks that wrap these tools into higher-level abstractions: Stagehand, Browser Use, AgentQL, LaVague. Some of them are brilliant. Some of them are solving problems that don't exist anymore.</p>
+
+<p>Part 2 covers the frameworks and SDKs, the middle layer of the browser tools stack. We'll look at what they add on top of Playwright, whether the abstraction is worth the overhead, and which ones are actually shipping production-grade agent experiences versus which ones are demo-ware with nice landing pages.</p>
+
+<p>If you want the short version: the stack is Playwright at the bottom, a framework in the middle, and an orchestration platform at the top. Part 1 was the bottom. Part 2 is the middle. Crack on to <a href="https://dev.to/blog/productivity-series/03-ai/browser-tools-part2-frameworks">Part 2</a> when you're ready.</p>
+
+
+            </div>
+
+              
+  
+
+              <div class="below-post-bb body-billboard-container" data-async-url="/stevengonsalvez/browser-tools-for-ai-agents-part-1-playwright-puppeteer-and-why-your-agent-picked-playwright-k71/bmar11/post_body_bottom"><div>    
+
+  <div class="crayons-card crayons-card--secondary crayons-bb js-billboard body-billboard mb-2 mt-6" style="" data-display-unit="" data-id="238781" data-category-click="click" data-category-impression="impression" data-context-type="article" data-dismissal-sku="" data-special="nothing" data-article-id="3554351" data-type-of="in_house">
+    <div class="crayons-story__top flex">
+      <div class="crayons-bb__header relative">
+    <div class="crayons-bb__title">DEV Community</div>
+
+  <button id="sponsorship-dropdown-trigger-238781" aria-controls="sponsorship-dropdown-238781" aria-expanded="false" aria-haspopup="true" class="dropBtn crayons-bb__dropdown crayons-btn crayons-btn--s crayons-btn--ghost crayons-btn--icon" aria-label="Toggle dropdown menu" data-dropdown-initialized="true" data-initialized="true">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" role="img" aria-labelledby="aa0johelp8taeegyaue4j6t6tnhjco62" class="crayons-icon pointer-events-none"><title id="aa0johelp8taeegyaue4j6t6tnhjco62">Dropdown menu</title>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.25 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm5.25 0a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm3.75 1.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path>
+</svg>
+
+  </button>
+
+  <div id="sponsorship-dropdown-238781" class="crayons-dropdown bb-dropdown right-0">
+    <ul class="list-none m-0">
+        <li>
+          <a class="crayons-link crayons-link--block" href="/billboards">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" role="img" aria-hidden="true" class="crayons-icon c-btn__icon">
+    <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 100-16 8 8 0 000 16zM11 7h2v2h-2V7zm0 4h2v6h-2v-6z"></path>
+</svg>
+
+            What's a billboard?
+          </a>
+        </li>
+      <li>
+        <a class="crayons-link crayons-link--block" href="/settings/customization#sponsors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" role="img" aria-hidden="true" class="crayons-icon c-btn__icon">
+    <path d="M3.34 16.9999C2.91727 16.2689 2.58866 15.4874 2.362 14.6739C2.85531 14.423 3.26959 14.0406 3.55903 13.5688C3.84846 13.0971 4.00176 12.5545 4.00197 12.0011C4.00218 11.4476 3.84928 10.9049 3.5602 10.4329C3.27112 9.961 2.85712 9.57821 2.364 9.32694C2.81604 7.69243 3.67673 6.1999 4.865 4.98994C5.32909 5.29167 5.86762 5.45911 6.42098 5.47373C6.97434 5.48834 7.52095 5.34958 8.00033 5.07278C8.47971 4.79598 8.87315 4.39194 9.13713 3.90539C9.4011 3.41883 9.52531 2.86872 9.496 2.31594C11.1381 1.89157 12.8612 1.89226 14.503 2.31795C14.474 2.87071 14.5984 3.42073 14.8626 3.90715C15.1268 4.39357 15.5204 4.79742 15.9998 5.07401C16.4793 5.35059 17.0259 5.48913 17.5793 5.4743C18.1326 5.45946 18.671 5.29183 19.135 4.98994C19.714 5.57994 20.228 6.25095 20.66 6.99995C21.093 7.74895 21.417 8.52995 21.638 9.32595C21.1447 9.57685 20.7304 9.95932 20.441 10.4311C20.1515 10.9028 19.9982 11.4454 19.998 11.9988C19.9978 12.5523 20.1507 13.095 20.4398 13.5669C20.7289 14.0389 21.1429 14.4217 21.636 14.6729C21.184 16.3075 20.3233 17.8 19.135 19.0099C18.6709 18.7082 18.1324 18.5408 17.579 18.5262C17.0257 18.5115 16.479 18.6503 15.9997 18.9271C15.5203 19.2039 15.1268 19.6079 14.8629 20.0945C14.5989 20.5811 14.4747 21.1312 14.504 21.6839C12.8619 22.1083 11.1388 22.1076 9.497 21.6819C9.52605 21.1292 9.4016 20.5792 9.13742 20.0927C8.87324 19.6063 8.47964 19.2025 8.00017 18.9259C7.5207 18.6493 6.97405 18.5108 6.42073 18.5256C5.8674 18.5404 5.32896 18.7081 4.865 19.0099C4.27399 18.4069 3.76159 17.7315 3.34 16.9999ZM9 17.1959C10.0656 17.8106 10.8668 18.797 11.25 19.9659C11.749 20.0129 12.25 20.0139 12.749 19.9669C13.1324 18.7978 13.934 17.8114 15 17.1969C16.0652 16.5806 17.3205 16.3794 18.525 16.6319C18.815 16.2239 19.065 15.7889 19.273 15.3339C18.4524 14.4174 17.9991 13.2302 18 11.9999C18 10.7399 18.47 9.56295 19.273 8.66595C19.0635 8.21109 18.8125 7.77658 18.523 7.36795C17.3193 7.62025 16.0648 7.41942 15 6.80395C13.9344 6.18932 13.1332 5.20293 12.75 4.03394C12.251 3.98694 11.75 3.98594 11.251 4.03294C10.8676 5.20209 10.066 6.1885 9 6.80295C7.93478 7.41926 6.67948 7.62046 5.475 7.36795C5.18556 7.77623 4.93513 8.21081 4.727 8.66595C5.54757 9.5825 6.00088 10.7697 6 11.9999C6 13.2599 5.53 14.4369 4.727 15.3339C4.93647 15.7888 5.18754 16.2233 5.477 16.6319C6.68072 16.3796 7.93521 16.5805 9 17.1959ZM12 14.9999C11.2044 14.9999 10.4413 14.6839 9.87868 14.1213C9.31607 13.5587 9 12.7956 9 11.9999C9 11.2043 9.31607 10.4412 9.87868 9.87862C10.4413 9.31602 11.2044 8.99995 12 8.99995C12.7956 8.99995 13.5587 9.31602 14.1213 9.87862C14.6839 10.4412 15 11.2043 15 11.9999C15 12.7956 14.6839 13.5587 14.1213 14.1213C13.5587 14.6839 12.7956 14.9999 12 14.9999ZM12 12.9999C12.2652 12.9999 12.5196 12.8946 12.7071 12.7071C12.8946 12.5195 13 12.2652 13 11.9999C13 11.7347 12.8946 11.4804 12.7071 11.2928C12.5196 11.1053 12.2652 10.9999 12 10.9999C11.7348 10.9999 11.4804 11.1053 11.2929 11.2928C11.1054 11.4804 11 11.7347 11 11.9999C11 12.2652 11.1054 12.5195 11.2929 12.7071C11.4804 12.8946 11.7348 12.9999 12 12.9999Z" fill="black"></path>
+</svg>
+
+          Manage preferences
+        </a>
+      </li>
+      <hr>
+      <li>
+        <a class="crayons-link crayons-link--block" href="/report-abuse?billboard=238781">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" role="img" aria-hidden="true" class="crayons-icon c-btn__icon">
+    <path d="M12.382 3a1 1 0 0 1 .894.553L14 5h6a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-6.382a1 1 0 0 1-.894-.553L12 16H5v6H3V3h9.382Zm-.618 2H5v9h8.236l1 2H19V7h-6.236l-1-2Z"></path>
+</svg>
+
+          Report billboard
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+    </div>
+    <div class="p-1 pt-3 text-styles text-styles--billboard">
+      <p><a href="https://dev.to/deved/build-apps-with-google-ai-studio?bb=238781"><img src="data:image/webp;base64,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" alt="Google AI Education track image" width="1300" height="545" loading="lazy"></a></p>
+<h2>  <a name="build-apps-with-google-ai-studio" href="#build-apps-with-google-ai-studio">  </a>  <a href="https://dev.to/deved/build-apps-with-google-ai-studio?bb=238781">Build Apps with Google AI Studio 🧱</a>
+</h2>
+<p>This track will guide you through Google AI Studio's new "Build apps with Gemini" feature, where you can turn a simple text prompt into a fully functional, deployed web application in minutes.</p>
+<p><a href="https://dev.to/deved/build-apps-with-google-ai-studio?bb=238781" class="ltag_cta ltag_cta--branded" role="button">Read more →</a></p>
+    </div>
+      <div class="long-bb-bottom hidden"></div>
+      <div class="crayons-card__footer">
+        <button class="c-cta c-cta--branded billboard-readmore-button hidden">
+          Read More
+        </button>
+      </div>
+  </div>
+
+</div></div>
+          </div>
+          <section id="comments" data-follow-button-container="true" data-updated-at="2026-04-30 18:36:31 UTC" class="text-padding mb-4 border-t-1 border-0 border-solid border-base-10">
+    
+    <div id="billboard_delay_trigger"></div>
+    <div id="comments-container" data-testid="comments-container" data-commentable-id="3554351" data-commentable-type="Article" data-has-recent-comment-activity="true">
+
+        <div id="response-templates-data" class="hidden"></div>
+
+
+<form class="comment-form print-hidden" id="new_comment" action="/comments" accept-charset="UTF-8" method="post"><input name="utf8" type="hidden" value="✓" autocomplete="off">
+
+  <input type="hidden" name="authenticity_token" value="NOTHING" id="new_comment_authenticity_token">
+
+    <input value="3554351" autocomplete="off" type="hidden" name="comment[commentable_id]" id="comment_commentable_id">
+    <input value="Article" autocomplete="off" type="hidden" name="comment[commentable_type]" id="comment_commentable_type">
+    
+
+  <span class="crayons-avatar m:crayons-avatar--l mr-2 shrink-0">
+    <img src="data:image/webp;base64,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" width="32" height="32" alt="pic" class="crayons-avatar__image overflow-hidden" id="comment-primary-user-profile--avatar" loading="lazy">
+  </span>
+  <div class="comment-form__inner">
+    <div class="comment-form__field" data-tracking-name="comment_form_textfield">
+      <textarea placeholder="Add to the discussion" onfocus="handleFocus(event)" onkeyup="handleKeyUp(event)" onkeydown="handleKeyDown(event)" oninput="handleChange(event)" id="text-area" required="required" class="crayons-textfield comment-textarea crayons-textfield--ghost" aria-label="Add a comment to the discussion" name="comment[body_markdown]"></textarea>
+
+    </div>
+
+    <div class="response-templates-container crayons-card crayons-card--secondary p-4 mb-4 comment-form__templates fs-base hidden">
+      
+
+      <div class="personal-responses-container">
+      </div>
+      <div class="moderator-responses-container hidden">
+      </div>
+
+      <a target="_blank" rel="noopener nofollow" href="/settings/response-templates">
+        Create template
+      </a>
+      <p>Templates let you quickly answer FAQs or store snippets for re-use.</p>
+    </div>
+
+    <div class="comment-form__preview text-styles text-styles--secondary" id="preview-div"></div>
+
+    <div class="comment-form__buttons mb-4">
+      <button type="submit" class="crayons-btn mr-2 js-btn-enable" onclick="validateField(event)" data-tracking-name="comment_submit_button" disabled="">Submit</button>
+      <button type="button" class="preview-toggle crayons-btn crayons-btn--secondary comment-action-preview js-btn-enable mr-2" data-tracking-name="comment_preview_button" disabled="">Preview</button>
+      <a href="/404.html" class="dismiss-edit-comment crayons-btn crayons-btn--ghost js-btn-dismiss hidden">Dismiss</a>
+    </div>
+  </div>
+
+  <div class="code-of-conduct" id="toggle-code-of-conduct-checkbox"></div>
+</form>
+
+
+      
+    </div>
+
+    <div class="align-center">
+
+
+  
+
+</div>
+
+</section>
+<div id="hide-comments-modal" class="hidden">
+  <form id="hide-comments-modal__form" class="hide-comments-modal__form" data-type="json" action="/comments/hide" accept-charset="UTF-8" data-remote="true" method="post"><input name="utf8" type="hidden" value="✓" autocomplete="off"><input type="hidden" name="_method" value="patch" autocomplete="off"><input type="hidden" name="authenticity_token" value="jQu3lhQHYFiVRbjMKr6l6j2sZANh1UQd7LO7DudAkzrMOUQps5PHSjcigRD1yXIDjUz5nSOcOEYHJ_cyfCFulw" autocomplete="off">
+    <div class="hide-comments-modal__content">
+      <p class="pb-2">
+        Are you sure you want to hide this comment? It will become hidden in your post, but will still be visible via the comment's <a id="hide-comments-modal__comment-permalink" href="#">permalink</a>.
+      </p>
+      <label class="crayons-field crayons-field--checkbox my-2">
+        <input name="hide_children" type="hidden" value="0" autocomplete="off"><input class="hide_children crayons-checkbox" type="checkbox" value="1" name="hide_children" id="hide_children">
+        <p class="crayons-field__label">Hide child comments as well</p>
+      </label>
+      <p class="pb-4 pt-2">
+        <button type="submit" class="crayons-btn">
+          Confirm
+        </button>
+      </p>
+    </div>
+</form>  <p class="fs-s color-base-60">For further actions, you may consider blocking this person and/or <a id="hide-comments-modal__report-link" href="/report-abuse">reporting abuse</a></p>
+</div>
+
+
+
+        </article>
+  </div>
+</body>
+</html>

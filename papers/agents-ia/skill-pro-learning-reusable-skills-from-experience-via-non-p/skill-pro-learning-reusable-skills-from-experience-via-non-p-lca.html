@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill-Pro: Learning Reusable Skills from Experience via Non-Parametric PPO for LLM Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Skill-Pro: Learning Reusable Skills from Experience via Non-Parametric PPO for LLM Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Skill-Pro s'attaque au défaut central des agents LLM en prise de décision séquentielle : ils re-dérivent les mêmes solutions à chaque épisode, même quand la situation se répète. Les auteurs distinguent mémoire épisodique (trajectoires brutes, réflexions distillées, graphes) et mémoire procédurale, inspirée de la cognition humaine, qui mappe directement une situation à une séquence d'actions. La promesse : capitaliser l'expérience sans fine-tuner le modèle, en construisant un pool de skills exécutables réutilisables.</p>
+<p>Trois obstacles sont identifiés explicitement : <strong>exécutabilité</strong> (transformer des récits passifs en procédures activables), <strong>réutilisabilité fiable</strong> (garantir un gain de performance constant), <strong>optimisation non-paramétrique</strong> (apprendre sans dégrader les capacités générales du LLM). Le cadrage conceptuel est précis et le problème, réel.</p>
+
+<h2>Méthodologie</h2>
+<p>Le cœur du papier formalise un Skill-MDP où la politique se factorise en politique de sélection de skill <em>μ</em> et politique d'action LLM <em>π_LLM</em>. Un skill est un triplet ⟨activation, procédure, terminaison⟩ exprimé en langage naturel. L'apprentissage porte exclusivement sur l'évolution du pool Ω, le LLM et μ restant figés.</p>
+<p>L'innovation principale réside dans la <strong>Non-Parametric PPO</strong>, qui transpose les ingrédients de PPO au niveau sémantique :</p>
+<ul>
+<li><strong>Gradients sémantiques</strong> : pour chaque trajectoire où un skill est invoqué, un LLM produit par attribution rétrospective un triplet (g_I, g_π, g_β) de directions de raffinement en langage naturel, agrégées au niveau du batch.</li>
+<li><strong>PPO Gate</strong> : vérification trust-region calculée sur les trajectoires historiques. Le ratio d'importance ρ_t = π_LLM(a_t|s_t,ω')/π_LLM(a_t|s_t,ω) et l'avantage estimé par return-to-go avec baseline mobile sont combinés dans un objectif clippé. Seul le candidat avec J(ω') > 0 entre dans le pool.</li>
+<li><strong>Score en ligne</strong> : gain advantage-style accumulé sur les pas où le skill est actif, normalisé par le nombre d'invocations, pour pruner les skills sous-performants ou redondants.</li>
+</ul>
+<p>L'évaluation utilise ALFWorld (Train + OOD) et Mastermind-v0 de TextArena (Base, Hard, Extreme). Les baselines couvrent l'ensemble du spectre mémoire-augmentée : RAG, Expel, A-MEM, AWM, G-Memory, plus ReAct, CoT, et un agent State-only. Les évaluations cross-agent utilisent Gemma-2-9B pour apprendre puis Gemma-3-4B, Qwen3-32B, LLaMA-3.3-70B pour réutiliser. Sur ALFWorld, Qwen3-32B partout. Tous les baselines partagent le même LLM gelé, ce qui isole correctement la contribution de la mémoire.</p>
+
+<h2>Résultats principaux</h2>
+<p>Les chiffres sont nets. En réutilisation in-domain sur Mastermind-v0, Skill-Pro atteint 0,925 contre 0,349 pour RAG, 0,285 pour Expel, 0,020 pour A-MEM. La compression mémoire est l'argument le plus frappant : 816 tokens stockés au total contre 116 527 pour RAG et 391 706 pour AWM, soit deux ordres de grandeur. Le Δ prompt tokens par étape (273) reste inférieur à RAG (2698) tout en gardant une retrieval ratio modérée (0,591).</p>
+<p>Côté performance, Skill-Pro domine sur ALFWorld OOD (0,909 vs 0,900 pour AWM) et sur Mastermind-v0 (0,606 vs 0,577 pour G-Memory). Les gains se maintiennent en cross-agent : Qwen3-32B atteint 0,615 avec les skills appris par Gemma-2-9B, contre 0,497 en State-only.</p>
+<p>L'ablation est la partie la plus convaincante. Retirer les skills fait chuter la performance de 0,606 à 0,388. Retirer la NP-PPO (skills figés) chute à 0,482. Sans gradients sémantiques, le PPO Gate Pass Rate s'effondre de 30 points (59,49 % → 41,54 %), confirmant que les gradients produisent des candidats de meilleure qualité. Sans PPO Gate, tous les candidats passent (100 %) mais l'instabilité visible sur les courbes d'entraînement (Fig. 3) dégrade la performance. Le remplacement du score par FIFO produit la pire dégradation (Online Score négatif de −0,0064), démontrant que le maintien actif du pool est essentiel.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le papier souffre de plusieurs angles morts. <strong>Couverture expérimentale étroite</strong> : seulement deux benchmarks, dont un (Mastermind) est un jeu combinatoire fermé où la procédure optimale est intrinsèquement compressible. Rien ne garantit que le résultat se transpose à des environnements ouverts type WebArena ou SWE-Bench, où les patterns procéduraux sont moins stéréotypés.</p>
+<p><strong>Pas d'analyse de coût d'entraînement</strong> : la NP-PPO requiert pour chaque itération l'invocation d'un LLM pour l'attribution sémantique, l'agrégation, la génération de N_c candidats, puis le calcul du PPO Gate sur les trajectoires de batch. Aucun chiffrage de tokens dépensés pendant l'apprentissage, ce qui rend la comparaison coût/performance avec un fine-tuning RL réel impossible.</p>
+<p><strong>Robustesse statistique limitée</strong> : 50 épisodes par setting, écarts-types parfois larges (Skill-Pro sur Mastermind-Extreme : 0,333 ± 0,118), pas de tests de significativité. Les écarts en cross-agent sont parfois dans la barre d'erreur des baselines.</p>
+<p><strong>Validation de la PPO Gate</strong> : le ratio d'importance ρ_t = π_LLM(a_t|s_t,ω')/π_LLM(a_t|s_t,ω) suppose qu'on peut évaluer la log-probabilité d'actions historiques sous deux skills différents. Sur des LLMs accessibles uniquement via API sans logprobs (cas fréquent en production), cette mécanique n'est pas implémentable. Le papier ne discute pas cette contrainte.</p>
+<p><strong>Hypothèse forte sur l'attribution rétrospective</strong> : le gradient sémantique repose sur la capacité d'un LLM à diagnostiquer correctement la cause d'un échec dans une trajectoire. Le case study en appendice D montre un diagnostic plausible sur Mastermind, mais aucune validation systématique de la qualité d'attribution n'est fournie.</p>
+<p>Les auteurs reconnaissent en F.1 que la représentation explicite des skills diverge de la mémoire procédurale humaine implicite, et évoquent une compression future en code ou politiques latentes. Cette honnêteté est appréciable mais ne compense pas l'absence de comparaison à des baselines de fine-tuning paramétrique léger (LoRA, RFT) qui constituent le concurrent direct.</p>
+
+<h2>Reproductibilité</h2>
+<p>Code disponible sur <code>github.com/Miracle1207/Skill-Pro</code>. Les benchmarks (ALFWorld, TextArena) sont publics. Les backbones (Qwen3-32B, Gemma-2-9B, etc.) sont accessibles. Les prompts complets sont fournis en appendice E (six templates : décision, terminaison, gradient sémantique, évolution, summarization pour ablation, évolution sans gradient). L'algorithme 1 est explicite. Les hyperparamètres ne sont pas tous tabulés (taille de batch B, capacité K, ε de clipping, N_c) mais devraient être dans le code. Reproductibilité fonctionnelle plausible avec un effort modéré.</p>
+
+<h2>Impact et applications</h2>
+<p>Le papier arrive dans un contexte où l'<strong>ingénierie de skills</strong> devient un axe central pour les agents LLM, avec Claude Agent Skills d'Anthropic comme référence industrielle. Skill-Pro propose une voie d'auto-apprentissage là où Anthropic mise sur l'encodage manuel. Si la mécanique se généralise, on disposerait d'un mécanisme d'amélioration continue pour les agents en production sans pipeline de fine-tuning.</p>
+<p>L'applicabilité industrielle dépend de deux facteurs non résolus : (1) le coût en tokens de la boucle d'évolution, (2) la capacité d'évaluer ρ_t sur des LLMs propriétaires. Une variante "PPO Gate par évaluation comportementale" (rerun en simulation) serait nécessaire pour le déploiement réel.</p>
+<p>L'idée de gradient sémantique étend TextGrad au sequential decision-making et pourrait essaimer au-delà des skills, vers l'évolution de prompts, de tools schemas ou de policies de retrieval.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Skill-Pro se positionne entre plusieurs lignées : les agents skill-centric (Voyager, Cradle, GITM), les frameworks de mémoire procédurale récents (LegoMem, MemP), et les méthodes d'optimisation de prompts (TextGrad, GEPA). La nouveauté revendiquée tient à l'évolution autonome du pool via une mécanique PPO transposée, là où Voyager s'appuie sur un curriculum manuel et Memento optimise la politique de retrieval plutôt que le contenu mémorisé.</p>
+<p>Le papier est explicite sur la distinction avec Memento (factorisation similaire mais focus sur μ vs Ω) et MemRL (RL sur la mémoire épisodique). La comparaison avec GEPA, qui propose une évolution réflexive de prompts surpassant le RL, manque dans l'évaluation expérimentale alors qu'elle serait directement comparable conceptuellement.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème clair, distinction épisodique/procédurale bien posée, trois obstacles formalisés.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Baselines couvrant tout le spectre mémoire, LLM gelé identique, ablations systématiques. Limité à 2 benchmarks.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>50 épisodes par setting, écarts-types parfois larges, pas de tests de significativité.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Métriques de réutilisation (in-domain, cross-task, cross-agent) + efficacité (tokens stockés, Δ prompt) bien définies en appendice B.4.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Même LLM gelé pour tous, ablations isolant chaque composant. Pas de validation indépendante de l'attribution sémantique.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code GitHub, prompts complets, benchmarks publics. Hyperparamètres non tabulés en intégralité.</td></tr>
+<tr><td>Transparence des limites</td><td>3</td><td>Section F.1 sur l'écart représentation explicite/implicite. Coût d'entraînement et dépendance aux logprobs non discutés.</td></tr>
+<tr><td>Impact / nouveauté</td><td>4</td><td>Transposition originale de PPO au niveau sémantique, mécanique de PPO Gate inédite, alignée avec un thème industriel chaud.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3,8 / 5.</strong> Une contribution méthodologique réelle, validée par une ablation propre, mais dont la généralisation hors des benchmarks combinatoires reste à démontrer et dont le coût opérationnel demeure opaque.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autoregressive Direct Preference Optimization — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Autoregressive Direct Preference Optimization</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Direct Preference Optimization (Rafailov et al., 2023) est devenu la méthode de référence pour aligner les LLMs sur des préférences humaines sans modèle de récompense explicite. Sa dérivation s'appuie cependant sur le modèle Bradley-Terry appliqué à des réponses complètes : l'hypothèse autorégressive n'apparaît qu'a posteriori, lors de la factorisation de la vraisemblance via la règle de chaîne. Les auteurs identifient un décalage théorique entre cette formulation et la réalité des LLMs autorégressifs.</p>
+<p>La question posée est précise : peut-on définir des fonctions d'énergie qui rendent la distribution de Boltzmann <em>p<sub>2</sub></em> explicitement autorégressive avant l'application du modèle BT ? La réponse est ADPO, qui étend le domaine de la fonction de récompense à la fermeture par préfixes <em>Y*</em> de l'espace de sortie.</p>
+
+<h2>Méthodologie</h2>
+<p>La construction théorique repose sur trois ingrédients : des énergies de récompense définies sur les préfixes, leurs distributions de Boltzmann associées, et un modèle Bradley-Terry préfixé qui prend le produit des distributions de préférence sur tous les préfixes. La perte ADPO qui en résulte déplace la sommation hors du log-sigmoid (Table 1 du papier), ce qui change la dynamique de l'optimisation sans toucher aux fondations théoriques de DPO.</p>
+<p>Le Théorème 1 établit qu'à un décalage près, toute fonction de récompense compatible avec le BT préfixé peut se reparamétrer par un modèle autorégressif. La Corollaire 1 montre que DPO est le cas particulier d'ADPO où la mesure de feedback <em>μ′(y) = 1</em> pour toute séquence — interprétée comme l'évaluation par un humain de la réponse complète via une métrique scalaire.</p>
+<p>L'apport pratique est la dissociation entre la longueur de tokens <em>μ</em> (induite par la tokenisation) et la longueur de feedback <em>μ′</em> (induite par la fermeture par préfixes). Deux familles de granularité opérationnalisent ce choix : statique (fenêtre fixe <em>k</em>) et adaptative (nombre fixe <em>m</em> de sous-séquences). Les expériences couvrent quatre LLMs (Llama-3-8B, Gemma-3-12B, Qwen-3-8B, DeepSeek-Math-7B) sur GSM8K, MATH500 et trois benchmarks conversationnels (AlpacaEval 2, Arena-Hard, MT-Bench).</p>
+
+<h2>Résultats principaux</h2>
+<p>ADPO surpasse DPO sur l'ensemble des configurations testées en raisonnement mathématique. Sur GSM8K, les gains vont de +1,14 point (Qwen-3-8B : 86,96 → 88,10) à +3,71 points (Llama-3-8B : 64,37 → 68,08). La variante cADPO, qui combine ADPO avec la pondération par tokens critiques de cDPO, atteint le meilleur résultat individuel avec 91,74 % sur GSM8K avec Qwen-3-8B.</p>
+<p>L'étude de la granularité (Table 3) confirme l'hypothèse théorique : la famille adaptative avec <em>m ≥ 128</em> domine systématiquement DPO, tandis que la famille statique présente une dégradation due au padding EOS nécessaire pour aligner les longueurs. Sur les benchmarks conversationnels (Llama-3-8B-Instruct entraîné sur UltraFeedback), ADPO atteint 45,8 % en LC sur AlpacaEval 2 contre 40,3 % pour DPO et 44,7 % pour SimPO.</p>
+<p>Les écarts-types reportés en Annexe E sont faibles (typiquement &lt; 1 %) et le classement relatif des méthodes reste stable. L'analyse des dynamiques de récompense préfixe par préfixe (Figure 4) révèle une progression en trois phases : ADPO corrige d'abord la fin du raisonnement, puis le début, puis affine les tokens producteurs de réponse.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le résultat le plus solide est théorique : l'identification d'une mesure de feedback implicite <em>μ′ ≡ 1</em> dans DPO original éclaire pourquoi la majorité des variantes token-level (TDPO, TGDPO, cDPO) place la sommation à l'intérieur du log-sigmoid. ADPO offre un cadre unifié pour explorer la granularité intermédiaire.</p>
+<p>Les gains empiriques restent modestes : +1 à +4 points selon les configurations, ce qui se compare favorablement à SimPO mais ne représente pas un saut qualitatif. Les auteurs évitent toute exagération, ce qui est appréciable. La limitation principale reconnue est la dépendance au cadre de maximisation de récompense KL-contrainte, sans exploration d'autres divergences.</p>
+<p>Plusieurs choix méthodologiques mériteraient discussion. Le paramètre <em>m = 256</em> pour la famille adaptative est retenu comme valeur principale sans justification autre que la performance observée — il s'agit d'un hyperparamètre tuné. L'absence d'évaluation sur des LLMs &gt; 12B pour les benchmarks conversationnels limite la portée des conclusions sur le scaling. La comparaison avec SimPO, méthode récente sans modèle de référence, gagnerait à inclure plus de baselines de la même génération (KTO, ORPO).</p>
+
+<h2>Reproductibilité</h2>
+<p>L'implémentation utilise la bibliothèque TRL avec LoRA (rang 16 par défaut), AdamW, 3 époques. Les hyperparamètres sont reportés explicitement (β = 1,0, learning rates différenciés pour DPO/ADPO et cDPO/cADPO). Les auteurs annoncent la libération du code et des modèles, ce qui reste à vérifier au moment de la publication. Le matériel de calcul (4× H100) est précisé. Les annexes fournissent les preuves complètes de la Proposition 1, du Théorème 1 et de la Corollaire 2, ainsi que les écarts-types.</p>
+<p>Le manque principal côté reproductibilité est l'absence de seeds multiples reportés pour chaque configuration : les écarts-types en Table 10 ne précisent pas le nombre de runs sous-jacents. Pour des gains de l'ordre de 1-2 points, une analyse de significativité statistique aurait renforcé les conclusions.</p>
+
+<h2>Impact et applications</h2>
+<p>ADPO se positionne comme une généralisation propre de DPO plutôt qu'une rupture. Sa contribution la plus durable est probablement conceptuelle : la distinction explicite entre mesure de tokens et mesure de feedback ouvre un espace de design pour les futures méthodes d'alignement à granularité variable. Les variantes existantes (TDPO, TGDPO, cDPO) peuvent être reinterprétées dans ce cadre.</p>
+<p>Pour les praticiens, le coût d'adoption est faible : la modification de la perte se résume à un déplacement de sommation, sans surcoût de calcul significatif. La famille adaptative avec <em>m</em> élevé est directement applicable à n'importe quel pipeline DPO existant.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans la lignée des méthodes granularité-conscientes (SimPO, TDPO, TGDPO, cDPO) tout en s'en distinguant par un argument théorique. Rafailov et al. (2024) avait déjà proposé une lecture token-level de DPO via le soft-Q-learning, mais sans modifier le modèle BT lui-même. ADPO est le premier travail à intégrer l'hypothèse autorégressive <em>avant</em> l'application du BT, ce qui change la structure de la perte plutôt que son interprétation.</p>
+<p>Le papier est honnête sur cette filiation et cite abondamment les travaux concurrents. Il reste à voir si la reformulation préfixée inspirera des extensions au-delà de DPO (vers GRPO, par exemple) et si les gains se maintiennent sur des modèles plus larges et des benchmarks plus exigeants.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Question claire, originale et bien motivée par un décalage théorique réel.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Validation sur 4 LLMs et 5 benchmarks avec étude systématique de la granularité.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Standard du domaine, mais nombre de seeds par configuration non précisé.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Métriques standards (accuracy, LC win rate, MT-Bench score) bien établies.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>LC win rate corrige le biais de longueur, mais pas de contrôle multiple ni d'ablations approfondies.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Hyperparamètres détaillés, code annoncé, preuves complètes en annexe.</td></tr>
+<tr><td>Transparence des limites</td><td>3</td><td>Section limitations courte, choix de <em>m = 256</em> peu justifié, pas de tests de significativité.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Contribution théorique nette, gains empiriques modestes mais cohérents.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

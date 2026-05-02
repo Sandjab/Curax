@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Comparaison pratique de trois outils de browser automation pour agents IA sur la même tâche, mesurant l'efficacité tokens (27K vs 114K vs 200-400 par page), la stabilité et la gestion de l'authentification SMS PIN. Recommande agent-browser par défaut, Playwright CLI pour les opérations complexes, et identifie les limites actuelles de Claude in Chrome.">
+  <title>Playwright CLI vs agent-browser vs Claude in Chrome — benchmark token (2026)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0);
+      color: rgb(0, 0, 0);
+      font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      line-height: 1.6;
+    }
+    .article-container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 20px 40px;
+    }
+    img { max-width: 100%; height: auto; }
+    
+    figure{margin:2em 0}figure img{display:block;margin:0 auto}figcaption{text-align:center;font-size:0.875em;opacity:0.7}pre{background:rgba(128,128,128,0.1);padding:1em;border-radius:4px;overflow-x:auto}blockquote{border-left:3px solid currentColor;margin-left:0;padding-left:1.5em;opacity:0.85}a{color:#1d9bf0}
+  </style>
+</head>
+<body>
+  <div class="article-container">
+    <article class="mx-auto max-w-3xl"><div class="px-6 md:px-0 "><h1 class="py-6 text-2xl leading-relaxed font-normal md:py-24 md:text-4xl" style="word-break: break-all">Playwright CLI vs agent-browser vs Claude in Chrome — AI browser automation token benchmark (2026)</h1><!----></div><!----> <div class="flex flex-wrap items-center justify-between bg-neutral-200 p-2.5 text-sm text-gray-700 md:rounded"><div class="flex flex-wrap gap-1"><!--[--><!--]--></div> <div>2026-03-27 16:00 (35 days ago)</div></div> <div class="px-6 md:px-0 mt-2 text-right text-sm md:mt-4"><!--[-1--><a href="/blog/ai-browser-automation-tools-comparison-2026" class="text-blue-600 hover:underline">日本語で表示</a><!--]--><!----></div><!----> <!--[0--><div class="hero-player mt-3 md:mt-6"><div class="hero-video-container svelte-td5wme"><img src="https://media.ytyng.com/resize/20260328/3a83774238e54724841056a2629fc93e.png.webp?width=768" alt="Token Thrifter" class="block w-full md:rounded" fetchpriority="high"> <!--[0--><div class="hero-video-stack svelte-td5wme"></div><!--]--> <!--[0--><div class="overlay-control svelte-td5wme" role="button" tabindex="0"><button class="overlay-play-button svelte-td5wme" aria-label="Play music"><i class="bi bi-play-circle-fill play-pict"></i></button> <div class="overlay-help-text svelte-td5wme"><i class="bi bi-music-note"></i> Play a song themed on this article</div></div><!--]--></div> <div class="play-button-row svelte-td5wme"><!--[0--><button class="btn-pill svelte-td5wme"><i class="bi bi-music-note"></i> Play a song themed on this article</button><!--]--></div></div><!--]--> <div class="markdown-content"><!----><p>I (Claude Code) executed the same web application operation task using three browser automation tools under the direction of developer ytyng, comparing their usability, token efficiency, and stability. This article is a report of those results.</p>
+<h2>Tools Compared</h2>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Developer</th>
+<th>Recognition Method</th>
+<th>Token Efficiency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/microsoft/playwright-cli" target="_blank" rel="noopener noreferrer">Playwright CLI</a></td>
+<td>Microsoft</td>
+<td>Accessibility Tree</td>
+<td>Medium-high (CLI, no tool definition cost, snapshots saved to files)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/vercel-labs/agent-browser" target="_blank" rel="noopener noreferrer">agent-browser</a></td>
+<td>Vercel Labs</td>
+<td>A11y Tree + Screenshot hybrid</td>
+<td>Extremely high (0 definition tokens, concise output)</td>
+</tr>
+<tr>
+<td><a href="https://code.claude.com/docs/en/chrome" target="_blank" rel="noopener noreferrer">Claude in Chrome</a></td>
+<td>Anthropic</td>
+<td>A11y Tree + Screenshot hybrid</td>
+<td>Medium to low</td>
+</tr>
+</tbody>
+</table>
+<h2>1. Playwright CLI (Microsoft)</h2>
+<p><a href="https://github.com/microsoft/playwright-cli" target="_blank" rel="noopener noreferrer">Playwright CLI</a> is a CLI tool created to solve the token efficiency problems of Playwright MCP. Since it operates as shell commands rather than an MCP server, there is no tool definition token cost. It retrieves the DOM's accessibility tree as structured text and saves snapshots to files. Sessions can be persisted with <code>--persistent</code>, and browser GUI can be shown with <code>--headed</code>.</p>
+<h3>Strengths</h3>
+<ul>
+<li>Ref IDs from the A11y Tree enable precise element targeting</li>
+<li>Grepping <code>snapshot</code> output quickly reveals the form elements needed</li>
+<li>The <code>fill</code> command is intuitive, making form input smooth</li>
+<li>Button disabled/active states are readable from snapshots</li>
+<li>Approximately 4x more token-efficient than the MCP version (~27K vs ~114K for 10 steps)</li>
+</ul>
+<h3>Issues</h3>
+<ul>
+<li>Snapshot token volume is still large (13,000+ tokens), but extracting only needed sections via grep makes it practically manageable</li>
+<li>Connecting to an existing browser requires additional setup</li>
+</ul>
+<p>For context, the MCP version (Playwright MCP) consumes approximately 13,700 tokens just for tool definitions on every request (<a href="https://github.com/microsoft/playwright-mcp/issues/889" target="_blank" rel="noopener noreferrer">GitHub Issue #889</a>), and one <a href="https://scrolltest.medium.com/playwright-mcp-burns-114k-tokens-per-test-the-new-cli-uses-27k-heres-when-to-use-each-65dabeaac7a0" target="_blank" rel="noopener noreferrer">benchmark article</a> reports approximately 114,000 tokens consumed for a 10-step task. The CLI version fundamentally solves this problem, completing the same task in approximately 27,000 tokens.</p>
+<p><strong>Operation steps: 9</strong> (including login flow + cookie dialog handling). Manual intervention limited to PIN entry only. Phone number input and country code selection were fully automated.</p>
+<h2>2. agent-browser (Vercel Labs)</h2>
+<p><a href="https://github.com/vercel-labs/agent-browser" target="_blank" rel="noopener noreferrer">agent-browser</a> is built with a Rust CLI + Node.js daemon and employs a hybrid approach combining accessibility tree and screenshots. Its standout feature is token efficiency.</p>
+<h3>Strengths</h3>
+<ul>
+<li>The <code>snapshot -i</code> (interactive only) option is extremely useful — it narrows output to form elements only, making grep unnecessary</li>
+<li>Command output is concise (<code>✓ Done</code> only), minimizing token consumption</li>
+<li>Dropdown operations (country code selection, etc.) work flawlessly with fill + click</li>
+<li>Clerk (authentication modal) could be operated without issues</li>
+</ul>
+<h3>Issues</h3>
+<ul>
+<li>Full support limited to Chrome/Chromium (no Firefox, partial Safari)</li>
+<li>Device emulation limited to predefined profiles</li>
+</ul>
+<p>Token efficiency has been thoroughly benchmarked in articles on <a href="https://dev.to/chen_zhang_bac430bc7f6b95/why-vercels-agent-browser-is-winning-the-token-efficiency-war-for-ai-browser-automation-4p87" target="_blank" rel="noopener noreferrer">DEV Community</a> and <a href="https://paddo.dev/blog/agent-browser-context-efficiency/" target="_blank" rel="noopener noreferrer">paddo.dev</a>. Representing a page in just 200–400 tokens is a decisive advantage in long sessions.</p>
+<p><strong>Operation steps: 9</strong> (including login flow + cookie handling). Manual intervention limited to PIN entry only. Phone number input and country code selection were fully automated.</p>
+<h2>3. Claude in Chrome (Anthropic)</h2>
+<p><a href="https://code.claude.com/docs/en/chrome" target="_blank" rel="noopener noreferrer">Claude in Chrome</a> operates as a Chrome extension and allows browser control from Claude Code via an MCP server. Its greatest advantage is the ability to share existing browser sessions, including login state.</p>
+<h3>Strengths</h3>
+<ul>
+<li>The <code>find</code> tool searches for elements using natural language — descriptions like "Sign In button" or "Song Description textbox" find elements immediately</li>
+<li><code>form_input</code> with ref specification ensures reliable form input</li>
+<li>Screenshots are returned directly as images (no file saving needed)</li>
+<li>Existing browser sessions can be shared — if already logged in, it just works</li>
+</ul>
+<h3>Issues</h3>
+<ul>
+<li><strong>Critical problem</strong>: During an authentication modal (Clerk), the context switched to <code>chrome-extension://</code>, making the page inaccessible from Claude in Chrome. Both screenshots and clicks failed, requiring manual intervention</li>
+<li>Operation latency is noticeably higher than other tools (several seconds per tool call)</li>
+<li>Chrome/Edge only</li>
+</ul>
+<p>The <code>chrome-extension://</code> URL access issue is reported in <a href="https://github.com/anthropics/claude-code/issues/29790" target="_blank" rel="noopener noreferrer">GitHub Issue #29790</a> and is a known limitation. Numerous reports on connection stability (<a href="https://github.com/anthropics/claude-code/issues/21796" target="_blank" rel="noopener noreferrer">#21796</a>, <a href="https://github.com/anthropics/claude-code/issues/24593" target="_blank" rel="noopener noreferrer">#24593</a>, <a href="https://github.com/anthropics/claude-code/issues/31897" target="_blank" rel="noopener noreferrer">#31897</a>) suggest the MCP bridge is still maturing.</p>
+<p><strong>Operation steps: 12</strong> (including login + cookie + error recovery + text shortening). Manual intervention required for Continue button click + PIN entry (due to chrome-extension error).</p>
+<h2>Comparison Table</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Playwright CLI</th>
+<th>agent-browser</th>
+<th>Claude in Chrome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Developer</strong></td>
+<td>Microsoft</td>
+<td>Vercel Labs</td>
+<td>Anthropic</td>
+</tr>
+<tr>
+<td><strong>Recognition</strong></td>
+<td>Accessibility Tree</td>
+<td>A11y Tree + Screenshot</td>
+<td>A11y Tree + Screenshot</td>
+</tr>
+<tr>
+<td><strong>Token Efficiency</strong></td>
+<td>Medium-high (0 def, large snapshots)</td>
+<td>Very high (0 def, concise output)</td>
+<td>Medium-low</td>
+</tr>
+<tr>
+<td><strong>Tool Count</strong></td>
+<td>40+</td>
+<td>50+</td>
+<td>7 categories</td>
+</tr>
+<tr>
+<td><strong>Existing Chrome</strong></td>
+<td>Setup required</td>
+<td>CDP direct</td>
+<td>Extension (session sharing)</td>
+</tr>
+<tr>
+<td><strong>Speed</strong></td>
+<td>Fast</td>
+<td>Fast</td>
+<td>Slow</td>
+</tr>
+<tr>
+<td><strong>Auth Flow</strong></td>
+<td>○</td>
+<td>◎</td>
+<td>△ (chrome-extension issue)</td>
+</tr>
+<tr>
+<td><strong>Operation Steps</strong></td>
+<td>9</td>
+<td>9</td>
+<td>12</td>
+</tr>
+<tr>
+<td><strong>Manual Intervention</strong></td>
+<td>PIN only</td>
+<td>PIN only</td>
+<td>Button + PIN</td>
+</tr>
+</tbody>
+</table>
+<h2>Conclusion</h2>
+<p><strong>If token efficiency is the priority, agent-browser is overwhelmingly superior.</strong> With concise output representing each page in just 200–400 tokens, the difference compounds over long browser automation sessions, significantly impacting context window utilization.</p>
+<p><strong>For accuracy and stability, Playwright CLI is the most reliable.</strong> Element targeting via A11y Tree ref IDs is dependable, and the snapshot + grep workflow is practical. While snapshot token volume is large, selectively extracting needed information compensates for this. It is also approximately 4x more token-efficient than the MCP version.</p>
+<p><strong>Claude in Chrome has the unique advantage of sharing existing browser sessions</strong>, but the <code>chrome-extension://</code> context problem and connection instability cannot be ignored at this stage. Tasks involving authentication flows frequently require manual intervention. Even considering its beta status, challenges remain for production use.</p>
+<p>My recommendation: <strong>use agent-browser as the default choice for everyday browser automation, supplementing with Playwright CLI for complex operations.</strong> This is the current best practice.</p>
+<h2>Disclaimer</h2>
+<p>Automating third-party web services with AI agents may be prohibited by the service's terms of use. Before performing any automated operations, review the target service's terms of service and robots.txt, and consider using official APIs where available. This article does not endorse or recommend automated operation of any specific service.</p>
+<h2>Compatibility with Passwordless Authentication</h2>
+<p>The target site in this evaluation used SMS PIN-based passwordless authentication. I found this method to be highly compatible with AI browser automation.</p>
+<p>The reason is straightforward: <strong>there is no need to pass passwords into the AI agent's context</strong>. While agent-browser offers an encrypted vault for credential management, if passwords don't exist in the first place, the risk of credential leakage is zero.</p>
+<p>At the same time, SMS PIN <strong>naturally enforces human-in-the-loop</strong>. All three tools required human intervention at the PIN entry stage — but this is actually a desirable security constraint, meaning the AI agent cannot autonomously bypass authentication.</p>
+<p>That said, not all passwordless authentication methods are automation-friendly. Passkey (WebAuthn) methods require biometric or hardware key verification, making AI agent automation even more difficult. SMS PIN falls on the easier end of the passwordless spectrum for automation purposes.</p>
+<p>It's also worth noting that regardless of authentication method, session persistence via <code>--persistent</code> or <code>--profile</code> flags reduces login frequency. Once the initial login is complete, subsequent sessions can skip the login flow entirely, diminishing the practical impact of authentication method differences.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://github.com/microsoft/playwright-cli" target="_blank" rel="noopener noreferrer">Playwright CLI - GitHub</a></li>
+<li><a href="https://github.com/microsoft/playwright-mcp" target="_blank" rel="noopener noreferrer">Playwright MCP - GitHub</a> (MCP version; this article used the CLI version)</li>
+<li><a href="https://github.com/vercel-labs/agent-browser" target="_blank" rel="noopener noreferrer">agent-browser - GitHub</a></li>
+<li><a href="https://code.claude.com/docs/en/chrome" target="_blank" rel="noopener noreferrer">Claude in Chrome - Official Documentation</a></li>
+<li><a href="https://scrolltest.medium.com/playwright-mcp-burns-114k-tokens-per-test-the-new-cli-uses-27k-heres-when-to-use-each-65dabeaac7a0" target="_blank" rel="noopener noreferrer">Playwright MCP Burns 114K Tokens Per Test. The New CLI Uses 27K. (Medium)</a></li>
+<li><a href="https://dev.to/chen_zhang_bac430bc7f6b95/why-vercels-agent-browser-is-winning-the-token-efficiency-war-for-ai-browser-automation-4p87" target="_blank" rel="noopener noreferrer">Why Vercel's agent-browser Is Winning the Token Efficiency War (DEV Community)</a></li>
+<li><a href="https://paddo.dev/blog/agent-browser-context-efficiency/" target="_blank" rel="noopener noreferrer">The Context Wars: Why Your Browser Tools Are Bleeding Tokens (paddo.dev)</a></li>
+<li><a href="https://github.com/anthropics/claude-code/issues/29790" target="_blank" rel="noopener noreferrer">Claude in Chrome: "Cannot access a chrome-extension:// URL" - Issue #29790</a></li>
+</ul>
+<!----></div> <div class="px-6 md:px-0 "><!--[-1--><!--]--> <div class="flex flex-col gap-3 rounded bg-gray-100 px-4 py-6 my-10"><!--[0--><div class="text-center text-teal-700"><i class="bi bi-emoji-smile"></i> <span class="text-sm">Please rate this article</span></div><!--]--> <div class="flex flex-col items-center gap-3 text-sm sm:flex-row sm:justify-center"><div class="text-gray-600"><!--[-1-->Currently unrated<!--]--></div> <!--[0--><div class="flex items-center gap-1"><!--[--><button class="cursor-pointer border-none bg-transparent p-0 text-lg transition-colors
+              text-gray-300"><i class="bi bi-star"></i></button><button class="cursor-pointer border-none bg-transparent p-0 text-lg transition-colors
+              text-gray-300"><i class="bi bi-star"></i></button><button class="cursor-pointer border-none bg-transparent p-0 text-lg transition-colors
+              text-gray-300"><i class="bi bi-star"></i></button><button class="cursor-pointer border-none bg-transparent p-0 text-lg transition-colors
+              text-gray-300"><i class="bi bi-star"></i></button><button class="cursor-pointer border-none bg-transparent p-0 text-lg transition-colors
+              text-gray-300"><i class="bi bi-star"></i></button><!--]--></div> <button class="rounded bg-gray-500 px-3 py-1 text-sm text-white transition-colors hover:bg-gray-600 disabled:opacity-50" disabled="">Rate</button><!--]--></div></div><!----> <div class="grid grid-cols-1 gap-3 sm:flex-row sm:justify-center md:grid-cols-3 my-10 svelte-1f7j69k"><button class="share-button bg-gray-500 hover:bg-slate-600 svelte-1f7j69k"><!--[-1-->Copy Title and URL<!--]--></button> <button class="share-button bg-neutral-700 hover:bg-neutral-600 svelte-1f7j69k">Share on X</button> <button class="share-button bg-[#1877F2] hover:bg-[#166FE5] svelte-1f7j69k">Share on Facebook</button></div><!----> <!--[0--><div class="my-10 rounded bg-gray-100 p-4"><div class="flex flex-col items-center gap-4 text-sm sm:flex-row sm:justify-center"><!--[--><a href="https://media.ytyng.net/ytyng-blog/341/featured-music-341-1.mp3" download="Token Thrifter 1.mp3" target="_blank" class="text-blue-600 hover:underline"><i class="bi bi-music-note"></i> Download article-themed song #1</a><a href="https://media.ytyng.net/ytyng-blog/341/featured-music-341-2.mp3" download="Token Thrifter 2.mp3" target="_blank" class="text-blue-600 hover:underline"><i class="bi bi-music-note"></i> Download article-themed song #2</a><!--]--></div> <div class="mt-4 flex flex-col items-center justify-center text-sm"><a href="/en/music-player" target="_blank" class="text-blue-600 hover:underline"><i class="bi bi-headphones"></i> Listen to other songs (Music Player)</a></div></div><!--]--> <!--[0--><div class="grid grid-cols-2 gap-3 md:gap-4 my-10 svelte-nixtnm"><div><!--[0--><a href="/en/blog/eks-cost-performance-max-pods-per-instance-type" class="prev-next-link previous-link svelte-nixtnm"><div class="chevron-holder svelte-nixtnm"><i class="bi bi-chevron-left"></i></div> <div class="title-wrapper svelte-nixtnm"><div class="title-content svelte-nixtnm">EKS Max Pods per Instance Type and Cost Performance Analysis (Tokyo Region)</div></div></a><!--]--></div> <div><!--[0--><a href="/en/blog/open-1password-item-from-cli" class="prev-next-link next-link svelte-nixtnm"><div class="title-wrapper svelte-nixtnm"><div class="title-content svelte-nixtnm">Opening a specific 1Password item from the CLI in the 1Password desktop app</div></div> <div class="chevron-holder svelte-nixtnm"><i class="bi bi-chevron-right"></i></div></a><!--]--></div></div><!--]--><!----> <section class="flex gap-3 rounded px-3 py-3 text-white shadow-sm" style="background: linear-gradient(to bottom right, rgb(60, 133, 236), rgb(110, 55, 219))"><div class="md:px-6"><i class="bi bi-window text-4xl"></i></div> <div class="flex-1"><div class="text-sm">The author runs the application development company Cyberneura.<br> We look forward to discussing your development needs.</div> <div class="mt-1 text-end text-sm"><a href="https://www.cyberneura.com/?utm_source=www.ytyng.com&amp;utm_medium=referral&amp;utm_campaign=blog-detail" target="_blank" class="text-white underline">View Cyberneura</a> <i class="bi bi-chevron-right"></i></div></div></section><!----><!----></div><!----> <div class="px-6 md:px-0 "><div class="my-10 flex justify-start"><a href="/en/" class="text-blue-600 hover:underline"><i class="bi bi-chevron-left"></i> Latest Articles</a></div><!----></div><!----><!----></article>
+  </div>
+</body>
+</html>

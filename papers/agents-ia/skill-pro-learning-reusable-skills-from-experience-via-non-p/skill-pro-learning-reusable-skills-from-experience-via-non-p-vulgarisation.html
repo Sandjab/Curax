@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill-Pro: Learning Reusable Skills from Experience via Non-Parametric PPO for LLM Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Skill-Pro: Learning Reusable Skills from Experience via Non-Parametric PPO for LLM Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA refait à chaque fois les mêmes calculs</h2>
+
+<p>Un agent LLM qui résout dix fois la même tâche refait dix fois le même raisonnement. Chaque interaction démarre de zéro. Le modèle relit les consignes, interprète les retours, déroule sa chaîne de pensée, et finit par arriver à une solution qu'il avait déjà trouvée la veille. Cette redondance est invisible côté utilisateur, mais elle a un coût : tokens consommés, latence, et surtout des erreurs qui s'accumulent dans les tâches longues parce que tout est rejoué à chaque épisode.</p>
+
+<p>L'équipe derrière Skill-Pro, un consortium réunissant l'Académie chinoise des sciences, l'University College London, l'université de Bristol et Pékin, propose une autre approche. Plutôt que de stocker des trajectoires brutes ou des résumés textuels que l'agent devra réinterpréter, elle apprend à l'agent à fabriquer ses propres <em>compétences procédurales</em> réutilisables, sans jamais toucher aux poids du modèle. Le résultat : 0,925 de taux de réutilisation contre 0,349 pour un système RAG classique, et une mémoire 142 fois plus compacte.</p>
+
+<h2>Le problème : la mémoire épisodique ne suffit pas</h2>
+
+<p>Les frameworks actuels de mémoire pour agents LLM stockent l'expérience sous une forme passive. RAG conserve les trajectoires entières. ExpEL extrait des leçons. A-MEM prend des notes. AWM mémorise des workflows. G-Memory construit des graphes. Tous partagent une caractéristique : ce qui est stocké est un récit du passé que l'agent doit relire et réinterpréter au moment de décider.</p>
+
+<p>Les neuroscientifiques distinguent depuis Cohen et Squire (1980) deux types de mémoire à long terme. La mémoire épisodique stocke ce qui s'est passé : un dîner, une réunion, un trajet. La mémoire procédurale stocke comment faire : faire du vélo, taper au clavier, jouer un accord. Une fois acquise, la mémoire procédurale s'exécute sans repasser par la conscience explicite. Vous ne réfléchissez pas à chaque pression de touche.</p>
+
+<p>Les agents LLM actuels fonctionnent presque tous en mode épisodique. Même quand ils retrouvent une expérience pertinente, ils dépensent leur fenêtre de contexte à la décoder. C'est comme si, à chaque fois que vous deviez taper un mot, vous deviez relire le manuel d'apprentissage du clavier. Les auteurs identifient trois obstacles concrets : <strong>l'exécutabilité</strong> (un récit n'est pas un programme), <strong>la réutilisabilité fiable</strong> (rien ne garantit qu'une expérience stockée s'applique correctement à une nouvelle situation), et <strong>l'optimisation sans paramètres</strong> (comment améliorer le système sans risquer le fameux <em>catastrophic forgetting</em> du fine-tuning).</p>
+
+<h2>La méthode : des compétences avec un mode d'emploi exécutable</h2>
+
+<p>Skill-Pro reformule chaque unité de mémoire comme un objet structuré en trois parties, directement inspiré du framework des options en apprentissage par renforcement hiérarchique. Une compétence comporte une <strong>condition d'activation</strong> (quand l'utiliser), une <strong>procédure d'exécution</strong> (la séquence d'actions à dérouler), et une <strong>condition de terminaison</strong> (quand rendre la main). Chacune est exprimée en langage naturel, lisible par un humain, mais structurée comme un programme.</p>
+
+<p>L'exemple donné dans l'article éclaire la logique. Une compétence nommée <em>StrategicPlanning</em> s'active "quand la tâche commence et qu'aucune information préalable n'est disponible", déroule deux étapes ("établir un espace d'hypothèses initial", "générer une action exploratoire diverse"), et se termine "après la première action exploratoire et la première observation de feedback". L'agent ne raisonne plus à chaque pas : il sélectionne la compétence adéquate et la suit.</p>
+
+<h3>Apprendre sans toucher aux poids : le PPO non paramétrique</h3>
+
+<p>Le cœur de l'innovation est ailleurs. Comment faire évoluer ces compétences quand certaines marchent mal ? Réponse classique : entraîner le modèle. Réponse de Skill-Pro : adapter PPO, l'algorithme de référence en RL, mais sans aucun gradient numérique.</p>
+
+<p>L'équipe introduit ce qu'elle appelle des <strong>gradients sémantiques</strong>. L'idée est presque triviale dans son principe : après une trajectoire ratée, on demande à un LLM auxiliaire de diagnostiquer ce qui a cloché et de produire un commentaire structuré du type "tu as oublié de vérifier l'historique des essais avant de proposer une nouvelle solution". Ce diagnostic est attribué à l'un des trois composants de la compétence (activation, procédure, terminaison). On agrège ces diagnostics sur un lot de trajectoires pour filtrer le bruit, et on demande à un LLM de réviser la compétence dans la direction indiquée.</p>
+
+<p>Le diagnostic remplace le calcul de gradient. La révision en langage naturel remplace la mise à jour des poids. Le mécanisme reste fidèle à l'esprit de la descente de gradient — repérer une erreur, propager un signal correctif, ajuster — mais opère dans l'espace du texte plutôt que dans celui des paramètres.</p>
+
+<h3>Le PPO Gate : éviter les hallucinations correctives</h3>
+
+<p>Demander à un LLM de réviser une compétence comporte un risque évident : il peut halluciner et produire une version pire que l'originale, ou plus instable. Les auteurs ajoutent donc un filtre, baptisé <strong>PPO Gate</strong>, qui rejoue les trajectoires passées en remplaçant l'ancienne compétence par la nouvelle, calcule pour chaque pas un <em>importance ratio</em> (la probabilité que le LLM aurait choisi la même action sous la nouvelle compétence), pondère par l'avantage observé, et applique la fameuse fonction de clipping de PPO. Concrètement, une compétence candidate n'est intégrée que si elle augmente, sous contrainte de région de confiance, la probabilité d'avoir bien agi sur les épisodes passés.</p>
+
+<p>Si plusieurs candidates sont générées, on garde la meilleure au sens de ce score, à condition qu'il soit positif. Sinon on conserve l'ancienne version. C'est un garde-fou simple mais robuste : il interdit les sauts qualitatifs trop grands, qui sont précisément ceux où les LLM hallucinent le plus.</p>
+
+<h3>Le score en ligne : élaguer la mémoire au fil de l'eau</h3>
+
+<p>Dernier ingrédient, la maintenance du pool. Le pool de compétences a une capacité fixe, disons 20 ou 30 entrées. Chaque compétence accumule un score : la moyenne de l'avantage qu'elle apporte par rapport à une baseline glissante, sur les pas de temps où elle a été active. Les compétences à score négatif sont supprimées. Les doublons sémantiques aussi. Si le pool déborde encore, on coupe par score croissant. Ce mécanisme évolutif élimine progressivement les compétences obsolètes au fur et à mesure que la baseline s'améliore — ce qui était bon hier ne l'est plus forcément demain.</p>
+
+<h2>Résultats : compression extrême et meilleure performance</h2>
+
+<p>Les chiffres sont parlants. Sur le benchmark Mastermind-v0 de TextArena, Skill-Pro stocke 816 tokens au total. RAG en stocke 116 527. ExpEL en stocke 294 447. AWM en stocke 391 706. La compression atteint un facteur 100 à 480 selon le baseline, et pourtant la performance est meilleure.</p>
+
+<p>Le taux de réutilisation in-domain monte à 0,925 contre 0,091 pour G-Memory et 0,02 pour A-MEM. Autrement dit, presque chaque compétence stockée est utilisée, alors que les autres systèmes accumulent une masse de souvenirs morts. Le ∆ Prompt Tokens par pas tombe à 273, contre 5210 pour ExpEL. Les invocations sont moins fréquentes parce qu'une compétence couvre plusieurs pas consécutifs (le ratio de retrieval est de 0,591 au lieu de 1,0 pour les méthodes pas à pas).</p>
+
+<p>Sur la performance brute, Skill-Pro atteint 0,90 de taux de succès en entraînement ALFWorld et 0,909 sur les tâches hors distribution, contre 0,70 et 0,90 pour AWM, le baseline le plus solide. Sur Mastermind-v0, le retour moyen passe de 0,388 (agent state-only) à 0,606 avec Skill-Pro. Le test de transfert est encore plus instructif : les compétences apprises avec Gemma-2-9B sont rejouées avec Gemma-3-4B, Qwen3-32B et LLaMA-3.3-70B. Les performances tiennent. Une compétence procédurale rédigée dans un langage suffisamment abstrait pour être lisible se transfère à un autre modèle.</p>
+
+<h3>Ce que disent les ablations</h3>
+
+<p>L'étude d'ablation valide chaque composant. Sans gradients sémantiques (en remplaçant le diagnostic par un simple résumé neutre), le taux de PPO Gate Pass tombe de 30%. Sans PPO Gate, toutes les candidates passent et le pool dérive : la performance chute de 25%. Sans le score en ligne (remplacé par un FIFO), la dégradation est la plus sévère : -85,8% sur le taux de réutilisation, et un score moyen qui devient négatif. Les bonnes compétences sont remplacées par des nouvelles non éprouvées.</p>
+
+<p>Un détail intéressant : la distribution des compétences invoquées reste stable quand la difficulté de la tâche augmente (de Mastermind-v0 à Extreme). Skill-Pro extrait donc ce qui est invariant dans la logique de la tâche, pas ce qui est conjoncturel. C'est cette stabilité qui explique le transfert cross-task.</p>
+
+<h2>Implications pratiques pour l'ingénierie d'agents</h2>
+
+<p>Plusieurs leçons transposables hors du papier. La première est que la frontière entre RAG et fine-tuning n'est pas binaire. Skill-Pro occupe un espace intermédiaire : pas de mise à jour des poids, mais une mémoire structurée et auto-révisée qui ressemble à un fine-tuning soft. Pour les équipes qui hésitent entre charger leur contexte de cas similaires ou réentraîner sur leur domaine, cette voie médiane mérite d'être considérée.</p>
+
+<p>Deuxième leçon, le format des Claude Agent Skills d'Anthropic, cité explicitement dans le papier, gagne en légitimité scientifique. Anthropic propose de définir des compétences manuellement. Skill-Pro montre que ces compétences peuvent être apprises par interaction. Les deux approches sont compatibles : on peut amorcer avec des compétences écrites à la main et laisser l'agent les raffiner par expérience.</p>
+
+<p>Troisième leçon, la compression. Une équipe qui exploite des centaines de milliers de tokens de mémoire pour conditionner ses prompts brûle de l'argent à chaque appel. Si une mémoire procédurale réduit ce volume d'un facteur 100, l'économie est directe. Pour des agents en production qui tournent 24/7, le calcul devient évident.</p>
+
+<p>Quatrième leçon, plus subtile : le PPO Gate est un mécanisme générique pour superviser une auto-révision par LLM. Tout système où un modèle modifie ses propres prompts ou règles court le risque d'une dérive hallucinatoire. Le principe d'une vérification contrefactuelle sur des épisodes passés, avec contrainte de région de confiance, est applicable bien au-delà de ce papier — en particulier aux pipelines de prompt engineering automatisé style GEPA ou TextGrad.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs limites restent à creuser. Les compétences sont aujourd'hui exprimées en langage naturel explicite. Les auteurs eux-mêmes notent que la mémoire procédurale humaine est implicite et non verbalisable. Une piste consiste à compresser les compétences fréquemment réutilisées en modules de code exécutable, en politiques latentes ou en routines paramétrées, ce qui éliminerait le coût de l'interprétation par LLM à chaque exécution.</p>
+
+<p>La sélection des compétences (le mécanisme µ) est actuellement basée sur la similarité d'embedding ou un LLM-as-judge. C'est sommaire. Des travaux récents comme Memento ou MemRL apprennent une politique de retrieval par RL. Combiner Skill-Pro côté pool et MemRL côté sélection pourrait constituer la prochaine étape.</p>
+
+<p>La généralisation cross-domaine reste à démontrer. Les expériences couvrent Mastermind et ALFWorld, deux environnements relativement structurés. Que se passe-t-il sur des tâches ouvertes comme la navigation web, l'écriture de code complexe, ou l'usage d'outils variés ? Le pari implicite de Skill-Pro est qu'il existe toujours un noyau procédural extractible. Sur des tâches très créatives ou très contextuelles, ce noyau pourrait être beaucoup plus mince que sur les benchmarks de jeux.</p>
+
+<p>Reste enfin la question du coût d'apprentissage. Construire le pool demande des dizaines à centaines d'épisodes d'interaction, plus des appels LLM auxiliaires pour le diagnostic et la révision. Pour des tâches très récurrentes, cet investissement s'amortit. Pour des tâches rares, peut-être pas. Quantifier le seuil de rentabilité — combien de réutilisations futures justifient l'effort initial — serait une contribution pratique majeure pour les équipes qui voudraient adopter l'approche.</p>
+
+<p>Skill-Pro ne résout pas le problème de la mémoire des agents. Il déplace la question. Au lieu de demander "quoi stocker et comment retrouver ?", il demande "comment apprendre des routines exécutables qui survivent au temps et au changement de modèle ?". La réponse proposée — gradients sémantiques, garde PPO, score en ligne — est élégante parce qu'elle reproduit dans l'espace textuel des mécanismes éprouvés en RL classique. C'est probablement la direction la plus convaincante pour passer d'agents qui réfléchissent à chaque tour à des agents qui ont réellement appris quelque chose de leur passé.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

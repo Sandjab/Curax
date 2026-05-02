@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Reasoning for Large Language Models: Foundations, Evolution, Collaboration — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Agentic Reasoning for Large Language Models: Foundations, Evolution, Collaboration</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les modèles de langage cessent d'être des perroquets</h2>
+
+<p>Un modèle de langage classique répond à une question, point. Il génère du texte, s'arrête, attend la prochaine instruction. Cette mécanique a porté ChatGPT et ses cousins jusqu'à des prouesses sur les benchmarks de mathématiques ou de code. Mais elle se heurte à un mur dès que l'on sort du laboratoire : le monde réel n'attend pas, change pendant que l'on réfléchit, et exige souvent que l'on aille chercher l'information ailleurs avant de répondre.</p>
+
+<p>Une équipe pilotée par l'Université de l'Illinois Urbana-Champaign, en collaboration avec des chercheurs de Meta, Amazon, Google DeepMind, UCSD et Yale, vient de publier une cartographie ambitieuse de ce qu'ils appellent le <strong>raisonnement agentique</strong>. L'article, daté de janvier 2026, recense plusieurs centaines de systèmes et propose une grille de lecture unifiée pour comprendre comment les LLM passent du statut de générateur passif à celui d'agent autonome qui planifie, agit et apprend.</p>
+
+<p>L'enjeu dépasse largement les considérations académiques. C'est cette mutation qui sépare un assistant conversationnel d'un véritable collaborateur numérique capable de mener un projet de A à Z.</p>
+
+<h2>Le mur du raisonnement statique</h2>
+
+<p>Les techniques qui ont fait la gloire des LLM modernes — Chain-of-Thought, décomposition en sous-problèmes, programme-aidé — partagent toutes une hypothèse implicite : le contexte est figé, le raisonnement court, la réponse arrive d'un trait. Donnez à un LLM un théorème à démontrer, il déroule sa démonstration. Demandez-lui d'écrire une fonction Python, il la produit en un bloc.</p>
+
+<p>Ce modèle craque dès que la tâche s'allonge ou que l'environnement bouge. Réserver un voyage qui implique trois compagnies aériennes, un changement de devise et une vérification de visa ? Déboguer un système distribué dont la moitié des logs n'existe pas encore au moment où l'on commence à enquêter ? Mener une recherche scientifique qui demande de lire dix papiers, lancer trois expériences et réajuster en fonction des résultats ? Le LLM monolithique cale.</p>
+
+<p>Les auteurs résument l'opposition par un tableau saisissant. Le LLM classique est passif, statique, mono-passe, sans mémoire, réactif. L'agent, lui, est interactif, dynamique, multi-étapes, doté de mémoire externe, orienté vers un objectif explicite. Ce n'est pas une question de taille de modèle, mais d'architecture cognitive.</p>
+
+<blockquote>Le raisonnement ne s'étend plus par capacité statique, mais par interaction structurée qui rend possible la planification, l'adaptation et la collaboration à travers le temps et les tâches.</blockquote>
+
+<h2>Trois étages pour bâtir un agent</h2>
+
+<p>L'apport principal de cette synthèse tient en une décomposition à trois niveaux qui sert de fil rouge à toute la littérature.</p>
+
+<p>Le premier étage, <strong>fondationnel</strong>, concerne ce qu'un agent solitaire doit maîtriser pour fonctionner dans un environnement stable mais complexe. Trois compétences se détachent : planifier (décomposer un objectif en sous-tâches), utiliser des outils (appeler des API, exécuter du code, interroger des bases) et chercher (récupérer de l'information pertinente au moment opportun). Le système ReAct, devenu un classique en 2023, illustre cette logique en alternant pensée et action dans une boucle pensée–outil–observation.</p>
+
+<p>Le deuxième étage, <strong>auto-évolutif</strong>, ajoute la capacité à s'améliorer par expérience. L'agent ne se contente plus d'exécuter un plan : il critique ses propres erreurs, ajuste sa stratégie, mémorise ce qui a marché. Le framework Reflexion permet à un agent de relire ses échecs et d'en tirer des leçons textuelles pour la prochaine tentative. Voyager, dans Minecraft, accumule au fil des heures une bibliothèque de compétences exécutables qu'il a lui-même codées.</p>
+
+<p>Le troisième étage, <strong>collectif</strong>, fait passer plusieurs agents en mode équipe. Un manager décompose, des workers exécutent, un critic vérifie. Cette division du travail amplifie la diversité du raisonnement et permet de débattre, négocier, converger vers une réponse plus robuste. MetaGPT reproduit ainsi le cycle de développement logiciel avec des rôles de Product Manager, Architecte et Ingénieur, chacun joué par un agent dédié.</p>
+
+<p>Cette pyramide à trois étages n'est pas qu'une commodité de présentation. Elle reflète une logique d'ingénierie : on ne construit pas un système multi-agent fiable sur des agents individuels qui ne savent pas s'auto-corriger, et on ne fait pas s'auto-corriger un agent qui ne maîtrise pas ses fondamentaux.</p>
+
+<h2>Deux leviers pour les faire progresser</h2>
+
+<p>À chaque étage, les chercheurs distinguent deux modes d'amélioration qui correspondent à deux philosophies différentes.</p>
+
+<p>L'<strong>in-context reasoning</strong> garde les paramètres du modèle figés et joue sur l'orchestration au moment de l'inférence. On enchaîne des prompts plus malins, on construit des arbres de raisonnement à explorer, on conçoit des workflows qui découpent la tâche en stations bien définies. L'avantage : pas besoin de réentraîner, le modèle reste générique, on déploie en quelques jours. L'inconvénient : la performance plafonne à ce que sait faire le LLM sous-jacent.</p>
+
+<p>Le <strong>post-training reasoning</strong> change les poids du modèle pour internaliser les bonnes habitudes. On collecte des trajectoires de raisonnement réussies, on les filtre, on entraîne le modèle dessus en fine-tuning supervisé ou en apprentissage par renforcement. DeepSeek-R1, Search-R1, ReTool ou ToolRL appartiennent à cette famille. Le modèle ressort mécaniquement plus compétent en appel d'outils, mais le coût est élevé et le résultat moins flexible.</p>
+
+<p>Une analogie : l'in-context, c'est apprendre à un employé à suivre une procédure détaillée affichée au mur. Le post-training, c'est lui faire suivre une formation longue après laquelle il connaît la procédure par cœur. Les deux ont leur place, et les meilleurs systèmes combinent les deux.</p>
+
+<h2>La mémoire, vrai talon d'Achille</h2>
+
+<p>La section sur la mémoire mérite qu'on s'y arrête. Pendant longtemps, on a confondu mémoire et fenêtre de contexte : agrandir le contexte d'un modèle suffirait à lui donner une mémoire. Les auteurs montrent que cette approche est une impasse pour les tâches longues.</p>
+
+<p>Les systèmes comme MemGPT, MEM0, ou Zep traitent la mémoire comme un véritable composant du raisonnement, pas comme un buffer passif. La mémoire dite <em>plate</em> stocke des observations brutes ou des résumés sémantiques. La mémoire structurée organise l'information sous forme de graphes de connaissances, où entités, relations et événements sont reliés. La mémoire procédurale conserve des traces de workflows réussis, comme un cahier de recettes.</p>
+
+<p>Plus récemment, des travaux comme Memory-R1 ou Mem-α utilisent l'apprentissage par renforcement pour enseigner à l'agent <em>quoi</em> mémoriser, <em>quand</em> oublier et <em>comment</em> récupérer. La mémoire devient une politique apprise, plus seulement un stockage. C'est un changement de philosophie : on ne stocke plus tout au cas où, on apprend à faire le tri.</p>
+
+<p>Cette évolution répond à un problème très concret. Un agent qui résout cinquante tâches par jour pendant un mois accumule rapidement des centaines de milliers de tokens d'historique. Sans gestion intelligente, il se noie. Avec une mémoire bien architecturée, il devient au contraire de plus en plus efficace, réutilisant ses propres trouvailles.</p>
+
+<h2>Quand les agents se parlent entre eux</h2>
+
+<p>Le chapitre sur le multi-agent introduit une distinction fine entre coordination statique et coordination émergente. Dans AutoGen ou CAMEL, les rôles sont définis à l'avance, les politiques sont fixes : le système fonctionne comme un orchestre dont chaque musicien a sa partition. Dans GPTSwarm ou les frameworks entraînés par PPO/GRPO, les agents apprennent ensemble la meilleure topologie de communication et les bonnes incitations à se transmettre.</p>
+
+<p>Le défi se déplace alors de la planification individuelle vers ce que les auteurs nomment la <em>conception de mécanismes</em> : optimiser la structure des échanges et les signaux d'incitation pour aligner des raisonnements décentralisés sur un objectif global cohérent. C'est un problème d'économie computationnelle autant que d'ingénierie logicielle.</p>
+
+<p>Les domaines d'application reflètent cette logique de spécialisation. En finance, on retrouve des analystes, des risk managers, des traders et des compliance officers, chaque rôle reproduisant la structure d'une institution réelle. En médecine, des agents spécialisés en imagerie collaborent avec d'autres en pharmacologie. En génie logiciel, MetaGPT et ChatDev découpent le cycle de développement entre architectes, développeurs, testeurs et release managers.</p>
+
+<p>Cette répartition n'est pas cosmétique : elle introduit des contre-pouvoirs qui limitent la propagation d'erreurs. Un agent critic qui relit le code d'un agent worker rattrape une partie des hallucinations qu'un système monolithique laisserait passer.</p>
+
+<h2>Des chiffres qui dessinent la trajectoire</h2>
+
+<p>La survey ne fait pas qu'inventorier : elle situe la maturité de chaque approche. Quelques points de repère ressortent.</p>
+
+<p>ToolLLM a entraîné un modèle sur plus de <strong>16 000 API réelles</strong>, montrant que la généralisation à des outils non vus pendant l'entraînement reste possible si la diversité de l'entraînement est suffisante. SWE-bench, devenu le benchmark de référence pour les agents de développement logiciel, évalue la capacité à résoudre des issues GitHub réelles dans de vrais dépôts — un saut qualitatif par rapport aux exercices d'algorithmique synthétiques.</p>
+
+<p>Les méthodes basées sur GRPO (Group Relative Policy Optimization), variante de PPO popularisée par DeepSeek, dominent désormais l'entraînement des agents de raisonnement multi-tours parce qu'elles éliminent le besoin d'un réseau de valeur séparé, ce qui réduit substantiellement le coût de calcul. ARPO et DAPO étendent ce cadre aux récompenses parcimonieuses, fréquentes dans les environnements de tool-use complexes.</p>
+
+<p>Côté applications, les agents scientifiques commencent à produire des contributions vérifiables. AlphaEvolve traite le code de l'agent lui-même comme un espace d'hypothèses et utilise un LLM comme opérateur de mutation pour découvrir de meilleurs algorithmes. La frontière entre agent qui résout et agent qui découvre s'efface.</p>
+
+<h2>Ce que cela change pour qui construit aujourd'hui</h2>
+
+<p>Pour une équipe technique qui envisage de déployer des agents en production, plusieurs leçons émergent de cette synthèse.</p>
+
+<p>D'abord, la tentation de tout poser sur un LLM unique avec un long prompt système est presque toujours une erreur passé un certain niveau de complexité. Les architectures modulaires — un planificateur, un exécuteur, un vérificateur, une mémoire — résistent mieux et se débuguent plus facilement. Quand un agent monolithique échoue, on ne sait pas où regarder. Quand un agent modulaire échoue, on identifie le composant fautif.</p>
+
+<p>Ensuite, le choix entre in-context et post-training n'est pas binaire. Les équipes qui itèrent vite commencent en in-context, mesurent où le modèle plafonne, puis investissent en post-training sur les sous-tâches où le ROI est le plus clair. ReTool a ainsi spécialisé un modèle sur l'exécution de code dans un raisonnement, là où les approches purement prompt-based stagnaient.</p>
+
+<p>Troisième leçon, la mémoire est un investissement architectural à anticiper dès le départ. Les systèmes bricolés autour d'un simple buffer de conversation se retrouvent vite à devoir tout refaire. Adopter d'emblée une représentation structurée — graphe, store vectoriel hiérarchisé, ou les deux — économise des mois de refactoring.</p>
+
+<p>Enfin, la collaboration multi-agent introduit une couche d'orchestration qui devient elle-même un objet d'ingénierie. Topologies fixes pour les pipelines simples, topologies apprises pour les workflows complexes, mais dans tous les cas un protocole de communication explicite et une définition claire des rôles. Sans ces garde-fous, un système multi-agent dérive vers le chaos en quelques tours.</p>
+
+<h2>Les chantiers qui restent ouverts</h2>
+
+<p>Les auteurs identifient six frontières qui occuperont la communauté dans les prochaines années.</p>
+
+<p>La <strong>personnalisation</strong> reste embryonnaire. Un agent qui s'adapte au style, aux préférences et au contexte d'un utilisateur particulier sur des semaines d'interaction n'existe pas encore vraiment. Les mécanismes de mémoire évoluent dans cette direction mais le passage à l'échelle pose des questions de stockage et de vie privée.</p>
+
+<p>Le <strong>raisonnement à long horizon</strong> bute sur l'accumulation d'erreurs. Plus une trajectoire est longue, plus la probabilité qu'une étape échoue se rapproche de un. Les méthodes de vérification incrémentale et de récupération sur erreur progressent, mais on est encore loin d'agents capables de mener des projets de plusieurs jours sans surveillance humaine.</p>
+
+<p>Les <strong>modèles du monde</strong> sont la pièce manquante pour planifier en environnements riches. Un agent qui prédit les conséquences de ses actions avant de les exécuter prend de meilleures décisions, mais apprendre un modèle du monde fiable à partir de données limitées reste un problème ouvert.</p>
+
+<p>L'<strong>entraînement multi-agent à grande échelle</strong> souffre d'instabilités numériques mal comprises. Les paradigmes Centralized-Training/Decentralized-Execution issus du RL multi-agent classique se transposent imparfaitement aux LLM, dont l'espace d'action est combinatoire.</p>
+
+<p>Le <strong>raisonnement latent</strong> explore l'idée que la chaîne de pensée verbalisée n'est pas la seule forme de raisonnement utile. Des représentations internes plus compactes pourraient être plus efficaces, mais leur interprétabilité chute, ce qui pose des problèmes de sécurité et de débogage.</p>
+
+<p>La <strong>gouvernance</strong>, enfin, reste largement à construire. Quels mécanismes empêchent un agent autonome de causer des dommages quand son objectif est mal spécifié ? Quelles traces faut-il conserver pour rendre une décision auditable ? Ces questions débordent du champ technique mais ne pourront pas être résolues sans lui.</p>
+
+<p>La survey se conclut sur une observation lucide : le passage du LLM-prédicteur à l'agent-acteur ressemble moins à une révolution qu'à une lente reconfiguration. Chaque brique existait depuis quelques années — planification, recherche, mémoire, collaboration. Ce qui change, c'est leur intégration cohérente dans des architectures qui commencent à mériter le nom d'intelligence artificielle au sens fort. Le terrain est défriché, les outils existent, les benchmarks se stabilisent. L'étape suivante consiste à voir lesquelles de ces architectures tiennent le passage à l'échelle industrielle.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modular Memory is the Key to Continual Learning Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Modular Memory is the Key to Continual Learning Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+
+<p>Un modèle de langage entraîné en 2024 ne saura jamais ce qui s'est passé en 2026, sauf à le réentraîner intégralement. Pire : si vous tentez de lui ajouter de nouvelles connaissances en modifiant ses poids, il y a de fortes chances qu'il oublie une partie de ce qu'il savait déjà. Ce phénomène porte un nom dans la littérature : <em>oubli catastrophique</em>. C'est le talon d'Achille de l'apprentissage continu depuis trente ans.</p>
+
+<p>Vingt-six chercheurs réunis lors du séminaire Dagstuhl d'octobre 2025 viennent de publier une prise de position commune. Leur thèse tient en une phrase : pour construire des agents IA qui apprennent en continu, il faut arrêter de chercher LA bonne méthode d'apprentissage, et commencer à combiner les deux qui existent déjà — l'apprentissage par modification des poids et l'apprentissage par contexte — au sein d'une architecture mémoire modulaire. Le papier s'intitule <strong>Modular Memory is the Key to Continual Learning Agents</strong>, signé par Dorovatas, Schwerin, Aljundi et seize autres co-auteurs issus de Toyota, Microsoft Research, Mila, Stony Brook et plusieurs universités européennes.</p>
+
+<p>Ce n'est pas un article expérimental. C'est un manifeste technique qui dessine une feuille de route pour les cinq prochaines années de la recherche en agents adaptatifs.</p>
+
+<h2>Le problème : deux paradigmes qui s'ignorent</h2>
+
+<p>Quand on parle d'apprentissage chez un modèle d'IA, deux mécanismes très différents coexistent aujourd'hui.</p>
+
+<p>Le premier, l'<strong>In-Weight Learning</strong> (IWL), est l'approche historique. On modifie les poids du réseau neuronal par rétropropagation pour intégrer de nouvelles données. C'est efficace, c'est ce qui produit les capacités de raisonnement et de perception des grands modèles. Mais c'est aussi instable : chaque mise à jour risque d'effacer des connaissances acquises précédemment, et la plasticité du réseau finit par se dégrader après de nombreux cycles.</p>
+
+<p>Le second, l'<strong>In-Context Learning</strong> (ICL), est apparu avec les transformers. On laisse les poids figés et on injecte l'information directement dans le contexte du modèle au moment de l'inférence. C'est ce qui permet à GPT-4 ou Claude de s'adapter à une nouvelle tâche en quelques exemples sans entraînement. C'est rapide, réversible, sans oubli. Mais ça coûte cher en calcul à mesure que le contexte grandit, les performances se dégradent au-delà de certaines longueurs, et le modèle de base reste figé face aux dérives de distribution.</p>
+
+<p>La communauté de l'apprentissage continu travaille depuis des décennies sur l'IWL. La communauté des agents LLM mise tout sur l'ICL avec des fenêtres de contexte de plus en plus grandes et du RAG. Les deux camps avancent en parallèle sans réellement dialoguer. Le papier soutient que cette séparation est la principale raison pour laquelle on n'a toujours pas d'agents capables d'apprendre vraiment au fil de l'eau.</p>
+
+<h2>La méthode vulgarisée : trois mémoires plutôt qu'une</h2>
+
+<p>Les auteurs proposent une architecture inspirée à la fois du cerveau humain et de la hiérarchie mémoire des ordinateurs. Trois composants distincts, avec des rôles clairs.</p>
+
+<h3>Le modèle central</h3>
+
+<p>C'est le réseau de neurones pré-entraîné — pensez à Llama 3, GPT-5 ou Claude. Il porte les capacités générales : perception, raisonnement, compréhension multimodale, choix d'action, usage d'outils. Dans l'architecture proposée, il n'est ni gelé ni mis à jour en permanence. Il évolue lentement, par consolidation périodique, comme le cortex humain qui intègre des connaissances stables sur des semaines.</p>
+
+<h3>La mémoire de travail</h3>
+
+<p>Elle correspond à la fenêtre de contexte active. Elle reçoit les signaux externes (instructions utilisateur, données capteur, démonstrations) et les signaux internes (souvenirs récupérés depuis la mémoire long terme, traces de raisonnement intermédiaires). Sa capacité est limitée et son contenu transitoire — exactement comme la mémoire de travail biologique qui retient sept éléments pendant quelques secondes.</p>
+
+<h3>La mémoire long terme</h3>
+
+<p>C'est la pièce centrale du dispositif. Elle stocke les expériences accumulées : faits, événements, interactions personnalisées avec un utilisateur, traces de raisonnement réussies. Elle supporte des opérations explicites : ajout, récupération, mise à jour, oubli sélectif, consolidation. Elle peut prendre plusieurs formes — du texte brut indexé, des embeddings denses, des caches clé-valeur, ou même un module neuronal dédié.</p>
+
+<p>Le système opère selon deux régimes. Pendant le <strong>régime externe</strong>, l'agent interagit avec son environnement : il reçoit une requête, décide s'il doit consulter sa mémoire long terme, raisonne, répond. Pendant le <strong>régime interne</strong> — qui se déclenche périodiquement, hors interaction — le système se met en mode introspection. Il rejoue ses souvenirs accumulés, distille ce qui mérite d'être intégré dans les poids du modèle central, compresse ou supprime ce qui devient redondant. C'est l'analogue du sommeil paradoxal qui consolide les apprentissages chez l'humain.</p>
+
+<p>L'analogie cérébrale n'est pas gratuite. Le papier s'appuie explicitement sur les travaux de McClelland sur les <em>complementary learning systems</em> : l'hippocampe encode rapidement des épisodes spécifiques, le cortex apprend lentement des structures généralisables, et un dialogue permanent entre les deux — orchestré par le replay pendant le sommeil — permet d'apprendre vite sans tout oublier.</p>
+
+<h2>Résultats clés : une grille d'évaluation des mémoires</h2>
+
+<p>Étant un papier de position, il ne présente pas de chiffres expérimentaux. Sa contribution principale est une taxonomie comparative des représentations mémoire existantes, évaluées sur sept critères opérationnels.</p>
+
+<p>Les <strong>mémoires à slots à données brutes</strong> (résumés textuels, jeux d'exemples) offrent une capacité illimitée et un oubli sélectif trivial — il suffit de supprimer un slot. Mais elles passent mal à l'échelle multimodale, leur coût de récupération croît linéairement avec le nombre d'items, et leur capacité de généralisation reste limitée.</p>
+
+<p>Les <strong>mémoires à slots par embeddings</strong> (caches KV, activations extraites, prompts appris) compressent l'information dans un espace latent. Elles supportent le multimodal, restent rapides à mettre à jour, et encodent implicitement des relations sémantiques. Le revers : elles sont dépendantes de l'architecture du modèle qui les a produites, donc difficilement transférables entre agents.</p>
+
+<p>Les <strong>mémoires neuronales distribuées</strong> (réseaux dédiés, mémoires de Hopfield) atteignent une compacité maximale et permettent une vraie généralisation entre items reliés. Mais elles souffrent d'interférence : modifier un souvenir risque d'en altérer d'autres, et l'oubli ciblé devient quasi impossible. Bref, elles ramènent par la fenêtre le problème d'oubli catastrophique qu'on cherchait à éliminer.</p>
+
+<p>Aucune représentation ne domine sur tous les critères. C'est précisément l'argument central : il faut des architectures hybrides, où chaque type de mémoire joue le rôle pour lequel il est le mieux adapté.</p>
+
+<p>Le papier formule aussi quatre desiderata directement transposés des neurosciences : séparer adaptation rapide et intégration lente, autoriser plusieurs formats représentationnels (épisodes, abstractions, compétences), distinguer mémoire déclarative et non-déclarative, et traiter la mémoire comme une ressource activement gérée avec des politiques explicites de stockage, replay, oubli et consolidation.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Pour les équipes qui construisent des agents en production aujourd'hui, ce cadre théorique a des conséquences immédiates.</p>
+
+<p>Les <strong>assistants personnalisés</strong> en sont l'application la plus directe. Un agent qui assiste un utilisateur sur plusieurs mois doit accumuler ses préférences, ses corrections, son contexte de travail. Aujourd'hui, l'industrie résout ce problème en empilant tout dans le contexte ou en faisant du RAG sur l'historique. Le coût de l'inférence explose et la qualité se dégrade. Une mémoire long terme structurée avec une politique d'oubli — pour évacuer les préférences obsolètes — résout ces deux limites.</p>
+
+<p>La <strong>réduction des hallucinations</strong> bénéficie aussi du dispositif. Forcer le modèle à référencer une mémoire factuelle comme « certificat de compréhension » ancre ses réponses. Quand l'utilisateur corrige une hallucination, la correction peut être stockée et calibrer les sorties futures. C'est un mécanisme d'apprentissage par retour direct qui n'existe pas aujourd'hui dans la plupart des chatbots commerciaux.</p>
+
+<p>L'<strong>explicabilité</strong> change de nature. Si le modèle référence des souvenirs explicites pour produire une réponse, on peut tracer le chemin : tel fait stocké à telle date a influencé telle décision. Pour les usages réglementés — santé, finance, droit — c'est un argument décisif face aux modèles boîte noire actuels.</p>
+
+<p>Le <strong>scaling au temps d'inférence</strong> trouve une utilité nouvelle. Aujourd'hui, quand un modèle de raisonnement comme o3 ou DeepSeek-R1 produit une longue trace de réflexion pour résoudre un problème, cette trace est jetée à la fin. Si un problème similaire se pose une heure plus tard, le modèle recommence de zéro. Une mémoire long terme qui stocke et réutilise ces traces — comme proposé par les travaux récents sur ReasoningBank ou le Log-Augmented Generation — pourrait diviser massivement les coûts de calcul des modèles raisonneurs.</p>
+
+<p>Enfin, l'<strong>apprentissage d'outils</strong> chez les agents profite directement du dispositif. Un agent qui découvre un nouvel outil peut stocker des traces d'usage réussi dans sa mémoire long terme, plutôt que de réapprendre l'API à chaque session. À mesure que l'écosystème d'outils évolue, l'agent met à jour ses souvenirs sans avoir à être réentraîné.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Le papier laisse plusieurs questions ouvertes, et c'est ce qui en fait l'intérêt principal pour quiconque cherche à se positionner sur ces sujets.</p>
+
+<p>La première question concerne les <strong>politiques de contrôle</strong>. Qui décide quand consulter la mémoire long terme ? Quand consolider ? Quand oublier ? Le papier reconnaît que ces décisions peuvent être pilotées par des heuristiques fixes ou par des politiques apprises, mais que l'apprentissage métacognitif intrinsèque reste un problème de recherche orthogonal. C'est probablement le verrou principal des cinq prochaines années.</p>
+
+<p>La seconde question touche à la <strong>stabilité de la consolidation</strong>. Mettre à jour le modèle central, même rarement, reste un acte chirurgical. Les techniques de fine-tuning par adaptateurs comme LoRA aggravent parfois l'oubli plutôt qu'elles ne l'évitent, et la fusion de plusieurs adaptateurs n'a rien d'évident. Le papier reconnaît que la recherche sur l'IWL continu reste centrale, même dans une architecture qui en réduit la fréquence.</p>
+
+<p>Une troisième question concerne le <strong>partage entre agents</strong>. Si les souvenirs sont stockés sous forme d'embeddings dépendants d'un modèle particulier, ils ne sont pas transférables entre agents qui utilisent des architectures différentes. Le texte brut est partageable mais perd les bénéfices de compression et de généralisation. Pour les systèmes multi-agents — qui se généralisent en entreprise — c'est un sujet structurant.</p>
+
+<p>La quatrième question est celle de la <strong>vie privée</strong>. Une mémoire long terme qui accumule des interactions utilisateur sur plusieurs années pose des problèmes inédits : conformité RGPD, droit à l'effacement, fuite mémorielle vers d'autres utilisateurs lors de la consolidation. Le papier mentionne l'oubli délibéré pour information sensible, mais sans en faire un axe central. Les équipes qui déploieront ces architectures devront combler ce manque.</p>
+
+<p>Le papier se termine sur un appel à l'action explicite : la communauté apprentissage continu et la communauté agents LLM doivent cesser de travailler en silos. Les premiers ont trente ans d'expérience sur la gestion de l'oubli et la stabilité des mises à jour. Les seconds ont les capacités de raisonnement et la maturité industrielle. La synthèse est en chantier depuis quelques mois — voir les travaux de Behrouz sur Titans, ou ceux de Caccia sur la distillation de contexte profonde — et il y a fort à parier que les architectures dominantes de 2027 ressembleront à ce que ce papier décrit en pointillés aujourd'hui.</p>
+
+<p>Pour un ingénieur qui construit des produits IA, l'enseignement pratique tient en deux décisions de design. D'abord, ne plus considérer la mémoire comme un simple buffer RAG bolt-on, mais comme un composant architectural au même titre que le modèle. Ensuite, accepter que l'apprentissage continu d'un agent passe nécessairement par des cycles de consolidation hors ligne — l'équivalent du sommeil — et budgéter le calcul correspondant dès la conception.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

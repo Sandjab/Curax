@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autoregressive Direct Preference Optimization — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Autoregressive Direct Preference Optimization</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand l'alignement des modèles regarde enfin la phrase se construire</h2>
+
+<p>Sur le benchmark GSM8K, Qwen-3-8B passe de 86,96 % à 91,74 % de bonnes réponses. Le modèle n'a pas changé. Les données d'entraînement non plus. Ce qui change, c'est la manière dont on lui dit qu'une réponse est meilleure qu'une autre — et plus précisément, à quel moment de la génération on lui dit.</p>
+
+<p>L'équipe de Masanari Oi à l'Institute of Science Tokyo s'est attaquée à une incohérence théorique au cœur de DPO (Direct Preference Optimization), la méthode qui sert aujourd'hui de standard pour aligner les grands modèles de langage avec les préférences humaines. Leur reformulation, baptisée ADPO, ne réinvente pas la roue. Elle déplace simplement une opération mathématique d'un côté d'une fonction à l'autre. Et cette translation apparemment cosmétique change le comportement d'apprentissage du modèle, avec des gains mesurés sur quatre familles de LLM et cinq benchmarks différents.</p>
+
+<h2>Le problème : un modèle qui parle mot à mot, jugé phrase par phrase</h2>
+
+<p>Pour comprendre l'apport d'ADPO, il faut revenir sur ce que fait DPO depuis 2023. La méthode reçoit des paires de réponses : pour une même question, une réponse préférée et une réponse rejetée par un évaluateur humain. Plutôt que d'entraîner un modèle de récompense séparé puis d'optimiser le LLM contre ce modèle (la voie classique de RLHF), DPO court-circuite l'étape intermédiaire et ajuste directement les probabilités du modèle pour favoriser les réponses préférées.</p>
+
+<p>Le mécanisme repose sur le modèle de Bradley-Terry, un cadre statistique qui formalise les choix par paires : la probabilité qu'une réponse A soit préférée à une réponse B dépend d'une différence de scores entre A et B. Dans DPO, ces scores sont calculés au niveau de la réponse complète. Le modèle compare deux blocs de texte fini, point.</p>
+
+<p>Le problème est que les LLM ne fonctionnent pas comme ça. Ils génèrent du texte de manière autorégressive, mot par mot, chaque token étant prédit en fonction des précédents. La probabilité d'une réponse complète n'est rien d'autre qu'un produit de probabilités conditionnelles enchaînées. Or DPO traite ce produit comme une boîte noire : il prend le logarithme de la probabilité totale, applique le modèle de Bradley-Terry, et l'affaire est entendue. Mathématiquement, cela donne une somme de log-ratios <em>à l'intérieur</em> de la fonction sigmoïde.</p>
+
+<p>Les auteurs identifient cette opération comme le symptôme d'une hypothèse implicite qu'ils nomment <strong>la mesure de longueur de feedback</strong>. Quand DPO traite une réponse comme un tout, il suppose en réalité que le retour humain a une granularité unique : la phrase entière vaut un seul vote. Cette hypothèse est cohérente avec la façon dont on collecte généralement les préférences (un humain lit deux réponses complètes et choisit la meilleure), mais elle entre en tension avec la nature séquentielle de la génération.</p>
+
+<h2>La méthode : préférer prefixe par préfixe</h2>
+
+<p>L'idée centrale d'ADPO consiste à introduire l'hypothèse autorégressive <em>avant</em> d'appliquer Bradley-Terry, et non après. Concrètement, les chercheurs définissent une fonction de récompense non plus sur les réponses complètes, mais sur les <strong>préfixes</strong> de réponses — autrement dit, sur tous les morceaux de phrase de longueur 1, 2, 3, et ainsi de suite.</p>
+
+<p>Imaginez que vous corrigiez un élève en train d'écrire une démonstration mathématique. DPO classique, c'est lire la copie une fois terminée et noter d'un seul chiffre. ADPO, c'est annoter au fil de l'écriture : à chaque étape du raisonnement, vous comparez ce qu'a écrit l'élève avec une version alternative dispréférée jusqu'au même point, et vous donnez un signal de préférence local. Le résultat final ne change pas — l'élève vise toujours la bonne réponse — mais l'apprentissage devient plus fin, parce que chaque pas du raisonnement reçoit son propre verdict.</p>
+
+<p>Mathématiquement, la conséquence est élégante : l'opération de somme qui se trouvait à l'intérieur du log-sigmoïde dans DPO se retrouve à l'extérieur dans ADPO. Au lieu de calculer <em>une seule</em> probabilité de préférence sur la réponse complète, on calcule une probabilité de préférence à chaque préfixe et on les agrège ensuite. Le théorème de reparamétrisation prouvé par les auteurs garantit que cette transformation reste cohérente avec les fondations théoriques de DPO : on n'enfreint aucune règle, on généralise.</p>
+
+<p>De cette généralisation émerge un résultat conceptuellement riche. Les chercheurs montrent qu'il existe en réalité <em>deux</em> mesures de longueur indépendantes dans le problème :</p>
+
+<ul>
+<li>La <strong>longueur de tokens</strong>, qui dépend de la tokenisation du modèle et compte combien de morceaux composent une réponse.</li>
+<li>La <strong>longueur de feedback</strong>, qui définit à quelle granularité on souhaite recevoir le signal de préférence.</li>
+</ul>
+
+<p>DPO correspond au cas limite où la longueur de feedback vaut 1 pour toute réponse — un seul verdict global. ADPO version token-level correspond au cas où ces deux mesures sont égales — un verdict par token. Entre les deux, tout un spectre devient accessible.</p>
+
+<h3>Deux familles pour explorer ce spectre</h3>
+
+<p>Pour rendre l'idée opérationnelle, les auteurs proposent deux paramétrages.</p>
+
+<p>La <strong>famille statique</strong> fixe une fenêtre de taille k tokens. Le modèle reçoit un signal de préférence tous les k tokens générés. Quand k vaut 1, on obtient une supervision token par token ; quand k croît, la granularité s'épaissit jusqu'à se rapprocher de DPO classique. Limite pratique : pour comparer deux réponses de longueurs différentes, il faut padder l'une avec des tokens vides, ce qui peut bruiter l'apprentissage.</p>
+
+<p>La <strong>famille adaptative</strong> contourne ce problème. Au lieu de fixer la taille des segments, on fixe leur nombre m. Chaque réponse est découpée en m morceaux de tailles aussi proches que possible. Une réponse de 256 tokens découpée en m=128 segments donne deux tokens par segment ; une réponse de 1024 tokens donne huit tokens par segment. Pas de padding, pas de longueur arbitraire — juste un découpage proportionnel.</p>
+
+<h2>Résultats : la granularité fine paie</h2>
+
+<p>Les expériences couvrent quatre LLM (Llama-3-8B, Gemma-3-12B, Qwen-3-8B, DeepSeek-Math-7B) et cinq benchmarks (GSM8K, MATH500 pour le raisonnement mathématique ; AlpacaEval 2, Arena-Hard, MT-Bench pour le dialogue).</p>
+
+<p>Sur GSM8K, ADPO bat systématiquement DPO. Llama-3-8B passe de 64,37 % à 68,08 % — soit 3,71 points de gain absolu. Sur MATH500, le modèle gagne 3 points (de 18,00 % à 21,00 %). Avec DeepSeek-Math-7B, la version token-level d'ADPO atteint 70,36 %, soit 2,58 points au-dessus de DPO. Quand on combine ADPO avec cDPO (une variante qui pondère les tokens critiques), on obtient cADPO et le record absolu : Qwen-3-8B atteint 91,74 % sur GSM8K.</p>
+
+<p>L'analyse de granularité révèle un point intéressant pour qui veut implémenter la méthode. Dans la famille adaptative, des valeurs faibles de m (m=2) dégradent parfois les performances : couper une réponse en deux morceaux produit des frontières arbitraires qui n'ont pas de sens sémantique. Mais dès que m atteint 128 ou 256, ADPO surpasse DPO sur tous les modèles testés. Le sweet spot se situe autour de m=256, qui correspond à un signal de préférence environ tous les 1 à 4 tokens selon la longueur de la réponse.</p>
+
+<p>Sur les tâches conversationnelles, le tableau se confirme. Avec Llama-3-8B-Instruct entraîné sur UltraFeedback, ADPO atteint 45,8 % de length-controlled win rate sur AlpacaEval 2, contre 40,3 % pour DPO et 44,7 % pour SimPO (la méthode de référence pour cette tâche). Sur Arena-Hard, le gain est de 1,8 point par rapport à DPO. Sur MT-Bench, le score passe de 7,0 à 7,1. Les écarts ne sont pas spectaculaires sur les benchmarks de dialogue, mais ils sont consistants — et ADPO bat SimPO, qui était jusqu'ici considérée comme l'optimum pratique pour ce type de tâche.</p>
+
+<h3>Une dynamique d'apprentissage révélatrice</h3>
+
+<p>L'analyse des courbes d'entraînement apporte un éclairage qualitatif intéressant. ADPO creuse plus rapidement et plus fortement l'écart entre les probabilités log des réponses préférées et rejetées. Le modèle apprend littéralement à amplifier la distinction. Plus la granularité est fine (k petit ou m grand), plus cette séparation est marquée.</p>
+
+<p>L'analyse complémentaire des récompenses implicites par préfixe (annexe F du papier) suggère un comportement d'apprentissage en trois phases. Au début de l'entraînement, le modèle se concentre sur la fin du raisonnement — là où les divergences entre bonnes et mauvaises réponses sont les plus visibles. Au milieu, l'attention se déplace vers le début du raisonnement, ces premiers pas qui orientent toute la suite. À la fin, le signal se concentre sur les tokens qui produisent directement la réponse finale. ADPO réalise donc une forme de credit assignment progressif : il attribue le mérite (ou la faute) aux moments du raisonnement qui comptent vraiment.</p>
+
+<h2>Implications pratiques : un levier sous-utilisé pour l'alignement</h2>
+
+<p>Pour les équipes qui entraînent des modèles avec des données de préférence, ADPO offre un changement de comportement sans coût d'infrastructure significatif. La méthode utilise les mêmes données, le même backbone, le même pipeline d'entraînement. Seule la fonction de perte change. Pour une équipe qui maintient déjà une stack DPO, le portage tient en quelques lignes de code.</p>
+
+<p>Le gain le plus net se manifeste sur les tâches de raisonnement, ce qui n'est pas un hasard. Une démonstration mathématique a une structure interne forte : chaque étape conditionne la suivante. DPO classique, qui note la copie à la fin, peine à dire au modèle <em>quel</em> moment du raisonnement a fait basculer la solution. ADPO, en notant chaque préfixe, fournit ce signal de localisation. C'est précisément ce dont les modèles de raisonnement long (ceux qui produisent des chaînes de pensée explicites avant de répondre) ont besoin pour s'améliorer.</p>
+
+<p>Le second enseignement pratique concerne le choix de granularité. Le papier établit empiriquement que les granularités intermédiaires (m entre 128 et 512) battent à la fois la granularité token-by-token et la granularité response-level. Cela contredit l'intuition selon laquelle "plus fin égale mieux" et suggère qu'il existe un niveau naturel de découpage — quelque part entre la phrase et le mot — qui correspond à l'unité de raisonnement effective des modèles actuels. Trouver cette granularité optimale par tâche devient un nouveau levier d'optimisation.</p>
+
+<p>Pour les équipes produit qui consomment des modèles alignés, ADPO illustre un point plus large. Les progrès sur l'alignement ne viennent plus seulement de plus de données ou de plus de paramètres. Ils viennent de la finesse avec laquelle on traduit le feedback humain en signal d'apprentissage. La frontière de l'alignement devient une frontière de design d'objectif.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>ADPO laisse plusieurs questions ouvertes que la communauté va probablement explorer dans les mois qui viennent.</p>
+
+<p>Premier axe : la dépendance à la divergence de Kullback-Leibler. Comme DPO, ADPO repose sur un objectif de maximisation de récompense contraint par une divergence KL au modèle de référence. Cette contrainte est mathématiquement pratique mais arbitraire. D'autres divergences (alpha-divergence, divergence de Jensen-Shannon, distances de Wasserstein) pourraient offrir des dynamiques d'apprentissage différentes, potentiellement plus robustes au bruit dans les données de préférence ou plus tolérantes aux modèles de référence imparfaits.</p>
+
+<p>Deuxième axe : l'apprentissage automatique de la granularité. Aujourd'hui, le paramètre m est un hyperparamètre fixe par expérience. Mais rien n'empêche en principe de l'apprendre, voire de le faire varier dynamiquement selon le contenu de la réponse. Une réponse mathématique pourrait bénéficier d'une granularité fine, une réponse créative d'une granularité grossière. Apprendre cette mesure de feedback en même temps que le modèle ouvrirait la voie à des LLM qui choisissent eux-mêmes leur résolution d'apprentissage.</p>
+
+<p>Troisième axe : la combinaison avec les méthodes de feedback dense. cDPO identifie déjà les tokens critiques dans une réponse rejetée. ADPO découpe la réponse en segments de feedback. Combiner les deux a déjà été testé (cADPO), mais d'autres méthodes de feedback fin (DPO basé sur des annotations partielles, RLHF avec des évaluateurs ciblés) pourraient bénéficier du même traitement de granularité.</p>
+
+<p>Plus fondamentalement, ADPO illustre une tendance que les théoriciens de l'apprentissage par renforcement notent depuis longtemps : la nature séquentielle des modèles de langage ne se résume pas à un détail d'implémentation. Elle conditionne ce qu'un modèle peut apprendre et comment. Les méthodes qui prennent au sérieux cette structure séquentielle — token-level RL, ADPO, soft Q-learning version langage — semblent toutes converger vers l'idée que l'avenir de l'alignement passe par une supervision plus fine que la phrase.</p>
+
+<p>Pour le praticien qui maintient une infrastructure d'alignement aujourd'hui, le message est concret : essayer ADPO sur un benchmark représentatif de votre domaine vaut probablement le coût d'expérimentation. Le delta moyen observé dans le papier (3 à 5 points selon le benchmark) dépasse souvent les gains que l'on obtient en ajoutant 50 % de données de préférence supplémentaires. Quand un changement de fonction de perte rivalise avec un investissement majeur en collecte de données, il mérite une expérimentation sérieuse.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
