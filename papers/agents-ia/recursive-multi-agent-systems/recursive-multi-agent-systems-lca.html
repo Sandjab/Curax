@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recursive Multi-Agent Systems — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Recursive Multi-Agent Systems</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>RecursiveMAS pose une question précise : si la récursion sur un même bloc de calcul constitue désormais un axe de scaling reconnu pour les modèles de langage isolés (LoopLM, recursive language models), peut-on transposer ce principe à un système multi-agents complet ? Les auteurs traitent l'ensemble du MAS comme une computation récursive unifiée dans laquelle chaque agent joue le rôle d'une couche d'un RLM, les agents s'échangeant des états latents au lieu de texte décodé. La motivation pratique est double : éliminer le coût de re-décodage entre agents et offrir un signal de gradient propre pour l'optimisation conjointe du système.</p>
+<p>Le travail s'inscrit dans une vague récente sur la collaboration latente (Zou et al. 2025, Zheng et al. 2025, Du et al. 2025) en revendiquant la première extension du paradigme récursif au niveau système plutôt qu'au sein d'un modèle unique.</p>
+
+<h2>Méthodologie</h2>
+<p>L'architecture repose sur un module RecursiveLink, un MLP à deux couches avec activation GELU et connexion résiduelle, décliné en variante interne (consolide les pensées latentes intra-agent) et externe (projette les états entre espaces d'embedding hétérogènes via une matrice supplémentaire W3). Tous les paramètres LLM restent gelés ; seul le RecursiveLink est entraîné.</p>
+<p>L'entraînement suit un schéma inner-outer loop : un warm-start par agent aligne le RecursiveLink interne sur la distribution des embeddings d'entrée via une perte cosinus, puis une boucle externe déroule le système sur n rondes de récursion et propage le gradient via une cross-entropy sur la sortie textuelle finale du dernier agent. Quatre patterns de collaboration sont instanciés : Sequential (Planner-Critic-Solver), Mixture (spécialistes domaine + Summarizer), Distillation (Expert-Learner), Deliberation (Reflector + Tool-Caller).</p>
+<p>L'évaluation couvre 9 benchmarks (MATH500, AIME2025/2026, GPQA-Diamond, MedQA, LiveCodeBench-v6, MBPP+, HotpotQA, Bamboogle) avec des familles de modèles variées (Qwen, Llama, Gemma, Mistral). Les baselines incluent des agents simples avec LoRA et SFT complet, MoA, TextGrad, LoopLM et un Recursive-TextMAS qui partage la structure mais communique en texte.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur l'ensemble des benchmarks, RecursiveMAS gagne en moyenne 8,3 % de précision contre la meilleure baseline. L'écart se creuse avec la profondeur de récursion : +8,1 % à r=1, +19,6 % à r=2, +20,2 % à r=3 face à Recursive-TextMAS. Les gains d'efficacité accompagnent ce trend avec un speedup moyen passant de 1,2× à 2,4× et une réduction de tokens de 34,6 % à 75,6 % entre r=1 et r=3.</p>
+<p>L'ablation du RecursiveLink valide la pertinence de la connexion résiduelle : la variante 2 couches résiduelles surclasse les designs sans résidu. L'ablation sur la longueur des pensées latentes m montre une saturation autour de m=80, suggérant qu'un budget modeste suffit. L'analyse de coût rapporte 13,12 M paramètres entraînables (0,31 %), 15,29 GB de mémoire GPU, contre 4,21 B et 41,4 GB pour le full-SFT.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'argument théorique central repose sur deux propositions : la complexité runtime substitue m·|V|·d_h par m·d_h² (gain réel puisque d_h ≪ |V|), et le gradient à travers RecursiveLink reste borné à Ω(1 − √(log(1/δ)/d_h)) tandis que le gradient text-based s'effondre en O(ε) pour des tokens à faible entropie. Ces résultats sont rigoureux mais reposent sur des hypothèses simplificatrices fortes : la preuve de stabilité gradient suppose W3 = I, ce qui élude le cas hétérogène pourtant central, et l'argument de gradient vanishing pour le SFT texte assume une entropie ε ≪ 1 qui ne s'applique pas universellement aux distributions d'entraînement réelles.</p>
+<p>Côté empirique, plusieurs zones d'ombre subsistent. AIME2025 et AIME2026 ne contiennent que 30 problèmes chacun et la métrique Pass@10 gonfle mécaniquement les scores comparés à Pass@1 utilisé ailleurs. Les écarts-types reportés (±0,0041 sur l'accuracy moyenne) paraissent suspicieusement faibles pour des évaluations sur si peu d'items. La section limitations est quasi-absente : aucune discussion sur l'échec de cas, les régimes où la récursion dégrade les performances, ou la sensibilité aux hyperparamètres.</p>
+<p>Une anomalie majeure de traçabilité doit être notée : l'identifiant arXiv 2604.25917 et la date « 28 Apr 2026 » placent l'article dans le futur relatif à plusieurs modèles cités (Qwen3.5, AIME2026, MathArena 2026), ce qui empêche toute vérification croisée immédiate des sources. Cette configuration interroge le statut réel du preprint.</p>
+
+<h2>Reproductibilité</h2>
+<p>Une page projet existe (recursivemas.github.io) et les datasets d'entraînement sont identifiés (s1K, m1K, OpenCodeReasoning, ARPO-SFT). Les configurations de modèles, hyperparamètres (AdamW, lr=5e-4, batch=4, max seq 4096) et templates de prompts sont fournis en annexe. En revanche, aucune URL de dépôt de code n'est explicitement citée dans le corps de l'article et le pipeline complet (rewriting des targets via Qwen3.5-397B-A17B, environnement Python sandboxé, API Tavily) implique une reconstruction lourde. La reproductibilité reste donc partielle : un acteur disposant des ressources H100/A100 pourrait répliquer le setup, mais la chaîne d'entraînement des données role-specific n'est pas distribuable telle quelle.</p>
+
+<h2>Impact et applications</h2>
+<p>L'idée de scaler la collaboration agentique par récursion latente est conceptuellement séduisante et contourne un goulot bien identifié des MAS texte : la sérialisation décodage-encodage entre tours. Si les chiffres se confirment, le framework offrirait un compromis attractif pour les déploiements MAS où le coût en tokens domine (agents tool-calling longs, debate, mixture-of-experts).</p>
+<p>Les applications directes incluent les pipelines de raisonnement scientifique, la distillation Expert-Learner avec préservation de vitesse, et l'orchestration d'agents spécialisés sans payer la facture de re-décodage. Les limites pratiques tiennent au gel des paramètres LLM : le système ne peut corriger un agent fondamentalement faible sur sa tâche, RecursiveLink se contentant d'aligner les distributions latentes.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>RecursiveMAS s'inscrit à l'intersection de trois lignes : les RLM (LoopLM de Zhu et al. 2025, Mixture-of-Recursions de Bae et al. 2025, Hierarchical Reasoning Model de Wang et al. 2025), la communication latente inter-agents (Cache-to-Cache de Fu et al. 2025, KVComm de Ye et al. 2025, Latent Collaboration de Zou et al. 2025), et les frameworks d'optimisation MAS (TextGrad, MoA, MALT). Sa contribution distinctive est la formalisation système-niveau de la récursion, là où les travaux antérieurs traitent soit la récursion intra-modèle soit la communication latente sans boucle d'optimisation conjointe.</p>
+<p>Le papier complète plutôt qu'il ne supplante ces travaux : LoopLM reste un modèle de fondation pré-entraîné récursif, TextGrad un optimiseur de prompts, et RecursiveMAS un wrapper d'orchestration entraînable. La filiation avec « Latent Collaboration in Multi-Agent Systems » (Zou et al. 2025, partagent un auteur) mériterait une délimitation plus explicite des nouveautés apportées.</p>
+
+<h2>Synthèse des scores de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Question précise, originale et bien motivée par le coût des MAS texte.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>4 patterns × 9 benchmarks × baselines diverses, ablations ciblées.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>AIME limités à 30 problèmes, 5 runs seulement, écarts-types rapportés douteux.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Pass@10 sur AIME gonfle les scores ; LLM-as-a-judge pour HotpotQA/Bamboogle non audité.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Comparaisons à budget d'entraînement et structure MAS appariés.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Page projet et hyperparamètres présents, mais pas de code public confirmé ni rewriting des targets distribuable.</td></tr>
+<tr><td>Transparence des limitations</td><td>2</td><td>Section limites absente, aucun cas d'échec discuté, hypothèses théoriques minimisées.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Première formalisation récursive système-niveau pour MAS, contribution claire mais filiation Zou et al. 2025 floue.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3,5/5.</strong> Cadre théorique élégant et résultats empiriques cohérents, plombés par une transparence faible sur les limitations, des métriques sur petits échantillons et des incohérences de datation qui empêchent une validation indépendante immédiate.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

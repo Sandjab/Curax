@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recursive Multi-Agent Systems — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Recursive Multi-Agent Systems</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les agents IA arrêtent de se parler en français</h2>
+
+<p>Trois agents discutent pour résoudre un problème de mathématiques. Le premier rédige un plan en 800 tokens. Le deuxième le critique en 600 tokens supplémentaires. Le troisième produit une solution finale, qu'il faut ensuite renvoyer au premier pour un nouveau tour. Au bout de trois itérations, la facture en tokens s'envole et chaque agent a passé l'essentiel de son temps à décoder du texte produit par les autres avant de le ré-encoder pour son propre traitement.</p>
+
+<p>Une équipe de chercheurs d'UIUC, Stanford, NVIDIA et MIT propose une alternative : et si les agents s'échangeaient directement leurs représentations internes, sans jamais passer par le texte intermédiaire ? Leur système, baptisé <strong>RecursiveMAS</strong>, gagne 8,3 % de précision moyenne, accélère l'inférence jusqu'à 2,4× et réduit la consommation de tokens de plus de 75 % sur les configurations profondes.</p>
+
+<p>Le résultat est intéressant pour deux raisons. D'abord parce qu'il remet en cause un dogme implicite des systèmes multi-agents actuels : la communication doit passer par du langage naturel. Ensuite parce qu'il s'inspire d'une idée venue d'ailleurs — les modèles récursifs — pour la transposer à l'échelle d'un système entier.</p>
+
+<h2>Le problème : pourquoi les agents perdent leur temps à se parler</h2>
+
+<p>Les systèmes multi-agents (MAS) sont devenus un standard pour faire collaborer plusieurs LLM spécialisés sur des tâches complexes. Un agent planifie, un autre critique, un troisième résout. Ou bien on assemble un mathématicien, un codeur et un biologiste, et un agent de synthèse agrège leurs réponses.</p>
+
+<p>Le problème, c'est que cette collaboration se fait toujours par texte. Chaque agent reçoit du texte, le tokenise, le passe dans son Transformer, puis décode token par token sa réponse vers l'espace vocabulaire (typiquement 100 000 à 200 000 candidats à chaque étape). L'agent suivant fait l'inverse : il prend ce texte, le retokenise, et le ré-encode dans son propre espace latent.</p>
+
+<p>Ce ping-pong texte/embeddings a deux coûts. D'abord, un coût de calcul : décoder vers le vocabulaire est une opération massive, dominée par une multiplication matricielle dont la taille dépend du nombre de tokens du dictionnaire. Ensuite, un coût plus subtil sur l'apprentissage. Quand on essaie d'entraîner l'ensemble du système de bout en bout — par exemple en propageant un gradient depuis la sortie finale vers l'agent initial — le texte agit comme un goulot d'étranglement. Les chercheurs montrent mathématiquement que le gradient s'effondre vers zéro à mesure qu'il traverse les couches de softmax intermédiaires. Autrement dit, l'agent du début ne reçoit quasiment plus de signal pédagogique sur ce qui s'est mal passé en bout de chaîne.</p>
+
+<p>Une analogie : imaginez une équipe où chaque membre doit traduire ses pensées en morse, l'envoyer au collègue suivant qui les retranscrit, les réinterprète, puis traduit sa propre réflexion en morse. Le travail finit par se faire, mais 70 % du temps part dans la traduction. Et si le résultat final est mauvais, presque impossible de remonter au membre de l'équipe qui a fait l'erreur initiale.</p>
+
+<h2>La méthode : transformer les agents en couches d'un grand modèle récursif</h2>
+
+<p>Le point de départ conceptuel des auteurs vient des <em>recursive language models</em>. Dans un Transformer classique, l'information traverse une fois les 30 ou 60 couches du réseau et ressort. Dans un modèle récursif, on fait passer l'information plusieurs fois dans le même empilement de couches, comme si on demandait au réseau de réfléchir plus longtemps en réutilisant les mêmes ressources de calcul. Cette idée a montré qu'on pouvait gagner en profondeur de raisonnement sans gonfler le nombre de paramètres.</p>
+
+<p>RecursiveMAS pousse l'analogie plus loin : si un modèle peut être bouclé, pourquoi pas un système multi-agents entier ? Chaque agent devient une "couche" du grand système, et l'ensemble forme une boucle où l'information circule en restant dans l'espace latent.</p>
+
+<p>Pour rendre ça possible, les auteurs introduisent un module appelé <strong>RecursiveLink</strong>. C'est une simple connexion résiduelle à deux couches linéaires avec une activation GELU au milieu — moins de 0,4 % des paramètres totaux du système. Ce module joue deux rôles distincts.</p>
+
+<h3>L'Inner Link : laisser un agent réfléchir sans parler</h3>
+
+<p>À l'intérieur de chaque agent, l'Inner Link permet de générer des "pensées latentes" sans décoder vers le vocabulaire. Au lieu de produire un token visible, l'agent reprend directement le dernier vecteur caché de son Transformer, le passe dans le RecursiveLink, et l'injecte comme nouvelle entrée pour le tour suivant. Le modèle continue de réfléchir, mais en silence.</p>
+
+<p>L'avantage est double. On évite l'étape coûteuse de décodage. Et on garde une représentation continue, plus riche qu'un seul token discret choisi parmi 150 000.</p>
+
+<h3>L'Outer Link : faire dialoguer des agents qui ne parlent pas la même langue</h3>
+
+<p>Le deuxième usage est plus délicat. Les agents du système ne sont pas identiques : on peut combiner un Qwen3 de 1,7 milliard de paramètres avec un Llama 3.2 de 1 milliard et un Qwen2.5-Math de 1,5 milliard. Leurs espaces latents internes ont des dimensions différentes et des distributions différentes. Pas question de transférer brutalement le vecteur caché de l'un vers l'autre.</p>
+
+<p>L'Outer Link règle ce problème avec une couche linéaire supplémentaire qui projette l'information de l'agent source vers l'espace de l'agent cible. C'est un traducteur appris, mais qui traduit entre représentations vectorielles plutôt qu'entre langues.</p>
+
+<p>Le tout forme une boucle : agent 1 produit ses pensées latentes, l'Outer Link les transforme pour l'agent 2, qui les traite et passe à l'agent 3, etc. Quand le dernier agent termine son tour, ses pensées latentes repartent vers le premier agent — un nouveau tour de récursion commence. Seul le tout dernier tour décode vers du texte pour produire la réponse finale.</p>
+
+<h3>Un entraînement en deux temps</h3>
+
+<p>Faire fonctionner ce système demande une procédure d'entraînement adaptée. Les auteurs gèlent tous les paramètres des LLM eux-mêmes — économie majeure — et n'apprennent que les RecursiveLinks.</p>
+
+<p>La phase <strong>inner-loop</strong> entraîne d'abord chaque agent en parallèle à produire des pensées latentes alignées avec ce qu'auraient été les bonnes réponses textuelles. C'est une forme de pré-chauffage : on apprend au modèle que ses sorties latentes doivent rester sémantiquement proches des embeddings d'entrée standard.</p>
+
+<p>Vient ensuite la phase <strong>outer-loop</strong>, plus ambitieuse. On déroule le système entier sur n tours de récursion, on calcule la perte sur la sortie textuelle finale, et on rétropropage le gradient à travers toute la boucle. C'est ici que les Outer Links apprennent à transmettre l'information utile, et que le système entier se co-optimise.</p>
+
+<h2>Résultats : plus précis, plus rapide, et plus économe en tokens</h2>
+
+<p>Les chercheurs évaluent RecursiveMAS sur neuf benchmarks couvrant les mathématiques (MATH500, AIME 2025, AIME 2026), les sciences et la médecine (GPQA-Diamond, MedQA), la génération de code (LiveCodeBench, MBPP+) et les questions multi-sauts (HotpotQA, Bamboogle).</p>
+
+<p>Premier constat : la précision croît avec la profondeur de récursion. Sur AIME 2025, la version "scaled" passe de 80,0 % au premier tour à 86,7 % au troisième. Comparé à un système multi-agents équivalent qui communique par texte au lieu de latents, l'écart se creuse à mesure que la récursion s'approfondit : +8,1 % de précision au tour 1, mais +20,2 % au tour 3.</p>
+
+<p>Deuxième constat, plus parlant pour qui paye une facture API : la consommation de tokens. Le système basé texte gonfle naturellement avec la profondeur — chaque tour génère du nouveau texte intermédiaire. RecursiveMAS, lui, reste à peu près stable puisque la récursion se fait en latent. Au tour 3, sur AIME 2025, le système texte consomme 8 645 tokens contre 1 586 pour RecursiveMAS — une réduction de 81 %.</p>
+
+<p>Troisième constat : le coût d'entraînement. Comparé à un fine-tuning complet (4,21 milliards de paramètres modifiables, 41 GB de mémoire GPU, 9,67 $ de coût estimé), RecursiveMAS n'entraîne que 13 millions de paramètres (0,31 % du total) pour 4,27 $ et 15 GB de mémoire — tout en obtenant une meilleure précision moyenne (74,9 % contre 68,6 %).</p>
+
+<p>Le système est aussi flexible quant à la structure de collaboration. Les auteurs testent quatre patterns : pipeline séquentiel (planificateur → critique → résolveur), mélange d'experts spécialisés (math, code, science), distillation expert-apprenant, et délibération avec appel d'outils externes. RecursiveMAS améliore systématiquement le meilleur agent individuel : +6,2 % en mixture, +4,8 % en deliberation, +8,0 % en distillation tout en gardant un avantage de vitesse 1,5× sur l'agent expert.</p>
+
+<h2>Implications pratiques : ce que ça change pour ceux qui déploient des agents</h2>
+
+<p>Pour les équipes qui construisent des systèmes agentiques en production, plusieurs leçons se dégagent.</p>
+
+<p>D'abord, le coût d'inférence des MAS textuels devient un vrai frein quand on veut faire de la collaboration profonde. Aujourd'hui, beaucoup de frameworks (AutoGen, CrewAI, LangGraph) reposent sur des échanges textuels prolongés. Sur des tâches simples, le surcoût est gérable. Sur des problèmes qui demandent plusieurs cycles de raffinement, il devient prohibitif. Les chiffres de l'article — 75 % de tokens en moins au troisième tour — suggèrent qu'il existe un plafond pratique au-delà duquel le texte n'est plus le bon véhicule.</p>
+
+<p>Ensuite, l'idée d'entraîner uniquement de petits modules de connexion plutôt que les LLM eux-mêmes est attractive opérationnellement. Beaucoup d'équipes utilisent des modèles propriétaires fermés (Claude, GPT-4) qu'elles ne peuvent pas fine-tuner. RecursiveMAS suppose un accès aux états cachés des modèles, ce qui exclut les API fermées dans leur état actuel — mais l'approche fonctionne directement avec des modèles open-weights, en gelant leurs paramètres et en n'apprenant qu'une couche de coordination de quelques millions de paramètres.</p>
+
+<p>Pour les fournisseurs de modèles, la question reste ouverte : faut-il exposer les hidden states via une API ? Cela ouvrirait la voie à ce type d'architecture sans céder les poids du modèle. Quelques travaux récents (notamment KVcomm et Cache-to-Cache, cités dans l'article) explorent déjà cette direction.</p>
+
+<p>Côté architecture, le pattern de "boucle latente" pourrait inspirer des designs plus économes en compute. Si un système peut atteindre la même qualité en bouclant trois fois sur des modèles légers (1-2 milliards de paramètres) qu'en utilisant un seul modèle massif (70+ milliards), le compromis devient intéressant pour des déploiements edge ou des contraintes budgétaires serrées.</p>
+
+<h2>Pour aller plus loin : les questions qui restent ouvertes</h2>
+
+<p>Le travail de Yang, Zou et leurs collègues laisse plusieurs zones grises qui méritent attention.</p>
+
+<p>La première concerne <strong>l'interprétabilité</strong>. Quand des agents communiquent par texte, on peut lire leurs échanges, débugger, auditer. Avec des pensées latentes, ce contrôle disparaît. L'article ne dit pas comment diagnostiquer un système qui produit la mauvaise réponse au tour 3 alors qu'il aurait pu réussir avec un autre routage. Pour des applications réglementées (santé, finance, juridique), cette opacité pourrait être bloquante.</p>
+
+<p>La deuxième touche à <strong>la généralisation hors-distribution</strong>. Les RecursiveLinks sont entraînés sur des données spécifiques (s1K, m1K, OpenCodeReasoning, ARPO-SFT). Comment se comportent-ils sur des tâches très différentes du domaine d'entraînement ? L'article montre que l'architecture s'adapte à différents patterns de collaboration, mais ne stresse pas suffisamment la généralisation cross-domain.</p>
+
+<p>La troisième concerne <strong>la limite de la profondeur récursive</strong>. Les expériences plafonnent à trois tours. Au-delà, les gains saturent-ils ? Apparaît-il des phénomènes de "drift" où les représentations latentes dérivent loin de toute sémantique cohérente ? Les courbes de scaling présentées en Figure 1 suggèrent une saturation, mais sans la cartographier précisément.</p>
+
+<p>Enfin, la plus intrigante peut-être : que se passe-t-il quand les agents apprennent à <em>tricher</em> dans l'espace latent ? Avec du texte, un comportement pathologique resterait visible. En latent, des collusions ou des stéganographies pourraient émerger. Aucune équipe ne s'est encore penchée sérieusement sur la sécurité des communications latentes inter-agents — le sujet va devenir chaud.</p>
+
+<p>Au-delà de ces réserves, RecursiveMAS marque un déplacement utile. Pendant deux ans, la communauté multi-agents a parié sur des prompts toujours plus sophistiqués, des chains-of-thought toujours plus longues, des protocoles de discussion toujours plus structurés. L'article rappelle qu'à un moment, le texte cesse d'être la bonne abstraction. Les modèles savent déjà se représenter des concepts dans leurs espaces internes — il était temps de les laisser collaborer à ce niveau-là.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
