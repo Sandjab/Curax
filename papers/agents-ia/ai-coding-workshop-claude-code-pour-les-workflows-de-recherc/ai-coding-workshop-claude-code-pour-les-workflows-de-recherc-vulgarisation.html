@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Coding Workshop : Claude Code pour les workflows de recherche ML — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AI Coding Workshop : Claude Code pour les workflows de recherche ML</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand l'agent code pendant que vous lisez l'arXiv</h2>
+
+<p>Un doctorant lance trois expériences sur le cluster GPU de son université, part déjeuner, et retrouve à son retour les courbes de loss tracées, les résultats consignés dans un fichier markdown daté, et un brouillon d'analyse comparant les runs aux baselines. Personne n'a touché au clavier pendant son absence. C'est ce workflow concret que Xingjian Zhang, doctorant au laboratoire Foreseer de l'Université du Michigan, est venu décrire lors d'un atelier d'avril 2026 destiné à ses collègues chercheurs en machine learning.</p>
+
+<p>Son propos ne porte pas sur un nouveau modèle de fondation, ni sur une architecture inédite. Il documente une transformation plus discrète mais structurante : la manière dont les agents de code comme Claude Code redessinent le quotidien d'un laboratoire de recherche en IA. Les outils existent, les pratiques se stabilisent, et les retours de terrain commencent à former un corpus exploitable. Zhang a compilé six mois d'usage intensif dans un déck de quarante diapositives qui mérite qu'on s'y attarde, parce qu'il distille des principes transférables bien au-delà du contexte académique.</p>
+
+<h2>Pourquoi les workflows de recherche craquent sous la charge cognitive</h2>
+
+<p>Un projet de recherche en ML moderne ressemble à une usine de petites tâches répétitives entrelacées avec quelques décisions critiques. Un chercheur passe ses journées à écrire des scripts sbatch pour Slurm, surveiller la file d'attente du cluster, copier des checkpoints entre <code>/scratch</code> et <code>/nfs/turbo</code>, retrouver le commit git qui a produit telle courbe, comparer trois runs avec des hyperparamètres légèrement différents, et finalement intégrer les chiffres dans un fichier LaTeX. Sur six mois, le ratio entre travail intellectuel et plomberie penche dangereusement vers la plomberie.</p>
+
+<p>Le problème ne se résout pas en automatisant chaque tâche isolément. Les scripts shell ad hoc s'accumulent, deviennent illisibles, et nul ne se souvient de leurs paramètres trois semaines plus tard. Les notebooks Jupyter divergent du code de production. Les résultats expérimentaux finissent dans un Google Doc, un canal Slack, ou la mémoire défaillante du chercheur.</p>
+
+<p>L'enjeu réel : comment faire pour qu'un nouveau membre du labo puisse reproduire une expérience à partir d'un seul fichier markdown, six mois après son exécution ? Et comment libérer le chercheur des tâches mécaniques sans pour autant lui faire perdre le contrôle ni la traçabilité de ses décisions ?</p>
+
+<h2>Trois principes qui changent la posture face à l'agent</h2>
+
+<p>Zhang ne propose pas une recette technique mais une réorganisation mentale. Trois principes structurent son approche, et chacun retourne une intuition qu'on a tendance à appliquer par défaut.</p>
+
+<h3>Le contexte est votre ressource la plus rare</h3>
+
+<p>Un agent de code dispose d'une fenêtre de contexte limitée — typiquement un million de tokens pour Claude Opus 4.7, mais ce qui compte c'est ce qu'on y laisse rentrer. Charger un fichier de logs de 500 Mo, c'est sacrifier la mémoire de travail nécessaire au raisonnement. Garder une session ouverte sur trois sujets disjoints depuis trois jours, c'est diluer l'attention de l'agent.</p>
+
+<p>La pratique recommandée tient en quelques gestes : une session par tâche, compactage agressif autour de 30 % d'espace restant, préférence pour les références <code>@fichier:lignes</code> plutôt que les copier-coller massifs, et désactivation des serveurs MCP non utilisés. La commande <code>/context</code> dans Claude Code affiche en temps réel la répartition du contexte par catégorie — outils système, fichiers mémoire, skills chargés, messages — ce qui transforme la gestion du contexte en exercice mesurable plutôt qu'en intuition floue.</p>
+
+<p>Le corollaire : déléguer les investigations longues à des sous-agents qui brûlent leur propre contexte et ne renvoient que la synthèse. Demander à un agent <em>Explore</em> de cartographier tous les configs où la learning rate est définie coûte beaucoup de tokens dans la session du sous-agent, mais rend à la session principale une réponse de quelques lignes.</p>
+
+<h3>Déléguer un objectif, pas une séquence d'actions</h3>
+
+<p>Le réflexe naturel quand on découvre un agent de code, c'est de le piloter au coup par coup. Tab pour accepter une suggestion, retour arrière pour la rejeter, nouvelle instruction pour la prochaine étape. Ce mode survit mal au passage à des tâches complexes. La proposition de Zhang : passer en mode plan avec <code>shift+tab</code>, lire attentivement le plan généré, le rediriger une fois si nécessaire, puis basculer en mode auto et relire le diff final plutôt que chaque appel d'outil intermédiaire.</p>
+
+<p>Le tournant pédagogique : formuler la condition de succès de manière vérifiable. Plutôt que « améliore l'accuracy du modèle », demander « atteins une accuracy ≥ 0,78 sur le set de validation et fournis la commande qui le vérifie ». Quand l'agent peut juger lui-même s'il a fini, le chercheur sort de la boucle au lieu de la constituer.</p>
+
+<h3>La règle des deux fois</h3>
+
+<p>Toute tâche effectuée deux fois dans une journée est candidate à l'automatisation. Trois questions à se poser : peut-on en faire un skill ? Un hook l'attraperait-il automatiquement ? Devrait-on l'inscrire dans <code>CLAUDE.md</code> pour ne plus jamais le retaper ?</p>
+
+<p>Zhang insiste sur un détail pratique souvent ignoré : on n'écrit pas un <code>SKILL.md</code> à partir d'une page blanche. À la fin d'une session où l'agent a fait quelque chose d'utile, il suffit de demander « sur la base de ce qu'on vient de faire, crée un skill ». Claude rédige le fichier, le nomme, propose le diff. Le chercheur valide. La méthode capture la version qui vient d'être testée plutôt qu'une abstraction théorique.</p>
+
+<h2>L'organisation du laboratoire : un dépôt, une mémoire</h2>
+
+<p>Au-delà des principes d'usage, Zhang détaille une architecture de projet qui mérite qu'on la regarde de près. L'idée : tout vivre dans un seul dépôt git, avec une structure stable que l'agent et l'humain partagent.</p>
+
+<pre><code>project/
+├── src/                  # code
+├── experiments/          # runs + logs
+├── paper/                # LaTeX, git-backed
+├── results/              # tables + figures, auto-generated
+└── refs/                 # Zotero export, BibTeX</code></pre>
+
+<p>Une règle non négociable : <strong>le code contrôle le papier</strong>. Aucun chiffre, tableau ou figure n'est saisi à la main dans le LaTeX. Les scripts du dossier <code>scripts/artifacts_generation/</code> lisent <code>experiments/</code>, écrivent <code>results/</code>, et <code>paper/main.tex</code> ne fait qu'inclure les artefacts générés. Le test de validité tient en une commande : effacer le dossier <code>results/</code>, relancer le build, obtenir le même papier au caractère près.</p>
+
+<p>Cette discipline a un effet collatéral précieux. Quand un reviewer demande de recalculer une métrique avec une autre baseline, on corrige le script et on relance. On ne patch pas un nombre dans le .tex. La cohérence devient une propriété mécanique du système plutôt qu'une vigilance humaine épuisable.</p>
+
+<h3>Index plus détail : la documentation à deux niveaux</h3>
+
+<p>Pour suivre les expériences, Zhang propose une organisation à deux étages. Un fichier index, <code>experiments.md</code>, qui contient un paragraphe de moins de cent mots par run, regroupé par phase du projet. Et un fichier détail par expérience, nommé <code>experiments/2026-03-21_sft-qwen3-1.7b.md</code>, qui doit suffire à reproduire ou réinterpréter un run isolé.</p>
+
+<p>Le fichier détail porte une charge utile précise : le hash git du code qui a tourné, la commande exacte ou le chemin du sbatch, la version et le chemin du dataset, le fichier de log avec l'identifiant du run wandb, le chemin et le hash du config, les chiffres observés avec leurs plots, et — séparé visuellement — les hypothèses interprétatives marquées comme telles.</p>
+
+<p>Cette dernière distinction est centrale dans la pratique de Zhang. Les faits observés sont stockés par défaut. Les hypothèses ne sont sauvegardées qu'avec une approbation explicite. Un exemple concret depuis ses notes :</p>
+
+<blockquote>
+<p>- Accuracy rose 0.52 → 0.61 from step 500 → 1400 [observed].<br>
+- Hypothesis [needs approval before saving]: 4B may not amplify the diversity benefit seen at 1.7B.</p>
+</blockquote>
+
+<p>La discipline empêche un effet pervers fréquent : les conclusions hâtives qui se transforment en vérités tribales du laboratoire après quelques semaines, sans qu'on se souvienne plus qu'elles n'avaient jamais été validées.</p>
+
+<h2>L'outillage concret : ce qui tourne dans le labo Foreseer</h2>
+
+<p>Le laboratoire de Zhang publie sa configuration sur GitHub sous le nom <code>umich-foreseer/lab-claude-config</code>. L'installation se fait en une instruction donnée à l'agent lui-même : « utilise ce dépôt pour mettre en place ma config Claude Code sur Great Lakes » — Great Lakes étant le cluster HPC de l'université.</p>
+
+<p>Le contenu mérite l'inventaire car il illustre la portée pratique de l'approche. Côté skills, on trouve <code>/onboard</code> qui détecte le username, le cluster et les comptes Slurm pour configurer l'environnement, <code>/submit-experiment</code> qui rédige le sbatch, crée la documentation, soumet le job et l'enregistre, <code>/harvest</code> qui récupère les métriques et chemins dans l'index, <code>/slurm-status</code> pour la file d'attente courante, et <code>/connect</code> pour le SSH inter-cluster avec les bonnes clés.</p>
+
+<p>Côté agents, trois investigateurs spécialisés tournent en contexte frais : <code>@slurm-queue</code> qui sonde la file pour trouver un créneau libre et suggère une partition, <code>@slurm-resource</code> qui dimensionne GPU, mémoire et walltime, et <code>@slurm-storage</code> qui choisit entre Turbo, Scratch et Data Den selon les besoins d'I/O.</p>
+
+<p>Côté hooks, un seul mais déterminant : <code>node-context.sh</code> sur l'événement <code>PreToolUse(Bash)</code>. Avant chaque appel shell, le hook détecte si l'agent s'apprête à exécuter une commande sur un nœud de login ou un nœud de calcul, et injecte un avertissement si nécessaire. Une garde-fou contre l'erreur classique du chercheur pressé qui lance un entraînement lourd sur le nœud de login et fait tomber le service pour tout le campus.</p>
+
+<h2>Pourquoi cette transformation dépasse les laboratoires de ML</h2>
+
+<p>L'atelier de Zhang s'adresse explicitement aux chercheurs en ML mais ses leçons se transposent. La règle des deux fois fonctionne pour un développeur qui livre du code en production. La séparation faits/hypothèses fonctionne pour un consultant qui rédige des recommandations. La discipline du dépôt unique avec génération automatique des artefacts fonctionne pour toute production technique où la cohérence entre source et livrable doit être garantie.</p>
+
+<p>Le déplacement le plus profond reste cognitif. Pendant l'ère Copilot, l'agent complétait du code à la marge — une ligne, un bloc, une fonction. Le développeur restait au centre du processus. Avec Claude Code, l'agent opère sur l'ensemble du dépôt, lance des shells, interroge des bases de données via MCP, dispatche des sous-agents en parallèle, vérifie ses propres résultats. Le développeur passe du clavier au pilotage : il définit des objectifs, conçoit des protocoles de vérification, arbitre les diffs.</p>
+
+<p>Cette mutation n'est pas neutre pour les organisations. Un labo qui adopte ces pratiques fait tourner trois fois plus d'expériences avec le même effectif. Une équipe d'ingénierie qui formalise ses skills capitalise son savoir-faire dans des fichiers versionnés plutôt que dans la mémoire de ses seniors. Les onboardings raccourcissent : un nouveau membre du labo Foreseer hérite de l'environnement complet en quelques minutes via <code>/onboard</code>.</p>
+
+<p>Le revers : la discipline requise est réelle. Sans la rigueur du <code>CLAUDE.md</code> bien tenu, sans le réflexe du <code>/compact</code>, sans la séparation observation/hypothèse, l'agent produit du bruit à grande échelle. Le risque n'est plus la lenteur mais l'inflation de fichiers générés que personne ne relit.</p>
+
+<h2>Ce que l'atelier ne dit pas — et qui mérite d'être posé</h2>
+
+<p>Zhang reste pragmatique : il documente ce qui marche dans son contexte. Plusieurs questions restent ouvertes pour qui veut généraliser sa démarche.</p>
+
+<p>D'abord, la dépendance au modèle. Tout l'édifice repose sur Claude Code et sur la qualité des modèles Anthropic. Un changement de prestataire — Codex, Aider, Cline — ne se fait pas sans frais : les skills, hooks et CLAUDE.md sont relativement portables, mais les comportements fins de l'agent (gestion du contexte, qualité du planning) varient. Le déck mentionne d'ailleurs <code>cmux</code>, terminal qui supporte plusieurs agents en parallèle, comme une réponse partielle à cette question.</p>
+
+<p>Ensuite, la question du coût. Un chercheur qui délègue agressivement à des sous-agents brûle des tokens en permanence. Pour un labo universitaire avec une licence académique, l'addition reste contenue. Pour une PME, les arbitrages économiques se posent autrement.</p>
+
+<p>Enfin, la dimension épistémique. Quand un agent rédige une partie de l'analyse expérimentale, où passe la frontière entre l'idée originale du chercheur et la formulation de la machine ? La règle de Zhang sur les hypothèses qui requièrent une approbation explicite répond partiellement à la question, mais le débat n'est pas clos dans la communauté scientifique.</p>
+
+<p>Pour qui veut explorer concrètement, le dépôt <code>umich-foreseer/lab-claude-config</code> reste la meilleure entrée : un cas réel, en production dans un vrai laboratoire, avec des skills exécutables et une documentation lisible. Mieux qu'une promesse marketing, c'est un protocole qu'on peut copier, modifier, soumettre à l'épreuve de son propre quotidien — la définition même d'un savoir transmissible.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
