@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chain-of-Verification Reduces Hallucination in Large Language Models — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Chain-of-Verification Reduces Hallucination in Large Language Models</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les hallucinations factuelles restent un problème ouvert pour les grands modèles de langage, particulièrement sur les faits rares de la distribution longue. Les auteurs de Meta AI s'attaquent à cette question avec une hypothèse précise : un LLM, prompté à se vérifier lui-même via des questions courtes ciblant chaque affirmation factuelle, atteint une précision plus élevée sur ces sous-questions que sur la génération longue d'origine, et peut donc corriger sa propre sortie sans recourir à des outils externes.</p>
+<p>La proposition est nommée <strong>Chain-of-Verification (CoVe)</strong>. Elle se distingue des approches concurrentes (auto-cohérence par échantillonnage multiple, examen croisé entre LLM, retrieval-augmented generation) en restant strictement intra-modèle et déterministe par décodage glouton.</p>
+
+<h2>Méthodologie</h2>
+<p>CoVe articule quatre étapes invoquées sur le même LLM par few-shot prompting :</p>
+<ul>
+<li><strong>Réponse de base</strong> : génération directe sur la requête utilisateur.</li>
+<li><strong>Plan de vérification</strong> : production d'une liste de questions ciblant les affirmations factuelles de la réponse de base.</li>
+<li><strong>Exécution des vérifications</strong> : réponse à chaque question, déclinée en quatre variantes (joint, 2-step, factored, factor+revise) selon le contexte attendu par le modèle.</li>
+<li><strong>Réponse finale révisée</strong> : régénération conditionnée par les paires question-réponse de vérification.</li>
+</ul>
+<p>L'enjeu central des variantes tient au contrôle de l'attention : la version <em>joint</em> conditionne les vérifications sur la réponse initiale et risque de répéter ses hallucinations. Les versions <em>factored</em> et <em>2-step</em> isolent les questions du contexte initial pour casser cette boucle de répétition. La variante <em>factor+revise</em> ajoute une étape explicite de cross-check de cohérence avant la régénération.</p>
+<p>L'évaluation porte sur quatre tâches : Wikidata (questions de listes générées automatiquement, 56 items), Wiki-Category list dérivé de QUEST (55 items), MultiSpanQA en closed book (418 questions factuelles), et la génération longue de biographies évaluée par FACTSCORE. Le modèle de base est Llama 65B avec décodage glouton et few-shot à 3 exemples. Les baselines incluent Llama 2 70B Chat zero-shot et avec CoT, plus InstructGPT, ChatGPT et PerplexityAI sur la tâche biographique.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur Wikidata, la précision passe de 0.17 (few-shot Llama 65B) à 0.36 avec CoVe two-step, soit plus du double. Le nombre d'entités hallucinées chute de 2.95 à 0.68 par réponse pour une perte modérée d'entités correctes (0.59 → 0.38). Le pattern se reproduit sur Wiki-Category (0.12 → 0.22 avec CoVe factored) et MultiSpanQA (F1 0.39 → 0.48).</p>
+<p>Le gain le plus marqué concerne la génération longue : FACTSCORE progresse de 55.9 à 71.4 avec la variante factor+revise, dépassant ChatGPT (58.7) et PerplexityAI (61.6) — ce dernier disposant pourtant d'un retrieval. La supériorité de PerplexityAI ne subsiste que sur les faits très rares, là où le retrieval externe reste indispensable.</p>
+<p>Trois constats secondaires renforcent l'argumentaire : sur Wikidata, environ 70% des entités sont correctement validées par question individuelle alors que seulement 17% des entités générées dans la liste initiale sont correctes ; les questions de vérification générées par le LLM battent des templates yes/no rule-based (0.22 contre 0.16) ; les questions ouvertes battent les questions yes/no, le modèle ayant tendance à acquiescer aux formulations de yes/no même fausses (cf. annexe ChatGPT).</p>
+
+<h2>Discussion et limites</h2>
+<p>Le résultat le plus solide est conceptuel : décomposer une génération longue en sous-questions courtes change le régime d'erreur du modèle. La granularité de la requête modifie le taux d'hallucination indépendamment de toute connaissance externe ajoutée — un résultat qui ré-instrumentalise les capacités déjà présentes dans les poids du modèle plutôt que d'en injecter de nouvelles.</p>
+<p>Plusieurs limites pèsent sur la portée des conclusions. La méthode est testée sur un seul modèle de base (Llama 65B), sans réplication sur GPT-4, Claude ou des modèles plus récents — la généralisation à des LLM mieux alignés ou plus gros reste hypothétique. Les benchmarks list-based sont de faible volume (56 et 55 questions), ce qui limite la puissance statistique des comparaisons entre variantes. Aucun intervalle de confiance ni test de significativité n'est rapporté.</p>
+<p>Le périmètre des hallucinations couvertes se restreint à des inexactitudes factuelles directement énonçables. Les hallucinations dans le raisonnement, les inférences ou les opinions ne sont pas traitées, ce que les auteurs reconnaissent. Le coût computationnel est multiplié — chaque requête déclenche au minimum trois passes supplémentaires, davantage en factored — sans analyse coût-performance explicite. Enfin, la dépendance à FACTSCORE, lui-même un modèle Llama avec retrieval, introduit un évaluateur partiel qui pourrait favoriser des sorties stylistiquement proches de ses biais.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les prompts few-shot sont fournis intégralement en annexe pour la tâche biographique, et les benchmarks utilisés sont publics (Wikidata API, QUEST, MultiSpanQA). Aucun dépôt de code n'est référencé dans l'article ni d'identifiants de runs. Le décodage glouton et le modèle Llama 65B (poids accessibles sous license recherche au moment de la publication) rendent la replication plausible mais demanderaient une réimplémentation des pipelines d'évaluation. Le score de reproductibilité reste donc moyen.</p>
+
+<h2>Impact et applications</h2>
+<p>CoVe a essaimé dans la littérature des méthodes d'auto-vérification déliberative et a contribué à populariser le pattern « décomposer puis vérifier » comme alternative légère au RAG sur les faits torse-tail. Le résultat empirique selon lequel un modèle répond plus fidèlement à ses propres sous-questions qu'à la requête longue est devenu un argument standard pour justifier les chaînes de vérification ou les architectures multi-passe en production.</p>
+<p>L'extension naturelle, suggérée par les auteurs eux-mêmes, consiste à brancher un retrieval ou des outils sur l'étape d'exécution des vérifications, ce qui combinerait les gains observés sur les faits fréquents avec une couverture des faits très rares.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail se situe dans la lignée du chain-of-thought (Wei et al., 2022), du self-refine (Madaan et al., 2023) et de LM vs LM (Cohen et al., 2023). Sa contribution distinctive tient à deux choix : (i) maintenir un seul agent au lieu d'un débat multi-LLM, (ii) isoler les vérifications du contexte initial pour empêcher la répétition d'hallucinations — un point théorique mesuré empiriquement par l'écart joint vs factored. Le rapprochement explicite avec Radhakrishnan et al. (2023) sur la décomposition factorée pour la fidélité des chaînes de raisonnement souligne cette filiation.</p>
+
+<h2>Tableau récapitulatif</h2>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>4</td><td>Hypothèse claire et testable sur la délibération intra-modèle.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Quatre tâches variées, ablations cohérentes des variantes.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>56 et 55 items pour les tâches list-based, sans tests statistiques.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>FACTSCORE et précision micro-moyennée, mais évaluateur LLM partiel.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Décodage glouton et baselines few-shot identiques, mais un seul modèle de base.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Prompts complets en annexe, pas de code public référencé.</td></tr>
+<tr><td>Transparence sur les limites</td><td>4</td><td>Section dédiée explicite sur le périmètre factuel et le coût.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Pattern devenu référence dans les méthodes d'auto-vérification.</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

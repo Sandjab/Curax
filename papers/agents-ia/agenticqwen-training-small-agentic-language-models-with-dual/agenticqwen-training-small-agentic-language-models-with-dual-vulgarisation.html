@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgenticQwen: Training Small Agentic Language Models with Dual Data Flywheels for Industrial-Scale Tool Use — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AgenticQwen: Training Small Agentic Language Models with Dual Data Flywheels for Industrial-Scale Tool Use</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+<p>Un agent IA qui réserve un vol, consulte une base SQL ou orchestre une dizaine d'outils, ça coûte cher. Très cher. Les systèmes en production comme Manus s'appuient sur GPT-5 ou Claude pour fonctionner correctement, et la facture API explose dès qu'on dépasse le million d'utilisateurs. Les alternatives open source comme Qwen3-235B restent gourmandes en GPU. Pourtant, la majorité des tâches confiées à ces agents sont répétitives : réserver, chercher, analyser, résumer. Faut-il vraiment un modèle de 235 milliards de paramètres pour booker un Paris-Pékin ?</p>
+
+<p>Une équipe d'Alibaba répond non. Dans un papier publié en avril 2026, les chercheurs présentent <strong>AgenticQwen</strong>, une famille de petits modèles (8B et 30B) entraînés spécifiquement pour l'usage d'outils en environnement industriel. Leur recette tient en deux idées : un entraînement par renforcement multi-tours, et un mécanisme de génération automatique de données qu'ils appellent <em>dual data flywheel</em>. Le résultat est frappant : un modèle 8B qui double les performances de son équivalent vanille et talonne des modèles trente fois plus gros sur des benchmarks réels.</p>
+
+<h2>Le problème : la malédiction du plateau</h2>
+
+<p>Entraîner un agent IA par renforcement, c'est lui faire répéter des tâches en le récompensant quand il réussit. Sur le papier, plus on lui donne d'exemples, mieux il devrait performer. Dans la pratique, les chercheurs observent un mur : après quelques rounds d'entraînement, les gains s'effondrent. Le modèle a appris à résoudre les cas du dataset, mais ces cas se ressemblent trop. Le signal d'apprentissage sature.</p>
+
+<p>Le problème est encore plus aigu pour les agents que pour les modèles de raisonnement classiques. Un agent doit gérer des états d'environnement changeants, des utilisateurs ambigus voire malveillants, et des workflows à branches multiples. Or les jeux de données synthétiques disponibles suivent presque tous des chemins linéaires : interroger, réserver, confirmer. Le réel est plus sale. Que faire si le vol est complet ? Si le client est un membre Gold qui réclame une compensation cash, alors qu'il n'est en réalité qu'un client standard ? Ces ramifications, les datasets actuels les ignorent.</p>
+
+<p>Les grands acteurs du secteur — Kimi, MiniMax, DeepSeek — publient régulièrement des modèles puissants, mais rarement de petits modèles avec de vraies capacités d'agent. Il existe donc un trou dans le marché entre les mastodontes coûteux et les petits modèles inadaptés aux tâches industrielles.</p>
+
+<h2>La méthode : deux volants d'inertie qui s'entraînent eux-mêmes</h2>
+
+<p>L'idée centrale du papier est élégante. Plutôt que de figer un dataset d'entraînement, les chercheurs construisent deux <em>flywheels</em> — des volants d'inertie — qui génèrent automatiquement des données de plus en plus dures à chaque tour d'entraînement. Le premier flywheel cible le raisonnement, le second cible le comportement d'agent.</p>
+
+<h3>Le flywheel de raisonnement : apprendre de ses échecs</h3>
+
+<p>Le principe est simple. Après un round d'entraînement par renforcement, on collecte les problèmes que le modèle a ratés. Ces erreurs sont précieuses : elles indiquent les zones où il reste à apprendre. Mais elles sont peu nombreuses. L'équipe utilise alors un modèle plus puissant, Qwen3-235B, pour générer des variantes plus difficiles de ces erreurs.</p>
+
+<p>Trois mécanismes de génération coexistent. Le premier, l'expansion par <em>self-instruct</em>, transforme un problème en versions plus complexes : on change les valeurs, on ajoute des contraintes, on injecte des concepts supplémentaires. Une équation algébrique simple devient un problème fonctionnel à plusieurs étapes. Le deuxième, l'injection de personas, déplace les problèmes dans d'autres domaines : un exercice de géométrie devient une mesure physique, une probabilité s'enrobe dans une réaction chimique. Le troisième, un filtre de cohérence, fait résoudre chaque candidat trois fois par le grand modèle. Si les trois solutions divergent, on jette. Si elles convergent, on garde.</p>
+
+<p>Ce dispositif garantit que les nouvelles données sont à la fois variées et vérifiables. À chaque round, le modèle progresse, génère de nouveaux types d'erreurs, et le cycle recommence avec des problèmes encore plus exigeants.</p>
+
+<h3>Le flywheel d'agent : faire pousser des arbres de comportement</h3>
+
+<p>Le second flywheel s'attaque au cas plus retors des comportements d'agent. Au départ, l'entraînement utilise des tâches linéaires issues de SYNTHAGENT. Réserver un vol, par exemple, suit un chemin déterministe : requête, réservation, confirmation. Cela apprend au modèle la sémantique des outils, mais ne prépare pas aux ramifications du réel.</p>
+
+<p>Après chaque round, l'algorithme injecte des branches conditionnelles dans le workflow. Un grand modèle analyse la trajectoire existante et propose des sous-chemins induits par d'autres états d'environnement. Le chemin linéaire devient un arbre. Si le vol est disponible, on réserve normalement. Si tous les vols sont complets, on cherche un train à grande vitesse, ou un aéroport voisin. Si le vol est retardé, on vérifie le statut du membre, puis on choisit entre compensation cash et bons d'achat selon son niveau de fidélité.</p>
+
+<blockquote>L'arbre de comportement transforme une procédure en une carte de décisions. Là où le dataset original proposait un seul chemin valide, l'arbre propose une dizaine de scénarios mutuellement exclusifs.</blockquote>
+
+<p>Vient ensuite l'étape la plus astucieuse : la <em>branch-to-task inversion</em>. Pour chaque branche de l'arbre, l'algorithme remonte aux conditions qui la déclencheraient et reconstruit une nouvelle tâche. La branche "chercher un train" correspond à un environnement où tous les vols sont complets, accompagnée d'une nouvelle instruction utilisateur ("je dois être à Pékin ce soir"). Chaque branche devient ainsi une tâche d'entraînement à part entière, garantissant que le modèle s'exerce sur tous les chemins de l'arbre, pas seulement le plus probable.</p>
+
+<p>Une dernière touche pimente l'exercice : un utilisateur simulé adversarial. Ce faux client tente de pousser l'agent vers une mauvaise branche en mentant. Il prétend être membre Gold pour obtenir une compensation cash, alors qu'il est membre standard. L'agent doit donc systématiquement vérifier les informations via les outils plutôt que de croire l'utilisateur sur parole. Cet entraînement à la méfiance produit des agents robustes face aux tentatives de manipulation.</p>
+
+<h3>Pour boucler la boucle</h3>
+
+<p>Les tâches générées au tour <em>k</em> servent de graines pour construire des tâches encore plus difficiles au tour <em>k+1</em>. Au fur et à mesure que la politique du modèle s'améliore, l'arbre s'enrichit en branches plus profondes. Les chercheurs valident chaque tâche synthétisée : le grand modèle doit être capable de la résoudre dans l'environnement simulé, et la trace d'exécution doit emprunter la branche prévue. Sinon, on rejette la tâche pour bruit ou ambiguïté.</p>
+
+<h2>Résultats clés</h2>
+
+<p>Les chiffres parlent. Sur TAU-2, un benchmark de tâches multi-tours dans les domaines aérien, télécoms et retail, AgenticQwen-8B atteint une moyenne de 47,4 contre 23,8 pour Qwen3-8B vanilla. Soit un doublement pur et simple. Le modèle 30B-A3B grimpe à 50,2, et talonne le Qwen3-235B (52,0) malgré une taille huit fois moindre.</p>
+
+<p>Sur certains sous-ensembles, le petit modèle dépasse même le grand. Sur BFCL-Base, AgenticQwen-30B-A3B obtient 60,0 contre 58,5 pour le 235B. Sur BFCL-Long Context, il monte à 55,5 contre 54,0. Le pattern se reproduit sur les benchmarks de recherche déployés en production : AgenticQwen-30B-A3B gagne 17 points sur XBench par rapport au Qwen3-30B-A3B vanille (47,0 contre 30,0).</p>
+
+<p>L'évolution round par round est révélatrice. Du round 0 (modèle non entraîné) au round 3, les courbes de performance grimpent de manière régulière sur tous les benchmarks, sans exception. Au round 3, AgenticQwen approche déjà la performance du grand modèle utilisé comme générateur de données synthétiques, ce qui suggère un plafond proche : les chercheurs n'ont pas jugé utile de pousser plus loin.</p>
+
+<p>Côté coûts, AgenticQwen-30B-A3B termine ses tâches GAIA en 344 secondes en moyenne, contre 449 pour Qwen3-235B sur le même hardware. Plus rapide et bien moins cher à servir. Les chercheurs attribuent ce gain à une meilleure planification : un agent mieux entraîné prend moins de détours inutiles.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Pour les équipes qui déploient des agents en production, ce papier est une bonne nouvelle. La fracture entre modèles frontière et petits modèles n'est pas immuable. Sur les workflows standardisés et à haute fréquence — réservations, requêtes structurées, analyses récurrentes —, un modèle 8B bien entraîné suffit. Le coût d'inférence chute d'un ordre de grandeur, et la latence avec.</p>
+
+<p>L'architecture d'Alibaba illustre cette philosophie. Dans leur système agentique en production, un classifieur prédit si une requête tombe dans la zone de compétence d'AgenticQwen. Si oui, on route vers le petit modèle. Sinon, vers le mastodonte. Cette logique hybride permet de couvrir le long tail des tâches difficiles tout en optimisant le coût moyen.</p>
+
+<p>Le papier ouvre aussi une voie intéressante pour la fabrication de données. Le <em>dual flywheel</em> est un schéma général : il produit automatiquement des datasets qui se complexifient avec le modèle. Les équipes qui peinent à constituer des jeux de données d'agents — un problème connu — peuvent appliquer cette recette à leurs propres domaines. Le code de synthèse et de RL est open source, intégré dans la toolkit EasyDistill.</p>
+
+<p>L'utilisateur adversarial mérite aussi attention. À l'heure où les agents IA sont déployés en contact direct avec des clients, la robustesse aux tentatives de manipulation devient critique. Un agent qui croit aveuglément un utilisateur peut accorder une compensation indue, exécuter une transaction non autorisée, ou divulguer une information sensible. Entraîner explicitement les modèles à vérifier plutôt qu'à faire confiance, c'est ajouter une couche de sécurité applicative au modèle lui-même.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Les limites pointées par les auteurs sont honnêtes. AgenticQwen excelle sur le raisonnement et le function calling, mais peine sur les tâches très ouvertes ou nécessitant des contextes très longs. Les benchmarks de deep search comme WebWalker exigent des dizaines de milliers de tokens de contexte que les modèles 8B et 30B, plafonnés à 40k tokens, ne peuvent pas absorber pleinement. Le gap résiduel face à Qwen3-235B sur ces tâches reflète autant la capacité contextuelle que la sophistication du modèle.</p>
+
+<p>Autre biais à surveiller : tout l'écosystème — synthétiseur, simulateur d'utilisateur, simulateur d'outil, évaluateur — repose sur des modèles Qwen. Cette homogénéité de famille peut créer un biais d'évaluation : ce que Qwen-235B juge correct, AgenticQwen apprend à reproduire. Les auteurs invitent la communauté à rejouer le pipeline avec d'autres familles (Llama, Mistral, DeepSeek) pour vérifier que les résultats tiennent.</p>
+
+<p>Reste la question stratégique. Si le flywheel fonctionne pour les agents standardisés, jusqu'où peut-on pousser la spécialisation ? Pourrait-on imaginer des modèles 1B ou 3B taillés pour un sous-ensemble précis de tâches — service client e-commerce, support IT de niveau 1, gestion de calendrier — avec un coût d'inférence quasi nul ? La frontière entre LLM généraliste et système expert pourrait se brouiller, avec des constellations de petits modèles spécialisés orchestrés par un routeur léger. Le papier d'Alibaba n'invente pas cette idée, mais il fournit une recette concrète pour la mettre en œuvre, et les chiffres pour la défendre.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

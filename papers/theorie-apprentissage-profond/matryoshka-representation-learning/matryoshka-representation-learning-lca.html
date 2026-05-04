@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matryoshka Representation Learning — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Matryoshka Representation Learning</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les représentations apprises par les modèles profonds sont déployées avec une dimensionnalité fixe, choisie à l'entraînement. Cette rigidité impose un compromis figé entre précision et coût computationnel, alors que les tâches en aval (classification, retrieval, few-shot) ont des contraintes hétérogènes en mémoire, latence et granularité sémantique. Kusupati et al. posent la question suivante : peut-on entraîner une représentation unique qui s'adapte à plusieurs régimes de ressources ?</p>
+<p>La réponse proposée — Matryoshka Representation Learning (MRL) — consiste à imposer durant l'entraînement que les O(log d) préfixes du vecteur d'embedding soient chacun, indépendamment, des représentations utilisables. La métaphore des poupées russes traduit cette structure d'imbrication : chaque sous-vecteur des m premières dimensions encode une version cohérente, mais plus grossière, de l'information.</p>
+
+<h2>Méthodologie</h2>
+<p>La modification du pipeline est minimale. Pour un ensemble M ⊂ [d] de tailles cibles (typiquement {8, 16, 32, …, 2048} obtenu par halvages successifs), l'objectif d'entraînement somme les pertes de classification calculées sur chaque préfixe z₁:ₘ via un classifieur linéaire propre W^(m). Une variante MRL-E partage les poids du classifieur (W^(m) = W₁:ₘ) pour économiser la mémoire dans les espaces de sorties extrêmes.</p>
+<p>Le surcoût d'entraînement est négligeable car les forward/backward passes restent uniques ; seules s'ajoutent |M| ≤ ⌊log d⌋ têtes linéaires. Aucun hyperparamètre spécifique n'est tuné : les pondérations cₘ sont fixées à 1 et les configurations existantes (FFCV pour ResNet50, schedules de ALIGN/JFT) sont réutilisées telles quelles.</p>
+<p>L'évaluation couvre quatre régimes : supervisé (ResNet50 sur ImageNet-1K, ViT-B/16 sur JFT-300M), contrastif vision-langage (ALIGN), masked language modelling (BERT). Les comparaisons opposent MRL à des modèles fixed-feature (FF) entraînés indépendamment à chaque dimension, à des compressions post-hoc (SVD, projection JL aléatoire), à la sélection aléatoire de features, et aux slimmable networks.</p>
+<p>Deux applications spécifiques sont disséquées : la classification adaptative par cascade (seuils sur la confiance softmax pour décider de l'escalade dimensionnelle) et le retrieval adaptatif (shortlist en faible dimension Dₛ puis re-ranking en haute dimension Dᵣ), ainsi qu'une variante Funnel Retrieval qui itère shortlisting et re-ranking en doublant Dᵣ et halvant la taille de la liste à chaque étape.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur ImageNet-1K en classification linéaire, MRL ResNet50 atteint la précision des FF entraînés indépendamment à chaque dimension, et MRL-E reste à moins de 1 % à partir de 16 dimensions. À 8 dimensions, l'écart MRL vs FF est positif (66.63 % vs 65.29 %) — apprendre la nesting améliore les très basses dimensions. En 1-NN, MRL surpasse FF jusqu'à 2 % sur les petites tailles.</p>
+<p>La classification adaptative atteint 76.30 % de précision (équivalent FF-512) avec une dimension moyenne de 37, soit un facteur 14× sur la taille des embeddings. Pour le retrieval sur ImageNet-1K, la combinaison Dₛ=16 / Dᵣ=2048 reproduit la précision du retrieval direct à 2048 dimensions tout en étant 128× moins coûteuse en FLOPs et 14× plus rapide en wall-clock avec HNSW. Sur ImageNet-4K (4202 classes, 4.2M images), Dₛ=64 suffit pour des gains de 32× théoriques et 6× réels.</p>
+<p>Trois résultats secondaires consolident l'approche. D'abord, l'interpolation : malgré l'optimisation explicite de O(log d) tailles, la précision croît continûment sur toutes les dimensions intermédiaires (Figure 5). Ensuite, la robustesse : MRL conserve les performances sur ImageNetV2/R/A/Sketch et améliore ImageNet-A de 0.6 %. Enfin, le few-shot long-tail : sur FLUID, MRL gagne jusqu'à 2 % sur les classes nouvelles en queue de distribution.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs identifient eux-mêmes plusieurs points faibles dans la Section 6. La pondération uniforme des pertes nichées n'est pas Pareto-optimale ; un schéma adaptatif (anytime neural networks) pourrait améliorer le compromis aux extrémités. Le choix de Dₛ et Dᵣ pour le retrieval reste empirique — Funnel Retrieval atténue ce point sans le résoudre formellement. L'absence d'apprentissage conjoint d'une structure de recherche (k-d tree différentiable) limite l'optimalité du pipeline complet.</p>
+<p>La principale faiblesse méthodologique tient à l'absence d'error bars : le coût des entraînements à grande échelle (JFT-300M, ALIGN) interdit la répétition multi-seed. Les comparaisons reposent donc sur des points uniques, ce qui rend délicate l'interprétation des écarts inférieurs au pourcent. La checklist NeurIPS le reconnaît explicitement.</p>
+<p>Le baseline slimmable network est défavorablement instable en dessous de 25 % de largeur, ce qui creuse artificiellement l'écart aux faibles dimensions. La comparaison à SVD post-hoc est correcte mais ne couvre pas toutes les méthodes de compression apprises (PCA supervisée, distillation dimensionnelle).</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code (PyTorch + FFCV) et les modèles pré-entraînés sont publics sur GitHub (RAIVNLab/MRL). L'implémentation se réduit à deux classes : Matryoshka_CE_Loss et MRL_Linear_Layer, fournies dans l'Appendix A. Les hyperparamètres, schedules, choix d'optimiseurs (SGD pour ResNet50, Adafactor pour ViT, AdamW pour BERT) et matériels (2×A100, TPU v3 8x8 et 4x4) sont documentés. Le sous-ensemble ImageNet-4K introduit pour le retrieval grand-échelle est mis à disposition.</p>
+<p>Reste un angle mort : les expériences JFT-300M et ALIGN reposent sur des données propriétaires Google, non reproductibles hors de l'écosystème interne. Les résultats ImageNet-1K, ALIGN évaluations zero-shot et BERT sont en revanche pleinement reproductibles.</p>
+
+<h2>Impact et applications</h2>
+<p>MRL est devenu un standard de fait pour les embeddings de production. OpenAI a adopté la technique pour text-embedding-3 (avec dimensions configurables), Cohere et Google l'utilisent dans leurs API d'embeddings. La popularité tient à trois propriétés convergentes : surcoût d'entraînement nul, déploiement adaptatif sans réentraînement, et complémentarité avec les techniques d'ANNS (HNSW, Product Quantization).</p>
+<p>Les applications dépassent le retrieval visuel : recherche dense en NLP, embeddings multimodaux, déploiement edge avec budget mémoire variable, classification hiérarchique exploitant les superclasses (la Figure 10 montre que les basses dimensions capturent la hiérarchie ImageNet). L'analyse par dimension fournit aussi un outil de diagnostic des bottlenecks d'information.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>MRL s'inscrit dans la lignée des ordered representations de Rippel et al. (2014) qui utilisaient le nested dropout sur autoencodeurs. La contribution centrale est de réduire la complexité d'optimisation de O(d) à O(log d) tout en obtenant l'interpolation gratuitement, et d'étendre l'approche au-delà des autoencodeurs vers la classification supervisée, le contrastif et le MLM. Le lien avec les slimmable networks (Yu et al., 2018) et Once-for-all (Cai et al., 2019) est explicite : MRL imbrique des représentations sans imbriquer des sous-réseaux, évitant les forward passes multiples nécessaires aux variantes architecturales.</p>
+<p>L'article résonne aussi avec les travaux sur la dimension intrinsèque (Li et al., 2018 ; Gong et al., 2019) en montrant empiriquement que la dimension utile dépend de la difficulté de la tâche — observation exploitée par la classification adaptative. Le rapprochement avec Johnson-Lindenstrauss (projection aléatoire en faible dimension) sert de baseline trivial battu par plusieurs ordres de grandeur, soulignant que la nesting apprise est qualitativement différente d'une réduction de dimension générique.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<tr><th>Critère</th><th>Score</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>5/5</td><td>Problème bien posé, formulation originale et pertinente pour le déploiement réel</td></tr>
+<tr><td>Design expérimental</td><td>4/5</td><td>Multi-modalités, multi-échelles, mais quelques baselines incomplètes</td></tr>
+<tr><td>Taille d'échantillon</td><td>5/5</td><td>ImageNet-1K, JFT-300M, ALIGN data, ImageNet-4K — échelle web</td></tr>
+<tr><td>Qualité des métriques</td><td>4/5</td><td>Top-1, 1-NN, mAP@k, P@k, FLOPs, wall-clock — métriques pertinentes et complètes</td></tr>
+<tr><td>Contrôle des biais</td><td>3/5</td><td>Pas d'error bars (coût prohibitif assumé), un seul seed par configuration</td></tr>
+<tr><td>Reproductibilité</td><td>5/5</td><td>Code, modèles et benchmark ImageNet-4K publics ; algorithmes complets en appendice</td></tr>
+<tr><td>Transparence sur les limites</td><td>4/5</td><td>Section 6 explicite quatre limitations et pistes futures</td></tr>
+<tr><td>Impact et nouveauté</td><td>5/5</td><td>Devenu un standard industriel pour les embeddings adaptatifs</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

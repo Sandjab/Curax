@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR-Memory: Optical Context Retrieval for Long-Horizon Agent Memory — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>OCR-Memory: Optical Context Retrieval for Long-Horizon Agent Memory</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les agents LLM autonomes en environnement long-horizon (navigation web, automatisation mobile) accumulent des trajectoires d'interaction trop volumineuses pour la fenêtre de contexte. Les approches existantes sacrifient soit la fidélité (résumé, abstraction), soit le coût en tokens (stockage brut). Les auteurs proposent OCR-Memory : stocker les trajectoires sous forme d'images plutôt que de texte, en exploitant la densité d'information de la modalité visuelle démontrée par DeepSeek-OCR.</p>
+<p>L'idée centrale repose sur trois mécanismes : un encodage visuel multi-résolution avec dégradation des mémoires anciennes (mimant l'oubli), un paradigme locate-and-transcribe qui sépare la localisation visuelle (via des bounding boxes indexées de type Set-of-Mark) de la récupération déterministe du texte verbatim, et un upscaling actif lorsqu'une mémoire dégradée est jugée pertinente.</p>
+
+<h2>Méthodologie</h2>
+<p>Le retriever est construit sur DeepSeek-OCR (3B). L'encodeur visuel est gelé, seul le décodeur est fine-tuné via LoRA (rang 16, alpha 32) sur les couches de projection q/k/v/o. L'entraînement utilise HotpotQA repurposé : les paragraphes sont rendus en images marquées SoM, et le modèle apprend à produire un vecteur binaire indiquant les paragraphes pertinents (loss BCE pondérée avec w+ &gt; w- pour favoriser le rappel).</p>
+<p>L'inférence applique une règle de sélection hybride combinant un seuil de probabilité (τ=0.4 calculé via softmax sur les logits "0"/"1") et un Top-K fallback (K=5). Le mécanisme de mémoire utilise deux niveaux de résolution (1024×1024 pour les 5 derniers steps, 512×512 pour l'historique antérieur), correspondant à des budgets de 256 et 64 tokens visuels.</p>
+<p>L'évaluation porte sur Mind2Web (split Cross-Task, navigation web) et AppWorld (interactions API, avec subset Hard). Cinq baselines : Zero-Shot, dense retrieval, MemoryBank, AWM, ACON. L'agent de raisonnement principal est GPT-4 (température 0), avec un test de généralisation sur Qwen3-32B.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur Mind2Web, OCR-Memory atteint 53.8% en Element Accuracy contre 49.1% pour AWM (meilleure baseline) et 41.3% pour le retrieval dense, avec une fenêtre de mémoire fixée à 4096 tokens. Le Step Success Rate progresse de 42.6% (AWM) à 46.1%. Sur AppWorld, le gain le plus marqué se situe sur le subset Hard (30.8% vs 27.2% pour AWM, +3.6 points absolus).</p>
+<p>L'ablation du Set-of-Mark est éclairante : remplacer la sélection par index par une génération de texte libre fait chuter Step SR de 46.1% à 39.2% et triple la latence (1.7s vs 5.3s). La variante bounding box sans index intermédiaire est plus rapide mais moins précise (44.5%).</p>
+<p>L'étude sous contraintes de tokens (1024 à 8192) montre que l'avantage d'OCR-Memory s'amplifie quand le budget se restreint : +17 points en Element Accuracy à 1024 tokens, contre +12 à 8192. Sur le test NIAH adapté en images, le retrieval atteint 98.5% à 4k de contexte et tient 94.1% à 32k, avec un ratio de compression visuelle au-delà de 10×.</p>
+<p>Le profil d'efficacité système est clairement assumé comme un trade-off : les tokens textuels injectés dans le LLM passent de 3980 à 596 par step (réduction 6.7×), mais le stockage disque par épisode passe de 18 KB à 1.47 MB et la latence de retrieval de 0.3s à 1.7s.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'évaluation reste circonscrite à deux benchmarks dont seul Mind2Web bénéficie d'une analyse fine-grained complète. AppWorld est uniquement reporté en Success Rate, ce qui masque les comportements intermédiaires. Aucun intervalle de confiance ni test statistique n'est rapporté ; les écarts de quelques points absolus sur Step SR ou Element Accuracy mériteraient une quantification de la variance entre runs.</p>
+<p>Le choix d'évaluer principalement avec GPT-4 introduit un biais de coût et de reproductibilité. Le test de généralisation sur Qwen3-32B est rassurant mais limité à un seul backbone open-source. La sensibilité aux hyperparamètres (τ=0.4, K=5, ratio π=[0.3,0.7] du curriculum de résolution) n'est pas étudiée, alors que ces choix conditionnent directement le compromis rappel/coût.</p>
+<p>Le paradigme locate-and-transcribe résout élégamment l'hallucination textuelle en déléguant la récupération à un fetch déterministe sur les logs originaux. Cette propriété donne 100% de fidélité au niveau du contenu récupéré, mais la métrique ne mesure que la conformité du texte fetché à la source — pas la pertinence de la sélection elle-même, point que les auteurs reconnaissent honnêtement.</p>
+<p>La section Limitations identifie correctement le coût d'entraînement spécialisé, le surcoût de rendu et le footprint mémoire double (encodeur visuel + LLM). Manque cependant une discussion sur la robustesse face à des trajectoires comportant des éléments non-textuels (screenshots GUI bruts, captures de tableaux complexes), qui constituent pourtant un cas d'usage naturel.</p>
+
+<h2>Reproductibilité</h2>
+<p>L'annexe fournit les hyperparamètres LoRA, le schedule d'apprentissage (cosine, lr 1e-5, batch 128, 3 epochs), les spécifications de rendu SoM (rouge RGB 255,0,0, police Arial 36pt) et la logique de retrieval. Aucun lien vers du code public ou des poids fine-tunés n'est mentionné dans le manuscrit, ce qui est un manque significatif pour un papier dont l'apport repose sur un fine-tuning spécifique de DeepSeek-OCR. L'utilisation de datasets publics (HotpotQA, Mind2Web, AppWorld) facilite cependant la réplication conceptuelle.</p>
+
+<h2>Impact et applications</h2>
+<p>Le travail s'inscrit dans la continuité directe de DeepSeek-OCR (Wei et al., 2025) en transposant la compression optique du contexte au domaine de la mémoire agentique. C'est l'une des premières démonstrations expérimentales que la modalité visuelle peut servir de support de stockage pour la mémoire d'agent, avec des gains concrets mesurables sous budget contraint.</p>
+<p>Les applications naturelles concernent les agents long-horizon en production : assistants de coding avec historique étendu, agents web avec mémoire d'épisodes répétés, systèmes RAG agentiques sur logs volumineux. L'analogie avec la décroissance de la mémoire humaine (vivid-to-fuzzy) et le mécanisme d'active recall suggèrent des directions plus larges sur la modélisation cognitive de la mémoire d'agent.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article se positionne contre trois familles : retrieval-based (MemoryBank, MemGPT), abstraction d'expérience (AWM, Voyager, ExpeL) et compression de contexte (LLMLingua, ACON, MemGen). Le différenciateur tient à l'usage de la modalité visuelle comme support de stockage primaire, là où les approches précédentes restent text-centric même quand elles compressent.</p>
+<p>Le rapprochement avec la mémoire OCR humaine (vivid-to-fuzzy, active recall) renvoie aux travaux sur les architectures cognitives pour agents (Sumers et al., 2024) sans pour autant en revendiquer la filiation directe. La dépendance forte à DeepSeek-OCR comme backbone visuel rend OCR-Memory tributaire des progrès futurs de cette ligne de modèles, ce qui peut être vu comme une force (capitalisation sur l'état de l'art) ou une fragilité (verrouillage architectural).</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien formulé (mémoire long-horizon sous budget) avec angle original (modalité visuelle).</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Deux benchmarks pertinents, baselines correctes, ablations utiles, mais pas de variance ni d'IC reportés.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Splits standards, mais aucun test de significativité ni de runs multiples.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Métriques classiques (Ele Acc, F1, SR, NIAH), bien choisies. Manque de granularité sur AppWorld.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Test de généralisation backbone (GPT-4 + Qwen3-32B), pas d'analyse de sensibilité aux hyperparamètres.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Hyperparamètres détaillés en annexe, mais aucun code ni poids publiés.</td></tr>
+<tr><td>Transparence sur les limites</td><td>4</td><td>Section Limitations explicite, trade-offs assumés (latence, disque, footprint).</td></tr>
+<tr><td>Impact / nouveauté</td><td>4</td><td>Première application de la compression optique à la mémoire d'agent, gains concrets mesurés.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3.2/5</strong> — Contribution originale et bien exécutée sur deux benchmarks, mais évaluation perfectible (variance non rapportée, code non publié, sensibilité aux hyperparamètres non testée).</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matryoshka Representation Learning — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Matryoshka Representation Learning</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Une seule représentation, plusieurs tailles</h2>
+
+<p>Quand Google indexe le web, chaque image, chaque document, chaque produit est transformé en une longue liste de nombres — un vecteur de quelques centaines à quelques milliers de dimensions. Ce vecteur, c'est la signature numérique de l'objet. Plus il est long, plus il capture finement les nuances. Plus il est long, aussi, plus il coûte cher à stocker, à comparer, à servir des millions de fois par seconde.</p>
+
+<p>Le compromis paraît irréductible : précision contre vitesse. Soit on garde des vecteurs longs et l'on paie en serveurs, soit on les raccourcit et l'on perd en qualité. Les équipes ML jonglent depuis des années entre les deux, souvent en entraînant plusieurs modèles différents, un par budget de calcul. Aditya Kusupati et ses coauteurs (université de Washington, Google Research, Harvard) proposent une issue élégante avec <strong>Matryoshka Representation Learning</strong> (MRL), publié à NeurIPS 2022. L'idée : un seul vecteur qui contient, comme une poupée russe, toutes les versions tronquées de lui-même, chacune utilisable telle quelle.</p>
+
+<h2>Le problème : la rigidité des embeddings</h2>
+
+<p>Un système de recommandation, un moteur de recherche d'images, un assistant qui retrouve des passages dans une base documentaire — tous reposent sur le même mécanisme. Un modèle profond transforme l'entrée en vecteur, puis le système compare ce vecteur à des millions ou milliards d'autres pour trouver les plus proches. Le coût de la recherche dépend linéairement de la taille du vecteur. Doubler la dimension double la facture mémoire et le temps de calcul.</p>
+
+<p>Le hic : la dimension idéale dépend de la tâche. Pour une recherche grossière de premier filtrage, 16 nombres peuvent suffire. Pour départager les résultats les plus pertinents, on en voudrait 2048. Et selon le matériel — un téléphone, un serveur, un edge device — le budget bouge encore. Les solutions habituelles sont toutes coûteuses ou dégradantes.</p>
+
+<ul>
+<li>Entraîner plusieurs modèles, un par taille cible. Multiplie les coûts de training et de maintenance.</li>
+<li>Compresser après coup avec une SVD ou une quantification. Perte de précision significative en dessous d'un certain seuil.</li>
+<li>Utiliser des sous-réseaux de capacités variables. Demande plusieurs passes avant pour ré-encoder toute la base.</li>
+</ul>
+
+<p>Aucune n'offre ce qu'un système web-scale demande vraiment : produire <em>une seule fois</em> un encodage et l'utiliser à plusieurs niveaux de finesse selon le contexte, sans repasser le modèle.</p>
+
+<h2>La méthode : empiler les granularités dans le même vecteur</h2>
+
+<p>L'intuition derrière MRL est simple à formuler. Au lieu de laisser le réseau distribuer l'information uniformément sur les 2048 dimensions du vecteur final, on l'oblige à organiser cette information du plus grossier au plus fin. Les 8 premières dimensions doivent suffire à classifier l'image. Les 16 premières doivent faire mieux. Les 32 premières encore mieux. Et ainsi de suite jusqu'à 2048.</p>
+
+<p>L'analogie de la poupée russe (matriochka) est exacte. Quand on tronque le vecteur à n'importe quelle taille parmi celles entraînées, on obtient une représentation autonome, utilisable directement, sans recalcul.</p>
+
+<p>Concrètement, les chercheurs modifient à peine le pipeline d'apprentissage. Là où un ResNet classique calcule une seule loss de classification sur le vecteur de 2048 dimensions, MRL en calcule plusieurs en parallèle : une sur les 8 premières dimensions, une sur les 16, une sur les 32, jusqu'à 2048 — neuf losses au total dans leur configuration ImageNet. Chaque sous-vecteur passe par son propre classifieur linéaire, et les gradients se propagent depuis chacune de ces sorties. Le réseau apprend donc à concentrer le signal le plus discriminant dans les premières dimensions, et à raffiner progressivement avec les suivantes.</p>
+
+<p>Une variante allégée, MRL-E (pour <em>efficient</em>), partage les poids du classifieur final entre toutes les tailles, ce qui divise par deux la mémoire des têtes de classification. Pratique quand on classe sur des millions de labels.</p>
+
+<p>Le détail qui change tout : seules <strong>log(d)</strong> tailles sont explicitement optimisées (9 valeurs pour d=2048). Mais le réseau apprend à interpoler entre ces points d'ancrage. Tronquer à 24 dimensions, taille jamais entraînée, donne un résultat presque aussi bon qu'à 32 — l'information se diffuse de façon fluide.</p>
+
+<p>Le surcoût d'entraînement reste marginal. Pas de nouveaux hyperparamètres à régler, pas d'architecture exotique. Une dizaine de lignes de PyTorch ajoutées au code existant.</p>
+
+<h2>Résultats : 14× plus petit, 14× plus rapide</h2>
+
+<p>Sur ImageNet-1K avec un ResNet-50, le constat est net. Le vecteur MRL tronqué à 8 dimensions atteint 66,6% de précision en classification linéaire — contre 65,3% pour un modèle entraîné spécifiquement à cette taille. À 16 dimensions, MRL est à 73,5%, déjà meilleur que tous les baselines. À toutes les tailles testées, MRL égale ou dépasse les modèles dédiés. Le scénario "un modèle pour les gouverner tous" tient la route.</p>
+
+<p>Là où les chiffres deviennent frappants, c'est dans le déploiement adaptatif. Les chercheurs entraînent une politique simple : pour chaque image, commencer par classer avec 8 dimensions et regarder la confiance de la prédiction. Si le modèle hésite, passer à 16, puis 32, et ainsi de suite jusqu'à atteindre une décision fiable. Cette cascade adaptative atteint 76,3% de précision avec une dimension moyenne de 37 — soit la même précision qu'un modèle fixe à 512 dimensions, pour <strong>14× moins de calcul</strong>.</p>
+
+<p>En recherche d'images, le gain est plus impressionnant encore. Le pipeline classique compare la requête à 1,3 million de vecteurs de 2048 dimensions. Avec MRL, on procède en deux temps : une présélection rapide avec les 16 premières dimensions du vecteur — 200 candidats remontés en quelques millisecondes —, puis un re-classement de cette courte liste avec les 2048 dimensions complètes. Précision finale identique au pipeline tout-2048. Coût théorique en FLOPs : <strong>128× moindre</strong>. Temps réel mesuré : 14× plus rapide. Le shortlisting domine le coût total, et le re-classement de 200 vecteurs reste anecdotique même à pleine dimension.</p>
+
+<p>Les auteurs poussent l'idée avec ce qu'ils appellent <em>funnel retrieval</em> : une cascade qui rétrécit progressivement la liste de candidats tout en augmentant la dimension utilisée. 200 candidats à 16 dim, puis 100 à 32 dim, puis 50 à 64 dim, et ainsi de suite. Aussi précis que la recherche directe à 2048 dim, encore plus efficace.</p>
+
+<p>Sur des datasets plus difficiles comme ImageNet-4K (4 millions d'images, 4202 classes), l'avantage tient. Sur des modèles plus gros — ViT-B/16 entraîné sur JFT-300M, ALIGN sur 1,8 milliard de paires image-texte, BERT en masked language modeling — le procédé se transpose sans réglage, avec des gains de qualité parfois supérieurs aux baselines, en particulier dans les basses dimensions.</p>
+
+<h2>Pourquoi ça compte pour l'industrie</h2>
+
+<p>L'embedding est devenu une primitive d'infrastructure. Pinecone, Weaviate, Qdrant, les bases vectorielles de tous les gros cloud providers stockent aujourd'hui des trillions de vecteurs. OpenAI, Cohere, Voyage facturent leurs embeddings à la dimension. Le coût annuel d'un index vectoriel de quelques milliards de documents se chiffre en centaines de milliers de dollars, dominé par la RAM et la bande passante mémoire.</p>
+
+<p>Un embedding matriochka change la donne. La même base peut servir des cas d'usage très différents sans duplication. Un dashboard de monitoring qui n'a besoin que d'un filtrage grossier tape sur les 64 premières dimensions. Une recherche fine de produit charge les 768 ou 1536. Le stockage à pleine dimension reste utile, mais l'accès ne paie le prix fort que quand la précision le justifie.</p>
+
+<p>OpenAI a d'ailleurs adopté le principe début 2024 avec ses modèles <code>text-embedding-3-small</code> et <code>text-embedding-3-large</code> : on peut tronquer leurs sorties via le paramètre <code>dimensions</code> sans perte significative de qualité — application directe de MRL. La technique est passée du papier de recherche à l'API publique en moins de deux ans.</p>
+
+<p>Pour les équipes RAG (retrieval-augmented generation), l'usage évident est le re-ranking en cascade. Premier passage en 256 dim sur le corpus complet, second en 1024 dim sur les 50 meilleurs candidats. Latence divisée par cinq, mémoire de l'index divisée par quatre, qualité préservée.</p>
+
+<p>Sur mobile et edge, les contraintes sont différentes mais l'avantage existe aussi : un modèle unique embarqué, exploité à 64 dim quand la batterie est faible, à 256 dim quand le téléphone est sur secteur. Pas besoin de packager plusieurs modèles distillés.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>MRL n'est pas une solution magique. Plusieurs questions restent ouvertes.</p>
+
+<p>D'abord, le réglage des poids relatifs des losses imbriquées. Les auteurs utilisent des poids tous égaux à 1, ce qui marche bien empiriquement mais n'est sans doute pas optimal. Donner plus de poids aux petites dimensions pourrait améliorer encore le compromis dans la zone basse, au prix d'une légère dégradation dans la zone haute. Une piste explorée dans les architectures <em>anytime</em>, où le modèle doit produire une réponse utilisable à chaque pas de calcul.</p>
+
+<p>Ensuite, la question des objectifs hétérogènes. Rien n'oblige à utiliser la même loss à toutes les granularités. Optimiser la robustesse au bruit pour les 8 premières dimensions et la précision fine pour les 2048 dernières pourrait spécialiser chaque tranche pour son rôle métier — filtrage rapide en bas, départage précis en haut.</p>
+
+<p>L'intégration avec les structures de recherche approchée (HNSW, IVF, ScaNN) reste à creuser. Aujourd'hui, MRL et ces index sont complémentaires mais indépendants. Apprendre conjointement la représentation et la structure d'index, comme un k-d tree différentiable, pourrait pousser encore plus loin l'efficacité du retrieval à très grande échelle.</p>
+
+<p>Une dernière piste, plus exploratoire : utiliser le désaccord entre dimensions comme signal. Quand le modèle 8 dim et le modèle 2048 dim prédisent des classes différentes, c'est souvent un cas ambigu — l'image contient plusieurs objets, ou la classe est confondue avec un voisin sémantique dans la hiérarchie ImageNet. Les auteurs montrent qu'avec un routage parfait des instances vers la bonne dimension, on gagnerait jusqu'à 4,6 points de précision. Détecter automatiquement quelle dimension utiliser pour quelle entrée ouvrirait un champ d'optimisation neuf.</p>
+
+<p>Le code et les modèles pré-entraînés sont disponibles sur le dépôt <code>RAIVNLab/MRL</code>. La barrière d'entrée est basse : si vous entraînez un encodeur, ajouter quelques losses imbriquées coûte une heure de travail. La récompense — un modèle qui s'adapte gratuitement à n'importe quel budget de déploiement — vaut clairement l'effort.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

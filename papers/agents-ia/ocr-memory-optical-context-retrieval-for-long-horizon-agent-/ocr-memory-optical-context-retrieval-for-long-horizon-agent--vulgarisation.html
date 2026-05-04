@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR-Memory: Optical Context Retrieval for Long-Horizon Agent Memory — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>OCR-Memory: Optical Context Retrieval for Long-Horizon Agent Memory</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA stocke sa mémoire sous forme d'images</h2>
+
+<p>Un agent IA qui automatise la navigation web sur plusieurs heures accumule des milliers de captures, de clics, de réponses d'API. Tout garder en texte brut sature la fenêtre de contexte du modèle en quelques minutes. Tout résumer fait perdre les détails qui comptent : un message d'erreur précis, une URL exacte, l'ordre d'une séquence d'actions.</p>
+
+<p>Une équipe de l'Université de Hong Kong, de l'Université du Nord-Texas, de Tsukuba et de Yonsei propose un détour inattendu pour résoudre ce dilemme. Plutôt que stocker l'historique sous forme de tokens textuels, ils le rendent en images, puis utilisent un modèle de reconnaissance optique pour retrouver les bouts pertinents quand l'agent en a besoin. Le système s'appelle <strong>OCR-Memory</strong>, et il améliore les taux de réussite sur des tâches longues d'environ 5 à 10 points face aux meilleures approches textuelles, tout en divisant par près de 7 le nombre de tokens injectés dans le modèle de raisonnement.</p>
+
+<h2>Le mur de la fenêtre de contexte</h2>
+
+<p>Un agent autonome moderne enchaîne des dizaines, parfois des centaines d'étapes pour accomplir une tâche. À chaque étape, il génère une trace de raisonnement, appelle des outils, lit des résultats, observe l'écran. L'historique gonfle vite. Un GPT-4 standard plafonne à quelques dizaines de milliers de tokens utilisables, et les modèles à contexte long souffrent du fameux phénomène <em>lost in the middle</em> : noyés sous l'information, ils oublient le milieu.</p>
+
+<p>Les approches existantes contournent le problème de trois façons, toutes imparfaites. La récupération sémantique classique (RAG) découpe l'historique en morceaux et fait remonter ceux qui ressemblent à la requête courante ; mais la similarité textuelle confond souvent <em>topiquement proche</em> et <em>logiquement utile</em>. L'abstraction d'expérience compresse les trajectoires en compétences réutilisables ; mais les détails fins disparaissent. La compression de contexte raccourcit le texte directement ; mais on perd des nuances structurelles.</p>
+
+<p>Le défi tient en une phrase : préserver l'intégralité d'une longue histoire sans payer le prix en tokens.</p>
+
+<h2>L'idée centrale : encoder le texte comme une image</h2>
+
+<p>Les auteurs partent d'une observation récente liée à <strong>DeepSeek-OCR</strong>, un modèle qui transforme du texte rendu en image en une séquence très compacte de tokens visuels. Une page entière de texte tient dans 64 à 400 tokens visuels selon la résolution choisie. À comparer aux milliers de tokens nécessaires pour stocker le même contenu en texte brut.</p>
+
+<p>L'analogie est simple : prendre une photo d'un livre prend bien moins de mémoire que retranscrire chaque mot, et un humain peut quand même retrouver le passage qui l'intéresse en feuilletant. OCR-Memory applique cette intuition aux trajectoires d'agents. Chaque morceau d'historique devient une image rendue, annotée comme un cahier de notes.</p>
+
+<h3>La technique « Locate-and-Transcribe »</h3>
+
+<p>Récupérer du texte à partir d'images comporte un risque connu : les modèles vision-langage hallucinent quand l'image est floue ou dense. Les chercheurs neutralisent ce risque par un découpage en deux temps.</p>
+
+<p>D'abord, chaque segment de texte dans l'image reçoit un cadre rouge et un numéro d'identification visible — la technique appelée <strong>Set-of-Mark</strong>. Le modèle optique ne génère pas du texte libre. Il répond uniquement par une séquence de 0 et de 1, indiquant pour chaque numéro si le segment est pertinent ou non par rapport à la requête. C'est un pointeur, pas une transcription.</p>
+
+<p>Ensuite, une fois les bons numéros sélectionnés, le système va chercher le texte correspondant dans une base de logs textuels stockée à part. La récupération devient déterministe. Aucune hallucination possible : on lit ce qui a été écrit, mot pour mot.</p>
+
+<p>Cette séparation entre <em>localiser</em> (côté visuel) et <em>transcrire</em> (côté texte stocké) est l'astuce qui rend la méthode fiable. Le modèle visuel sert de moteur de recherche ; les logs textuels servent de coffre-fort.</p>
+
+<h3>Une mémoire qui flétrit, comme la nôtre</h3>
+
+<p>Garder toutes les images en haute résolution coûterait trop cher. Les auteurs s'inspirent de la mémoire humaine, où les souvenirs anciens deviennent flous mais conservent leur sens général. Le système applique une dégradation progressive : les cinq dernières étapes sont stockées en 1024×1024 pixels, le reste passe à 512×512. Une image en basse résolution coûte 64 tokens visuels au lieu de 256, soit quatre fois moins.</p>
+
+<p>Ce qui rend l'idée subtile, c'est le mécanisme de <strong>rappel actif</strong>. Si une image floue contient finalement un segment pertinent, le système la régénère en haute résolution à partir des logs originaux et la garde nette pour la suite de l'épisode. Les souvenirs utiles redeviennent vifs ; les souvenirs jamais consultés restent flous. Une sorte de filtre adaptatif piloté par l'usage réel.</p>
+
+<h2>Comment on entraîne un modèle à pointer plutôt qu'à parler</h2>
+
+<p>DeepSeek-OCR sait lire du texte, mais ne sait pas juger quels passages soutiennent une requête. Les auteurs le ré-entraînent sur HotpotQA, un jeu de données de questions-réponses multi-sauts. L'astuce : ils jettent les réponses textuelles et ne gardent que les <em>supporting facts</em>, les paragraphes annotés comme nécessaires pour répondre.</p>
+
+<p>Pour chaque question, dix paragraphes sont rendus dans une image, chacun marqué d'un numéro. Le modèle doit produire une séquence binaire de la forme « 1, 0, 1, 0, 0, … ». La cible n'est plus de générer une réponse, mais de désigner les bons indices.</p>
+
+<p>Quelques choix d'entraînement méritent qu'on s'y arrête. Le encodeur visuel reste figé, seul le décodeur de langage est ajusté via LoRA — on garde intactes les capacités de lecture optique. La fonction de coût pondère plus lourdement les faux négatifs que les faux positifs (poids 2 contre 1) : mieux vaut récupérer un peu trop que rater une preuve. Et les images d'entraînement sont volontairement dégradées à différentes résolutions, pour que le modèle apprenne à fonctionner aussi bien en basse définition qu'en haute définition.</p>
+
+<h2>Des gains nets sur des benchmarks longs</h2>
+
+<p>L'évaluation porte sur deux terrains exigeants. <strong>Mind2Web</strong> teste la navigation web généraliste : un agent doit accomplir des tâches comme réserver un vol ou trouver une recette sur des sites variés. <strong>AppWorld</strong> simule un monde d'applications avec des API à orchestrer, allant des tâches faciles à des cas durs nécessitant beaucoup de retours en arrière.</p>
+
+<p>Avec une fenêtre de contexte mémoire fixée à 4096 tokens, OCR-Memory dépasse cinq baselines, dont les meilleures approches publiées récemment. Sur Mind2Web, l'<em>Element Accuracy</em> passe de 49,1 % (meilleur baseline AWM) à 53,8 %. Le <em>Step Success Rate</em> grimpe à 46,1 %. Sur AppWorld, le score moyen atteint 58,1 %, et l'écart se creuse sur les tâches difficiles : 30,8 % contre 21,4 % pour le RAG textuel classique.</p>
+
+<p>Le vrai test arrive quand on serre la vis. Quand le budget tombe à 1024 tokens, OCR-Memory garde 17 points d'avance sur la récupération textuelle en Element Accuracy. La méthode tient là où les approches textuelles s'effondrent par manque de place.</p>
+
+<h3>Une compression réelle de plus de 10×</h3>
+
+<p>Les auteurs mesurent aussi la fidélité brute de la récupération sur le test <em>Needle-in-a-Haystack</em> du benchmark RULER : retrouver une aiguille dans une botte de foin textuelle. Le ratio de compression visuelle atteint 10,3× à 4 000 tokens et reste stable à 10,6× à 32 000 tokens. La précision de récupération chute peu : 98,5 % à 4k, encore 94,1 % à 32k. Le système avale du contexte ultra-long sans rendre les armes.</p>
+
+<p>Côté faithfulness, le contraste est frappant. La variante générative qui produit du texte libre obtient 84,3 % de fidélité — autrement dit, près d'un cas sur six contient une hallucination. La variante par index atteint 100 %, par construction : le texte n'est pas généré, il est lu dans les logs.</p>
+
+<h3>L'ablation confirme chaque pièce</h3>
+
+<p>Retirer les marques visuelles fait chuter les performances et triple la latence. Le marquage par boîte sans index est plus rapide mais moins précis. La résolution fixe haute coûte 256 tokens visuels par image ; la stratégie dynamique en consomme 82 en moyenne, pour un score quasi identique. La résolution fixe basse économise encore plus mais perd 6 points de Step SR. La combinaison adaptative trouve le bon compromis.</p>
+
+<p>Le test de généralisation change le modèle de raisonnement principal de GPT-4 vers Qwen3-32B. Les gains relatifs se maintiennent. Le bénéfice vient bien du mécanisme de mémoire, pas d'une particularité du backbone.</p>
+
+<h2>Un déplacement délibéré du goulet d'étranglement</h2>
+
+<p>OCR-Memory ne rend pas tout moins cher. Le tableau de coûts publié par les auteurs est honnête sur ce point. Par épisode, le stockage disque passe de 18 Ko à 1,47 Mo — 80 fois plus. La latence de récupération monte de 0,3 s à 1,7 s par étape. Le modèle de vision doit rester chargé en mémoire à côté du modèle de langage principal.</p>
+
+<p>En échange, les tokens textuels injectés dans le contexte de raisonnement chutent de 3 980 à 596 par étape. Soit 6,7 fois moins. La ressource la plus rare dans un agent long-horizon, c'est la fenêtre de contexte du modèle de raisonnement ; le disque et la latence de pré-traitement sont comparativement abordables. Les auteurs assument le déplacement : on échange du cher contre du moins cher.</p>
+
+<p>Pour les équipes qui construisent des agents en production — automatisation web, support client multi-tour, copilotes longs — le calcul peut être attractif. Une heure de session avec un GPT-4 à grosse fenêtre coûte vite plus qu'un peu de stockage S3 et 1,5 seconde de latence par étape.</p>
+
+<h2>Ce que la méthode pose comme questions</h2>
+
+<p>Le pari conceptuel est intriguant : utiliser la modalité visuelle non pas pour son contenu visuel, mais comme un format de compression dense pour du texte. Les modèles vision-langage modernes deviennent des moteurs de recherche sur de longs historiques.</p>
+
+<p>Plusieurs pistes restent à explorer. La méthode demande un fine-tuning spécifique sur HotpotQA ; tester d'autres jeux d'entraînement, ou voir si un modèle généraliste suffit, serait utile. La résolution adaptative se pilote ici par l'âge du souvenir, mais on pourrait imaginer des heuristiques plus fines : importance détectée, fréquence d'accès passée, type d'événement. Les domaines d'application au-delà de la navigation web et des API restent à défricher : code, documents médicaux, conversations multi-tour très longues.</p>
+
+<p>Une question plus profonde émerge en filigrane. Si l'image se révèle être un meilleur format de stockage que le texte pour des historiques d'agents, on assiste peut-être à un retournement intéressant. Le texte a longtemps été considéré comme la représentation neutre, universelle, du contenu. OCR-Memory suggère qu'à l'échelle des longs contextes, le texte rendu en pixels devient une forme plus économique que le texte tokenisé. Le pixel comme format de compression du langage : voilà une idée qui mérite qu'on regarde où elle mène.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chain-of-Verification Reduces Hallucination in Large Language Models — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Chain-of-Verification Reduces Hallucination in Large Language Models</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un modèle de langage se relit lui-même</h2>
+
+<p>Demandez à ChatGPT de citer des politiciens nés à New York. Il vous répondra Hillary Clinton et Michael Bloomberg avec aplomb. Hillary Clinton est née à Chicago. Michael Bloomberg à Boston. Le modèle ne ment pas par malice : il produit ce qu'il croit être une réponse plausible, et plausible n'est pas vrai.</p>
+
+<p>Ce phénomène a un nom, l'hallucination, et il pourrit la vie de quiconque essaie de bâtir un produit sérieux sur un LLM. Une équipe de Meta AI dirigée par Shehzaad Dhuliawala a publié en 2023 une méthode pour faire baisser ce taux d'erreur sans recourir à la moindre base externe : Chain-of-Verification, ou CoVe. L'idée tient en une phrase : avant de finaliser sa réponse, le modèle se pose lui-même des questions pour vérifier ce qu'il vient d'écrire.</p>
+
+<p>Le résultat fait sauter le score de factualité de 55,9 à 71,4 sur la génération de biographies, soit un gain de 28% obtenu sans entraînement supplémentaire, sans recherche web, sans fine-tuning. Juste en réorganisant la façon dont on parle au modèle.</p>
+
+<h2>Le défi : la fiction qui ressemble à un fait</h2>
+
+<p>Les grands modèles de langage produisent du texte token après token, en estimant à chaque pas le mot le plus probable. Cette mécanique fonctionne admirablement pour les phrases bien formées, mais elle devient piégeuse dès qu'il s'agit de faits précis : dates, noms propres, lieux de naissance, statistiques.</p>
+
+<p>Le problème s'aggrave avec ce que les chercheurs appellent les faits de "torse" et de "queue" — les informations qui apparaissent rarement dans le corpus d'entraînement. Pour ces faits peu fréquents, le modèle n'a pas mémorisé une réponse fiable. Alors il en fabrique une qui ressemble à ce qu'on attend : une entité du bon type, plausible dans le contexte, mais fausse.</p>
+
+<p>Pire encore, le format long amplifie le problème. Plus le modèle écrit, plus il s'appuie sur ce qu'il vient de générer. Une première erreur conditionne les suivantes. C'est ce qu'on appelle l'<em>exposure bias</em>, et c'est pour cela qu'une biographie de cinq paragraphes contient souvent plus de bourdes qu'une réponse en trois lignes.</p>
+
+<p>Les solutions existantes se rangent en trois familles. Première option, retoucher le modèle pendant l'entraînement, par renforcement ou apprentissage contrastif. Coûteux et long. Deuxième option, brancher le modèle sur des outils externes : moteur de recherche, base de connaissances, retrieval-augmented generation. Efficace mais lourd à déployer. Troisième option, ajouter une couche de raisonnement par-dessus le modèle de base, sans rien modifier d'autre. C'est la voie que choisit CoVe.</p>
+
+<h2>La méthode : penser avant de répondre, douter après avoir répondu</h2>
+
+<p>CoVe se déroule en quatre étapes, toutes exécutées par le même modèle qui change simplement de casquette à chaque fois.</p>
+
+<p><strong>Étape 1, brouillon initial.</strong> On pose la question, le modèle répond comme d'habitude. C'est la base de référence, celle qu'on cherche à améliorer. Pour la requête "Qui sont quelques politiciens nés à New York ?", le modèle produit sa liste — avec ses erreurs.</p>
+
+<p><strong>Étape 2, plan de vérification.</strong> Le modèle reçoit sa propre réponse et doit générer une série de questions destinées à vérifier les faits qu'il a énoncés. Pour chaque nom de la liste, une question du type "Où est née Hillary Clinton ?". Ces questions ne sont pas pré-écrites : le modèle les formule librement, à partir des faits qu'il a lui-même produits.</p>
+
+<p><strong>Étape 3, exécution des vérifications.</strong> Le modèle répond à chacune de ses propres questions de vérification. Hillary Clinton ? Chicago. Donald Trump ? Queens, New York. Michael Bloomberg ? Boston. Et là, quelque chose de remarquable se produit : interrogé isolément sur le lieu de naissance d'Hillary Clinton, le modèle connaît la bonne réponse. Le savoir était dans ses poids, mais il ne l'avait pas mobilisé en mode génération longue.</p>
+
+<p><strong>Étape 4, réponse finale révisée.</strong> Le modèle compile la réponse initiale et les vérifications, repère les incohérences, et produit une version corrigée. La liste finale exclut Clinton et Bloomberg, et garde ceux dont la vérification a confirmé le lieu de naissance.</p>
+
+<p>L'astuce conceptuelle tient dans l'asymétrie entre questions courtes et réponses longues. Une biographie est un terrain miné où chaque phrase peut faire dérailler la suivante. Une question factuelle isolée est un exercice net, sans contexte parasite. Le même modèle est plus fiable sur la seconde tâche que sur la première — et CoVe exploite cette différence.</p>
+
+<h3>Quatre variantes d'exécution</h3>
+
+<p>Les chercheurs testent quatre manières d'enchaîner les étapes 2 et 3, et la différence entre elles est étonnamment instructive.</p>
+
+<p>La version <em>jointe</em> empile tout dans un seul prompt : la réponse initiale, les questions, les réponses aux questions, la version finale. C'est le plus simple, mais aussi le plus fragile. Le modèle voit ses propres hallucinations dans son contexte au moment où il répond aux questions de vérification, et il a tendance à les répéter. Une mauvaise réponse contamine sa propre vérification.</p>
+
+<p>La version <em>en deux étapes</em> sépare la planification (qui voit la réponse initiale) de l'exécution des vérifications (qui ne voit que les questions). Le modèle répond à "Où est née Hillary Clinton ?" sans avoir sous les yeux la phrase qu'il vient d'écrire affirmant qu'elle est née à New York. Cette amnésie volontaire change tout.</p>
+
+<p>La version <em>factorisée</em> pousse plus loin : chaque question de vérification est traitée dans un prompt totalement indépendant, en parallèle. Aucune contamination possible entre les questions, ni avec la réponse initiale. C'est plus coûteux en appels, mais ces appels sont parallélisables.</p>
+
+<p>La version <em>factor+revise</em> ajoute une cinquième étape, un prompt explicite de cross-check qui demande au modèle, fait par fait : "ce que tu disais initialement est-il cohérent avec ce que tu viens de vérifier ?". Le modèle doit étiqueter chaque fait comme cohérent, incohérent ou partiellement cohérent avant de produire la version finale.</p>
+
+<h2>Les chiffres : ce qui marche et ce qui ne marche pas</h2>
+
+<p>Les chercheurs évaluent CoVe sur quatre tâches : des questions à liste générées depuis Wikidata (politiciens nés à Boston, etc.), un benchmark plus difficile basé sur les catégories Wikipedia (films d'horreur animés mexicains), un benchmark de question-réponse en livre fermé (MultiSpanQA), et la génération de biographies longues.</p>
+
+<p>Sur Wikidata, la précision passe de 0,17 (baseline Llama 65B en few-shot) à 0,36 avec CoVe en deux étapes. Le nombre d'entités hallucinées tombe de 2,95 à 0,68 par requête. Pour le coût d'une légère baisse des bonnes réponses (0,59 à 0,38), le modèle devient nettement plus fiable.</p>
+
+<p>Sur MultiSpanQA, le F1 passe de 0,39 à 0,48. Sur la génération de biographies, le FACTSCORE — une métrique qui mesure la proportion de faits atomiques vérifiables — bondit de 55,9 à 71,4 dans la variante factor+revise. Pour comparaison, ChatGPT obtient 58,7 sur la même tâche, et PerplexityAI, qui s'appuie pourtant sur de la recherche web, plafonne à 61,6. Llama 65B avec CoVe, sans aucun outil externe, dépasse les deux.</p>
+
+<p>Le détail qui fait réfléchir : sur Wikidata, environ 17% des entités produites par le baseline Llama sont correctes en mode liste longue. Mais quand on interroge le modèle sur chaque entité individuellement via une question de vérification, environ 70% des réponses sont correctes. Le savoir est là. C'est la mise en forme longue qui le dégrade.</p>
+
+<h3>Ce qui ne fonctionne pas</h3>
+
+<p>Trois résultats négatifs méritent autant d'attention que les positifs.</p>
+
+<p>D'abord, l'instruction tuning et le chain-of-thought standard n'aident pas. Llama 2 70B Chat, version instruite, sous-performe Llama 65B en few-shot sur ces tâches. Ajouter "Let's think step by step" au prompt ne change rien. Le raisonnement étape par étape aide pour les maths, pas pour les hallucinations factuelles.</p>
+
+<p>Ensuite, les questions de vérification générées par le modèle battent les questions générées par règle. Les chercheurs ont testé une version où les questions de vérification sont des templates rigides du type "X répond-il à la question ?". La précision chute à 0,16 contre 0,22 pour les questions formulées librement par le modèle. La capacité à formuler une bonne question de vérification fait partie du travail.</p>
+
+<p>Enfin, les questions ouvertes battent les questions oui/non. Demander "Où est née Hillary Clinton ?" est plus fiable que demander "Hillary Clinton est-elle née à New York ?". Pour la seconde formulation, le modèle a tendance à acquiescer, surtout si l'affirmation lui a été présentée avec assurance. C'est un biais de complaisance que les questions ouvertes neutralisent.</p>
+
+<h2>Pourquoi ça compte pour les produits qu'on construit</h2>
+
+<p>CoVe n'est pas une révolution architecturale. C'est un pattern de prompting. Et c'est précisément ce qui le rend pertinent pour qui développe avec des LLM aujourd'hui.</p>
+
+<p>Pour un produit qui doit générer du contenu factuel — fiches produit, résumés de documents, descriptions clients, rapports automatisés — le compromis est clair. Multiplier les appels au modèle coûte plus cher en tokens et en latence, mais évite de publier des assertions fausses. Sur certains usages, c'est rédhibitoire ; sur d'autres, c'est négociable.</p>
+
+<p>Le pattern factorisé est particulièrement intéressant en architecture distribuée : les questions de vérification s'exécutent en parallèle, ce qui limite l'impact sur la latence perçue. Avec un modèle rapide en backend, on peut faire tenir les quatre étapes dans un budget acceptable.</p>
+
+<p>L'enseignement le plus profond concerne la conception des prompts. CoVe prouve qu'on peut améliorer significativement un modèle non pas en lui donnant plus d'informations, mais en contrôlant ce qu'il a sous les yeux à chaque étape. La factorisation marche parce qu'elle empêche le modèle de voir ses propres erreurs au moment où il devrait les corriger. Ce principe — gérer l'attention par décomposition du contexte — s'applique bien au-delà de la vérification factuelle. Toute tâche où un LLM se sabote en s'auto-influençant peut bénéficier de la même logique.</p>
+
+<p>Pour les équipes qui hésitent entre RAG et prompting plus malin, l'article apporte un argument utile : sur des faits relativement fréquents, un modèle bien orchestré rivalise avec un système de retrieval. Le RAG reste indispensable pour les faits rares (Figure 2 du papier le montre clairement, PerplexityAI conserve l'avantage sur les faits "very rare"), mais pour le gros du trafic, l'auto-vérification suffit.</p>
+
+<h2>Ce qui reste à creuser</h2>
+
+<p>Les auteurs reconnaissent eux-mêmes les limites de leur travail. CoVe ne supprime pas les hallucinations, il les réduit. La méthode ne traite que les inexactitudes factuelles directes — pas les erreurs de raisonnement, pas les biais d'opinion, pas les faux liens de causalité. Une biographie corrigée par CoVe peut encore contenir des inférences douteuses, juste avec des dates correctes.</p>
+
+<p>La piste la plus évidente d'extension est la combinaison avec des outils externes. CoVe se prive volontairement de retrieval pour isoler l'effet du raisonnement interne. Greffer un moteur de recherche à l'étape 3, là où le modèle répond aux questions de vérification, devrait empiler les gains. Cette combinaison existe déjà dans la littérature sous différentes formes (Verify-and-Edit de Zhao et al., RARR de Gao et al.), et CoVe lui apporte un cadre plus structuré.</p>
+
+<p>Une autre question reste en suspens : comment scaler la méthode sur des modèles plus récents et plus capables ? L'article date de 2023 et travaille sur Llama 65B. Sur GPT-4 ou Claude Opus, le baseline est déjà bien meilleur, et le gain marginal de CoVe pourrait s'amenuiser. Inversement, des modèles plus capables génèrent peut-être de meilleures questions de vérification, ce qui amplifierait l'effet. Les expériences manquent.</p>
+
+<p>Enfin, la mécanique du factor+revise — où le modèle étiquette explicitement chaque fait comme cohérent ou non — pose une question d'interprétabilité utile. Si on conserve ces étiquettes en sortie, l'utilisateur final dispose d'une trace de raisonnement vérifiable. C'est une forme de transparence rare dans les LLM, et elle ouvre des usages dans les domaines où l'auditabilité compte : santé, droit, finance.</p>
+
+<p>L'idée centrale du papier — un modèle se relit mieux qu'il n'écrit — résonne avec une observation que tout développeur de LLM finit par faire. Demandez à un modèle de critiquer son propre code, il trouvera des bugs. Demandez-lui d'écrire le même code parfaitement du premier coup, il échouera. La génération et l'évaluation sont deux régimes cognitifs différents, et CoVe est un protocole pour basculer du premier au second au bon moment.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

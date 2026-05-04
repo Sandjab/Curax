@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgenticQwen: Training Small Agentic Language Models with Dual Data Flywheels for Industrial-Scale Tool Use — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AgenticQwen: Training Small Agentic Language Models with Dual Data Flywheels for Industrial-Scale Tool Use</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le déploiement industriel d'agents LLM repose massivement sur des modèles propriétaires frontières (GPT-5, Claude) ou sur des modèles ouverts massifs comme Qwen3-235B, ce qui génère des coûts d'API et d'inférence prohibitifs pour des services à plusieurs millions d'utilisateurs. AgenticQwen attaque ce verrou : entraîner des petits modèles (8B dense, 30B-A3B MoE avec seulement 3B paramètres actifs) capables d'exécuter des tâches agentiques standardisées et hautement fréquentes — réservation de billets, recherche d'information, analyse de documents — avec un coût et une latence compatibles avec une production cloud.</p>
+<p>La contribution centrale ne porte pas sur l'architecture du modèle mais sur le pipeline de données. Les auteurs partent d'un constat empirique : un seul tour de RL sur données synthétiques sature rapidement, car les trajectoires générées convergent vers un sous-espace homogène de solutions. Leur réponse est un dispositif à deux flywheels qui rétroinjecte les échecs du modèle pour synthétiser des exemples de difficulté croissante.</p>
+
+<h2>Méthodologie</h2>
+<p>L'entraînement combine deux objectifs RL optimisés par GRPO. Le <strong>reasoning RL</strong> utilise des tâches multi-étapes (mathématiques, recherche multi-hop sur HotpotQA et 2WikiMultiHopQA) avec récompense binaire sur la justesse de la réponse finale. L'<strong>agentic RL</strong> simule users et tools via Qwen3-235B et applique une récompense rubrique-based dans [0, 1] proportionnelle aux sous-buts accomplis.</p>
+<p>Le flywheel de raisonnement augmente les cas d'erreur par self-instruct (Qwen3-235B réécrit les problèmes avec valeurs modifiées, contraintes ajoutées, concepts supplémentaires), par injection de personas (transposition d'un problème de géométrie en mesure physique), puis filtre par consensus à trois échantillons d'un teacher fort.</p>
+<p>Le flywheel agentique procède en quatre phases : initialisation linéaire avec SYNTHAGENT, expansion en arbre comportemental (ajout de branches conditionnelles selon l'état d'environnement), inversion branche-vers-tâche (rétro-traduction d'une branche choisie en triplet état/instruction-utilisateur/SOP-agent), et intervention adversariale d'un mock user qui pousse vers une branche incorrecte. Chaque itération produit des arbres plus profonds, exposant le modèle à des décisions conditionnelles et à des reformulations trompeuses.</p>
+<p>Le volume total d'entraînement annoncé est d'environ 100K échantillons. La validation des données synthétiques exige qu'un teacher fort résolve correctement la tâche dans la branche cible, ce qui filtre les générations bruitées.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur TAU-2 (300 tâches multi-tours, Avg@4) et BFCL-V4 Multi-turn (~800 tâches), AgenticQwen-8B atteint 47,4 de moyenne contre 23,8 pour Qwen3-8B vanilla, soit un doublement. AgenticQwen-30B-A3B grimpe à 50,2, à 1,8 point de Qwen3-235B (52,0). Sur certains sous-ensembles (BFCL-Base, BFCL-Long Context), le modèle 30B dépasse même le 235B.</p>
+<p>La courbe d'amélioration entre Round 0 et Round 3 est monotone sur les 7 catégories testées, ce qui valide empiriquement l'hypothèse du flywheel : la difficulté croissante des tâches synthétisées soutient l'apprentissage là où une expansion plate de données saturerait. Les auteurs notent eux-mêmes des rendements décroissants au-delà du Round 3, justifiant l'arrêt.</p>
+<p>En déploiement industriel sur WebWalker, XBench et GAIA, AgenticQwen-30B-A3B améliore de 17 points le score XBench du Qwen3-30B vanilla, malgré un volume d'entraînement search inférieur à 10K. La latence moyenne sur GAIA descend à 344s contre 449s pour Qwen3-235B, ce qui consolide l'argument coût/performance.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le talon d'Achille méthodologique est la <strong>circularité Qwen</strong> : le synthétiseur, le simulateur d'utilisateur, le simulateur d'outil, l'évaluateur de récompense et les modèles évalués appartiennent tous à la famille Qwen. Le filtre de consistance à trois échantillons et le validateur de difficulté reposent sur Qwen3-235B. Cette homogénéité crée un biais d'auto-préférence systémique : les tâches retenues sont celles que Qwen3-235B sait résoudre, et le reward provient du même juge. Les auteurs reconnaissent cette limite mais ne l'atténuent par aucun cross-check externe (autre famille de modèles comme juge, évaluateur humain sur un sous-ensemble).</p>
+<p>La taille des benchmarks pose problème pour TAU-2 (≈ 300 tâches sur 3 datasets, soit 100 par split). Le recours à Avg@4 atténue la variance mais ne corrige pas les intervalles de confiance non rapportés. Aucun test de significativité n'accompagne les écarts entre AgenticQwen et les baselines, ce qui rend l'interprétation des gains de quelques points (par exemple +0,5 sur retail) délicate.</p>
+<p>La généralisation hors domaine training est mince. Les benchmarks de search (WebWalker, XBench, GAIA) sont annoncés comme proxys mais le système de production n'est pas conçu pour la recherche, et la limite de contexte 40K des modèles 8B et 30B handicape mécaniquement les tâches longues. L'absence de comparaison avec d'autres petits agentic models concurrents (Kimi K2 small, MiniMax M1, DeepSeek-V3.2) — pourtant cités en introduction comme inexistants ou indisponibles — laisse un angle mort sur le positionnement réel.</p>
+<p>L'évaluation industrielle est qualitative : un cas d'usage BI est illustré (figure 3), mais aucune métrique de satisfaction utilisateur, taux de routage automatique ou taux de fallback vers le 235B n'est rapportée.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les auteurs publient les checkpoints sur Hugging Face (alibaba-pai/agenticqwen), le code de synthèse et de RL sur GitHub (haruhi-sudo/data_synth_and_rl), et intègrent le pipeline dans EasyDistill. Les annexes B à D fournissent un exemple de tâche générée et les prompts complets de behavior tree expansion et de branch-to-task inversion. Cet effort d'ouverture est substantiel et compense partiellement l'opacité méthodologique sur les hyperparamètres GRPO et la composition exacte du dataset 100K (les proportions reasoning/agentic ne sont pas détaillées).</p>
+<p>Reste qu'une réplication indépendante est lourde : le pipeline exige Qwen3-235B pour la simulation et l'évaluation, ce qui impose une infrastructure GPU significative et lie la reproduction au modèle teacher.</p>
+
+<h2>Impact et applications</h2>
+<p>Le résultat industriellement parlant — un MoE 30B avec 3B actifs qui rivalise avec un MoE 235B sur des workflows tool-use standardisés — constitue un argument tangible pour le routage adaptatif coût/performance dans les agents cloud. Le pattern "comportement tree expansion + adversarial mock user" se généralise au-delà de Qwen et offre un protocole de durcissement applicable à tout post-training agentique.</p>
+<p>Pour les équipes produit, l'enseignement opérationnel est qu'un petit modèle spécialisé sur le sous-ensemble standardisé du trafic (réservation, requêtes structurées, analyse routinière) peut traiter la majorité des requêtes, tandis qu'un modèle frontière reste réservé aux tâches longue queue (vibe coding, deep search). Le ROI dépend de la capacité à classifier en amont la nature de la requête, point que l'article effleure mais ne formalise pas.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>AgenticQwen s'inscrit dans la lignée SYNTHAGENT (Lyu et al., 2026, même équipe) dont il étend le mock environment. Il croise la voie des Self-Instruct (Wang et al., 2023) et Persona Hub (Ge et al., 2025) pour la diversification des données, et celle de GRPO (Shao et al., 2024) pour l'optimisation. La vraie nouveauté est l'expansion structurelle en arbre comportemental : là où la plupart des pipelines de données synthétiques travaillent au niveau du prompt ou de la trajectoire, AgenticQwen travaille au niveau du graphe de décision et fait du curriculum un objet de premier ordre.</p>
+<p>Comparé aux travaux de Chain-of-Agents (Li et al., 2025) qui distillent des comportements multi-agents dans un seul modèle, AgenticQwen reste single-agent mais externalise la complexité dans la structure des tâches. Cette différence d'approche est complémentaire plutôt qu'antagoniste.</p>
+
+<h3>Synthèse des critères de robustesse</h3>
+<table>
+  <thead>
+    <tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Question de recherche</td><td>4</td><td>Problème industriel concret et bien cadré sur le compromis coût/capacité agentique.</td></tr>
+    <tr><td>Design expérimental</td><td>4</td><td>Pipeline cohérent, ablation par tour d'entraînement, mais comparateurs limités.</td></tr>
+    <tr><td>Taille d'échantillon</td><td>3</td><td>TAU-2 à 300 tâches reste modeste, BFCL plus robuste avec 800 tâches.</td></tr>
+    <tr><td>Qualité des métriques</td><td>4</td><td>Exact Match et Avg@4 sont appropriés, latence end-to-end mesurée.</td></tr>
+    <tr><td>Contrôle des biais</td><td>2</td><td>Circularité Qwen massive : synthétiseur, juge et évalué d'une même famille.</td></tr>
+    <tr><td>Reproductibilité</td><td>4</td><td>Checkpoints, code et prompts publiés, pipeline intégré à EasyDistill.</td></tr>
+    <tr><td>Transparence sur les limites</td><td>3</td><td>Limitations contexte long et biais Qwen reconnus, hyperparamètres RL absents.</td></tr>
+    <tr><td>Impact et nouveauté</td><td>4</td><td>Behavior tree expansion comme objet curriculaire est une contribution méthodologique nette.</td></tr>
+  </tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
