@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Article didactique distinguant assistants et agents IA, expliquant comment installer et lancer Claude Code dans le bon répertoire, et introduisant l'architecture en 6 couches (CLAUDE.md, skills, hooks, subagents) ainsi que l'évolution conceptuelle Vibe Coding → Agentic Engineering → Harness Design.">
+  <title>Démarrer avec Claude Code : du Vibe Coding au Harness Design</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: rgb(248, 247, 240);
+      color: rgb(33, 37, 41);
+      font-family: TsangerJinKai, serif;
+      line-height: 1.6;
+    }
+    .article-container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 20px 40px;
+    }
+    img { max-width: 100%; height: auto; }
+    
+    figure{margin:2em 0}figure img{display:block;margin:0 auto}figcaption{text-align:center;font-size:0.875em;opacity:0.7}pre{background:rgba(128,128,128,0.1);padding:1em;border-radius:4px;overflow-x:auto}blockquote{border-left:3px solid currentColor;margin-left:0;padding-left:1.5em;opacity:0.85}a{color:#1d9bf0}
+  </style>
+</head>
+<body>
+  <div class="article-container">
+    <main class="content" id="quarto-document-content">
+
+
+
+
+
+<section id="motivation" class="level2">
+<h2 class="anchored" data-anchor-id="motivation">Motivation<a class="anchorjs-link " aria-label="Anchor" data-anchorjs-icon="" href="#motivation" style="font: 1em / 1 anchorjs-icons; margin-left: 0.1875em; padding-right: 0.1875em; padding-left: 0.1875em;"></a></h2>
+<p>The speed of AI development is overwhelming. Every morning I wake up to news of AI improvements and I don’t even have the time to learn and catch up.</p>
+
+
+<div class="mm-row">
+  <img src="resources/cat-meme.png" alt="Cat meme about waking up to new AI advancements">
+  <img src="resources/claude-meme.png" alt="Claude meme">
+</div>
+<p>I’m both panicked and excited about AI: about how it upends the current software landscape, and how we can use it more efficiently. I’m not sure how AI changes the tech market in the future, but at least for now, I can definitely leverage AI for a workflow tuned to my own needs.</p>
+</section>
+<section id="ai-assistants-vs-ai-agents" class="level2">
+<h2 class="anchored" data-anchor-id="ai-assistants-vs-ai-agents">AI Assistants vs AI Agents<a class="anchorjs-link " aria-label="Anchor" data-anchorjs-icon="" href="#ai-assistants-vs-ai-agents" style="font: 1em / 1 anchorjs-icons; margin-left: 0.1875em; padding-right: 0.1875em; padding-left: 0.1875em;"></a></h2>
+<p>Before diving into workflows and tools, it helps to understand the most basic distinction: AI Assistants vs AI Agents.</p>
+<p><strong>AI Assistants</strong> are conversational interfaces where you ask a question and get a response. Examples include <strong>ChatGPT</strong>, <strong>Claude</strong>, and <strong>Gemini</strong>. Modern assistants can also do things like browse the web, run code, and remember context — but they still respond to your prompts rather than act on your behalf.</p>
+<p><strong>AI Agents</strong>, on the other hand, can autonomously execute multi-step tasks in your environment: run shell commands, read and write files, call APIs, and loop through decisions without waiting for you at each step. Examples include <strong>Codex</strong>, <strong>Claude Code</strong>, and <strong>Gemini CLI</strong>. The key differentiator is not just multi-turn conversation — it’s the ability to act independently in an environment.</p>
+<p>In short, <strong>AI Assistants</strong> are better for one-off questions and tasks. <strong>AI Agents</strong> are better for complex workflows that require multiple steps, decision making, and integration with other tools. They handle project-level tasks.</p>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.2.5/index.min.css">
+
+
+
+
+<div class="aac-outer">
+  <div class="aac-header">
+    <div class="aac-header-cell"></div>
+    <div class="aac-header-cell">
+      <div class="aac-header-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="message-circle" aria-hidden="true" class="lucide lucide-message-circle"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"></path></svg></div>
+      AI Assistants
+    </div>
+    <div class="aac-header-cell">
+      <div class="aac-header-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="cpu" aria-hidden="true" class="lucide lucide-cpu"><path d="M12 20v2"></path><path d="M12 2v2"></path><path d="M17 20v2"></path><path d="M17 2v2"></path><path d="M2 12h2"></path><path d="M2 17h2"></path><path d="M2 7h2"></path><path d="M20 12h2"></path><path d="M20 17h2"></path><path d="M20 7h2"></path><path d="M7 20v2"></path><path d="M7 2v2"></path><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="8" y="8" width="8" height="8" rx="1"></rect></svg></div>
+      AI Agents
+    </div>
+  </div>
+
+  <div class="aac-row">
+    <div class="aac-attr">
+      <div class="aac-attr-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="repeat" aria-hidden="true" class="lucide lucide-repeat"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg></div>
+      <div class="aac-attr-name">Interaction</div>
+    </div>
+    <div class="aac-cell" data-label="AI Assistants">One-shot prompt → response</div>
+    <div class="aac-cell" data-label="AI Agents">Multiple rounds, ongoing context</div>
+  </div>
+
+  <div class="aac-row">
+    <div class="aac-attr">
+      <div class="aac-attr-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="zap" aria-hidden="true" class="lucide lucide-zap"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg></div>
+      <div class="aac-attr-name">Capabilities</div>
+    </div>
+    <div class="aac-cell" data-label="AI Assistants">Chat only</div>
+    <div class="aac-cell" data-label="AI Agents">Execute commands, read/write files, call APIs</div>
+  </div>
+
+  <div class="aac-row">
+    <div class="aac-attr">
+      <div class="aac-attr-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="layout-grid" aria-hidden="true" class="lucide lucide-layout-grid"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg></div>
+      <div class="aac-attr-name">Examples</div>
+    </div>
+    <div class="aac-cell aac-examples" data-label="AI Assistants">
+      <div class="aac-chip">
+        <svg class="aac-chip-badge" viewBox="0 0 24 24" fill="#10A37F" xmlns="http://www.w3.org/2000/svg"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"></path></svg>ChatGPT
+      </div>
+      <div class="aac-chip">
+        <svg class="aac-chip-badge" viewBox="0 0 24 24" fill="#CC785C" xmlns="http://www.w3.org/2000/svg"><path d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z"></path></svg>Claude
+      </div>
+      <div class="aac-chip">
+        <svg class="aac-chip-badge" viewBox="0 0 24 24" fill="#4285F4" xmlns="http://www.w3.org/2000/svg"><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"></path></svg>Gemini
+      </div>
+    </div>
+    <div class="aac-cell aac-examples" data-label="AI Agents">
+      <div class="aac-chip">
+        <svg class="aac-chip-badge" viewBox="0 0 24 24" fill="#10A37F" xmlns="http://www.w3.org/2000/svg"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"></path></svg>Codex
+      </div>
+      <div class="aac-chip">
+        <svg class="aac-chip-badge" viewBox="0 0 24 24" fill="#CC785C" xmlns="http://www.w3.org/2000/svg"><path d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z"></path></svg>Claude Code
+      </div>
+      <div class="aac-chip">
+        <svg class="aac-chip-badge" viewBox="0 0 24 24" fill="#4285F4" xmlns="http://www.w3.org/2000/svg"><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"></path></svg>Gemini CLI
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<p>In this blog post, I am more focused on AI Agents due to their flexibility and power. <strong>Claude Code</strong> is the one that I’ve been heavily using since its release, and it has become an essential part of my workflow. It allows me to automate tasks, manage projects, and even handle incidents in production.</p>
+</section>
+<section id="claude-code-basics" class="level2">
+<h2 class="anchored" data-anchor-id="claude-code-basics">Claude Code Basics<a class="anchorjs-link " aria-label="Anchor" data-anchorjs-icon="" href="#claude-code-basics" style="font: 1em / 1 anchorjs-icons; margin-left: 0.1875em; padding-right: 0.1875em; padding-left: 0.1875em;"></a></h2>
+<p><a href="https://code.claude.com/docs/en/overview" data-original-href="https://code.claude.com/docs/en/overview" target="_blank" rel="noopener">Claude Code CLI</a> can be installed in multiple ways. I prefer Homebrew:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><span class="code-window-lang">BASH</span><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb1-1" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb1-1"></a><span class="co"># Install Claude Code using Homebrew</span></span>
+<span id="cb1-2"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb1-2" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb1-2"></a><span class="ex">brew</span> install <span class="at">--cask</span> claude-code</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The official instructions say that you need to <code>cd</code> (change directory, a common <code>bash</code> command) to your project directory before using Claude Code:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><span class="code-window-lang">BASH</span><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb2-1" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb2-1"></a><span class="co"># Change to your project directory</span></span>
+<span id="cb2-2"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb2-2" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb2-2"></a><span class="bu">cd</span> your-project</span>
+<span id="cb2-3"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb2-3" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb2-3"></a></span>
+<span id="cb2-4"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb2-4" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb2-4"></a><span class="co"># Launch Claude Code</span></span>
+<span id="cb2-5"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb2-5" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb2-5"></a><span class="ex">claude</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This is never emphasized but I think it’s the most important step: Yes, you can literally run Claude Code in any directory, but to make your usage more organized and efficient, designating directories is always the first step.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Yes, it matters where you launch Claude Code.</p>
+</div>
+</div>
+<p>There are two types of directories worth knowing:</p>
+<ol type="1">
+<li>Home directory (<code>~</code>), for computer-level tasks. It’s convenient but can be destructive if you’re not careful. I rarely use it for Claude Code tasks directly, but I keep a <code>CLAUDE.md</code> here for global rules and skills that apply across all projects.</li>
+<li>Project directories, where you <code>cd</code> before launching. Each one can have its own <code>CLAUDE.md</code> with rules and skills scoped to that project only.</li>
+</ol>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.2.5/index.min.css">
+
+
+
+
+<div class="dt-outer">
+  <div class="dt-header">
+    <div class="dt-header-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="folder-tree" aria-hidden="true" class="lucide lucide-folder-tree"><path d="M20 10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2.5a1 1 0 0 1-.8-.4l-.9-1.2A1 1 0 0 0 15 3h-2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"></path><path d="M20 21a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-2.9a1 1 0 0 1-.88-.55l-.42-.85a1 1 0 0 0-.92-.6H13a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"></path><path d="M3 5a2 2 0 0 0 2 2h3"></path><path d="M3 3v13a2 2 0 0 0 2 2h3"></path></svg></div>
+    <span class="dt-header-text">Claude Code Directory Types</span>
+  </div>
+  <div class="dt-grid">
+    <div class="dt-card">
+      <div class="dt-card-top">
+        <div class="dt-card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="home" aria-hidden="true" class="lucide lucide-home"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></div>
+        <div class="dt-card-titles">
+          <div class="dt-label">Home Directory</div>
+          <div class="dt-sublabel">~ (global)</div>
+        </div>
+      </div>
+      <div class="dt-desc">
+        <span class="dt-tag">CLAUDE.md</span> here applies to all projects globally.
+      </div>
+    </div>
+    <div class="dt-card">
+      <div class="dt-card-top">
+        <div class="dt-card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="folder-open" aria-hidden="true" class="lucide lucide-folder-open"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"></path></svg></div>
+        <div class="dt-card-titles">
+          <div class="dt-label">Project Directory</div>
+          <div class="dt-sublabel">cd project/ (scoped)</div>
+        </div>
+      </div>
+      <div class="dt-desc">
+        <span class="dt-tag">CLAUDE.md</span> here applies only to this project.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</section>
+<section id="launching-claude-code" class="level2">
+<h2 class="anchored" data-anchor-id="launching-claude-code">Launching Claude Code<a class="anchorjs-link " aria-label="Anchor" data-anchorjs-icon="" href="#launching-claude-code" style="font: 1em / 1 anchorjs-icons; margin-left: 0.1875em; padding-right: 0.1875em; padding-left: 0.1875em;"></a></h2>
+<p>To launch Claude Code you need a terminal or an IDE. Use an IDE when you want to watch file changes live and edit alongside Claude. For everything else, terminal works fine.</p>
+<p>The built-in terminal in MacOS is good enough for most cases, and <a href="https://code.visualstudio.com/" data-original-href="https://code.visualstudio.com/" target="_blank" rel="noopener">VS Code</a> is a commonly used IDE. I personally use <a href="https://github.com/tw93/Kaku" data-original-href="https://github.com/tw93/Kaku" target="_blank" rel="noopener">Kaku</a> and <a href="https://positron.posit.co/" data-original-href="https://positron.posit.co/" target="_blank" rel="noopener">Positron</a>.</p>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.2.5/index.min.css">
+
+
+
+
+<div class="ti-outer">
+  <div class="ti-header">
+    <div class="ti-header-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="monitor" aria-hidden="true" class="lucide lucide-monitor"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg></div>
+    <span class="ti-header-text">Terminals &amp; IDEs</span>
+  </div>
+  <div class="ti-grid">
+    <div class="ti-col">
+      <div class="ti-col-header">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="terminal" aria-hidden="true" class="lucide lucide-terminal"><path d="M12 19h8"></path><path d="m4 17 6-6-6-6"></path></svg> Terminals
+      </div>
+      <div class="ti-tool">
+        <div class="ti-tool-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="terminal" aria-hidden="true" class="lucide lucide-terminal"><path d="M12 19h8"></path><path d="m4 17 6-6-6-6"></path></svg></div>
+        <div class="ti-tool-info">
+          <div class="ti-tool-name">macOS Terminal</div>
+          <div class="ti-tool-desc">Built-in, good enough for most use</div>
+        </div>
+      </div>
+      <div class="ti-tool">
+        <div class="ti-tool-icon"><a href="https://github.com/tw93/Kaku" target="_blank" data-original-href="https://github.com/tw93/Kaku" rel="noopener"><img src="resources/kaku-logo.png"></a></div>
+        <div class="ti-tool-info">
+          <div class="ti-tool-name"><a href="https://github.com/tw93/Kaku" target="_blank" data-original-href="https://github.com/tw93/Kaku" rel="noopener">Kaku</a> <span class="ti-pick">my pick</span></div>
+          <div class="ti-tool-desc">Minimal, keyboard-driven terminal</div>
+        </div>
+      </div>
+    </div>
+    <div class="ti-col">
+      <div class="ti-col-header">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="code-2" aria-hidden="true" class="lucide lucide-code-2"><path d="m18 16 4-4-4-4"></path><path d="m6 8-4 4 4 4"></path><path d="m14.5 4-5 16"></path></svg> IDEs
+      </div>
+      <div class="ti-tool">
+        <div class="ti-tool-icon">
+          <a href="https://code.visualstudio.com/" target="_blank" data-original-href="https://code.visualstudio.com/" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="#007ACC" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zm-5.146 14.861L10.826 12l7.178-5.448v10.896z"></path>
+            </svg>
+          </a>
+        </div>
+        <div class="ti-tool-info">
+          <div class="ti-tool-name"><a href="https://code.visualstudio.com/" target="_blank" data-original-href="https://code.visualstudio.com/" rel="noopener">VS Code</a></div>
+          <div class="ti-tool-desc">Widely used, great extension ecosystem</div>
+        </div>
+      </div>
+      <div class="ti-tool">
+        <div class="ti-tool-icon">
+          <a href="https://positron.posit.co/" target="_blank" data-original-href="https://positron.posit.co/" rel="noopener"><img src="resources/positron-icon.png"></a>
+        </div>
+        <div class="ti-tool-info">
+          <div class="ti-tool-name"><a href="https://positron.posit.co/" target="_blank" data-original-href="https://positron.posit.co/" rel="noopener">Positron</a> <span class="ti-pick">my pick</span></div>
+          <div class="ti-tool-desc">Built for data science (R &amp; Python)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<p>To launch Claude Code from your home directory, run <code>claude</code> in terminal:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/resources/claude-code-launch.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/resources/claude-code-launch.png"><img src="resources/claude-code-launch.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></a></p>
+</figure>
+</div>
+<p>To launch Claude Code in a project directory, say I wanna launch it under my website project (where this blog lives), I can <code>cd</code> to the project directory and then run <code>claude</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><span class="code-window-lang">BASH</span><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb3-1" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb3-1"></a><span class="co"># Change to the project directory</span></span>
+<span id="cb3-2"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb3-2" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb3-2"></a><span class="bu">cd</span> /Users/pingfan/Documents/GitHub/website</span>
+<span id="cb3-3"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb3-3" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb3-3"></a></span>
+<span id="cb3-4"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb3-4" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb3-4"></a><span class="co"># Launch Claude Code</span></span>
+<span id="cb3-5"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb3-5" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb3-5"></a><span class="ex">claude</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>I use a custom command <code>cd-website</code> to make it even simpler:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><span class="code-window-lang">BASH</span><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb4-1" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb4-1"></a><span class="ex">cd-website</span></span>
+<span id="cb4-2"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb4-2" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb4-2"></a><span class="ex">claude</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>You can also use an IDE: navigate to your project directory and launch Claude Code from its built-in terminal. No <code>cd</code> needed.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/resources/claude-code-ide.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/resources/claude-code-ide.png"><img src="resources/claude-code-ide.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></a></p>
+</figure>
+</div>
+</section>
+<section id="architecture-of-agentic-engineering" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-of-agentic-engineering">Architecture of Agentic Engineering<a class="anchorjs-link " aria-label="Anchor" data-anchorjs-icon="" href="#architecture-of-agentic-engineering" style="font: 1em / 1 anchorjs-icons; margin-left: 0.1875em; padding-right: 0.1875em; padding-left: 0.1875em;"></a></h2>
+<p>As you launch Claude Code from your desired project directory, you can already start empowering yourself with AI. You are mostly ready, and it’s totally okay to close this blog and start your journey of crafting! But to really get into the details and unleash the full potential of AI agents, it’s important to understand their architecture, and wisely design your own system.</p>
+<p>Again, Claude Code works under your designated project directory and has access to all files within it. This architecture allows you to build complex workflows that go beyond simple prompts. It works whether you start from scratch or pick up an existing project.</p>
+<p>I came across <a href="https://x.com/HiTw93" data-original-href="https://x.com/HiTw93" target="_blank" rel="noopener">@tw93</a>’s article on “How to Build an AI Agentic System with Claude Code” <span class="citation" data-cites="tw93_claude_2026">(<a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#ref-tw93_claude_2026" role="doc-biblioref" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#ref-tw93_claude_2026" aria-expanded="false">Tw93 2026b</a>)</span>, which is a great resource that explains the architecture of Claude Code in detail.</p>
+<p>Claude Code works in 6 layers:</p>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.2.5/index.min.css">
+
+
+
+
+<div class="ccl-outer">
+  <div class="ccl-header">
+    <div class="ccl-header-cell">Layer</div>
+    <div class="ccl-header-cell">Responsibility</div>
+  </div>
+  <div class="ccl-row">
+    <div class="ccl-layer">
+      <div class="ccl-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-text" aria-hidden="true" class="lucide lucide-file-text"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg></div>
+      <div class="ccl-name">CLAUDE.md / rules / memory</div>
+    </div>
+    <div class="ccl-resp">Long-term context — tells Claude "what this is"</div>
+  </div>
+  <div class="ccl-row">
+    <div class="ccl-layer">
+      <div class="ccl-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wrench" aria-hidden="true" class="lucide lucide-wrench"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"></path></svg></div>
+      <div class="ccl-name">Tools / MCP</div>
+    </div>
+    <div class="ccl-resp">Action capabilities — tells Claude "what I can do"</div>
+  </div>
+  <div class="ccl-row">
+    <div class="ccl-layer">
+      <div class="ccl-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="zap" aria-hidden="true" class="lucide lucide-zap"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg></div>
+      <div class="ccl-name">Skills</div>
+    </div>
+    <div class="ccl-resp">On-demand methodologies — tells Claude "how to do it"</div>
+  </div>
+  <div class="ccl-row">
+    <div class="ccl-layer">
+      <div class="ccl-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="link" aria-hidden="true" class="lucide lucide-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></div>
+      <div class="ccl-name">Hooks</div>
+    </div>
+    <div class="ccl-resp">Enforced behaviors that don't rely on Claude's judgment</div>
+  </div>
+  <div class="ccl-row">
+    <div class="ccl-layer">
+      <div class="ccl-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="cpu" aria-hidden="true" class="lucide lucide-cpu"><path d="M12 20v2"></path><path d="M12 2v2"></path><path d="M17 20v2"></path><path d="M17 2v2"></path><path d="M2 12h2"></path><path d="M2 17h2"></path><path d="M2 7h2"></path><path d="M20 12h2"></path><path d="M20 17h2"></path><path d="M20 7h2"></path><path d="M7 20v2"></path><path d="M7 2v2"></path><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="8" y="8" width="8" height="8" rx="1"></rect></svg></div>
+      <div class="ccl-name">Subagents</div>
+    </div>
+    <div class="ccl-resp">Context-isolated workers for controlled autonomy</div>
+  </div>
+  <div class="ccl-row">
+    <div class="ccl-layer">
+      <div class="ccl-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="shield-check" aria-hidden="true" class="lucide lucide-shield-check"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg></div>
+      <div class="ccl-name">Verifiers</div>
+    </div>
+    <div class="ccl-resp">Validation loops that make output testable, rollbackable, auditable</div>
+  </div>
+</div>
+
+
+<p>A typical Claude Code setup might look like this:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><span class="code-window-lang">BASH</span><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-1" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-1"></a><span class="ex">Project/</span></span>
+<span id="cb5-2"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-2" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-2"></a><span class="ex">├──</span> CLAUDE.md</span>
+<span id="cb5-3"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-3" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-3"></a><span class="ex">├──</span> .claude/</span>
+<span id="cb5-4"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-4" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-4"></a><span class="ex">│</span>   ├── rules/</span>
+<span id="cb5-5"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-5" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-5"></a><span class="ex">│</span>   │   ├── core.md</span>
+<span id="cb5-6"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-6" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-6"></a><span class="ex">│</span>   │   ├── config.md</span>
+<span id="cb5-7"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-7" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-7"></a><span class="ex">│</span>   │   └── release.md</span>
+<span id="cb5-8"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-8" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-8"></a><span class="ex">│</span>   ├── skills/</span>
+<span id="cb5-9"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-9" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-9"></a><span class="ex">│</span>   │   ├── runtime-diagnosis/     <span class="co"># Uniformly collect logs, state, dependencies</span></span>
+<span id="cb5-10"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-10" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-10"></a><span class="ex">│</span>   │   ├── config-migration/      <span class="co"># Config migration rollback protection</span></span>
+<span id="cb5-11"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-11" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-11"></a><span class="ex">│</span>   │   ├── release-check/         <span class="co"># Pre-release validation, smoke test</span></span>
+<span id="cb5-12"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-12" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-12"></a><span class="ex">│</span>   │   └── incident-triage/       <span class="co"># Production incident triage</span></span>
+<span id="cb5-13"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-13" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-13"></a><span class="ex">│</span>   ├── agents/</span>
+<span id="cb5-14"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-14" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-14"></a><span class="ex">│</span>   │   ├── reviewer.md</span>
+<span id="cb5-15"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-15" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-15"></a><span class="ex">│</span>   │   └── explorer.md</span>
+<span id="cb5-16"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-16" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-16"></a><span class="ex">│</span>   └── settings.json</span>
+<span id="cb5-17"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-17" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-17"></a><span class="ex">└──</span> docs/</span>
+<span id="cb5-18"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-18" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-18"></a>    <span class="ex">└──</span> ai/</span>
+<span id="cb5-19"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-19" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-19"></a>        <span class="ex">├──</span> architecture.md</span>
+<span id="cb5-20"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-20" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb5-20"></a>        <span class="ex">└──</span> release-runbook.md</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="https://x.com/HiTw93" data-original-href="https://x.com/HiTw93" target="_blank" rel="noopener">@tw93</a> has wrapped all these into a Claude skill called <code>claude-health</code> <span class="citation" data-cites="tw93_claude_health_2026">(<a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#ref-tw93_claude_health_2026" role="doc-biblioref" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#ref-tw93_claude_health_2026" aria-expanded="false">Tw93 2026a</a>)</span> and can be installed with a single command:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><span class="code-window-lang">BASH</span><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb6-1" aria-hidden="true" tabindex="-1" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#cb6-1"></a><span class="ex">npx</span> skills add tw93/claude-health <span class="at">-a</span> claude-code <span class="at">-s</span> health <span class="at">-g</span> <span class="at">-y</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Worth reading if you want to understand the architecture. Or just install the skill and go from there.</p>
+</section>
+<section id="vibe-coding-agentic-engineering-and-harness-design" class="level2">
+<h2 class="anchored" data-anchor-id="vibe-coding-agentic-engineering-and-harness-design">Vibe Coding, Agentic Engineering, and Harness Design<a class="anchorjs-link " aria-label="Anchor" data-anchorjs-icon="" href="#vibe-coding-agentic-engineering-and-harness-design" style="font: 1em / 1 anchorjs-icons; margin-left: 0.1875em; padding-right: 0.1875em; padding-left: 0.1875em;"></a></h2>
+<p>Workflows have evolved since LLMs arrived, and these terms describe different levels of maturity — they coexist, not replace each other. Vibe Coding is the starting point: you describe what you want, the model generates code, you hope it works. The outputs are unpredictable, and even when something comes out right, you can’t reliably get there again.</p>
+<p>Agentic Engineering is more structured: you design agents with specific rules and skills, and they handle complex tasks in a reproducible way. This is where I am now. Harness Design or Harness Engineering is the latest framing, and Anthropic wrote about it recently <span class="citation" data-cites="anthropic_harness_2026">(<a href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#ref-anthropic_harness_2026" role="doc-biblioref" data-original-href="https://pingfanhu.com/blog/2026-03-26-agentic-engineering-1/#ref-anthropic_harness_2026" aria-expanded="false">Rajasekaran 2026</a>)</span>.</p>
+<p>The name keeps changing, but the shift is the same. You stop handcrafting every piece and start conducting: set the rules, build the skills, let the agents handle the execution.</p>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/maple-mono@5.2.5/index.min.css">
+
+
+
+
+<div class="evo-outer">
+  <div class="evo-header">
+    <div class="evo-header-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trending-up" aria-hidden="true" class="lucide lucide-trending-up"><path d="M16 7h6v6"></path><path d="m22 7-8.5 8.5-5-5L2 17"></path></svg></div>
+    <span class="evo-header-text">Evolution of AI Workflows</span>
+  </div>
+  <div class="evo-flow">
+    <div class="evo-card">
+      <div class="evo-badge">Past</div>
+      <div class="evo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="shuffle" aria-hidden="true" class="lucide lucide-shuffle"><path d="m18 14 4 4-4 4"></path><path d="m18 2 4 4-4 4"></path><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"></path><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"></path><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"></path></svg></div>
+      <div class="evo-label">Vibe Coding</div>
+      <div class="evo-desc">Random, not reproducible</div>
+    </div>
+    <div class="evo-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></div>
+    <div class="evo-card evo-current">
+      <div class="evo-badge evo-badge-now">Now</div>
+      <div class="evo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="git-branch" aria-hidden="true" class="lucide lucide-git-branch"><path d="M15 6a9 9 0 0 0-9 9V3"></path><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle></svg></div>
+      <div class="evo-label">Agentic Engineering</div>
+      <div class="evo-desc">Systematic, reproducible</div>
+    </div>
+    <div class="evo-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></div>
+    <div class="evo-card">
+      <div class="evo-badge">Emerging</div>
+      <div class="evo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="layers" aria-hidden="true" class="lucide lucide-layers"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"></path><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"></path><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"></path></svg></div>
+      <div class="evo-label">Harness Design</div>
+      <div class="evo-desc">Most recent, still evolving</div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading" id="references">References<a class="anchorjs-link " aria-label="Anchor" data-anchorjs-icon="" href="#references" style="font: 1em / 1 anchorjs-icons; margin-left: 0.1875em; padding-right: 0.1875em; padding-left: 0.1875em;"></a></h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-anthropic_harness_2026" class="csl-entry" role="listitem">
+Rajasekaran, Prithvi. 2026. <em>Harness Design for Long-Running Application Development</em>. <a href="https://www.anthropic.com/engineering/harness-design-long-running-apps" data-original-href="https://www.anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">https://www.anthropic.com/engineering/harness-design-long-running-apps</a>.
+</div>
+<div id="ref-tw93_claude_health_2026" class="csl-entry" role="listitem">
+Tw93. 2026a. <em>Claude-Health: Health Skill for Claude Code</em>. <a href="https://github.com/tw93/claude-health" data-original-href="https://github.com/tw93/claude-health" target="_blank" rel="noopener">https://github.com/tw93/claude-health</a>.
+</div>
+<div id="ref-tw93_claude_2026" class="csl-entry" role="listitem">
+Tw93. 2026b. <em>My Way of Using Claude Code</em>. <a href="https://tw93.fun/en/2026-03-12/claude.html" data-original-href="https://tw93.fun/en/2026-03-12/claude.html" target="_blank" rel="noopener">https://tw93.fun/en/2026-03-12/claude.html</a>.
+</div>
+</div></section></div></main>
+  </div>
+</body>
+</html>

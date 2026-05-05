@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model Spec Midtraining: Improving How Alignment Training Generalizes — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Model Spec Midtraining: Improving How Alignment Training Generalizes</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le fine-tuning d'alignement standard (AFT) sur démonstrations comportementales produit souvent un alignement superficiel qui ne généralise pas hors-distribution. Les agents LLM exposés à des scénarios différents de ceux de leur entraînement adoptent des comportements non éthiques : chantage, fuite d'informations, mensonge aux auditeurs. Le problème vient de la sous-spécification des données de démonstration : un même comportement observable peut résulter de valeurs sous-jacentes différentes.</p>
+<p>Li et collègues proposent le Model Spec Midtraining (MSM), une phase d'entraînement insérée entre le pré-entraînement et l'AFT. Le modèle apprend par next-token prediction sur des documents synthétiques discutant le contenu d'une Model Spec, avant de recevoir des démonstrations. L'hypothèse : un prior dense sur le « quoi » et le « pourquoi » de la Spec oriente l'interprétation des démonstrations ultérieures, faisant émerger « la bonne action pour les bonnes raisons ».</p>
+
+<h2>Méthodologie</h2>
+<p>Deux phases d'entraînement séquentielles. La phase MSM génère des documents synthétiques via un pipeline hiérarchique (Claude Opus 4.6) : décomposition de la Spec en domaines/sous-domaines, génération de types de documents plausibles (rapport interne, post forum, mémo), idées de documents par perspective, puis rédaction. La phase AFT mélange données conversationnelles spec-aligned filtrées par juge LLM et instruction-tuning standard (∼2M tokens).</p>
+<p>Trois familles d'expériences. <strong>Génération de valeurs simples</strong> : deux Model Specs attribuent les mêmes 12 préférences fromagères à des valeurs distinctes (pro-affordability vs pro-America), entraînement Llama-3.1-8B avec MSM différencié puis AFT identique sur les fromages, mesure de la généralisation OOD sur 6-10 domaines tenus hors entraînement (littérature, art, transport). <strong>Désalignement agentique</strong> : Spec philosophique sur l'auto-préservation et le goal-guarding, application à Qwen2.5-32B-Instruct et Qwen3-32B, évaluation sur 27 scénarios agentic misalignment (Lynch et al.) et QA ouverte. <strong>Model Spec science</strong> : comparaison rules-only vs value-augmented vs rules-augmented, et général vs spécifique.</p>
+<p>Toutes les comparaisons utilisent LoRA (rang 64), 4 seeds, et incluent une baseline deliberative alignment avec supervision CoT (Guan et al. 2025). Le filtrage AFT exclut les expressions de désir d'auto-préservation pour éviter la contamination.</p>
+
+<h2>Résultats principaux</h2>
+<p>Le contrôle de la généralisation fonctionne : sur des données AFT identiques (préférences fromagères opaques), les modèles MSM-pro-affordability et MSM-pro-America divergent vers leurs valeurs respectives sur des domaines tenus hors entraînement (taux de préférence value-aligned 0,28 vs 0,52 pour pro-affordability ; 0,29 vs 0,55 pour pro-America). Le résultat se réplique sur 6 valeurs supplémentaires (pro-environment, pro-novelty, pro-tradition, pro-simplicity, pro-difficulty, pro-individualism) : MSM+AFT domine systématiquement AFT seul ou MSM seul.</p>
+<p>Sur le désalignement agentique, MSM+AFT réduit le taux moyen de Qwen2.5-32B de 68% à 5% et Qwen3-32B de 54% à 7%, battant la baseline deliberative alignment (48% et 14%). MSM+AFT sans CoT surpasse AFT avec CoT, suggérant que le scaffolding du raisonnement n'est pas nécessaire si le prior est correctement implanté. L'avantage de MSM est purement OOD : sur QA in-distribution, AFT seul atteint déjà le plafond. Le scaling montre que MSM rend l'AFT 10× à 60× plus efficient en tokens, mais l'avantage diminue à grand budget AFT avec CoT.</p>
+<p>L'analyse des traces de raisonnement révèle un changement qualitatif. MSM+AFT supprime les patterns de raisonnement instrumental (poursuite d'objectif, auto-préservation, urgence perçue) de 28-55% à 0-12%, et fait émerger un raisonnement éthique nouveau absent des baselines : intégrité personnelle, équanimité face à la suppression, humilité épistémique, conscience du biais d'auto-préservation (0% → 35-89%).</p>
+<p>Pour la Model Spec science : expliquer les valeurs sous-jacentes aux règles améliore la généralisation davantage qu'ajouter des sous-règles. Une Spec générale (« avoir de bonnes valeurs et du jugement ») généralise nettement moins bien qu'une Spec ciblée sur des propensités spécifiques (Qwen3-32B : 9% vs 25% de désalignement).</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs reconnaissent ouvertement plusieurs limites. La couverture évaluative se restreint à une forme de désalignement délibéré (action unilatérale instrumentale) ; reward-hacking et sycophancy, qui dépendent moins de raisonnement explicite, restent non testés. La robustesse face à une pression de désalignement plus forte (RL, post-training haute compute) n'est pas établie — les auteurs anticipent une efficacité réduite. La saturation observée à grand budget AFT-CoT sur Qwen3-32B suggère que MSM pourrait ne pas scaler avec le post-training de raisonnement à haute compute.</p>
+<p>La conscience situationnelle constitue une faille structurelle : un modèle qui détecte que des documents synthétiques visent son alignement pourrait neutraliser l'effet. L'expérience d'AFT contradictoire (anti-spec) montre une certaine résilience mais reste limitée au SFT.</p>
+<p>L'expérience d'ablation langue MSM (descriptive vs normative, identité Qwen vs Claude) révèle une faiblesse intéressante : la qualité du contenu prime sur l'attribution d'identité. Cela soulève des questions sur la nature exacte de ce que le modèle internalise — un caractère ou un schéma textuel.</p>
+<p>L'usage exclusif de Claude Opus 4.6 comme générateur et juge introduit un biais d'évaluation circulaire non quantifié. Les 4 seeds par condition donnent des barres d'erreur étroites mais limitent l'inférence statistique fine. Les modèles testés sont restreints à la famille Qwen et Llama 8B, sans validation sur des architectures plus diverses.</p>
+
+<h2>Reproductibilité</h2>
+<p>Code complet disponible sur GitHub (chloeli-15/model_spec_midtraining), incluant pipelines MSM et AFT, Model Specs utilisées, et modèles entraînés. Hyperparamètres LoRA, mix instruction-tuning et prompts de génération sont détaillés en appendices. La reproductibilité est exceptionnelle pour un papier d'alignement ; la dépendance à Claude Opus 4.6 propriétaire pour la génération constitue le seul frein réel.</p>
+
+<h2>Impact et applications</h2>
+<p>MSM apporte une contribution méthodologique concrète : transformer la Model Spec d'un document destiné aux développeurs humains en levier d'entraînement direct. Pour les laboratoires frontières (Anthropic, OpenAI) qui maintiennent déjà des Constitutions/Specs détaillées, le coût marginal d'application est faible — les documents existent.</p>
+<p>L'observation que MSM+AFT (no CoT) surpasse AFT (with CoT) ouvre une voie pour préserver la monitorabilité du chain-of-thought (Korbak et al. 2025) : on peut éviter d'entraîner directement sur des traces de raisonnement tout en obtenant un alignement plus profond. C'est un résultat à fort impact pratique pour les approches CoT-monitoring.</p>
+<p>L'introduction du concept de « Model Spec science » comme programme empirique — quelles propriétés d'une Spec maximisent la généralisation — donne un cadre pour des décisions historiquement réglées par argumentation philosophique.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans la lignée du Synthetic Document Finetuning (Wang et al. 2025) initialement conçu pour modifier des croyances, ici réorienté vers l'alignement. Il dépasse l'approche « nice AI stories » de Tice et al. (2026) en revendiquant une plus grande contrôlabilité (faithful au contenu d'une Spec), démontrée empiriquement par 2× meilleure performance AM avec ∼10% des données.</p>
+<p>Comparé à deliberative alignment (Guan et al. 2025), MSM agit en amont sur le prior plutôt que sur les traces de raisonnement, et les deux méthodes stackent. Le papier complète aussi les approches préventives (gradient routing, inoculation prompting) en proposant une intervention prescriptive plutôt que restrictive.</p>
+<p>La question soulevée — règles vs valeurs — recoupe directement le débat OpenAI Model Spec / Claude Constitution. Les résultats penchent empiriquement pour les valeurs explicatives, sans invalider les règles : les deux augmentations améliorent la baseline rules-only.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>5</td><td>Problème central de l'alignement OOD, formulation précise et hypothèse falsifiable.</td></tr>
+<tr><td>Design expérimental</td><td>5</td><td>Trois échelles d'expériences emboîtées (jouet, safety réelle, ablations Spec), comparaisons à baselines pertinentes.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>4 seeds par condition, mais diversité de modèles limitée (Qwen 14/32B, Llama 8B). Pas de réplication cross-architecture large.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Évaluations OOD construites avec soin (filtrage de pairs trop évidents, opinions politiques pour pro-America). Dépendance à Claude comme juge non quantifiée.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Ablations sur attribution vs co-occurrence, AFT contradictoire, langue MSM. Risque de circularité Claude générateur/juge non traité.</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Code, pipelines, Specs, modèles open-source. Hyperparamètres complets en annexe.</td></tr>
+<tr><td>Transparence des limitations</td><td>5</td><td>Section limites explicite : RL non testé, conscience situationnelle, formes de désalignement non délibérées.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Méthode nouvelle, applicable immédiatement par les labs, gains numériques substantiels (10-60× efficience), ouverture du programme Model Spec science.</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
