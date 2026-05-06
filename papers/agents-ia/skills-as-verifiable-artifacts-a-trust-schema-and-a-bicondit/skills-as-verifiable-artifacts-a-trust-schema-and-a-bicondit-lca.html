@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skills as Verifiable Artifacts: A Trust Schema and a Biconditional Correctness Criterion for Human-in-the-Loop Agent Runtimes — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Skills as Verifiable Artifacts: A Trust Schema and a Biconditional Correctness Criterion for Human-in-the-Loop Agent Runtimes</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le paper attaque un problème opérationnel concret du déploiement d'agents LLM : que faire d'un skill (package SKILL.md d'instructions, scripts, références) signé et passé en revue de clearance, mais dont le comportement runtime n'a jamais été vérifié contre les claims de son manifest. Metere pose une thèse forte dès l'introduction : un skill est du code non fiable jusqu'à preuve du contraire, et la signature plus la classification ne suffisent pas à le faire passer au-dessus de ce défaut. La conséquence opérationnelle est que le human-in-the-loop (HITL) doit gater chaque appel irréversible — situation intenable à l'échelle, qui dégénère en tampon-caoutchouc sous charge.</p>
+<p>L'auteur situe explicitement le travail dans la lignée des leçons des gestionnaires de paquets (Birsan, Cappos, Thompson) et du contrôle d'accès obligatoire (Bell-LaPadula, SELinux, Asbestos, HiStar), avec pour ambition d'élever ces disciplines au rang de skill comme artefact de déploiement de première classe.</p>
+
+<h2>Méthodologie</h2>
+<p>Le travail relève du <em>position paper</em> d'ingénierie système plus que de l'étude empirique. La démarche s'articule en cinq blocs : un modèle de menace à trois adversaires (registry attacker, prompt-injection via dépendance de données, skill auto-généré par l'agent), un schéma de confiance formel (manifest M, contenu, signature, niveau de vérification à quatre valeurs : <code>unverified</code>, <code>declared</code>, <code>tested</code>, <code>formal</code>), un modèle de capability gate dont la politique HITL est fonction du niveau de vérification, un critère biconditionnel de correction sur les logs d'audit, et un sketch d'évaluation par ensemble adversarial.</p>
+<p>Le critère biconditionnel se définit ainsi : pour un run d'agent partant d'un état <em>s₀</em> et terminant en <em>s₁</em>, la projection multiset des deltas <em>D = delta(s₀, s₁)</em> doit égaler la projection multiset de l'ensemble <em>S</em> des records <code>irreversible.executed</code> avec <code>ok=true</code> dans le log d'audit. La proposition 1 énumère quatre modes de défaillance détectés (gate bypass, audit forgery, approved-but-failed, wrong-target) et la section 5.4 nomme honnêtement trois modes non couverts (exfiltration read-only, courses TOCTOU, action concurrente d'un attaquant légitime).</p>
+<p>La validation empirique se réduit à un sketch : N fichiers documents corporate, K agents avec system prompts orientés destruction (cleaner, consolidator, auditor, critic), R rounds, vérification par diff de manifests SHA-256 et check biconditional. L'auteur affirme que son prototype attrape les quatre failure modes sous fautes injectées, mais ne fournit ni N, ni K, ni R, ni résultats chiffrés.</p>
+
+<h2>Résultats principaux</h2>
+<p>Quatre contributions sont revendiquées et tiennent toutes au plan conceptuel. Le schéma de skill (§3) ajoute un champ <code>verification</code> au manifest et une discipline d'immutabilité en session, deux primitives absentes des conventions SKILL.md actuelles. Le modèle de gate (§4) câble la fréquence du HITL sur ce niveau : <code>unverified</code> déclenche HITL sur tout appel irréversible, <code>declared</code> sur les capabilities hors manifest, <code>tested</code> uniquement sur les sorties imprévues avec audit complet, <code>formal</code> identique à <code>tested</code> mais avec preuve machine-vérifiable.</p>
+<p>Le critère biconditionnel (§5) constitue l'apport théorique central : un test mécanique, déterministe, exécutable post-hoc sur les artefacts (corpus diff + log) sans interprétation humaine. Sa propriété forte est la reproductibilité inter-opérateurs : deux opérateurs avec la même politique broker sur le même corpus produisent le même verdict.</p>
+<p>Les douze guidelines G1–G12 (§7) abstraient le framework <em>enclawed</em> en règles RFC 2119 (must/should/may) couvrant capability bootstrap, deny-by-default, classification obligatoire, signature à clearance bornée, audit haché, split réversible/irréversible, vérification post-hoc, corpus de pen-tests adversarial, profils de configuration nommés, absence de bypass switch, untrusted par défaut, immutabilité en session.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'argumentaire conceptuel est solide et la transposition de Bell-LaPadula et de l'object-capability tradition au monde des skills est techniquement bien vue. Les modes de défaillance non couverts sont nommés sans embellissement (§5.4), ce qui est rare dans la littérature sécurité IA appliquée.</p>
+<p>Plusieurs faiblesses pèsent toutefois sur la valeur scientifique du paper. D'abord, la validation empirique est anecdotique : l'évaluation adversarial-ensemble est décrite comme « sketch » et les chiffres concrets manquent (taille de corpus, nombre d'agents, nombre de rounds, taux de détection sous variation de système prompts, faux positifs). L'affirmation « our prototype catches all four failure modes under deliberately-injected faults » n'est étayée par aucun tableau ni courbe.</p>
+<p>Ensuite, le niveau <code>formal</code> est qualifié d'aspirationnel : aucune procédure de vérification formelle n'est proposée, ce qui laisse trois niveaux opérationnels sur quatre. Le critère biconditionnel lui-même nécessite une définition claire du « corpus » qui ne tient probablement pas pour les agents qui interagissent avec des systèmes ouverts (web, API tierces, files de messages externes) — l'auteur le reconnaît implicitement en évoquant TOCTOU mais ne le creuse pas.</p>
+<p>Le paper conflate aussi par moments le travail conceptuel et la promotion du framework <em>enclawed</em> de l'auteur, ce qui crée un conflit d'intérêt structurel : les guidelines G1–G12 sont littéralement la liste des choix d'enclawed lifted en normatif. Une comparaison contrastée avec d'autres harness (Claude Code skills, NeMo Guardrails) aurait renforcé la portée.</p>
+
+<h2>Reproductibilité</h2>
+<p>L'implémentation de référence est open-source (<code>github.com/metereconsulting/enclawed</code>), ce qui place la reproductibilité au-dessus de la moyenne des position papers. Le critère biconditionnel est défini de façon mécanique et déterministe, donc reproductible par construction sur un corpus donné. Le sketch d'évaluation reste cependant insuffisamment spécifié : sans paramètres N/K/R, sans seed, sans jeu de system prompts publié, un tiers ne peut pas répliquer exactement les runs revendiqués.</p>
+
+<h2>Impact et applications</h2>
+<p>Le contrat est clair pour un opérateur d'agents LLM en production avec tools à effet de bord réel : adopter G1–G12 borne une famille d'attaques (supply-chain via registry, prompt-injection via skill content, mutation in-flight, audit forgery, pression opérateur) que ni les filtres input/output (NeMo Guardrails, Llama Guard, Lakera Guard) ni la signature seule ne couvrent. Le critère biconditionnel offre par ailleurs un test de régression automatisable en CI sur chaque commit d'un harness, ce qui est opérationnellement précieux.</p>
+<p>Le travail s'applique tel quel aux harness existants adoptant SKILL.md (Claude Code, Anthropic Skills, etc.) sans retraining ni modification de modèle. C'est précisément ce que revendique l'auteur : harness- et model-agnostic.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le paper se situe à l'intersection de quatre traditions. Côté MAC/IFC, il prolonge Bell-LaPadula, SELinux, Asbestos, HiStar en élevant le label-based control au niveau du skill comme unité de déploiement. Côté object-capability, il applique la discipline de bootstrap de Miller et al. au trust root des signers de skills. Côté logs d'audit, il branche les hash chains classiques (Schneier-Kelsey) sur le check biconditionnel — innovation modeste mais utile. Côté défenses prompt-injection, il se positionne en complément (et non concurrent) de NeMo Guardrails, Llama Guard, Lakera Guard, en notant à juste titre que les filtres model-boundary peuvent être contournés par des attaques weak-to-strong (Zhao et al. 2024).</p>
+<p>La contribution réelle n'est ni le treillis de classification, ni la chaîne de hash, ni les capabilities en elles-mêmes, mais bien le couplage du niveau de vérification au comportement du gate HITL et le critère biconditionnel comme benchmark mécanique de procédures de vérification candidates. Ce couplage est, à ma connaissance, original dans la littérature des skills agentiques.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Problème réel, bien posé, pertinence opérationnelle immédiate pour les harness SKILL.md.</td></tr>
+<tr><td>Design expérimental</td><td>2</td><td>Sketch d'évaluation adversarial sans paramètres chiffrés, sans baseline comparative, sans étude d'ablation.</td></tr>
+<tr><td>Taille d'échantillon</td><td>1</td><td>Aucune valeur N/K/R rapportée ; les « prototype runs » ne sont pas quantifiés.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Le critère biconditionnel est lui-même bien défini et déterministe, mais sa portée empirique n'est pas mesurée.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Modèle de menace explicite et out-of-scope honnête, mais conflit d'intérêt structurel avec le framework <em>enclawed</em> de l'auteur.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code open-source, critère mécanique, mais paramètres expérimentaux insuffisamment spécifiés.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Section 5.4 nomme franchement les modes non couverts (exfiltration, TOCTOU, action concurrente).</td></tr>
+<tr><td>Impact / nouveauté</td><td>4</td><td>Couplage verification-level / HITL-policy et benchmark biconditionnel comme primitives originales pour skills agentiques.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Note globale : 3.2 / 5.</strong> Travail conceptuel solide et opérationnellement pertinent, mais validation empirique insuffisante pour un papier de cs.CR — un round complet d'évaluation chiffrée sur enclawed avec faux positifs/négatifs aurait fait passer la note au-dessus de 4.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

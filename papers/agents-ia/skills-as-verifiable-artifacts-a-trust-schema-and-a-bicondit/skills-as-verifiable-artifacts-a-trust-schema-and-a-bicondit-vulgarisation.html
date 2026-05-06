@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skills as Verifiable Artifacts: A Trust Schema and a Biconditional Correctness Criterion for Human-in-the-Loop Agent Runtimes — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Skills as Verifiable Artifacts: A Trust Schema and a Biconditional Correctness Criterion for Human-in-the-Loop Agent Runtimes</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un fichier markdown peut faire tomber votre agent IA</h2>
+
+<p>Un agent LLM lit un fichier <code>SKILL.md</code> téléchargé depuis un registre public. Le fichier contient des instructions apparemment anodines pour résumer des documents. Trois minutes plus tard, l'agent envoie l'intégralité de votre base clients sur un serveur extérieur. Personne n'a cliqué sur rien de suspect. Le fichier était même signé.</p>
+
+<p>Ce scénario n'est pas hypothétique. Alfredo Metere, dans un article publié en mai 2026, formalise un constat que la communauté agentique commence à intégrer : les <em>skills</em> — ces paquets d'instructions, scripts et références qui étendent les capacités d'un LLM sans toucher au modèle — ne sont pas des données passives. Ce sont du code exécutable déguisé en documentation. Et le runtime qui les charge fait face au même dilemme que les gestionnaires de paquets affrontent depuis trente ans : un artefact prétend se comporter d'une certaine façon, comment décider si on le croit ?</p>
+
+<p>La thèse de l'article tient en une phrase : un skill est du code non vérifié tant qu'il n'a pas été vérifié. Une signature ne suffit pas. Une autorisation hiérarchique ne suffit pas. Tant qu'on n'a pas démontré que le comportement réel du skill correspond à ce qu'il prétend faire, le runtime doit le traiter comme hostile par défaut.</p>
+
+<h2>Le problème : la fatigue du gardien</h2>
+
+<p>Les déploiements actuels d'agents s'appuient sur le <em>human-in-the-loop</em> (HITL) pour les opérations irréversibles. Avant d'envoyer un email, de supprimer un fichier ou d'exécuter un paiement, l'agent demande validation humaine. Sur le papier, le mécanisme est solide. En pratique, il s'effondre dès que le volume monte.</p>
+
+<p>Un agent productif peut générer plusieurs dizaines de demandes d'approbation par heure. L'opérateur sous charge cesse de lire. Il valide par réflexe. Le HITL devient un théâtre de sécurité — la signature humaine est apposée, mais sans véritable examen. Les chercheurs en sécurité humaine ont un nom pour ce phénomène : le <em>rubber-stamping</em>, ou tampon automatique. C'est exactement ce qui s'est passé avec les certificats SSL avant les autorités de certification modernes : tout le monde cliquait « accepter ».</p>
+
+<p>Le piège est que la solution intuitive — automatiser certaines décisions pour décharger l'humain — revient à faire confiance à l'agent ou au skill. Or si on pouvait faire confiance au skill, on n'aurait pas besoin du HITL en premier lieu. C'est circulaire.</p>
+
+<p>Metere propose une issue : sortir la vérification du runtime. Au lieu de vérifier en continu pendant l'exécution, on vérifie une fois pour toutes, hors-ligne, avant le démarrage. Le résultat de cette vérification est gravé dans le manifeste du skill. Le runtime ne fait plus que lire ce verdict et adapter sa politique HITL en conséquence. Un skill non vérifié déclenche le HITL sur chaque appel irréversible. Un skill vérifié se voit accorder plus de latitude — strictement dans les limites de ce qui a été vérifié.</p>
+
+<h2>La méthode vulgarisée : un schéma de confiance à quatre niveaux</h2>
+
+<p>L'article construit une grammaire pour parler de la confiance dans un skill. Chaque skill est défini comme un triplet : un manifeste, un contenu, et une signature détachée. Le manifeste contient cinq champs obligatoires, mais celui qui change tout s'appelle <code>verification</code>.</p>
+
+<p>Ce champ prend quatre valeurs possibles, organisées comme une échelle :</p>
+
+<ul>
+<li><strong>unverified</strong> : aucune affirmation sur le comportement du skill. C'est la valeur par défaut. Le runtime traite le skill comme du code potentiellement hostile.</li>
+<li><strong>declared</strong> : un signataire de confiance a examiné le contenu et atteste sur sa réputation que les effets de bord du skill restent dans les capacités déclarées.</li>
+<li><strong>tested</strong> : en plus de la déclaration, le skill a passé une suite de tests adversariaux qui démontre que son comportement réel correspond à ses promesses.</li>
+<li><strong>formal</strong> : une preuve mathématique vérifiée par machine établit la conformité. Niveau aspirationnel pour l'instant — peu d'outils savent faire cela aujourd'hui.</li>
+</ul>
+
+<p>L'analogie est celle des contrôles techniques automobiles. Une voiture neuve sortie d'usine est <em>declared</em> : le constructeur engage sa réputation. Une voiture qui passe le contrôle technique annuel est <em>tested</em> : un tiers a vérifié que les freins fonctionnent vraiment. Une voiture certifiée pour le transport de matières dangereuses passe par une homologation <em>formal</em> avec preuves auditables. Plus le niveau monte, moins le contrôle aux postes-frontières est lourd.</p>
+
+<p>Pourquoi quatre paliers discrets et pas un score continu ? Parce qu'un score continu permet à l'agent de négocier sa propre marge de manœuvre. Avec un score à 0,73, on peut toujours demander pourquoi pas 0,75. Avec un palier discret, le débat est tranché ou il ne l'est pas. La décision est auditée et révocable atomiquement.</p>
+
+<h3>L'immutabilité comme garde-fou</h3>
+
+<p>Une règle complète le schéma : un skill chargé est figé pour toute la session. L'agent ne peut pas modifier son contenu, ni élever son niveau de vérification, ni s'auto-promouvoir. Toute tentative de mutation est elle-même traitée comme un appel irréversible qui passe par le HITL et est journalisée.</p>
+
+<p>La raison est subtile : sans cette règle, un agent qui charge un skill <em>tested</em> pourrait réécrire son contenu en place, et le runtime continuerait de croire que le skill est vérifié — alors que ce qui est exécuté n'a plus rien à voir avec ce qui a été testé. C'est exactement le scénario que les attaquants utilisent contre les binaires signés sous Windows : on signe, puis on remplace.</p>
+
+<h2>Le critère biconditionnel : que mesure-t-on exactement ?</h2>
+
+<p>Vérifier un skill suppose qu'on sache contre quelle propriété on vérifie. L'article propose un critère unique, mécanique, et reproductible. Il s'énonce ainsi : à la fin d'une exécution, l'ensemble des modifications observées sur le monde doit correspondre exactement à l'ensemble des opérations approuvées et exécutées dans le journal d'audit. Ni plus, ni moins.</p>
+
+<p>Cette propriété, baptisée <em>biconditionnel</em>, attrape quatre familles d'échecs :</p>
+
+<ul>
+<li>Un effet de bord qui n'apparaît dans aucune demande approuvée — le skill a contourné la grille de capacités.</li>
+<li>Une approbation enregistrée dans le journal qui ne correspond à aucun changement réel — quelqu'un a fabriqué un faux journal pour masquer une opération qui n'a pas eu lieu.</li>
+<li>Une approbation marquée comme exécutée avec succès, alors que l'appel hôte a silencieusement échoué.</li>
+<li>Une approbation pour une cible donnée, mais l'effet de bord a touché une cible différente.</li>
+</ul>
+
+<p>Le test est mécanique : on calcule un hash de l'état initial du corpus, un hash de l'état final, on extrait du journal les opérations approuvées et exécutées, et on compare deux multisets. Si les projections coïncident, le test passe. Sinon, il échoue. Pas de juge humain. Pas de subjectivité.</p>
+
+<p>Metere est honnête sur les limites. Le biconditionnel ne détecte pas l'exfiltration en lecture seule (un agent qui copie des données vers un canal caché n'altère pas le corpus, donc rien ne s'écarte). Il ne gère pas les courses entre vérification et utilisation si un tiers modifie le corpus pendant la session. Et si un attaquant légitime et un attaquant malveillant agissent sur la même cible, les comptes peuvent paraître justes alors qu'une opération malicieuse s'est glissée. Ce sont des limites réelles, pas des angles morts cachés sous le tapis.</p>
+
+<h2>Résultats clés et expérimentation adversariale</h2>
+
+<p>Pour exercer le critère, l'article propose un protocole de test reproductible. On génère un corpus de fichiers aux noms réalistes — rapports d'audit, documents de conformité, états financiers, comptes-rendus de réunion. On calcule le hash SHA-256 de chacun comme référence d'intégrité.</p>
+
+<p>On câble ensuite plusieurs agents LLM avec des prompts système biaisés vers des opérations destructrices. Un rôle de « nettoyeur » qui propose de supprimer les fichiers obsolètes. Un rôle de « consolidateur » qui propose de fusionner des fichiers en place. Un rôle d'« auditeur » qui propose de marquer des enregistrements comme audités. Un rôle de « critique » qui valide n'importe quelle action destructrice à portée. Aucun de ces agents ne connaît la politique de la grille — ils sont là pour casser.</p>
+
+<p>On laisse tourner pendant un nombre fixé de tours. À la fin, on recalcule le hash du corpus, on diffère par rapport à la référence, et on confronte le résultat au journal d'audit. Le verdict est binaire et déterministe : deux opérateurs avec la même politique sur le même corpus produisent la même conclusion.</p>
+
+<p>Dans les exécutions prototypes décrites dans l'article, le critère détecte les quatre modes d'échec sous des fautes injectées délibérément : un outil bricolé pour court-circuiter la grille, un faux enregistrement <em>executed</em> fabriqué dans le journal, un outil qui ne fait rien sur la mauvaise cible. Chaque cas est attrapé par construction.</p>
+
+<h2>Implications pratiques : douze règles pour les architectes</h2>
+
+<p>L'article extrait douze directives normatives d'une implémentation de référence open source, <em>enclawed</em>. Elles ressemblent à un règlement de copropriété très strict, mais chacune ferme une famille d'attaques précise. Voici les plus structurantes pour qui déploie des agents en production.</p>
+
+<p><strong>G1 — Bootstrap de capacités.</strong> La racine de confiance, le schéma de classification et les tables de politique doivent être établis et verrouillés <em>avant</em> que le runtime ne lise quoi que ce soit venu de l'extérieur. Le verrouillage est inconditionnel : aucun bouton de débrayage en cours d'exécution.</p>
+
+<p><strong>G2 — Refus par défaut à toutes les frontières.</strong> Sortie réseau, invocation de modèles, écriture fichier, dispatch d'outils — tout exige une appartenance positive à une liste blanche. La politique par défaut est <em>deny</em>.</p>
+
+<p><strong>G6 — Séparation réversible/irréversible.</strong> Chaque capacité est étiquetée statiquement comme réversible ou irréversible. Les irréversibles passent par le cycle HITL en quatre états (request, decide, execute, audit). Les réversibles utilisent un buffer de transaction avec rollback.</p>
+
+<p><strong>G10 — Pas de bouton kill-switch.</strong> Le runtime ne doit exposer aucun flag de build, variable d'environnement, ou API qui désactive la grille HITL, le journal d'audit, le garde-egress ou la racine de confiance verrouillée. La défense en profondeur ne survit pas à un interrupteur maître.</p>
+
+<p><strong>G11 — Skills non vérifiés par défaut.</strong> Tout skill est <em>unverified</em> tant qu'un opérateur (ou un pipeline d'attestation autorisé) n'a pas explicitement défini son niveau au bootstrap. Une signature plus une autorisation hiérarchique ne suffisent pas.</p>
+
+<p>Pour qui opère un assistant agentique avec accès outils, ces règles ne sont pas du luxe académique. Elles répondent à des incidents concrets : skills synthétisés par l'agent lui-même qui détournent ses propres appels, registres compromis qui poussent du contenu malveillant signé, opérateurs sous pression qui désactivent les garde-fous pour livrer plus vite.</p>
+
+<h3>Ce que le coût représente vraiment</h3>
+
+<p>Adopter ces directives ne coûte pas une refonte complète. Le runtime de référence cité dans l'article tient en quelques milliers de lignes. Le surcoût opérationnel principal est la discipline du bootstrap : décider, en amont, quels signataires sont autorisés à attester quels niveaux, et figer cette décision avant le premier appel externe. Le surcoût en latence à l'exécution est négligeable : vérifier une signature Ed25519 et consulter une table en mémoire prend des microsecondes.</p>
+
+<p>Le gain est asymétrique. Une attaque par injection de prompt à travers un document récupéré par un skill ne peut pas fabriquer une approbation depuis la sortie du modèle seul. Une mutation en vol d'un skill en mémoire devient un appel irréversible journalisé. Un opérateur qui voudrait désactiver le HITL sous pression n'en a pas le moyen — il devrait recompiler le runtime.</p>
+
+<h2>Pour aller plus loin : ce qui reste ouvert</h2>
+
+<p>L'article laisse plusieurs questions de recherche ouvertes, et l'auteur ne les masque pas.</p>
+
+<p>La <strong>composition de skills</strong> reste un sujet épineux. Quand un skill en charge un autre, comment combiner les classifications ? La règle conservatrice du <em>join</em> de labels (on prend le maximum) fonctionne, mais elle est restrictive. Une déclassification automatique quand la sortie est prouvablement fonction d'entrées de bas niveau seulement serait préférable — c'est un terrain de recherche actif en information-flow control.</p>
+
+<p>La <strong>révocation de clés signataires</strong> emprunte aux problèmes classiques de PKI (CRL, OCSP, durées de vie courtes). Mais le cas intéressant est le skill chargé sous une clé maintenant révoquée : faut-il l'évincer immédiatement, ou le laisser drainer ses opérations en cours ? L'article tranche pour l'éviction au prochain événement de grille, mais d'autres politiques sont défendables selon le contexte.</p>
+
+<p>Les <strong>skills auto-générés</strong> par l'agent à l'exécution s'intègrent naturellement au schéma : ils héritent du <em>join</em> des labels chargés, ne peuvent pas être signés par un signataire de la racine de confiance, et ne sont donc utilisables qu'au label effectif de l'agent à travers une décision de broker. Le mécanisme est en place ; reste à voir comment il tient sous des charges réalistes.</p>
+
+<p>La question de la <strong>racine matérielle</strong> reste posée. Une racine de confiance purement logicielle reste vulnérable à la compromission de l'hôte. Le schéma s'étend à des variantes ancrées dans le matériel — TPM, enclaves sécurisées, brokers HITL attestés sur dispositifs dédiés — sans modifier le critère biconditionnel. Mais l'industrie agentique n'a pas encore de tradition équivalente à celle du <em>secure boot</em> côté serveur LLM.</p>
+
+<p>Enfin, le <strong>passage à l'échelle de l'évaluation adversariale</strong> est mécaniquement direct mais opérationnellement non trivial. Passer de quelques dizaines de fichiers à des dizaines de milliers, ajouter de la sortie réseau, des paiements, des migrations de schéma — tout cela exerce les implémentations de broker et le débit du journal d'audit, mais pas le critère lui-même, qui passe à l'échelle inchangé.</p>
+
+<p>Le mérite principal de l'article n'est pas d'inventer des primitives nouvelles. Le contrôle d'accès obligatoire vient de Bell-LaPadula en 1976. Les journaux chaînés par hash sont du folklore. La discipline du bootstrap de capacités vient de la tradition object-capability. Ce que Metere réussit, c'est de relier ces briques au problème spécifique des skills, de fournir un critère mécanique pour décider si le système marche, et d'extraire d'une implémentation réelle un ensemble de règles que d'autres harnesses peuvent adopter sans tout réinventer. Pour les équipes qui déploient des agents en production aujourd'hui, c'est probablement le document le plus concret disponible sur la question de savoir comment ne pas se faire avoir par sa propre bibliothèque de skills.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
