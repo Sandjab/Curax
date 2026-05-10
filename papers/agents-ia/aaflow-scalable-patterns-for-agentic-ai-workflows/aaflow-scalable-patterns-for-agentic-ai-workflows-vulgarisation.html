@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AAFLOW: Scalable Patterns for Agentic AI Workflows — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AAFLOW: Scalable Patterns for Agentic AI Workflows</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand l'IA agentique se heurte au mur de la plomberie</h2>
+
+<p>Un pipeline RAG (Retrieval-Augmented Generation) bien réglé peut consacrer jusqu'à 90 % de son temps d'exécution à déplacer des données plutôt qu'à générer du texte. Ce chiffre, mesuré par l'équipe de l'Université de Virginie et de Rutgers derrière AAFLOW, résume tout le problème : on s'extasie devant les capacités de raisonnement des LLM, mais la vraie bataille de performance se joue dans la tuyauterie qui entoure le modèle.</p>
+
+<p>AAFLOW propose une réponse radicale : traiter les workflows agentiques comme du calcul haute performance classique, avec des opérateurs distribués, des primitives de communication explicites et zéro copie sérialisée entre les étapes. Le résultat tient en deux chiffres : 4,64× plus rapide qu'un pipeline Dask équivalent, et 1,88× plus rapide que LangChain sur un benchmark RAG complet — sans toucher au modèle de langage.</p>
+
+<h2>Le problème : un mariage forcé entre HPC et orchestration dynamique</h2>
+
+<p>Un workflow agentique moderne combine plusieurs briques : préparer les documents, générer leurs embeddings vectoriels, les stocker dans un index, retrouver les plus pertinents pour une requête, raisonner sur le contexte récupéré, mémoriser des éléments pour la prochaine itération. Chacune de ces étapes a des décennies de littérature derrière elle. Mais leur orchestration combinée, pilotée par un LLM qui décide à la volée des prochaines actions, est récente.</p>
+
+<p>Les frameworks dominants — LangChain, LangGraph, CrewAI, AutoGen — ont été pensés depuis la couche applicative. Ils privilégient la flexibilité du raisonnement et la facilité d'expression. Côté distribution, ils s'appuient sur des moteurs génériques comme Ray ou Dask, conçus pour du traitement batch statique. Ce mariage produit deux pathologies bien identifiées par les auteurs.</p>
+
+<p>D'abord, la sérialisation tue les performances. Chaque transition entre une étape de préprocessing, un module d'embedding et une base vectorielle implique de transformer les données dans un format intermédiaire, de les envoyer sur le réseau, puis de les désérialiser. Sur des corpus de millions de chunks, ce coût domine tout le reste.</p>
+
+<p>Ensuite, l'exécution devient non déterministe. Quand c'est le LLM qui décide s'il faut récupérer plus de contexte, reformuler la requête ou interroger un outil, le plan d'exécution change d'une run à l'autre. Impossible à profiler proprement, impossible à reproduire, impossible à optimiser avec les techniques HPC classiques.</p>
+
+<p>Les auteurs partent d'une intuition simple : les systèmes relationnels ont résolu un problème comparable il y a quarante ans en formalisant les requêtes SQL comme une composition d'opérateurs (jointure, projection, agrégation) qu'un compilateur transforme en plan d'exécution optimal. Pourquoi ne pas faire pareil pour les agents ?</p>
+
+<h2>La méthode : compiler l'agent comme on compile une requête SQL</h2>
+
+<p>AAFLOW définit cinq opérateurs canoniques qui couvrent l'essentiel d'un workflow agentique. <strong>Embedding</strong> transforme du texte en vecteurs. <strong>Retrieve</strong> cherche les vecteurs les plus proches d'une requête. <strong>Reason</strong> agrège les fragments récupérés en un contexte cohérent. <strong>Memory</strong> gère l'état persistant entre sessions. <strong>Upsert</strong> insère ou met à jour les embeddings dans l'index.</p>
+
+<p>Chaque opérateur est associé à un patron de communication HPC bien connu. L'embedding est <em>embarrassingly parallel</em> : chaque chunk est indépendant, on les distribue sur tous les cœurs sans coordination. La récupération est un <em>shuffle-compute</em> : la requête est diffusée à tous les nœuds qui détiennent une partition de l'index, chacun calcule un top-k local, et une réduction finale agrège les meilleurs candidats globaux. Le raisonnement est une réduction. L'upsert est un shuffle-reduce vers les partitions concernées.</p>
+
+<p>Cette correspondance n'a rien d'anecdotique. Elle permet au runtime de compiler le workflow en un graphe acyclique dirigé (DAG) dont chaque nœud connaît à l'avance son volume de données, son partitionnement et ses dépendances. Le LLM reste libre de décider <em>quoi</em> faire — décomposer une requête, relancer une recherche, synthétiser des résultats — mais le <em>comment</em> est figé dans le plan compilé.</p>
+
+<h3>Le plan de données zéro-copie</h3>
+
+<p>La deuxième innovation concerne la circulation des données entre étapes. Les frameworks classiques sérialisent tout : un DataFrame Pandas devient des bytes, qui traversent le réseau, qui sont reconstruits en objets Python, qui repassent en bytes pour la couche suivante. À grande échelle, c'est un gaspillage massif de cycles CPU.</p>
+
+<p>AAFLOW s'appuie sur Apache Arrow, le format colonnaire qui fait consensus dans l'écosystème data depuis quelques années, et sur Cylon, un moteur de DataFrames distribués développé en partie par les mêmes équipes. Les données vivent en mémoire dans un format unique, accessible directement par toutes les étapes sans recopie. Quand l'opérateur d'embedding écrit ses vecteurs, l'opérateur d'upsert peut les lire sans conversion. Le gain est mécanique : moins d'allocations mémoire, moins de copies, moins de pression sur le ramasse-miettes Python.</p>
+
+<p>Sous le capot, Cylon utilise les primitives réseau qu'on attend dans un environnement HPC : MPI, UCX, InfiniBand, RDMA. Ces briques connaissent les topologies de cluster, exploitent les transferts mémoire sans passer par le CPU, et offrent des collectives optimisées pour shuffle et reduce. Un pipeline RAG devient alors techniquement comparable à une simulation scientifique distribuée.</p>
+
+<h3>L'exécution batchée et asynchrone</h3>
+
+<p>Le dernier ingrédient concerne l'ordonnancement. Plutôt que de traiter les requêtes une par une, AAFLOW découpe la charge en quatre étapes distinctes — Load, Transform, Embed, Upsert — connectées par des files d'attente bornées. Chaque étape dispose de son propre pool de workers persistants, qui ne paient pas le coût de démarrage à chaque tâche.</p>
+
+<p>Les batchs d'embedding et d'upsert sont dimensionnés indépendamment. Un batch d'embedding optimal sature le calcul vectoriel ; un batch d'upsert optimal amortit les coûts d'écriture dans l'index FAISS. Découpler les deux permet d'ajuster chaque étape à son goulot d'étranglement réel. Les files bornées entre étapes créent une contre-pression naturelle : si l'upsert ralentit, l'embedding ralentit aussi, sans saturer la mémoire intermédiaire.</p>
+
+<h2>Résultats clés : où sont vraiment les gains</h2>
+
+<p>Les benchmarks confirment l'intuition initiale des auteurs : le temps de génération de tokens par le LLM reste équivalent entre tous les frameworks. Aucune magie ici, le modèle reste contraint par son matériel GPU. Les gains se concentrent ailleurs, et ils sont substantiels.</p>
+
+<p>Sur un pipeline RAG complet de 256 documents générant 32 768 tokens, AAFLOW boucle en 0,87 seconde contre 1,61 à 1,64 seconde pour LangChain, LangGraph, CrewAI et AutoGen — soit une accélération de 1,88×. Le détail est éclairant : la phase d'embedding passe de 1,14 à 0,49 seconde, l'upsert de 0,14 à 0,05 seconde. Les étapes de chargement et transformation restent comparables. Toute la différence vient bien de la communication et du batching.</p>
+
+<p>Sur un benchmark d'ingestion plus lourd avec 10 millions de chunks et 4096 fichiers, l'écart se creuse. AAFLOW termine en 3,49 secondes, contre 4,44 pour HigressRAG, 11,64 pour AsyncParallelOnly, 16,19 pour DaskScalableRAG et 84,14 pour une implémentation Ray. Les auteurs notent au passage un détail révélateur : le temps total d'AAFLOW est inférieur à la somme des temps de chaque étape, preuve directe que le pipeline asynchrone recouvre effectivement les phases.</p>
+
+<p>Le passage à l'échelle confirme la robustesse du modèle. Entre 128 et 1024 workers répartis sur des nœuds à 40 cœurs, AAFLOW maintient un comportement quasi linéaire en strong scaling, descendant de 30,94 à 4,51 secondes. En weak scaling, où chaque worker traite la même charge, la dégradation reste minime (3,06 à 5,19 secondes) là où les concurrents accumulent les coûts de coordination.</p>
+
+<p>Côté retrieval, les chiffres sont encore plus marqués. Sur une requête hybride, la latence passe de 21,45 ms avec HigressRAG à 1,33 ms avec AAFLOW, une réduction de 93,8 %. Sur une génération LLM complète, le temps total tombe de 68,23 à 28,12 ms, dont l'essentiel vient de l'élimination du staging I/O avant l'appel au modèle.</p>
+
+<h2>Implications pratiques : repenser l'architecture des applications IA</h2>
+
+<p>Le message d'AAFLOW dépasse la question du benchmark. Il pointe une asymétrie inconfortable dans l'industrie : on dépense des fortunes en GPU pour accélérer l'inférence, alors que les goulots d'étranglement réels se trouvent dans la couche d'orchestration en amont. Pour une équipe qui opère un système RAG en production sur de gros volumes, gagner 2× sur l'ingestion vaut souvent mieux que gagner 10 % sur l'inférence — parce que l'ingestion est moins parallélisable et plus difficile à scaler horizontalement.</p>
+
+<p>Le choix architectural d'AAFLOW est instructif. Plutôt que de réécrire un framework de zéro, l'équipe s'appuie sur des briques éprouvées : Arrow pour la mémoire, Cylon pour le calcul distribué, FAISS pour la recherche vectorielle, LlamaIndex pour la partie agent. La valeur ajoutée se loge dans la couche de compilation et d'ordonnancement qui les fait dialoguer sans friction. C'est une leçon de design système : la performance vient souvent de l'élimination des interfaces redondantes plutôt que de l'invention de nouveaux composants.</p>
+
+<p>Pour un CTO qui évalue son stack agentique, deux questions émergent. La première : combien de fois mes données sont-elles sérialisées dans mon pipeline actuel ? La réponse est souvent plus déprimante que prévue. La seconde : mon orchestrateur me donne-t-il des traces d'exécution reproductibles ? Sans ça, impossible de profiler proprement, encore moins d'optimiser.</p>
+
+<p>L'approche d'AAFLOW ne convient pas à tous les usages. Un assistant conversationnel à faible volume n'a aucun besoin de cette machinerie. Mais dès qu'on parle de RAG industriel — ingestion continue de millions de documents, requêtes concurrentes à fort QPS, multi-tenancy avec garanties de latence — la séparation entre logique d'agent et exécution physique devient une discipline indispensable.</p>
+
+<h2>Pour aller plus loin : les questions encore ouvertes</h2>
+
+<p>AAFLOW reste un prototype académique, et plusieurs limites méritent d'être mentionnées. Les benchmarks utilisent un substitut léger (DistilGPT-2) à la place d'un vrai LLM de production. Ce choix est défendable méthodologiquement — il isole la contribution de la couche données — mais il laisse ouverte la question de la dynamique réelle quand un modèle de plusieurs dizaines de milliards de paramètres entre dans la boucle, avec ses propres patterns de latence et ses propres pressions mémoire sur le GPU.</p>
+
+<p>Les auteurs annoncent une feuille de route ambitieuse pour les expériences à venir. Micro-benchmarks par opérateur pour attribuer précisément les gains. Comparaison entre plusieurs backends vectoriels (FAISS, ChromaDB, Pinecone) pour mesurer l'impact des choix d'indexation. Étude approfondie de l'opérateur Memory, dont les implications sur les workflows multi-tours restent peu explorées. Profilage fin des coûts de communication pour quantifier le terme Ω qui formalise l'overhead framework.</p>
+
+<p>Une question plus large plane sur ce type d'approche : jusqu'où peut-on figer le plan d'exécution sans étouffer la flexibilité qui fait l'intérêt des agents ? Les auteurs proposent une séparation nette entre logique (ce que l'agent décide) et physique (comment c'est exécuté). Cette dichotomie marche bien pour les opérateurs RAG classiques, mais qu'en est-il quand l'agent invoque des outils dynamiques, négocie avec d'autres agents, ou modifie son propre graphe d'exécution en cours de route ? La compilation devient alors un problème ouvert, voisin de celui des bases de données qui doivent re-planifier en cours de requête.</p>
+
+<p>Un autre angle mérite réflexion : l'impact sur l'écosystème logiciel. AAFLOW exige une expertise HPC qu'on trouve dans les laboratoires nationaux, peu dans les startups IA. Si l'industrie veut bénéficier de ces gains, il faudra que les principes de zéro-copie et d'ordonnancement déterministe descendent dans les frameworks grand public. LangChain et consorts auront-ils la volonté de repenser leur architecture en profondeur, ou ces optimisations resteront-elles l'apanage de runtimes spécialisés ?</p>
+
+<p>La contribution la plus durable d'AAFLOW est peut-être conceptuelle. En montrant qu'un workflow agentique peut s'analyser avec les mêmes outils qu'un plan de requête relationnel, le papier suggère qu'une discipline d'ingénierie mature reste à construire pour l'IA agentique. Quarante ans après Codd, le monde des LLM redécouvre la valeur des abstractions formelles. C'est un signe encourageant — et un programme de travail considérable pour les années qui viennent.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

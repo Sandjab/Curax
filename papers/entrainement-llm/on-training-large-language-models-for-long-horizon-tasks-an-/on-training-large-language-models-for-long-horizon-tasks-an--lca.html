@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On Training Large Language Models for Long-Horizon Tasks: An Empirical Study of Horizon Length — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>On Training Large Language Models for Long-Horizon Tasks: An Empirical Study of Horizon Length</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les agents LLM doivent enchaîner des séquences longues d'actions pour résoudre des tâches réelles (debug de code, navigation web, contrôle incarné). La littérature récente sur leur entraînement se partage entre optimisations système (context engineering, orchestration de workflows) et optimisations modèle (SFT, RL critic-free type GRPO/DAPO). Aucune ne traite la longueur d'horizon comme variable indépendante : elle reste confondue avec la complexité de raisonnement, la perception, ou le budget d'interaction.</p>
+<p>Kim et collègues posent une question simple et propre : à complexité de raisonnement strictement constante, quel est l'effet de la seule longueur d'horizon sur la dynamique d'entraînement RL d'un agent LLM ? Ils formalisent trois quantités distinctes — distance au but <em>d(s₀,g)</em>, budget d'interaction <em>H_max</em>, horizon effectif <em>h_π</em> — et construisent des suites de tâches qui découplent <em>d(s₀,g)</em> de la difficulté de résolution.</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole repose sur Sudoku et Rush Hour, deux jeux textuels procéduralement générables. Pour Sudoku, le nombre de cases vides sert de proxy de la distance au but ; HoDoKu garantit que tous les puzzles ne requièrent que des techniques basiques, fixant ainsi la complexité de résolution. Pour Rush Hour, le solveur de Fogleman fournit le nombre minimal de coups optimal.</p>
+<p>Le filtrage est l'ingrédient méthodologique central. Les auteurs ne conservent qu'un puzzle si Qwen3-8B (Sudoku, pass@8) ou GPT-5-mini (Rush Hour) le résout dans une formulation court-horizon proxy. L'hypothèse : un modèle qui possède la capacité de raisonnement sous-jacente doit pouvoir la démontrer en horizon court ; un échec en horizon long traduit alors un effet d'horizon, pas un déficit de raisonnement.</p>
+<p>Sept partitions L1–L7 (de 11–15 à 41–45 cases vides) avec 640 tâches d'entraînement par niveau et 100 tâches de test. La base est Qwen3-1.7B, initialisée par SFT sur trajectoires expert distillées (Qwen3-32B raffiné par GPT-5-mini), puis affinée par RL critic-free dérivé de REINFORCE avec normalisation batch des avantages, importance sampling masqué (Geo-MIS) et tronqué (Seq-TIS) pour gérer le décalage train/inference. Mémoire de l'agent : fenêtre glissante de K=2 tours.</p>
+<p>Trois mécanismes de réduction d'horizon sont testés : macro-actions atomiques composées (générer plusieurs <code>value()</code> par tour, déplacements multi-cellules dans Rush Hour), macro-actions de longueur flexible vs fixe, décomposition en sous-buts vérifiables (sous-grilles 3×3) avec récompense dense par segment.</p>
+
+<h2>Résultats principaux</h2>
+<p>Premier résultat : sur L1–L2 le RL converge proprement, sur L3–L4 il s'effondre catastrophiquement avec explosion du ratio de réponses tronquées à la longueur maximale. La complexité de résolution étant tenue constante par construction, l'horizon agit bien comme facteur indépendant d'instabilité.</p>
+<p>Deuxième résultat : les macro-actions stabilisent l'entraînement sur tous les régimes et permettent la convergence sur L3–L4. L'ablation contrôlée (Figure 4) est convaincante — quand on prend la <em>même</em> politique macro-action mais qu'on force l'environnement à n'exécuter qu'une action atomique par tour, l'effondrement réapparaît. Ce n'est donc pas la richesse représentationnelle de la macro-action qui sauve l'apprentissage, c'est la réduction de l'horizon effectif.</p>
+<p>Troisième résultat — le plus intéressant : la <em>généralisation d'horizon</em>. Les modèles entraînés sur L1–L2 ou L3–L4 transfèrent à L5–L7 (jamais vus). Le tableau 7 montre par exemple un avg@4 de 54% sur L5 pour le modèle entraîné en L3–L4 macro vs 0% pour la base. La précision par étape plus élevée explique partiellement l'effet, mais des cas où des modèles macro avec précision/étape plus faible battent des modèles atomiques montrent que la réduction du nombre de points de décision compte par elle-même.</p>
+<p>Quatrième résultat : la décomposition en sous-buts permet d'apprendre sur L3–L4 là où le baseline sparse échoue. Le curriculum court → long surpasse l'entraînement direct sur le long, suggérant que la compétence d'horizon se bootstrap.</p>
+<p>Robustesse : les conclusions tiennent sur WebShop (environnement réaliste), à l'échelle 4B (l'effondrement persiste, le scale ne sauve rien), et sous optimiseur GRPO-style (pas une particularité de REINFORCE).</p>
+
+<h2>Discussion et limites</h2>
+<p>L'analyse de la dynamique des gradients token-level (Section 2.2.2 et Annexe D.1) fournit un mécanisme plausible : sous avantage négatif, la masse de probabilité retirée du token échantillonné est redistribuée sur tout le vocabulaire (~10⁵), créant un signal diffus qui amplifie le bruit. Sur trajectoires longues à récompense terminale, l'accumulation de mises à jour à avantage négatif explique l'effondrement vers des générations incohérentes.</p>
+<p>Limite majeure reconnue par les auteurs : les expériences se cantonnent à Qwen3-1.7B et 4B sur deux jeux textuels. Aucune validation à l'échelle frontière (70B+) ni sur d'autres familles (Llama, DeepSeek). L'argument selon lequel l'effet d'horizon est largement orthogonal au choix de modèle reste une conjecture.</p>
+<p>Limite supplémentaire (Annexe D.4) : la généralisation observée est une généralisation d'horizon, pas une généralisation de techniques. Dès que les puzzles d'évaluation requièrent des techniques de résolution non vues à l'entraînement (médium/hard), la performance s'effondre même à horizon constant. Le RL ne crée pas de primitives de raisonnement nouvelles, il étend l'application de primitives déjà présentes — résultat cohérent avec Yue et al. (2025).</p>
+<p>Le filtrage par Qwen3-8B/GPT-5-mini introduit un biais de sélection silencieux : on conserve uniquement les puzzles que ces modèles savent résoudre en horizon court. Si la capacité court-horizon corrèle avec la facilité d'apprentissage en RL, l'estimation de l'effet d'horizon pur en est colorée.</p>
+<p>L'absence d'intervalles de confiance et de comparaisons multi-graines complique l'évaluation de la significativité statistique des courbes. Les résultats reposent sur des trajectoires uniques d'entraînement.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le papier détaille les hyperparamètres (Tableau 3), la construction des datasets (Annexe B), les prompts complets (Figures 14–15), les mécanismes d'importance sampling et leur ablation (Tableau 6). Le codebase s'appuie sur rllm v0.2 + verl v0.5.0 modifié pour résoudre les problèmes de retokenisation et de décalage train/inference. Aucun lien public vers le code modifié n'est fourni dans le texte ; les datasets dérivent de sources publiques (Ritvik19, HoDoKu, générateur Rush Hour de Fogleman). La reproductibilité est plausible mais demanderait un effort d'ingénierie non trivial.</p>
+
+<h2>Impact et applications</h2>
+<p>Le message opérationnel est clair : avant d'empiler des algorithmes RL sophistiqués pour le long-horizon, concevoir l'espace d'action pour réduire l'horizon effectif. Les agents code-based (programmes avec boucles et conditionnels qui compactent des séquences d'appels d'outils) et les agents GUI augmentés d'API haut niveau réalisent implicitement cette réduction — le papier fournit le cadre théorique qui justifie ce choix.</p>
+<p>Pour les praticiens entraînant des coding agents ou des agents web par RL, l'approche curriculum court→long et l'usage de récompenses denses sur sous-buts vérifiables deviennent des heuristiques étayées empiriquement. La distinction entre <em>d(s₀,g)</em>, <em>H_max</em> et <em>h_π</em> donne un vocabulaire utile pour analyser les échecs d'entraînement actuels.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans la lignée Park et al. (2025) qui formalisent la non-linéarité de la complexité état-action en fonction de l'horizon, et Sinha et al. (2025) sur l'illusion des rendements décroissants en exécution long-horizon. Il étend les curricula d'horizon de Shen et al. (2025) et Xi et al. (2025a) en reframant la progression non par budget d'interaction mais par distance au but intrinsèque.</p>
+<p>Sur le plan algorithmique, il s'aligne avec la vague critic-free post-DeepSeek-R1 (GRPO, DAPO, GSPO) et adopte les corrections d'importance sampling de Liu et al. (2025a) et Yao et al. (2025) pour le décalage train/inference. La connexion avec le RL hiérarchique (Zhou & Zanette 2024, Hu et al. 2025) et les process reward models (Xi et al. 2025b, Lee et al. 2025) est explicitée en Section 5.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+  <thead>
+    <tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Question de recherche</td><td>5</td><td>Question précise, originale, formalisée proprement (d, H_max, h_π).</td></tr>
+    <tr><td>Design expérimental</td><td>5</td><td>Découplage horizon/complexité par filtrage proxy court-horizon, ablation contrôlée macro-action+execution atomique.</td></tr>
+    <tr><td>Taille d'échantillon</td><td>3</td><td>640 tâches d'entraînement par niveau, 100 par niveau de test ; pas de répétitions multi-graines reportées, pas d'IC.</td></tr>
+    <tr><td>Qualité des métriques</td><td>4</td><td>pass@4, avg@4, taux de succès et précision par étape pertinents ; absence de tests statistiques formels.</td></tr>
+    <tr><td>Contrôle des biais</td><td>4</td><td>Bon contrôle de la complexité de résolution via HoDoKu ; biais de sélection résiduel via le filtrage par modèle proxy.</td></tr>
+    <tr><td>Reproductibilité</td><td>3</td><td>Hyperparamètres et prompts détaillés ; aucun lien explicite vers code/datasets dérivés ; modifications non triviales de verl.</td></tr>
+    <tr><td>Transparence sur les limites</td><td>4</td><td>Annexe A reconnaît les limites de domaine et d'échelle ; D.4 expose franchement l'absence de généralisation aux techniques nouvelles.</td></tr>
+    <tr><td>Impact et nouveauté</td><td>4</td><td>Reframe la conception d'agents long-horizon ; généralisation d'horizon est un phénomène observable utile ; impact dépendra de la validation à plus grande échelle.</td></tr>
+  </tbody>
+</table>
+<p><strong>Note globale : 4.0/5</strong> — étude bien conçue avec un message clair et exploitable, freinée par l'échelle de modèles testée et l'absence de protocole multi-graines.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

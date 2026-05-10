@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Code Reasoning — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Agentic Code Reasoning</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le raisonnement agentique sur le code, défini ici comme la capacité d'un agent LLM à explorer un dépôt et à établir des propriétés sémantiques sans exécuter le code, occupe une position inconfortable entre deux extrêmes. D'un côté, les approches non structurées de type chain-of-thought autorisent l'agent à conclure sans justifier, ce qui produit des hallucinations sémantiques. De l'autre, la vérification formelle en Lean ou Coq exige une formalisation complète des sémantiques de langage, irréaliste sur du code de production multi-langage.</p>
+<p>Ugare et Chandra proposent une voie médiane qu'ils nomment <strong>raisonnement semi-formel</strong> : un template de prompt qui force l'agent à énoncer des prémisses explicites, à tracer les chemins d'exécution test par test, puis à dériver une conclusion formelle. Le certificat reste en langage naturel mais sa structure rigide empêche l'agent de sauter des cas. La cible applicative annoncée est claire : fournir un signal de récompense fiable pour l'entraînement RL des agents de coding sans dépendre de sandboxes coûteux.</p>
+
+<h2>Méthodologie</h2>
+<p>Trois tâches structurent l'évaluation. La <strong>vérification d'équivalence de patches</strong> demande à l'agent, étant donné deux patches résolvant la même issue, de prédire s'ils produisent les mêmes résultats sur la suite de tests. La <strong>localisation de fautes</strong> sur Defects4J impose d'identifier les lignes buggées à partir du seul nom du test échouant, sans stack trace. Le <strong>code QA</strong> sur RubberDuckBench mesure la capacité à répondre à 15 questions de compréhension de code évaluées par grilles d'experts.</p>
+<p>Le harness agentique repose sur SWE-agent avec accès bash, exploration sur 100 étapes maximum, mais sans pouvoir exécuter le code du dépôt ni interroger l'historique git. Les comparaisons sont des ablations entre raisonnement standard (chain-of-thought libre) et raisonnement semi-formel (template structuré) sur les mêmes modèles : Sonnet-4.5 et Opus-4.5.</p>
+<p>Le dataset d'équivalence de patches mérite attention. Les auteurs ne tirent pas uniformément depuis SWE-bench-Verified mais curent activement 170 paires difficiles via un score de similarité combiné LLM (0-10) et difflib (>0.3), pour stresser le verifier sur les cas où la similarité de surface masque la divergence sémantique. Un second jeu de 200 patches issus de live-swe-agent (gemini-3-pro) est échantillonné aléatoirement avec équilibrage 50/50 correct/incorrect.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur les patches curés, le raisonnement semi-formel fait passer Opus-4.5 de 78,2% à 88,8% de précision, soit une réduction d'erreurs de près de moitié, au prix d'un coût computationnel multiplié par 2,8 (28 étapes contre 10). Sur les patches réels avec test patches disponibles, Opus-4.5 atteint 93% contre 87% en standard et 73% pour la baseline difflib avec seuil optimisé a posteriori.</p>
+<p>Sur RubberDuckBench, Opus-4.5 progresse de 78,3% à 87% (+8,7 points) avec le template semi-formel. Effet notable : Sonnet-4.5 ne bénéficie pas du template structuré (84,2% standard contre 84,8% semi-formel), suggérant un plateau dépendant du modèle. Les auteurs interprètent cela comme un signe que le template corrige principalement les défauts d'Opus à deviner depuis les noms de fonctions.</p>
+<p>Sur Defects4J, le gain est de +5 à +12 points en Top-5 selon le mode et la métrique. Le mode agentique avec semi-formel atteint 72,1% Top-5 sous la métrique stricte « All » sur l'échantillon de 50 bugs. La validation à plus grande échelle sur 100 bugs réduit l'écart à +5 points, ce que les auteurs attribuent à la présence de bugs trivialement résolus depuis le seul code de test.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'analyse d'erreurs est l'un des points forts de l'article. Les auteurs identifient des modes d'échec qualitativement distincts : tracé d'exécution incomplet malgré l'instruction, sémantique des bibliothèques tierces devinée par le nom, différences sémantiques détectées mais jugées hors-sujet à tort. Le cas py_5 illustre une limite intrinsèque : le raisonnement structuré peut produire des erreurs <em>plus confiantes</em> en construisant des chaînes plausibles mais incomplètes.</p>
+<p>Les faiblesses méthodologiques sont nettes. Le benchmark RubberDuckBench ne contient que 15 questions, ce qui ne permet aucune analyse statistique sérieuse — un écart de 9 points sur 15 items représente une poignée de réponses. La curation du dataset d'équivalence introduit un biais de sélection assumé mais non corrigé : on mesure la performance sur la queue dure de la distribution, pas sur le cas moyen. La contamination des données SWE-bench est mentionnée puis évacuée par l'argument des comparaisons relatives, ce qui est valable pour l'ablation mais ne dit rien des chiffres absolus.</p>
+<p>Le coût n'est jamais quantifié en dollars ou en tokens. L'argument économique central — éviter les sandboxes en RL — repose sur l'hypothèse implicite que 28 à 43 étapes d'agent Opus-4.5 sont moins coûteuses qu'une exécution de tests. Cette hypothèse mériterait une comparaison empirique, surtout face à difflib qui atteint 73% à coût quasi nul.</p>
+<p>L'absence de comparaison avec d'autres techniques de prompting structuré (Tree-of-Thoughts, self-consistency, programme assistant) limite l'attribution causale du gain à la « semi-formalité ». On ne sait pas si le bénéfice provient de la structure du certificat, de la longueur du raisonnement, ou simplement du budget d'étapes plus élevé qu'autorise le format.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les annexes A et B fournissent les templates de prompt complets pour l'équivalence de patches et la localisation de fautes, ce qui est nécessaire mais insuffisant. Aucun lien vers un dépôt de code, aucune mention de release du dataset curé de 170 patches, aucun script d'évaluation publié. Les benchmarks tiers (Defects4J, RubberDuckBench, SWE-bench) sont publics, mais le pipeline de curation et l'agent SWE minimal utilisé ne sont pas distribués. La reproductibilité reste partielle : un lecteur peut réimplémenter l'idée mais pas répliquer les chiffres exacts.</p>
+
+<h2>Impact et applications</h2>
+<p>L'application la plus tangible est le verifier sans exécution pour les pipelines RL d'agents de coding, où le coût de setup d'environnements (CI, sandboxes) domine. À 93% de précision, le signal reste trop bruité pour remplacer les tests sur les modèles frontières, mais devient utilisable comme reward shaping ou comme filtre de pré-sélection. Les auteurs mentionnent les pipelines SWE-RL, SWE-Gym et R2E-Gym comme bénéficiaires potentiels.</p>
+<p>L'extension à l'analyse statique générale (détection de vulnérabilités, code smells, mauvais usage d'API) est plausible mais spéculative. La généralisation inter-langages est démontrée à petite échelle sur Java, Python et C++ via RubberDuckBench, sans creuser la question des sémantiques spécifiques (closures, ownership, généricité).</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article se positionne explicitement entre SWE-RM (reward model entraîné), Agentic Rubrics (rubriques générées par LLM) et CodeJudge (LLM-as-judge), tous présentés comme « non structurés ». Le contraste avec la vérification formelle (Lean, Coq, Datalog) est posé comme l'autre extrême. La filiation revendiquée passe par le chain-of-thought de Wei et al. (2022), ReAct (Yao et al. 2023) et CodeAct (Wang et al. 2024), avec l'argument que le template task-specific est ce qui généralise mieux que la rubrique générée.</p>
+<p>Le travail le plus complémentaire est celui de Sistla et al. (2025) sur la vérification post-hoc du raisonnement LLM via Datalog : Ugare et Chandra opèrent côté input (forcer la qualité du raisonnement), Sistla et al. côté output (vérifier formellement le raisonnement produit). Une combinaison des deux approches semble naturelle et n'est pas encore explorée.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>4</td><td>Question claire et pertinente : raisonner sur le code sans exécuter, à un niveau intermédiaire entre CoT libre et vérification formelle.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Trois tâches diverses et ablations propres sur le même modèle, mais absence de comparaison avec d'autres techniques de prompting structuré.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>170 patches curés et 200 réels acceptables, mais 15 questions RubberDuckBench rendent les conclusions sur le code QA fragiles.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Test execution comme ground truth pour patches et Defects4J, mais évaluation par LLM grader sur RubberDuckBench (85% d'accord inter-juges).</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Contamination SWE-bench reconnue, comparaisons relatives correctes, mais biais de curation du dataset assumé sans correction.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Templates de prompt fournis en annexe, mais ni code, ni dataset curé, ni scripts d'évaluation publiés.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Section error analysis détaillée, cas d'échec documenté (py_5, Csv_12), contamination discutée explicitement.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Contribution incrémentale utile pour les pipelines RL, mais le concept de prompt structuré pour code n'est pas radicalement nouveau.</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

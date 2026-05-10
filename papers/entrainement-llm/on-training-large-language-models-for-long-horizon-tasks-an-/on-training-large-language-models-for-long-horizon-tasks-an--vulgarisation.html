@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On Training Large Language Models for Long-Horizon Tasks: An Empirical Study of Horizon Length — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>On Training Large Language Models for Long-Horizon Tasks: An Empirical Study of Horizon Length</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA échoue parce que la tâche est trop longue</h2>
+
+<p>Un modèle de langage capable de résoudre un Sudoku en une seule réponse peut s'effondrer complètement quand on lui demande de remplir les cases une par une. Même puzzle, même règles, même difficulté de raisonnement. Seule différence : la longueur de la séquence d'actions. Cette observation, à première vue contre-intuitive, est le point de départ d'une étude empirique menée par des chercheurs de Yonsei University et Microsoft Research, présentée à ICML 2026.</p>
+
+<p>L'enjeu dépasse largement le jeu de Sudoku. Les agents IA modernes — Claude Code, Codex, les agents web — passent leur temps à enchaîner des dizaines, parfois des centaines d'actions pour accomplir une tâche : lire un fichier, le modifier, lancer un test, lire l'erreur, corriger, recommencer. Si l'entraînement par renforcement échoue dès que la chaîne d'actions s'allonge, alors construire des agents fiables sur de longs horizons devient un problème structurel, pas un simple détail d'ingénierie.</p>
+
+<h2>Le problème : l'horizon comme goulot d'étranglement caché</h2>
+
+<p>Jusqu'ici, la recherche sur les agents LLM s'est concentrée sur deux directions. D'un côté, l'optimisation du système : meilleure gestion du contexte, orchestration de workflows, outils plus efficaces. De l'autre, l'optimisation du modèle : fine-tuning supervisé, apprentissage par renforcement avec des algorithmes toujours plus sophistiqués. Mais les deux approches restent largement des extensions de paradigmes mono-tour. Le rôle propre de la longueur de la tâche — combien d'étapes l'agent doit enchaîner — passait sous le radar.</p>
+
+<p>Le défi technique tient en deux mécanismes. Premièrement, l'explosion combinatoire : à chaque étape, l'agent doit choisir parmi un grand nombre d'actions possibles, et une mauvaise décision précoce contraint tout le reste de la trajectoire. La probabilité de suivre une trajectoire optimale décroît exponentiellement avec la longueur. Deuxièmement, le problème d'attribution du crédit. Quand l'agent échoue après cinquante actions, comment savoir laquelle de ces cinquante actions a tué la trajectoire ? Le signal d'apprentissage devient bruité, dilué, et les gradients deviennent instables.</p>
+
+<p>Avant cette étude, il restait difficile de séparer ces effets de la complexité intrinsèque de la tâche. Une tâche longue est souvent aussi une tâche difficile. Un Sudoku avec beaucoup de cases vides demande à la fois plus d'étapes <em>et</em> des techniques de résolution plus avancées. Les chercheurs voulaient isoler proprement la variable « longueur ».</p>
+
+<h2>La méthode : un Sudoku comme banc d'essai contrôlé</h2>
+
+<p>L'astuce expérimentale est élégante. Les chercheurs construisent des tâches où la difficulté de raisonnement reste constante mais où le nombre d'actions varie. Concrètement, ils prennent des grilles de Sudoku résolvables avec uniquement des techniques basiques (vérifié par un solveur classique, HoDoKu) et trient les puzzles selon le nombre de cases vides. Sept niveaux de difficulté, du plus court (11-15 cases vides) au plus long (41-45).</p>
+
+<p>Pour s'assurer que le modèle a la capacité de raisonnement nécessaire, ils filtrent les puzzles en demandant d'abord au modèle de générer la solution complète en une seule réponse. Si le modèle réussit ce format mono-tour, on sait qu'il connaît la technique. Restera à voir s'il peut l'appliquer pas à pas. C'est la séparation propre entre « savoir résoudre » et « savoir exécuter sur la durée ».</p>
+
+<p>Le second environnement est Rush Hour, ce jeu de plateau où il faut faire sortir une voiture rouge bloquée dans un parking en déplaçant les autres véhicules. Spatial, peu de connaissances préalables requises, et une métrique propre de longueur : le nombre minimum de coups pour sortir.</p>
+
+<p>Le modèle de base est Qwen3-1.7B, un petit modèle suffisant pour observer les dynamiques d'entraînement sans coût prohibitif. Les chercheurs procèdent en deux phases : un fine-tuning supervisé sur des trajectoires expertes générées par GPT-5-mini, suivi d'un apprentissage par renforcement avec une variante stabilisée de REINFORCE.</p>
+
+<h2>Résultats clés : l'effondrement et sa solution</h2>
+
+<p>Le premier résultat frappe par sa netteté. Sur les Sudokus courts (niveaux L1-L2, 11 à 20 cases vides), le RL fonctionne comme prévu : la performance grimpe régulièrement, l'entraînement se stabilise. Sur les Sudokus longs (L3-L4, 21 à 30 cases vides), la même procédure conduit à un effondrement spectaculaire. Le modèle commence à progresser, puis s'effondre brutalement, générant des réponses incohérentes et anormalement longues. Le ratio de réponses tronquées au maximum explose. La politique entraînée devient pire que celle de départ.</p>
+
+<p>Rappelons que la complexité de raisonnement est la même dans les deux cas. Seule la longueur de la séquence d'actions change. La conclusion est claire : la longueur d'horizon est, à elle seule, une cause d'instabilité d'entraînement.</p>
+
+<p>L'analyse du gradient explique pourquoi. Quand l'avantage est positif, le modèle concentre la probabilité sur le bon token. Quand l'avantage est négatif — cas fréquent en long horizon, où les trajectoires échouent souvent — la probabilité est diffusée sur l'ensemble du vocabulaire, soit cent mille tokens. Au lieu de pointer vers la bonne action, le signal disperse. Multipliez ce bruit sur des centaines d'étapes, et l'entraînement se désintègre.</p>
+
+<h3>La solution : raccourcir l'horizon plutôt que combattre sa longueur</h3>
+
+<p>La proposition des auteurs tient en une formule : <strong>réduction d'horizon</strong>. Au lieu de complexifier l'algorithme pour gérer les longues séquences, on transforme la tâche pour que la séquence soit plus courte. Deux mécanismes concrets sont testés.</p>
+
+<p>Le premier est l'usage de <strong>macro-actions</strong>. Plutôt que de remplir une case de Sudoku par étape, l'agent peut en remplir plusieurs en une seule décision. Sur Rush Hour, plutôt que de déplacer une voiture d'une case à la fois, il peut la déplacer de plusieurs cases d'un coup. Le contenu du raisonnement reste identique, mais le nombre de pas d'interaction chute. Et avec lui, l'instabilité disparaît. Les courbes d'entraînement sur L3-L4 deviennent stables et atteignent des performances finales bien supérieures à la baseline atomique.</p>
+
+<p>Pour s'assurer que ce gain vient bien de l'horizon raccourci et pas d'une politique plus expressive, les chercheurs font une expérience de contrôle propre : ils prennent la même politique entraînée avec macro-actions, mais l'obligent à n'exécuter qu'une action atomique par tour à l'inférence. Résultat : effondrement à nouveau. Le bénéfice tient bien à la longueur effective de l'horizon, pas à la richesse de l'espace d'actions.</p>
+
+<p>Une nuance importante émerge sur le design des macro-actions. Les versions à longueur fixe (toujours cinq actions par pas) performent moins bien que les versions flexibles, où le modèle choisit lui-même combien d'actions grouper. La rigidité tue l'efficacité ; la granularité doit rester sous contrôle de la politique.</p>
+
+<p>Le second mécanisme est la <strong>décomposition en sous-objectifs</strong>. Sur Sudoku, plutôt qu'attendre la grille complète pour donner une récompense, on découpe en sous-grilles 3×3 et on récompense chaque sous-grille correctement remplie. Le crédit devient local, l'apprentissage redevient stable, et la performance sur les longs horizons décolle là où la baseline en récompense éparse stagnait.</p>
+
+<h3>La généralisation d'horizon</h3>
+
+<p>Le résultat le plus intrigant arrive en fin d'étude. Les modèles entraînés sur des horizons courts ou modérés généralisent à des horizons plus longs <em>jamais vus pendant l'entraînement</em>. Un modèle entraîné sur des Sudokus de 21 à 30 cases vides résout des grilles de 41-45 cases avec une performance non triviale, là où le modèle baseline atomique tombe à zéro.</p>
+
+<p>Ce phénomène, baptisé <strong>généralisation d'horizon</strong>, ouvre une stratégie pratique : l'apprentissage par curriculum. Entraîner d'abord sur des tâches courtes, puis transférer vers des tâches longues, donne de meilleurs résultats que d'attaquer directement les tâches longues. Sur Rush Hour, un curriculum 4-9 coups puis 10-12 coups bat largement un entraînement direct sur 10-12 coups.</p>
+
+<p>Robustesse confirmée sur trois axes. Changement d'environnement (WebShop, un benchmark de navigation web) : même pattern, la réduction d'horizon stabilise. Changement d'échelle (modèle 4B au lieu de 1.7B) : l'effondrement persiste à plus grande capacité, augmenter la taille ne résout pas le problème. Changement d'optimiseur (variante GRPO) : même instabilité, même solution. Le goulot d'étranglement est structurel, pas accidentel.</p>
+
+<h2>Implications pratiques : repenser le design des agents</h2>
+
+<p>Pour qui construit aujourd'hui des agents IA en production, ces résultats ont des conséquences directes.</p>
+
+<p>D'abord, sur le design de l'espace d'actions. Les agents qui exécutent du code (style Claude Code, Codex) bénéficient d'un avantage caché : un programme avec une boucle <em>est</em> une macro-action. Au lieu d'enchaîner cinquante appels à un outil, l'agent écrit un script qui les fait tous. Cette compression d'horizon n'est pas un simple gain d'efficacité — c'est ce qui rend l'entraînement par renforcement faisable. Les agents GUI qui mélangent clics bas niveau et appels API haut niveau exploitent la même logique. Les chercheurs argumentent que ce choix d'abstraction devrait être un principe de design, pas un sous-produit.</p>
+
+<p>Ensuite, sur la conception des récompenses. Une récompense éparse au bout de cent actions, c'est un signal qui propage du bruit sur cent étapes. Décomposer la tâche en sous-objectifs vérifiables transforme un problème intractable en suite de problèmes courts. Les modèles de récompense de processus (process reward models) trouvent ici leur justification théorique : ils ne sont pas un raffinement d'ingénierie, ils sont la condition de stabilité.</p>
+
+<p>Enfin, sur la stratégie d'entraînement. Plutôt que d'investir dans des algorithmes RL toujours plus complexes pour gérer les longues séquences, le levier le plus rentable consiste à raccourcir la tâche elle-même. Soit en regroupant les actions, soit en découpant le but. Cette inversion de priorité est inhabituelle dans un domaine où la sophistication algorithmique reste valorisée.</p>
+
+<blockquote>« La meilleure façon de fuir un problème, c'est de le résoudre. » Plutôt que de forcer l'agent à apprendre des dépendances long-horizon intractables, on minimise structurellement la longueur d'interaction.</blockquote>
+
+<h2>Pour aller plus loin</h2>
+
+<p>L'étude reste limitée par son périmètre. Les environnements testés sont des jeux textuels contrôlés. Le monde réel — navigation web complexe, ingénierie logicielle sur de vrais dépôts, manipulation robotique — ajoute des bruits que Sudoku ne capture pas : observations partielles, dynamique stochastique, perception visuelle. Les auteurs reconnaissent que la validation sur des domaines hétérogènes reste à faire, même s'ils s'attendent à ce que le mécanisme de fond persiste.</p>
+
+<p>La taille des modèles testés (1.7B, 4B) est modeste. Une question ouverte : un modèle frontière comme GPT-5 ou Claude Opus contournerait-il l'effondrement par sa seule capacité ? L'expérience à 4B suggère que non, mais l'extrapolation reste prudente. Les comportements émergents à grande échelle peuvent toujours surprendre.</p>
+
+<p>Une autre limite intéressante apparaît dans les expériences additionnelles : la généralisation d'horizon ne s'étend pas aux techniques de raisonnement non vues. Un modèle entraîné sur des Sudokus à techniques faciles généralise à des grilles plus longues du même type, mais s'effondre dès qu'on introduit des techniques moyennes ou difficiles. Le RL amplifie et recompose des capacités déjà présentes, il n'en crée pas de nouvelles. Cette frontière entre généralisation d'horizon et généralisation de raisonnement mériterait sa propre étude.</p>
+
+<p>Enfin, l'asymétrie du gradient sur les avantages négatifs — qui dilue la probabilité sur tout le vocabulaire — pose une question plus profonde. Faut-il repenser fondamentalement comment on traite les trajectoires ratées dans le RL pour LLM ? Plusieurs travaux récents (CISPO, GSPO, DAPO) explorent des correctifs au niveau de l'échantillonnage par importance. Combiner ces correctifs avec la réduction d'horizon donne probablement le meilleur des deux mondes, mais l'interaction entre ces techniques reste à cartographier.</p>
+
+<p>Le message à retenir tient en une ligne : avant d'optimiser l'algorithme, optimiser la tâche. Pour construire des agents capables sur de longues durées, le levier n'est pas dans la sophistication du gradient, mais dans la géométrie même du problème qu'on demande à l'agent de résoudre.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

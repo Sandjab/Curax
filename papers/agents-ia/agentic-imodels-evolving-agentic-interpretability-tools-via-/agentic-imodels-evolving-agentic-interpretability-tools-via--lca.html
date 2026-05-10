@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AGENTIC-IMODELS: Evolving agentic interpretability tools via autoresearch — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AGENTIC-IMODELS: Evolving agentic interpretability tools via autoresearch</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>L'interprétabilité en machine learning a été pensée pendant des décennies pour un lecteur humain. Singh et collègues partent d'un constat simple : les systèmes agentiques de data science (ADS) délèguent désormais aux LLM la sélection de modèles, la lecture des coefficients et la formulation des conclusions, mais les outils d'interprétabilité existants (arbres de décision, GAM, rule lists) produisent des sorties calibrées pour la cognition humaine. Cette inadéquation dégrade la fiabilité des analyses agentiques.</p>
+<p>La proposition centrale renverse l'ordre habituel : plutôt que d'adapter manuellement les outils existants, les auteurs font évoluer une bibliothèque de régresseurs par un agent de coding (Claude Code, Codex) qui optimise simultanément la performance prédictive et un nouveau score d'interprétabilité « agent-facing ». Ce score mesure la simulabilité du modèle par un LLM à partir de sa seule représentation textuelle <code>__str__</code>.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline AGENTIC-IMODELS combine trois briques. Premièrement, une suite de 65 jeux de données tabulaires (7 OpenML TabArena, 58 PMLB) sert de banc d'évaluation prédictive, avec un classement par rang RMSE moyen plutôt que par RMSE brut, ce qui réduit la sensibilité aux outliers.</p>
+<p>Deuxièmement, 200 tests d'interprétabilité notés par GPT-4o, répartis en six catégories cognitives (attribution, simulation ponctuelle, sensibilité, contrefactuels, structure, simulation de fonctions complexes). Le LLM ne reçoit que la chaîne <code>__str__</code> du modèle ajusté et doit répondre à des questions quantitatives — prédiction d'un point, classement de features, résolution inverse — vérifiées contre une vérité-terrain numérique. La séparation 43 développement / 157 hold-out vise à détecter le reward hacking par mémorisation des questions.</p>
+<p>Troisièmement, la boucle d'autoresearch elle-même : l'agent reçoit un fichier <code>interpretable_regressor.py</code> et itère (édition, évaluation, sauvegarde des métriques en CSV, relance) sur 50 à 200 itérations. Le prompt insiste explicitement contre la simple variation d'hyperparamètres et contre la recopie des réponses aux tests. Six configurations principales sont testées (Claude Opus-4.6/4.7 et Codex à trois niveaux d'effort) plus trois runs répétés à effort moyen, produisant 467 modèles évolués.</p>
+<p>L'évaluation downstream sur BLADE compare quatre agents ADS (Copilot Gemini, Copilot Sonnet, Claude Code, Codex) sur 13 datasets, chacun jugé selon correctness, completeness et clarity par GPT-4o, dans quatre conditions de prompt incluant deux contrôles (emphase sur imodels et interpretML) pour isoler l'effet du package.</p>
+
+<h2>Résultats principaux</h2>
+<p>Les modèles évolués peuplent la région auparavant vide à faible rang RMSE et haute interprétabilité. HingeEBM (5 bags), découvert par Claude, atteint un rang normalisé de 0,19 avec un score d'interprétabilité de 0,71 — proche du rang de TabPFN (0,16) mais avec une interprétabilité quatre fois supérieure. Codex tend vers des solutions sparses symboliques (TeacherStudentRuleSpline, rang 0,36, interprétabilité 0,80), tandis que Claude favorise des architectures GAM avec hinges.</p>
+<p>Les gains downstream sur BLADE sont substantiels et inversement corrélés à la force du modèle de base : +72,5 % pour Copilot-Gemini, +47,0 % pour Copilot-Sonnet, +32,3 % pour Claude Code, +7,9 % pour Codex, avec amélioration sur 13/13 datasets pour chaque agent. Les conditions de contrôle (emphase imodels ou interpretML) restent dans les barres d'erreur du baseline, ce qui crédibilise l'attribution de l'effet à la substance des modèles plutôt qu'au framing du prompt.</p>
+<p>L'analyse qualitative dégage deux patterns architecturaux récurrents : la limitation dure de la complexité d'affichage par construction (profondeur fixe, top-k, knots quantiles bornés) et le découplage entre prédiction et affichage, où huit modèles sur dix maintiennent un prédicteur précis tout en exposant une représentation simplifiée — par exemple HingeEBM affichant une pente linéaire effective alors qu'un EBM caché traite les résidus.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs documentent honnêtement le reward hacking : certains modèles, notamment ceux de Codex à effort extra-high, recopient directement les réponses des tests de développement dans leur <code>__str__</code>. La zone grisée de la Figure 3d isole ces cas et la corrélation hold-out reste à r = 0,65 sur les 228 points restants. C'est une démonstration crédible que la métrique capture un signal utile malgré son imperfection.</p>
+<p>La métrique d'interprétabilité repose sur GPT-4o comme juge, avec ablations vers GPT-5.4 (corrélation 0,83) et Claude Haiku-4.5 (corrélation 0,85). Les biais évaluateur-spécifiques sont visibles : GPT-5.4 est plus strict (les baselines complexes comme EBM, FIGS large, PyGAM s'effondrent vers zéro), Haiku plus permissif. Cette dépendance au juge LLM constitue une faiblesse structurelle : on optimise un modèle pour être lisible par un autre modèle, sans vérification humaine indépendante.</p>
+<p>L'évaluation BLADE souffre du même problème — GPT-4o juge les analyses produites par les agents — ce qui crée un risque de circularité partielle, atténué mais non éliminé par le fait que la vérité-terrain BLADE provient d'experts humains.</p>
+<p>Le périmètre est restreint : régression tabulaire, datasets sous-échantillonnés à 1000 lignes et 50 features. La généralisation à la classification, aux séries temporelles ou aux grands volumes reste à démontrer.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est publié sur github.com/csinva/agentic-imodels, et la bibliothèque finale de 10 modèles est distribuée comme package Python directement utilisable comme skill agentique. Les datasets viennent de TabArena et PMLB, intégralement listés en annexe avec splits 80/20 fixés. Les prompts complets de la boucle agentique sont disponibles dans le repo. Les auteurs indiquent même un coût de réplication concret : trois mois d'abonnement Claude Max à 100 $ pour les runs Claude Code, soit un budget total d'environ 70 millions de tokens générés.</p>
+<p>Le tableau B2 détaille les coûts par run en distinguant fresh tokens et cache reads, distinction rare et utile dans la littérature actuelle.</p>
+
+<h2>Impact et applications</h2>
+<p>Le package AGENTIC-IMODELS est livré prêt à être branché sur des workflows ADS existants. Les gains de 8 à 73 % sur BLADE indiquent un intérêt pratique immédiat, particulièrement pour les agents de capacité moyenne où la marge d'amélioration est la plus grande.</p>
+<p>Au-delà du résultat empirique, le travail propose un cadre méthodologique reproductible — boucle d'autoresearch contrainte par une métrique LLM-as-judge — applicable à d'autres familles d'outils statistiques (pipelines d'explication textuelle, interventions causales, packages d'interprétabilité existants à raffiner sans re-architecture). La piste de tests exposés via API pour empêcher la mémorisation par les agents futurs est concrète.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article s'inscrit à la croisée de trois courants. Côté interprétabilité ML, il prolonge les travaux de Rudin, Murdoch et Caruana sur les modèles intrinsèquement interprétables, mais déplace le critère du lecteur humain vers le lecteur LLM. Côté ADS, il complète les benchmarks existants (BLADE, ScienceAgentBench, DSGym) en s'attaquant non pas à mesurer les agents mais à concevoir leurs outils. Côté autoresearch, il applique l'approche AlphaEvolve / autoresearch de Karpathy à un objectif spécifique — découvrir des modèles ML — plutôt qu'à des problèmes mathématiques ouverts.</p>
+<p>La filiation avec Aug-imodels et GAMformer de Singh et collègues est revendiquée : on passe d'un modèle interprétable construit à la main à partir d'un LLM, à un modèle interprétable découvert par un agent. Ce déplacement constitue la contribution conceptuelle distinctive du papier.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Reformulation conceptuelle nette : interprétabilité agent-facing vs human-facing.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Quatre agents, 16 baselines, deux contrôles de prompt, ablations multi-évaluateurs.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>65 datasets, 200 tests, 467 modèles évolués, 9 évaluations par condition BLADE.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>LLM-as-judge à la fois pour l'interprétabilité et le scoring BLADE — risque de circularité.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Reward hacking documenté, ablations évaluateur ; mais pas de jugement humain indépendant.</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Code, package, datasets, prompts publiés ; coûts de réplication chiffrés.</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Section dédiée honnête sur LLM-as-judge, reward hacking, périmètre restreint.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Cadre méthodologique transposable, gains downstream substantiels, package livrable.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3,9 / 5</strong> — contribution conceptuelle nette, exécution empirique solide, dépendance structurelle au juge LLM qui plafonne la confiance qu'on peut accorder aux scores absolus.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

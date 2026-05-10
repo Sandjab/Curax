@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coordination as an Architectural Layer for LLM-Based Multi-Agent Systems — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Coordination as an Architectural Layer for LLM-Based Multi-Agent Systems</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les systèmes multi-agents LLM échouent en production à des taux compris entre 41 % et 87 %, et la majorité de ces échecs proviennent de défauts de coordination plutôt que d'incapacités du modèle de base. Les auteurs s'attaquent à un vide précis dans la littérature 2024-2026 : les taxonomies empiriques décrivent les modes d'échec sans les relier à des configurations architecturales spécifiques, tandis que les frameworks d'orchestration déclarative (AWS Strands, Microsoft Foundry, Daunis et al. 2025) traitent la séparation spécification-implémentation comme une commodité d'ingénierie sans en faire un substrat de raisonnement architectural.</p>
+<p>La thèse défendue est claire : la couche de coordination doit être traitée comme un objet architectural configurable, séparable de la logique d'agent et de l'accès à l'information, et cette séparation rend possible des prédictions falsifiables sur les signatures d'échec avant déploiement. Le travail répond aussi à la critique méthodologique de Ao et al. (2026), qui montre que la plupart des comparaisons multi-agents existantes confondent effets architecturaux et effets d'accès à l'information.</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole expérimental fixe cinq éléments à travers toutes les configurations comparées : un modèle unique (claude-opus-4-6), une stack d'outils identique, un template de prompt commun, un plafond de tokens par appel, et l'ensemble de questions. Le compute total par question reste endogène, ce qui est un choix défendable : forcer un budget compute uniforme briserait l'intégrité architecturale d'un pipeline séquentiel face à un ensemble parallèle.</p>
+<p>Cinq configurations de référence sont pré-spécifiées : ensemble indépendant, débat par critique des pairs, orchestrateur-spécialiste, pipeline séquentiel, et alignement par consensus. Pour chacune, une prédiction qualitative sur la signature de Murphy (calibration REL et résolution RES) est posée avant l'exécution. Les marchés Polymarket binaires post-cutoff (résolution après le 15 septembre 2025) sont sélectionnés avec stratification par catégorie et par décile de prix de base, le score de Brier étant strictement propre.</p>
+<p>L'échantillon final compte 100 marchés répartis sur six catégories. La recherche web est désactivée : choix méthodologiquement propre pour isoler l'effet architectural, mais qui crée un régime informationnel particulier où l'agent ne peut rien apporter au-delà du consensus de marché.</p>
+
+<h2>Résultats principaux</h2>
+<p>Aucune configuration n'obtient un Alpha positif contre le consensus Polymarket. Le pipeline séquentiel atteint le meilleur Brier (0,153), à parité avec la baseline de marché (0,152) ; l'alignement par consensus est le pire (0,181). Trois prédictions sur cinq sont validées dans la direction prédite (ensemble indépendant, débat partiellement, alignement par consensus) ; la prédiction sur l'orchestrateur-spécialiste est contredite (REL observée la plus haute, pas la plus basse) ; le pipeline séquentiel correspond à la branche optimiste de sa prédiction conditionnelle.</p>
+<p>La frontière de Pareto coût-qualité est nette : ensemble indépendant (0,10 $ par marché, Brier 0,159) et pipeline séquentiel (0,36 $, Brier 0,153) dominent, tandis qu'orchestrateur-spécialiste, débat par critique et alignement par consensus sont dominés. Ce résultat est robuste indépendamment de la résolution statistique des écarts de Brier.</p>
+<p>Les tests t appariés sur 10 paires ne franchissent pas le seuil Bonferroni (p &lt; 0,005). Trois paires impliquant l'alignement par consensus atteignent p ≈ 0,075-0,082. L'analyse bootstrap révèle que ces trois paires ont des intervalles de confiance à 95 % excluant zéro, mais les intervalles à 99 % les rétablissent autour de zéro. La projection de puissance estime qu'un n ≈ 500 résoudrait les contrastes de l'alignement par consensus à seuil corrigé, et qu'un n ≈ 2 500 serait nécessaire pour les autres paires Pareto-dominées.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs reconnaissent eux-mêmes les faiblesses centrales : un seul modèle, un seul régime informationnel, un seul domaine de tâches, et un échantillon sous-dimensionné pour les contrastes adjacents. Le résultat d'Alpha négatif universel est contextualisé honnêtement : avec recherche web désactivée et marchés post-cutoff, l'agent forecaste des événements partiellement dans son futur informationnel contre des participants dans leur présent informationnel. Ce n'est donc pas un verdict sur les architectures mais sur ce qu'elles peuvent extraire d'un régime informationnel volontairement appauvri.</p>
+<p>Le test de prompt est une faiblesse réelle non corrigée : les blocs d'instructions par rôle ont été rédigés une fois sans ablation systématique. Une variation interne des prompts dans chaque configuration manquerait pour attribuer les effets observés à la structure plutôt qu'aux formulations. La présence du prix de base et de l'historique CLOB dans l'input intègre déjà la sagesse agrégée des traders post-cutoff, ce que les auteurs reconnaissent en redéfinissant la tâche comme calibration contre le consensus de marché plutôt que prédiction indépendante.</p>
+<p>L'analyse Type-S et Type-M selon Gelman et Carlin (2014) est un ajout salutaire rarement vu dans la littérature LLM : pour les sept paires non-consensus, des taux Type-M de 2,4 à 3,5 indiquent qu'une future confirmation isolée surestimerait probablement la magnitude réelle.</p>
+
+<h2>Reproductibilité</h2>
+<p>Trois dépôts publics sont libérés avec tags de version (paper-v05) et commits précis : le harness expérimental TypeScript, le dataset complet de traces (100 marchés × 5 configurations, ~17,1 M tokens sous CC-BY 4.0 avec datasheet conforme à Gebru et al. 2021), et le déploiement des agents de production sur Foresight Arena. Le pipeline d'analyse, les scripts bootstrap et la projection de puissance sont inclus. C'est l'un des standards de reproductibilité les plus stricts qu'on puisse trouver dans cette littérature.</p>
+<p>Une annexe sensibilité intention-to-treat documente les 6 prédictions sur 500 tombées en fallback p=0,5 sur des erreurs API transitoires, et confirme que cette gestion des échecs ne change ni l'ordre ni le contraste principal.</p>
+
+<h2>Impact et applications</h2>
+<p>Pour les praticiens utilisant des frameworks d'orchestration déclarative, le résultat de la frontière de Pareto a une portée immédiate : sur cette famille de tâches, deux patterns parmi cinq dominent, et trois (dont l'orchestrateur-spécialiste très répandu) sont dominés. Le mappage qualitatif vers la taxonomie MAST (Cemri et al. 2025) suggère que la spécification architecturale permet de prédire quels modes d'échec MAST une configuration est susceptible d'exhiber, ce qui transforme une taxonomie descriptive en outil prédictif partiel.</p>
+<p>Le canal de validation production sur Foresight Arena, qui accumule des données en parallèle sous régime web-search activé, est une réplication méthodologique différée mais structurée. La séparation des deux régimes informationnels en deux papiers est défendable plutôt qu'opportuniste.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit explicitement à l'intersection de trois clusters : les taxonomies d'échec (Cemri, Acharya, Wynn, Xu), l'orchestration déclarative (Daunis, Cao, Hu, Microsoft), et la critique méthodologique de Ao et al. (2026). Sa contribution propre est conceptuelle plutôt qu'infrastructurelle : aucune nouvelle infrastructure d'agent, aucun nouveau framework, mais une élévation de la couche de coordination en objet analytique avec prédictions falsifiables. La méthodologie d'évaluation hérite directement du papier compagnon des mêmes auteurs sur Foresight Arena, qui fournit l'analyse de puissance et la décomposition additive de l'Alpha Score.</p>
+<p>Les auteurs sont remarquablement disciplinés sur la portée : ils refusent explicitement les analogies au comportement collectif biologique, refusent toute généralisation cross-modèle ou cross-domaine, et qualifient leur travail de « validation de méthodologie » plutôt que de loi architecturale. Cette retenue est rare et augmente la crédibilité de la contribution.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Lacune méthodologique précise et bien argumentée, alignée sur la critique de Ao et al. (2026)</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Information-fixing rigoureux, prédictions pré-spécifiées, décomposition de Murphy adaptée ; ablation des prompts manquante</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>n=100 admis comme insuffisant pour Bonferroni sur 10 paires ; aucun contraste non-consensus résolu</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Brier strictement propre, Murphy decomposition, bootstrap apparié, analyse Type-S/M ; binning K=10 fragile à n=100</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Modèle unique, prompts fixes, marchés post-cutoff, exclusion des bucket-markets ; sensibilité aux prompts non testée</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Trois dépôts publics tagués, dataset CC-BY 4.0 avec datasheet, harness paramétrable, traces complètes</td></tr>
+<tr><td>Transparence des limites</td><td>5</td><td>Prédictions échouées rapportées, Alpha négatif assumé, sous-dimensionnement quantifié, scope strictement délimité</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Cadrage conceptuel utile et frontière de Pareto actionnable, mais pas de loi générale ; instantiation unique</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

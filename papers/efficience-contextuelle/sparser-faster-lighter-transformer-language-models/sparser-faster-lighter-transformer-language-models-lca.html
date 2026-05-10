@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sparser, Faster, Lighter Transformer Language Models — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Sparser, Faster, Lighter Transformer Language Models</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>La sparsité d'activation dans les couches feedforward des LLM est documentée depuis plusieurs années : avec ReLU, seule une petite fraction des neurones cachés s'active par token. Le paradoxe pratique est connu : les kernels sparses officiels tournent souvent plus lentement que les kernels denses sur GPU modernes, parce que le matériel et les bibliothèques (cuBLAS, CUTLASS) sont optimisés pour des patterns denses et que la matérialisation des indices sparses introduit des synchronisations coûteuses entre CTAs.</p>
+<p>Cetin et collègues s'attaquent à ce goulot d'étranglement avec un objectif d'ingénierie clair : produire des kernels CUDA pour H100 qui transforment effectivement la sparsité non structurée en gains de débit, d'énergie et de mémoire, à la fois en inférence et en entraînement. Le scope se limite aux blocs feedforward gated (gate, up, down), qui concentrent plus de deux tiers des paramètres et plus de 80% des FLOPs aux échelles considérées.</p>
+
+<h2>Méthodologie</h2>
+<p>Trois contributions techniques articulent le travail. Le format <strong>TwELL</strong> (Tile-wise ELLPACK) divise la matrice d'activations en tuiles 1D horizontales alignées sur les dimensions de tuilage des matmuls denses. Cet alignement, absent d'ELL classique, permet de matérialiser la représentation sparse directement dans l'epilogue d'un kernel WGMMA, sans kernel séparé ni synchronisation inter-CTA. Pour l'inférence, un second kernel fusionne up et down projections à partir des activations TwELL, en lançant un CTA par ligne d'entrée pour maximiser la concurrence et les hits L2.</p>
+<p>Pour l'entraînement, les auteurs reconnaissent que la non-uniformité forte des comptes de non-zéros entre tokens rend ELL trop fragile. Ils introduisent un <strong>format hybride</strong> partitionnant dynamiquement les lignes entre une matrice ELL agressivement compacte et une matrice dense de secours pour les lignes débordantes. Des kernels custom gèrent les matmuls hybride-vers-dense et dense-vers-hybride, ainsi que la transposition.</p>
+<p>Côté entraînement statistique, la recette est minimaliste : ReLU, plus une perte L1 sur les activations cachées avec coefficient ajustable. Les modèles "Transformer++" (proches de Qwen/Llama) sont entraînés sur fineweb à la frontière chinchilla-optimale, du 0,5B sur 10B tokens jusqu'au 2B sur 40B tokens, sur un nœud 8×H100 PCIe.</p>
+
+<h2>Résultats principaux</h2>
+<p>L'étude empirique balaie huit coefficients L1 sur un modèle 1,5B. Sans régularisation, le modèle atteint déjà 20% de sparsité (911 neurones actifs sur 5632). Avec L1=2×10⁻⁵, recommandé comme seuil conservateur, le nombre moyen de non-zéros tombe à plusieurs ordres de grandeur sous 5632 sans dégradation visible des performances downstream sur sept benchmarks (ARC, HellaSwag, OpenBookQA, PIQA, WinoGrande, CommonsenseQA).</p>
+<p>Les gains d'efficience croissent avec l'échelle. À 2B paramètres : +20,5% de débit en inférence, -17% d'énergie par token, +21,9% de débit d'entraînement. Une anomalie mérite d'être signalée : le pic mémoire augmente de 22,3% sur le 2B sparse, contre des réductions de 19 à 28% sur les modèles plus petits. Les auteurs mentionnent un micro-batch plus grand sans isoler clairement cette inversion dans le tableau 1.</p>
+<p>L'analyse couche par couche révèle une corrélation de Pearson supérieure à -0,996 entre nombre moyen de non-zéros et speedup local. Les pics d'activation se concentrent sur les premiers tokens d'une séquence et sur les tokens à fort contenu informationnel (noms propres, verbes spécifiques), tandis que les tokens prédictibles (fragments d'URL, contractions) activent peu de neurones.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le travail démontre concrètement ce que les efforts antérieurs (Deja Vu, Q-Sparse, ProSparse, TurboSparse) n'avaient pas livré : des accélérations réelles sur GPU moderne pour de la sparsité non structurée, sans top-K artificiel ni straight-through estimator. C'est une contribution rare dans un domaine encombré de speedups théoriques non reproductibles en pratique.</p>
+<p>Plusieurs limites tempèrent l'enthousiasme. Les modèles testés plafonnent à 2B paramètres, loin des échelles de production (70B, 405B, MoE). L'extrapolation des tendances de scaling est plausible mais non vérifiée. Les benchmarks downstream restent des QCM cloze classiques ; aucune évaluation sur tâches longues, génération ouverte, ou raisonnement mathématique n'est rapportée. La régularisation L1 est appliquée uniquement durant le pré-entraînement from scratch ; le coût de sparsification de modèles déjà entraînés n'est qu'évoqué en perspective.</p>
+<p>Le seuil de dégradation (en dessous de 0,5% de neurones activés) est cohérent avec Mirzadeh et al. mais la marge de sécurité retenue (L1=2×10⁻⁵) est calibrée sur le 1,5B et appliquée telle quelle aux autres tailles, sans ablation par échelle. La transparence sur les "neurones morts" et leur évolution est renvoyée à l'appendice. Le matériel testé se limite aux H100 PCIe et à un RTX 6000 mentionné en annexe ; la portabilité aux Blackwell ou GPU AMD n'est pas discutée.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les auteurs annoncent la libération du code et des kernels sous licence open source (github.com/SakanaAI/sparser-faster-llms). Les algorithmes sont détaillés en pseudocode et complétés par sept listings CUDA exhaustifs en annexe, incluant la gestion des barrières TMA, le scheduler Hilbert, les transitions warpgroup et les heuristiques de padding pour éviter les conflits de banc. Les hyperparamètres d'entraînement (architecture, optimiseur, scheduler, dataset, vocabulaire) sont fournis en table 2. Le dataset fineweb-edu utilisé est public. Cet ensemble place le travail dans le haut du panier en reproductibilité pour de l'ingénierie GPU bas-niveau.</p>
+
+<h2>Impact et applications</h2>
+<p>Le résultat le plus marquant n'est pas le speedup de 20% mais la démonstration que la sparsité non structurée peut entrer dans le pipeline d'inférence et d'entraînement standard sans sacrifier les performances ni dévier des recettes modernes. Cela débloque un axe d'efficience orthogonal à la quantification, à FlashAttention et au MoE.</p>
+<p>Les retombées immédiates concernent les déploiements en cloud GPU sur Hopper, où une réduction de 28% du pic mémoire sur un 1,5B abaisse réellement la barrière matérielle. Le pattern de sparsité concentré sur les premiers tokens et les couches early-middle suggère aussi des pistes d'interprétabilité que les auteurs effleurent sans approfondir. La possibilité de sparsifier des modèles pré-entraînés existants reste l'extension la plus attendue, suggérée mais non démontrée ici.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans la lignée Mirzadeh et al. (ReLU Strikes Back) qui avait réhabilité ReLU pour exploiter la sparsité émergente, mais déplace le débat du choix d'activation vers le software stack GPU. Contrairement à TurboSparse (ReLU répétés) ou ProSparse (seuillage manuel post-hoc), aucune modification d'architecture n'est requise au-delà du choix d'activation. Contrairement à Q-Sparse (top-K + straight-through), la sparsité émerge naturellement par L1.</p>
+<p>Le papier ouvre un dialogue avec les approches MoE et MoD (Mixture of Depths) en proposant une troisième voie : sparsité unstructured fine au niveau du neurone, sans routing learned. La complémentarité avec ces approches n'est pas explorée mais reste une question ouverte intéressante.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>5</td><td>Problème bien posé : transformer la sparsité théorique en gains réels sur GPU modernes.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Balayage propre du coefficient L1 et des échelles ; manque d'ablation par taille sur le seuil retenu.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Plafond à 2B paramètres et 40B tokens, loin des échelles de production. Pas de seeds multiples rapportés.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Sept benchmarks downstream standards, mesures d'énergie et de mémoire. Pas d'évaluation génération longue.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Comparaison dense/sparse sur mêmes hyperparamètres correcte. Pas de discussion de l'effet du choix matériel (H100 PCIe spécifiquement).</td></tr>
+<tr><td>Reproductibilité</td><td>5</td><td>Code annoncé open source, listings CUDA complets, hyperparamètres détaillés, dataset public.</td></tr>
+<tr><td>Transparence sur les limites</td><td>3</td><td>Anomalie mémoire du 2B non discutée, neurones morts renvoyés en appendice, portabilité matérielle non abordée.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Première démonstration crédible de gains pratiques sur sparsité non structurée à l'échelle du milliard de paramètres.</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

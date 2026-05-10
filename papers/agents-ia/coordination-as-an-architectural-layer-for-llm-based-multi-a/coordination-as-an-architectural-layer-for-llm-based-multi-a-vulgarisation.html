@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coordination as an Architectural Layer for LLM-Based Multi-Agent Systems — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Coordination as an Architectural Layer for LLM-Based Multi-Agent Systems</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les agents IA travaillent en équipe, ils échouent une fois sur deux</h2>
+
+<p>Entre 41 % et 87 % des systèmes multi-agents fondés sur des grands modèles de langage échouent en production. Le chiffre vient d'une étude qui a passé au crible plus de 1600 traces d'exécution sur les frameworks les plus utilisés du marché. Surprise : la majorité de ces échecs ne tient pas à la qualité des modèles eux-mêmes, mais à la façon dont les agents se coordonnent entre eux.</p>
+
+<p>Maksym Nechepurenko et Pavel Shuvalov, chercheurs chez Devnull FZCO à Dubaï, viennent de publier une étude qui propose de prendre ce problème à la racine. Leur thèse : la coordination entre agents IA mérite d'être traitée comme une couche architecturale à part entière, isolable et configurable, plutôt que comme un détail d'implémentation noyé dans le code. Pour le démontrer, ils ont monté une expérience contrôlée sur les marchés de prédiction de Polymarket, avec un protocole méthodologique qu'aucune étude précédente n'avait satisfait.</p>
+
+<h2>Le problème : on ne sait pas pourquoi les équipes d'agents échouent</h2>
+
+<p>La littérature existante sur les systèmes multi-agents souffre de deux faiblesses. D'un côté, des taxonomies empiriques cataloguent les modes d'échec — quatorze types distincts identifiés dans la plus grande étude du domaine, allant de l'ambiguïté des spécifications aux désalignements sémantiques entre agents. De l'autre, des frameworks industriels comme AWS Strands ou Microsoft Foundry permettent de spécifier des workflows d'agents de manière déclarative, en YAML ou via des interfaces visuelles.</p>
+
+<p>Aucune de ces deux approches ne répond à la question que se pose un praticien quand il choisit une architecture : <em>quel mode d'échec mon système va-t-il manifester</em> ? Les taxonomies décrivent ce qui casse, sans relier les échecs à des choix architecturaux précis. Les frameworks proposent des patterns prêts à l'emploi, sans expliquer lequel choisir pour quelle tâche.</p>
+
+<p>Pire, un travail récent de Ao et ses collègues a démontré que la plupart des comparaisons publiées entre architectures multi-agents souffrent d'un défaut méthodologique majeur : elles confondent l'effet de l'architecture avec celui de l'accès à l'information. Un agent planificateur qui dispose d'une fenêtre de contexte plus large, de plus d'appels d'outils ou de transcripts plus longs aura naturellement de meilleurs résultats — mais cela ne dit rien sur la qualité de sa coordination. Aucune étude publiée à ce jour n'avait corrigé ce biais.</p>
+
+<h2>La méthode : isoler la coordination, mesurer la calibration</h2>
+
+<p>Les auteurs construisent leur expérience autour d'un principe simple : tout ce qui n'est pas la coordination doit rester strictement identique. Même modèle (Claude Opus 4.6), mêmes outils, même prompt de base, même plafond de tokens par appel, même jeu de questions. Seule varie la façon dont les agents s'organisent entre eux.</p>
+
+<p>Ils définissent cinq configurations de référence, chacune représentant une famille classique d'organisation collective :</p>
+
+<ul>
+<li><strong>L'ensemble indépendant</strong> : trois agents répondent en parallèle sans se voir, leurs réponses sont moyennées. Comme un sondage où chaque expert vote dans son coin.</li>
+<li><strong>Le débat par critique mutuelle</strong> : les agents voient les réponses des autres et révisent leur position sur deux tours. Une réunion de comité, en somme.</li>
+<li><strong>L'orchestrateur-spécialistes</strong> : un agent planificateur découpe la question, délègue à des spécialistes, intègre les retours. Le modèle managérial classique.</li>
+<li><strong>Le pipeline séquentiel</strong> : trois étapes en file (recherche, analyse, prévision), chacune nourrissant la suivante. Une chaîne de production.</li>
+<li><strong>L'alignement par consensus</strong> : les agents itèrent jusqu'à converger vers un accord sous un certain seuil. Une assemblée qui négocie jusqu'au compromis.</li>
+</ul>
+
+<p>Pour chaque configuration, les chercheurs <em>prédisent à l'avance</em> le profil d'échec attendu. C'est la pierre angulaire de la démarche : générer des hypothèses falsifiables avant de regarder les résultats. Le pipeline séquentiel devrait amplifier les erreurs précoces. Le débat devrait écraser les opinions minoritaires correctes. Le consensus devrait converger vers le milieu, perdant en pouvoir discriminant.</p>
+
+<p>Pour mesurer ces signatures, ils utilisent la décomposition de Murphy, un outil emprunté à la météorologie depuis 1973. Cette décomposition sépare le score brut d'une prédiction probabiliste en deux composantes indépendantes : la <strong>fiabilité</strong> (l'agent dit-il 70 % quand l'événement arrive 70 % du temps ?) et la <strong>résolution</strong> (sait-il distinguer les cas probables des cas improbables ?). Deux systèmes peuvent obtenir le même score moyen tout en ayant des profils opposés — l'un bien calibré mais peu informatif, l'autre légèrement surconfiant mais très discriminant.</p>
+
+<h2>Le terrain de jeu : 100 marchés Polymarket post-entraînement</h2>
+
+<p>Polymarket offre une propriété précieuse pour évaluer des agents prédictifs : les questions portent sur des événements futurs avec une résolution binaire et objective, validée par un oracle externe. Pas de juge LLM susceptible de biaiser l'évaluation.</p>
+
+<p>Les chercheurs sélectionnent 100 marchés résolus après la date de coupure d'entraînement du modèle (août 2025), avec un volume supérieur à 50 000 dollars, et stratifiés par catégorie (crypto, politique, sport, économie, géopolitique, divertissement) et par décile de prix de base. Cette stratification est cruciale : sans elle, l'échantillon se concentre sur des marchés extrêmes où toutes les architectures s'accordent, et l'effet architectural devient invisible.</p>
+
+<p>La recherche web est désactivée. Ce choix méthodologique strict garantit que toutes les configurations partent du même bagage informationnel — celui du modèle plus les métadonnées du marché — et que les différences observées proviennent vraiment de la coordination.</p>
+
+<h2>Résultats : trois prédictions sur cinq tiennent, et deux configurations dominent</h2>
+
+<p>Le verdict empirique est nuancé. Trois des cinq prédictions sont confirmées dans la direction prédite, une est contredite, une autre tient seulement dans son scénario optimiste.</p>
+
+<p>L'alignement par consensus exhibe la signature attendue : la pire résolution (0,094) parmi toutes les configurations. Les agents convergent vers un point central qui rate la distribution réelle des résultats. Le marché 92, sur la nomination de Renate Reinsve aux Oscars, illustre le phénomène à l'échelle individuelle : quatre configurations attribuent une probabilité entre 0,83 et 0,87 (alignées sur le marché), tandis que le consensus converge à 0,35 — partant de positions diverses pour s'écraser au milieu.</p>
+
+<p>Le débat par critique mutuelle confirme partiellement la prédiction d'écrasement des minorités. Sur le marché 66 (cours du WTI sous les 100 dollars en avril, qui s'est résolu OUI), trois configurations donnaient entre 0,55 et 0,85 ; le débat est tombé à 0,12 et le consensus à 0,15. Les deux configurations qui font dialoguer les agents en plusieurs tours se sont alignées sur une position fortement erronée que les autres approches évitaient.</p>
+
+<p>L'orchestrateur-spécialistes contredit la prédiction. Au lieu d'imposer une calibration finale améliorée, il affiche la pire fiabilité du lot (0,025). L'incertitude de l'orchestrateur sur les sorties des spécialistes ajoute de la miscalibration plutôt que d'en retrancher.</p>
+
+<p>Le résultat le plus actionnable n'est pas dans les signatures de Murphy mais sur la frontière coût-qualité. Deux configurations dominent les trois autres : l'ensemble indépendant à 0,10 dollar par marché et le pipeline séquentiel à 0,36 dollar pour la meilleure précision. L'orchestrateur (0,31 dollar) et le débat (0,23 dollar) coûtent plus cher tout en livrant moins de précision que l'ensemble. Sur cette tâche, dans ce régime, ils sont strictement dominés.</p>
+
+<p>Un détail méthodologique mérite l'attention : aucune configuration ne bat le consensus du marché. Le score de Brier du marché Polymarket s'établit à 0,152 ; le pipeline séquentiel atteint 0,153, l'ensemble 0,159, et le consensus dégringole à 0,181. Avec la recherche web désactivée, les agents n'ont rien à apporter de plus que ce que la foule de traders humains et de bots a déjà incorporé dans le prix.</p>
+
+<h2>Ce que ça change pour les architectes de systèmes IA</h2>
+
+<p>La leçon la plus directe pour quiconque construit des systèmes multi-agents en production : <strong>l'orchestrateur-spécialistes et le débat ne valent pas leur coût</strong> sur ce type de tâche. Ce sont pourtant les deux patterns les plus mis en avant dans les frameworks commerciaux et la littérature populaire. Les choisir parce qu'ils <em>semblent</em> sophistiqués revient à payer plus cher pour de moins bonnes performances.</p>
+
+<p>L'effet est conditionnel à la catégorie de tâche. Sur les marchés sportifs, les cinq configurations s'équivalent à 0,012 point près. Sur les marchés économiques, l'écart explose à 0,121 — un facteur dix. L'architecture compte davantage quand la question demande un raisonnement numérique structuré que quand elle relève du pari informé.</p>
+
+<p>Le travail propose aussi un cadre méthodologique réutilisable pour qui veut comparer rigoureusement des architectures. La séparation en trois couches — information, coordination, agent — fournit un vocabulaire pour décrire des systèmes existants et un protocole pour les évaluer sans confondre les sources de variation.</p>
+
+<p>Enfin, les auteurs publient trois dépôts open source : le harnais expérimental TypeScript, un jeu de données de 17 millions de tokens couvrant 500 traces de raisonnement multi-agent annotées par configuration, et le code des agents déployés en production sur Foresight Arena. Cette transparence radicale facilite la réplication et l'extension.</p>
+
+<h2>Pour aller plus loin : ce que cette première étude ne tranche pas</h2>
+
+<p>Les auteurs ne cachent pas les limites de leur travail. Avec 100 marchés, l'écart de 0,028 point entre la meilleure et la pire configuration ne survit pas à la correction de Bonferroni sur dix paires de comparaisons. Une analyse de puissance bootstrap indique qu'il faudrait environ 500 marchés pour résoudre le contraste entre l'alignement par consensus et les autres, et plutôt 2500 pour résoudre tous les contrastes pertinents.</p>
+
+<p>L'étude porte sur un seul modèle, une seule famille de tâches, et un régime informationnel délibérément restreint. Étendre les résultats à GPT-5 et Gemini 3, ou à des conditions où la recherche web est activée, exige des suites empiriques que les auteurs annoncent comme la prochaine étape.</p>
+
+<p>Une question méthodologique reste ouverte : la coordination est-elle vraiment séparable de l'agent quand les messages entre agents sont des chaînes de langage naturel, sujettes à dérive sémantique d'un tour à l'autre ? Les auteurs reconnaissent que cette dérive n'a pas d'analogue dans les calculs classiques de coordination distribuée comme CSP ou le pi-calcul. La couche de coordination des LLM hérite donc des structures (topologies, autorités, agrégations) mais doit absorber des modes d'échec inédits.</p>
+
+<p>La déclinaison la plus prometteuse passe par Foresight Arena, un benchmark on-chain où les cinq mêmes configurations tournent en direct, recherche web activée, sur de vrais événements futurs. Les prédictions s'accumulent à raison d'un ou deux tours par jour, avec engagement cryptographique avant résolution. Là où l'étude actuelle mesure la coordination en information fixe, ce canal accumulera de quoi évaluer la coordination en information enrichie — un régime où l'on s'attend à voir certaines architectures briller et d'autres, payer leur surcoût sans contrepartie visible.</p>
+
+<p>La vraie portée de ce travail tient peut-être moins à ses résultats qu'à son geste méthodologique : <em>nommer</em> la couche de coordination, formuler des prédictions falsifiables avant l'expérience, et tester sur un terrain où la vérité terrain n'est pas négociable. Cette discipline manque cruellement à un domaine où l'on déploie des architectures multi-agents en production en s'appuyant sur l'intuition et le marketing des frameworks. Trois prédictions sur cinq qui tiennent ne font pas une théorie ; elles montrent qu'une théorie est possible.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

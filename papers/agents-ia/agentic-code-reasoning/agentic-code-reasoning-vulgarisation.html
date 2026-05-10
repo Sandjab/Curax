@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Code Reasoning — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Agentic Code Reasoning</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Faire raisonner une IA sur du code sans jamais l'exécuter</h2>
+
+<p>Deux correctifs Python pour le même bug. Visuellement, ils font la même chose : formater une année sur deux chiffres. Un agent IA standard les déclare équivalents en quelques secondes. Mauvaise réponse. L'un des deux plante avec une <code>AttributeError</code>, parce qu'une fonction <code>format()</code> définie dans le module masque silencieusement la fonction native de Python. Pour le découvrir, il aurait fallu ouvrir le fichier, descendre ligne 340, lire la définition. L'agent ne l'a pas fait.</p>
+
+<p>Cet exemple, tiré d'un vrai ticket Django, illustre le problème que Shubham Ugare et Satish Chandra (Meta) attaquent dans leur article <em>Agentic Code Reasoning</em>. Comment fait-on pour qu'un agent LLM analyse sérieusement du code, suive les dépendances entre fichiers, et conclue avec une certitude raisonnable — sans jamais exécuter le code ? Leur réponse tient en deux mots : raisonnement semi-formel.</p>
+
+<h2>Le problème : raisonner sans exécuter</h2>
+
+<p>Quand un développeur expérimenté relit un patch, il fait constamment deux choses : il navigue dans le code pour vérifier des hypothèses, et il trace mentalement ce qui va se passer à l'exécution. Les agents LLM modernes savent faire la première partie. Ils ouvrent les fichiers, cherchent les définitions, lisent les tests. Pour la deuxième partie — le raisonnement sémantique précis — ils trichent. Ils devinent. Ils supposent qu'une fonction nommée <code>format</code> est la <code>format</code> de Python. Ils affirment sans vérifier.</p>
+
+<p>Pourquoi est-ce un problème industriel et pas juste académique ? Parce que vérifier qu'un patch fonctionne coûte cher. Aujourd'hui, pour entraîner un agent de programmation par renforcement, il faut exécuter chaque patch dans un sandbox, installer les dépendances, lancer la suite de tests. Multiplié par des centaines de milliers d'itérations, ça devient le poste de coût dominant. Si un LLM pouvait juger la correction d'un patch sans rien exécuter, le pipeline d'entraînement deviendrait dramatiquement moins cher.</p>
+
+<p>Le problème, c'est la fiabilité. Un agent qui se trompe une fois sur quatre donne un signal de récompense pourri pour le RL. Les approches purement formelles — traduire le code en Lean ou Coq pour faire une preuve mécanique — sont irréalistes sur un dépôt Python ou Java arbitraire. Personne ne va formaliser la sémantique de Django ou de Mockito. Il faut donc une voie médiane.</p>
+
+<h2>La méthode : un certificat à remplir</h2>
+
+<p>L'idée des auteurs est presque banale, ce qui la rend intéressante. Au lieu de demander à l'agent « ces deux patches sont-ils équivalents ? », ils lui imposent un gabarit structuré à compléter, case par case. Une sorte de formulaire qui force l'agent à montrer son travail.</p>
+
+<p>Le gabarit ressemble à ceci pour la tâche d'équivalence de patches : énoncer les <strong>définitions</strong> utilisées, lister les <strong>prémisses</strong> (que modifie le patch 1 ? que modifie le patch 2 ? que vérifient les tests ?), puis pour chaque test, formuler une <strong>réclamation</strong> du type « avec le patch 1, le test X passe parce que [trace d'exécution] ». À la fin, soit un contre-exemple explicite si les patches diffèrent, soit une conclusion formelle d'équivalence appuyée sur les traces.</p>
+
+<p>Le mot important ici est <em>certificat</em>. L'agent ne produit pas une démonstration formelle au sens mathématique, mais un document structuré dans lequel chaque conclusion pointe vers une preuve concrète tirée du code. On reste en langage naturel, on garde la souplesse d'un LLM, mais on enlève la possibilité de sauter des étapes. Pour remplir la case « avec le patch 1, le test échoue parce que… », l'agent doit aller chercher la fonction réellement appelée, lire sa définition, suivre les appels. Il ne peut plus se contenter de deviner.</p>
+
+<p>Une analogie utile : c'est la différence entre demander à un junior « est-ce que ce code marche ? » et lui demander « décris-moi ligne par ligne ce qui se passe quand on exécute le test ». La deuxième formulation l'oblige à ouvrir les fichiers. La première l'autorise à bluffer.</p>
+
+<p>Les auteurs déclinent ce gabarit pour trois tâches différentes. Pour l'équivalence de patches, le squelette est celui décrit ci-dessus. Pour la localisation de bugs, le gabarit demande à l'agent de poser des hypothèses explicites (« je pense que le bug est dans tel fichier parce que… »), puis de les confirmer ou les réfuter au fil de l'exploration. Pour les questions sur du code, le formulaire impose une table de trace des fonctions (avec emplacements <code>fichier:ligne</code> et comportement vérifié), une analyse de flux de données, et une vérification de l'hypothèse contraire — autrement dit, l'agent doit chercher activement ce qui contredirait sa réponse.</p>
+
+<p>Le setup expérimental mérite d'être noté. L'agent tourne avec un harness SWE-agent minimal, peut lire les fichiers et lancer du Python isolé, mais ne peut <em>pas</em> exécuter le dépôt cible. Pas d'installation de dépendances, pas de sandbox, pas de tests. Git est désactivé pour empêcher de tricher en lisant les commits de correction. C'est de l'analyse statique pure, conduite par un agent.</p>
+
+<h2>Résultats : 93 % de précision sans exécuter</h2>
+
+<p>Les chiffres parlent d'eux-mêmes. Sur la tâche centrale d'équivalence de patches avec Opus-4.5, le raisonnement standard atteint 78 % de précision sur un dataset délibérément difficile. Le raisonnement semi-formel monte à 88,8 %. Une réduction des erreurs de près de moitié, simplement en changeant la forme du prompt — pas le modèle, pas l'entraînement.</p>
+
+<p>Sur un cas d'usage plus réaliste — vérifier si un patch généré par un agent <code>gemini-3-pro</code> correspond bien au patch de référence — le semi-formel atteint <strong>93 % de précision</strong>. À titre de comparaison, la méthode actuellement utilisée dans SWE-RL (un calcul de similarité textuelle avec <code>difflib</code>) plafonne à 73 %. Un appel LLM unique sans exploration fait 86 %. L'exploration agentique apporte donc 7 points, et la structuration semi-formelle en apporte encore 6 de plus.</p>
+
+<p>Pour la localisation de bugs sur Defects4J (un benchmark classique de bugs Java reproductibles), le semi-formel améliore la précision Top-5 de 5 à 12 points selon les configurations. Et pour le question-answering sur du code via RubberDuckBench, on passe de 78 % à 87 % avec Opus.</p>
+
+<p>Tout n'est pas rose. Le coût en tokens est réel : le semi-formel consomme environ 2,8 fois plus d'étapes de raisonnement que le standard. L'agent prend son temps, ouvre plus de fichiers, écrit des certificats verbeux. Si la cible était de remplacer une exécution réelle, l'arbitrage économique reste favorable — un sandbox Docker avec installation de dépendances coûte bien plus. Mais ce n'est pas gratuit.</p>
+
+<p>Autre nuance intéressante : l'effet du semi-formel dépend du modèle. Sur Sonnet-4.5, en question-answering, le gain est négligeable (84,2 % standard contre 84,8 % semi-formel). Sur Opus-4.5 même tâche, le gain est de 8,7 points. Hypothèse des auteurs : Sonnet a déjà tendance à raisonner de façon structurée, le gabarit ne change pas grand-chose ; Opus a une propension plus forte à deviner sur les noms de fonctions, et le gabarit corrige ce biais.</p>
+
+<h2>Pourquoi ça compte pour qui construit avec des LLM</h2>
+
+<p>Trois implications concrètes émergent.</p>
+
+<p>La première touche directement les équipes qui entraînent des agents de programmation. Aujourd'hui, le coût dominant d'un pipeline RL pour agent SWE n'est pas le GPU du modèle, c'est l'infrastructure d'exécution : sandboxes Docker, gestion des dépendances par dépôt, parallélisation des suites de tests. Un vérificateur LLM à 93 % de précision, c'est un signal de récompense exploitable pour une grande partie des itérations. On n'élimine pas l'exécution réelle — on la garde pour valider périodiquement et pour les cas ambigus — mais on peut absorber le gros du volume avec de l'inférence pure. Le ratio coût/itération change d'ordre de grandeur.</p>
+
+<p>La deuxième concerne l'analyse statique en général. Les outils classiques — linters, vérificateurs de types, analyses de flux — encodent une logique d'analyse dans des algorithmes spécialisés, langage par langage. Un agent piloté par un gabarit de raisonnement n'a pas cette contrainte. Le même gabarit fonctionne sur du Python, du Java, du C++. Pour des tâches comme la détection de vulnérabilités ou les <em>code smells</em>, où la spécialisation par langage coûte cher à maintenir, c'est une alternative crédible. On échange des garanties formelles contre de la flexibilité.</p>
+
+<p>La troisième implication est plus inconfortable. Elle concerne ce qui fait qu'un agent IA raisonne « bien » sur du code. Les auteurs montrent qu'il ne s'agit pas seulement de capacité brute du modèle : la <em>forme</em> du prompt change qualitativement le comportement. Un agent qui doit remplir un gabarit explore davantage, suit plus loin les appels de fonctions, vérifie ses hypothèses au lieu de pattern-matcher sur des noms. Cela suggère qu'une partie du « manque de fiabilité » des agents de programmation est moins un problème de modèle qu'un problème de cadrage de la tâche.</p>
+
+<p>L'analogie côté humain est parlante. Un développeur senior expérimenté ne raisonne pas mieux qu'un junior parce qu'il a un cerveau différent. Il raisonne mieux parce qu'il a internalisé une discipline : énumérer les cas, vérifier ses hypothèses, ne pas faire confiance aux noms. Le semi-formel impose cette discipline de l'extérieur, via le prompt.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>L'étude laisse plusieurs portes ouvertes.</p>
+
+<p>D'abord, le gabarit semi-formel est aujourd'hui un artefact de prompt. Les auteurs suggèrent qu'un post-entraînement supervisé sur des trajectoires structurées pourrait internaliser cette discipline, et économiser les tokens d'overhead. Si Anthropic ou OpenAI sortent des modèles de programmation entraînés sur ce type de trace, le gain pourrait devenir gratuit côté inférence. C'est une piste à suivre.</p>
+
+<p>Ensuite, les modes d'échec résiduels sont instructifs. Sur les 7 % de cas où Opus + semi-formel se trompe encore, trois causes dominent. L'agent suppose le comportement d'une fonction de bibliothèque tierce dont il n'a pas le code source. Il identifie une différence sémantique réelle mais la juge à tort sans impact sur les tests. Et parfois — c'est le plus dérangeant — il construit une chaîne de raisonnement élaborée mais incomplète, qui le rend <em>plus confiant</em> dans une mauvaise réponse. La structure de raisonnement peut donc amplifier l'erreur quand elle est mal posée. Ce n'est pas un argument contre la méthode, mais un rappel : un agent qui raisonne longtemps n'est pas automatiquement un agent qui raisonne juste.</p>
+
+<p>Une autre piste touche à la vérification hybride. Le travail de Sistla et al. cité par les auteurs traduit a posteriori les raisonnements LLM en faits Datalog et les vérifie avec de l'analyse statique. Combiner les deux — un agent qui produit un certificat semi-formel, puis un vérificateur formel qui contrôle la cohérence du certificat — donnerait des garanties plus solides sans renoncer à la flexibilité.</p>
+
+<p>Enfin, une question reste suspendue. Les benchmarks utilisés (SWE-bench, Defects4J) sont anciens et présents dans les corpus d'entraînement des LLM modernes. Les auteurs reconnaissent le risque de contamination et argumentent que leurs conclusions sont relatives (semi-formel contre standard, à modèle constant) plutôt qu'absolues. C'est honnête, mais ça laisse ouverte la question de la généralisation à des dépôts inédits, écrits dans des langages ou frameworks moins représentés. L'argument structurel — le gabarit oblige à explorer plutôt qu'à mémoriser — est plausible, mais reste à prouver hors distribution.</p>
+
+<p>Au-delà du résultat technique, ce papier propose un cadre mental utile pour quiconque travaille avec des agents LLM. La performance d'un agent dépend autant de la forme imposée à son raisonnement que de la puissance du modèle sous-jacent. Concevoir un agent, c'est concevoir le <em>protocole</em> que l'agent doit suivre. Le code n'a pas changé. Le modèle non plus. Seul le formulaire a changé — et avec lui, dix points de précision.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

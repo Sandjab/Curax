@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sparser, Faster, Lighter Transformer Language Models — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Sparser, Faster, Lighter Transformer Language Models</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand 99% des neurones dorment</h2>
+
+<p>Sur un GPU H100, faire tourner un calcul "creux" (avec beaucoup de zéros) est souvent <em>plus lent</em> que le même calcul dense. C'est l'un de ces paradoxes qui fait grincer des dents les ingénieurs depuis dix ans : la théorie dit qu'on devrait économiser de la puissance, le matériel répond l'inverse. Une équipe de Sakana AI et NVIDIA vient de publier un travail qui débloque ce verrou pour les grands modèles de langage. Résultat : jusqu'à 20% de vitesse d'inférence en plus, 17% d'énergie en moins, et près de 30% de mémoire économisée à l'entraînement, sans toucher à la qualité du modèle.</p>
+
+<p>Le papier s'appelle <em>Sparser, Faster, Lighter Transformer Language Models</em>. Derrière ce titre se cache une idée simple mais qui a longtemps résisté à l'implémentation : la plupart des "neurones" d'un LLM ne servent à rien pour un token donné. Encore fallait-il convaincre les GPU de l'admettre.</p>
+
+<h2>Le problème : une économie théorique qui coûte plus cher en pratique</h2>
+
+<p>Dans un Transformer moderne — le type d'architecture qui fait tourner GPT, Llama, Qwen ou Claude — deux tiers des paramètres et plus de 80% des opérations de calcul se trouvent dans les blocs <em>feed-forward</em>. Ce sont des couches qui projettent chaque token vers un espace beaucoup plus grand (typiquement 5000 à 8000 dimensions), appliquent une non-linéarité, puis le ramènent à sa taille d'origine. C'est là que le modèle stocke sa "mémoire" implicite : connaissances factuelles, schémas linguistiques, associations.</p>
+
+<p>Or les chercheurs savent depuis plusieurs années qu'au sein de cette projection géante, très peu de neurones s'activent réellement pour un token donné. Des études parlent du <em>lazy neuron phenomenon</em> : pour traiter le mot "Vermont" dans une phrase, peut-être 30 neurones sur 5000 se réveillent vraiment. Les autres restent à zéro.</p>
+
+<p>En théorie, on devrait pouvoir ignorer ces zéros et calculer dix fois plus vite. En pratique, le calcul creux sur GPU est un enfer. Les GPU modernes ont été optimisés pendant vingt ans pour les multiplications matricielles denses, avec des tuiles de mémoire bien alignées, des accès parallèles prévisibles, et des unités matérielles dédiées (les Tensor Cores) qui n'aiment rien tant que des blocs rectangulaires bien rangés. Dès qu'on introduit des trous, la machinerie patine : il faut maintenir des index, gérer des longueurs de ligne variables, synchroniser des threads qui ne finissent pas en même temps. Le coût administratif dépasse l'économie de calcul.</p>
+
+<p>Les tentatives précédentes ont contourné le problème en restructurant la sparsité (n'autoriser que 2 zéros sur 4, par exemple, pour rester aligné), ou en post-traitant les modèles existants avec des heuristiques. Aucune n'a vraiment percé : trop de compromis sur la qualité, des gains modestes, et une intégration laborieuse dans les pipelines d'entraînement standards.</p>
+
+<h2>La méthode : ranger les zéros pour que le GPU les ignore vraiment</h2>
+
+<p>L'équipe attaque le problème par les deux bouts en même temps : produire de la sparsité sans casser le modèle, et concevoir un format de stockage qui colle aux contraintes du matériel.</p>
+
+<h3>Forcer le modèle à devenir creux, gentiment</h3>
+
+<p>Pour la partie modèle, la recette est minimaliste. Deux ingrédients : utiliser la fonction ReLU comme activation (qui renvoie zéro pour toute entrée négative, contrairement à SiLU ou GELU qui laissent passer un petit résidu), et ajouter une pénalité L1 sur les activations pendant l'entraînement. La pénalité L1, c'est une vieille connaissance des statisticiens : elle pousse le modèle à mettre exactement zéro plutôt qu'une petite valeur, partout où c'est possible.</p>
+
+<p>Avec un coefficient bien dosé, le modèle apprend tout seul à n'activer en moyenne que 30 neurones sur 5632 par token. Soit 99,5% de sparsité. Et — c'est le résultat le plus surprenant du papier — sans aucune dégradation mesurable sur les benchmarks de raisonnement, de connaissance ou de complétion.</p>
+
+<h3>TwELL : un format de stockage taillé pour les GPU</h3>
+
+<p>Le cœur technique, c'est l'invention d'un nouveau format de représentation appelé <strong>TwELL</strong> (Tile-wise ELLPACK). Pour comprendre l'idée, une analogie : imaginez une bibliothèque où la plupart des étagères sont vides. L'ancien format standard (ELL) consiste à parcourir chaque étagère ligne par ligne pour compter les livres présents et les regrouper. Le problème : sur un GPU, ce comptage par ligne demande à des centaines de threads de se synchroniser, ce qui annule l'économie.</p>
+
+<p>TwELL change la stratégie : on découpe la bibliothèque en petites tuiles verticales, et dans chaque tuile, on regroupe localement les livres présents. La synchronisation reste locale, contenue dans une seule unité de calcul GPU (un <em>warp</em>). Plus de communication coûteuse entre processeurs distants.</p>
+
+<p>L'astuce-clé : TwELL peut être <em>matérialisé directement</em> en sortie de la multiplication matricielle qui calcule les activations. Pas de second passage sur les données, pas de relecture en mémoire. Tout se fait dans la "queue" du même kernel CUDA — l'équivalent informatique de trier ses courses en sortant du caddie, plutôt que de tout reposer sur la table pour le faire ensuite.</p>
+
+<h3>Un format hybride pour l'entraînement</h3>
+
+<p>L'inférence et l'entraînement n'ont pas les mêmes contraintes. À l'entraînement, il faut stocker les activations intermédiaires pour la rétropropagation, et la sparsité varie énormément d'un token à l'autre : un token banal active 5 neurones, un token "important" peut en activer 500. Réserver de la place pour le pire cas gaspillerait toute la mémoire économisée.</p>
+
+<p>La solution : un format <strong>hybride</strong>. Les lignes qui rentrent dans un budget serré (par exemple 100 non-zéros) vont dans une matrice compacte. Les rares lignes qui débordent partent dans une matrice dense de secours. Un simple vecteur binaire indique où chaque ligne a été rangée. En pratique, moins de 5% des lignes débordent, mais cette soupape évite que le format ne casse face aux exceptions.</p>
+
+<p>Le tout est complété par des kernels CUDA sur mesure pour H100, écrits en exploitant les instructions les plus récentes : tensor cores asynchrones, Tensor Memory Accelerator, clusters de threads coopératifs. Le papier publie tout le code, ce qui est suffisamment rare pour être remarqué.</p>
+
+<h2>Résultats : des chiffres qui passent à l'échelle</h2>
+
+<p>L'équipe a testé son approche sur quatre tailles de modèles, de 0,5 à 2 milliards de paramètres, chacun entraîné sur le volume optimal de tokens selon la loi de Chinchilla. Les chiffres principaux du tableau de comparaison :</p>
+
+<ul>
+<li>Sur le modèle 2B paramètres : <strong>+20,5% de débit en inférence</strong>, <strong>-17% d'énergie par token</strong>, <strong>+21,9% de vitesse d'entraînement</strong>.</li>
+<li>La précision moyenne sur 7 benchmarks reste identique au modèle dense (48,8% contre 49,1%, dans la marge de bruit).</li>
+<li>La mémoire de pic à l'entraînement chute de 28% sur le modèle 1,5B, et la même tendance se vérifie sur les autres tailles.</li>
+</ul>
+
+<p>Détail intéressant : les gains <em>augmentent</em> avec la taille du modèle. Plus le LLM est gros, plus il devient naturellement creux (le 2B descend à 24 neurones actifs en moyenne contre 39 pour le 0,5B), et plus les kernels en tirent profit. C'est exactement le sens inverse de ce qu'on observe avec beaucoup d'optimisations qui s'essoufflent à l'échelle.</p>
+
+<h3>Une cartographie de la sparsité</h3>
+
+<p>Le papier offre aussi une analyse qualitative qui mérite d'être lue. Les chercheurs ont regardé <em>où</em> et <em>quand</em> les neurones s'activent dans un modèle 1,5B entraîné.</p>
+
+<p>Par couche, le pattern est net : les deux premières couches restent très silencieuses, puis l'activité monte en cloche dans le premier tiers du réseau (couches 3 à 10), avant de redescendre. C'est cohérent avec d'autres travaux qui localisent dans ces couches intermédiaires une bonne partie du "raisonnement" et de la récupération de connaissances.</p>
+
+<p>Par token, les disparités sont saisissantes. Les tokens qui activent le moins de neurones sont des fragments prévisibles : composantes d'URL (<em>doi</em>, <em>gov</em>, <em>nlm</em>), contractions anglaises (<em>doesn</em>, <em>couldn</em>). Le modèle "sait" déjà ce qui vient après, donc il calcule à peine. À l'inverse, les tokens chargés de sens contextuel — verbes expressifs comme <em>enduring</em>, noms propres comme <em>Vermont</em> ou <em>Greeks</em>, termes techniques comme <em>formaldehyde</em> — déclenchent plusieurs centaines de neurones.</p>
+
+<p>Par position dans la séquence, même phénomène : les tout premiers tokens absorbent énormément de calcul (le modèle n'a pas encore de contexte pour s'appuyer), puis l'activité décroît exponentiellement. La sparsité devient ainsi une fenêtre sur le fonctionnement interne du modèle : on voit où il "réfléchit" et où il fait du remplissage.</p>
+
+<h2>Implications pratiques : un nouveau levier pour l'efficacité</h2>
+
+<p>Au-delà des chiffres bruts, le travail a plusieurs implications concrètes pour l'industrie.</p>
+
+<p>D'abord, sur le coût d'exploitation des LLM. Une économie d'énergie de 15% par token, multipliée par les milliards de requêtes traitées quotidiennement par les grands fournisseurs, représente des montants colossaux en facture électrique et en émissions carbone. Le rapport BLOOM cité dans les références chiffrait déjà à plusieurs centaines de tonnes d'équivalent CO2 l'entraînement d'un modèle de 176B paramètres. Tout ce qui réduit le coût marginal du token compte.</p>
+
+<p>Ensuite, sur l'accessibilité de l'entraînement. Réduire la mémoire de pic de 28% permet d'entraîner un modèle de la même taille sur du matériel moins cher, ou de pousser à des batchs plus gros sur le même hardware. Pour les labos académiques et les startups, c'est la différence entre pouvoir mener une expérience et y renoncer.</p>
+
+<p>Enfin, sur le débat plus large autour des architectures alternatives. Depuis deux ans, beaucoup d'efforts se concentrent sur les Mixtures of Experts (MoE), qui découpent explicitement le modèle en sous-réseaux activés sélectivement. La sparsité non-structurée présentée ici est un cousin plus simple : on garde l'architecture dense classique, on laisse le modèle décider tout seul qui dort et qui travaille, et on récupère les bénéfices côté exécution. Les deux approches ne s'excluent pas, mais celle-ci a l'avantage de ne demander aucun changement architectural majeur.</p>
+
+<p>Un point qui mérite d'être pesé honnêtement : ces gains s'expriment surtout à l'inférence avec des batchs raisonnables et à l'entraînement de modèles à l'échelle du milliard. Pour des batchs très petits ou pour de très petits modèles, les frais fixes des kernels peuvent dominer. Et l'implémentation est aujourd'hui spécifique aux H100 — porter ces optimisations sur Blackwell, AMD MI300 ou Apple Silicon demandera du travail. Le code étant ouvert, ce travail peut maintenant commencer en parallèle dans plusieurs équipes.</p>
+
+<h2>Pour aller plus loin : des pistes ouvertes</h2>
+
+<p>Le papier ouvre plusieurs chantiers que les auteurs reconnaissent eux-mêmes comme inachevés.</p>
+
+<p>Le premier concerne les <em>neurones morts</em>. Avec une régularisation L1 trop agressive, certains neurones finissent par ne jamais s'activer, quel que soit le token. Ils consomment alors des paramètres sans contribuer au modèle. Des techniques de réinitialisation pendant l'entraînement existent (les auteurs en mentionnent dans l'annexe) mais leur combinaison optimale avec la sparsité reste à explorer.</p>
+
+<p>Le second concerne la sparsification <em>après coup</em> de modèles déjà entraînés. Les LLM ouverts disponibles — Llama 3, Qwen 2.5, Mistral — sont presque tous entraînés avec SiLU et sans pénalité L1. Les rendre creux a posteriori demanderait un fine-tuning ciblé. Plusieurs travaux récents (TurboSparse, ProSparse) explorent cette piste, mais sans encore atteindre les niveaux de sparsité du papier. Si ça marche, on pourrait rétroactivement accélérer des dizaines de modèles populaires sans les ré-entraîner intégralement.</p>
+
+<p>Le troisième concerne l'extension à des modèles beaucoup plus gros. Les expériences s'arrêtent à 2B paramètres, ce qui est modeste face aux modèles frontière de 70B à 400B. La tendance observée — gains croissants avec la taille — est encourageante, mais reste à confirmer à grande échelle, et à confronter à la concurrence des MoE dans cette zone.</p>
+
+<p>Enfin, il y a une question plus conceptuelle. Si un modèle dense de 2B paramètres n'utilise réellement que 30 neurones sur 5632 par token, est-ce qu'on a besoin de tous ces paramètres pendant l'entraînement, ou seulement pendant l'inférence ? Autrement dit, la sparsité observée est-elle un artefact qu'on pourrait éviter avec une meilleure architecture, ou une propriété fondamentale du calcul linguistique ? La réponse a des implications profondes sur la façon dont on conçoit la prochaine génération de modèles.</p>
+
+<p>En attendant ces réponses, les chercheurs ont fait ce que beaucoup ne font pas : ils ont publié tout leur code sous licence ouverte. Les kernels CUDA, le pipeline d'entraînement, les benchmarks — tout est disponible sur GitHub. C'est l'invitation explicite à transformer un résultat de recherche isolé en brique d'infrastructure réutilisable. Et c'est probablement comme ça qu'on découvrira si cette nouvelle "axe d'efficacité" tient ses promesses au-delà du papier.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

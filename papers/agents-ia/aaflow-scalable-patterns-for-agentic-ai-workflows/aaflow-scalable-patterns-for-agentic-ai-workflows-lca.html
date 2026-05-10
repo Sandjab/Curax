@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AAFLOW: Scalable Patterns for Agentic AI Workflows — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AAFLOW: Scalable Patterns for Agentic AI Workflows</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Sarker et ses collègues s'attaquent à un goulet d'étranglement systémique des pipelines RAG agentiques en environnement distribué : l'orchestration des données et la communication inter-nœuds dominent le coût total, bien au-delà du temps d'inférence du LLM lui-même. Les frameworks existants (LangChain, LangGraph, CrewAI, AutoGen) traitent l'exécution comme un problème d'orchestration applicative et délèguent au LLM le contrôle de flux, ce qui produit des chemins d'exécution non déterministes, difficiles à profiler et à reproduire sur clusters HPC.</p>
+<p>La proposition centrale est de reformuler les workflows agentiques comme une composition d'opérateurs typés — embedding, retrieval, reasoning, memory, upsert — chacun associé à un patron de communication distribué connu (embarrassingly parallel, shuffle-compute, reduction, broadcast/exchange, shuffle-reduce). Cette algèbre permet de compiler un workflow agentique en un DAG d'exécution prévisible plutôt qu'en une séquence d'appels framework opaques.</p>
+
+<h2>Méthodologie</h2>
+<p>AAFLOW articule quatre couches : un runtime d'opérateurs, un plan de données zero-copy fondé sur Apache Arrow et Cylon, un chemin de récupération conscient de la mémoire (knowledge index + memory index sur FAISS partitionné), et un moteur d'exécution asynchrone par lots avec files bornées entre les étapes Load, Transform, Embed, Upsert. Le modèle de coût utilisé pour justifier les gains s'écrit T ≈ Nβ/P + Nα/(bP) + Ω, où Ω capture la surcharge framework (sérialisation, scheduling, object-store) que le système cherche à annuler via le zero-copy et des primitives de communication explicites (UCX, MPI, GLOO).</p>
+<p>L'évaluation combine trois bancs d'essai : comparaison avec les frameworks d'orchestration agentique sur 32 768 tokens / 256 documents ; ingestion à grande échelle sur 100 millions de chunks (corpus synthétique de 92 Go dérivé de wikitext2_train) avec 128 à 1024 workers ; et benchmark de récupération face à HigressRAG sur quatre scénarios (LLMG, NCCQ, HR, SCL).</p>
+<p>Choix méthodologique discutable mais reconnu : les auteurs substituent à la génération et à l'embedding des proxies <em>ultra-légers</em> — DistilGPT-2 et un LocalHashEmbedder — pour saturer le plan de données et exposer les surcharges des frameworks. Cette saturation artificielle est revendiquée comme un moyen d'isoler le terme Ω, mais elle modifie radicalement le régime de fonctionnement par rapport à un déploiement réel.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur le benchmark RAG end-to-end, AAFLOW termine en 0,8748 s contre 1,61–1,64 s pour les quatre baselines, soit un facteur 1,88× face à LangChain. L'écart se concentre sur les étapes Embed (0,486 s vs 1,14 s) et Upsert (0,049 s vs 0,13 s), tandis que le débit de génération de tokens reste comparable. Sur le pipeline d'ingestion à grande échelle, AAFLOW affiche 3,487 s contre 4,439 s pour HigressRAG, 16,188 s pour DaskScalableRAG et 84,136 s pour RayScalableRAG, soit des accélérations de 1,28×, 4,64× et 24,12×.</p>
+<p>Les courbes de scaling fort montrent une réduction de la latence end-to-end de 30,944 s à 4,505 s entre 128 et 1024 workers. Le scaling faible est plus modeste (3,064 s → 5,185 s), reflétant la croissance de Ω avec la coordination globale, mais reste meilleur que les baselines. Sur la récupération, AAFLOW divise par environ 16 la latence de retrieval hybride (1,33 ms vs 21,45 ms) — gain attribué au routage explicite sur shards FAISS et à l'élimination des conversions intermédiaires.</p>
+
+<h2>Discussion et limites</h2>
+<p>La plus grosse réserve concerne l'écart entre régime de test et régime réel. Avec un embedding remplacé par un hash local et une génération par DistilGPT-2, les frameworks comparés sont mesurés dans une zone où ils ne sont pas optimisés et où la moindre surcharge de sérialisation devient dominante. Sur des modèles de production (par exemple un embedder BGE-large et un LLM 70B), la part relative du plan de données chute mécaniquement et les gains de 1,88× à 4,64× se compresseraient probablement de manière significative. Les auteurs reconnaissent ce point dans la section "Scope of Evaluation" mais ne fournissent aucune extrapolation chiffrée.</p>
+<p>Le choix de RayScalableRAG comme baseline mérite scrutin : 57 s rien que pour la phase de Load contre 0,9 s pour AAFLOW suggère une configuration sous-optimale plutôt qu'un défaut intrinsèque de Ray. Aucune analyse de variance n'est fournie sur les mesures, ce qui est gênant pour des écarts de quelques millisecondes en récupération. La latence Memory est rapportée à 0,00 ms pour HigressRAG, ce qui ressemble à un artefact de mesure plutôt qu'à une comparaison équitable.</p>
+<p>L'opérateur de raisonnement (Op_reason) reste largement déclaratif : sa "réduction" se résume à une concaténation triée de fragments. La promesse d'un "operator algebra" n'est pas formalisée au-delà des cinq opérateurs fixes, sans propriétés de composition prouvées (associativité, équivalence d'optimisation), ce qui limite la prétention de "compilateur" agentique.</p>
+<p>Enfin, l'article cite plusieurs références aux dates futures incohérentes (arXiv:2605.02162v1 daté du 4 mai 2026 pour le présent papier, arXiv:2512.16676, arXiv:2602.23374) : il s'agit probablement d'un preprint en cours dont les références n'ont pas été stabilisées, mais ces incohérences nuisent à la traçabilité.</p>
+
+<h2>Reproductibilité</h2>
+<p>Aucun lien public vers un dépôt de code AAFLOW n'est fourni dans le texte, alors que Cylon et FAISS sont open source. Les configurations matérielles sont décrites au niveau du nombre de cœurs (40 par nœud) et du nombre de workers, mais sans spécification d'interconnexion, de version de bibliothèques, ni de scripts de benchmark reproductibles. Le corpus synthétique généré à partir de wikitext2_train est partiellement spécifié (92 Go, 100M chunks). Le modèle de coût Eq. (1)–(3) est explicite, ce qui aide à interpréter les résultats. Globalement, la reproductibilité indépendante du benchmark reste hors d'atteinte en l'état.</p>
+
+<h2>Impact et applications</h2>
+<p>Le positionnement « le bottleneck du RAG agentique n'est pas le LLM mais l'orchestration de données » est une remise en cause utile face à la littérature qui sur-investit l'optimisation d'inférence (vLLM, SGLang). L'idée de mapper les opérations agentiques à des primitives HPC (UCX, MPI) pousse les workflows agentiques hors du registre purement applicatif et ouvre une voie vers les centres de calcul scientifique, où la reproductibilité d'exécution est non négociable. Les gains observés sur les phases Embed/Upsert sont cohérents avec l'expérience de la communauté HPC sur Apache Arrow.</p>
+<p>L'applicabilité industrielle dépendra de la capacité à intégrer Cylon dans les stacks Python existantes sans imposer de réécriture profonde, et de la robustesse du runtime face à des charges de production hétérogènes plutôt qu'aux corpus synthétiques homogènes des benchmarks.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article se situe à l'intersection de trois familles : systèmes de dataframes distribués (Modin, Cylon, Spark), runtimes de workflows scientifiques (Parsl, RADICAL-Pilot, Ray) et frameworks agentiques applicatifs (LangChain, LangGraph, CrewAI, AutoGen, DSPy). La filiation directe est avec les travaux antérieurs des mêmes auteurs sur Cylon, Deep RC et RHAPSODY ; AAFLOW en est une extension naturelle vers le RAG agentique. Le rapprochement avec DSPy, qui compile aussi des programmes LM en pipelines optimisés, est juste mais minimisé : DSPy optimise la qualité des sorties par recompilation, AAFLOW optimise la performance d'exécution distribuée — les deux approches sont complémentaires plutôt que concurrentes. La comparaison à HigressRAG et MemoRAG situe le travail face à l'optimisation du chemin de récupération côté application, là où AAFLOW opère sur le substrat distribué.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Reformulation claire et originale du RAG agentique comme algèbre d'opérateurs HPC.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Trois bancs d'essai cohérents, mais usage de proxies ultra-légers qui biaise le régime mesuré.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>Échelle convaincante : 100M chunks, 4096 fichiers, 128–1024 workers, 92 Go de données.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Latences par étape et throughput tokens/s pertinents, mais pas d'intervalles de confiance ni d'analyse de variance.</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Configurations RayScalableRAG suspectes (84 s sur Load), pas de tuning équivalent des baselines documenté.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Aucun lien vers code AAFLOW, versions des bibliothèques et interconnexion non précisées.</td></tr>
+<tr><td>Transparence sur les limites</td><td>4</td><td>Section "Scope of Evaluation" reconnaît explicitement l'absence de tests sur LLM réels et liste les expériences futures.</td></tr>
+<tr><td>Impact / nouveauté</td><td>3</td><td>Contribution incrémentale solide sur l'axe Cylon→RAG, mais l'algèbre d'opérateurs reste informelle.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale indépendante : 3,0 / 5.</strong> Bonne intuition systèmes et démonstration cohérente sur l'axe communication-bound, plombée par un protocole d'évaluation qui amplifie mécaniquement les écarts mesurés.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
