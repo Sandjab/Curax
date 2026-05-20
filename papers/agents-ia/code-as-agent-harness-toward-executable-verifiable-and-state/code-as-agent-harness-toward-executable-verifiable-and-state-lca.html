@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code as Agent Harness: Toward Executable, Verifiable, and Stateful Agent Systems — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Code as Agent Harness: Toward Executable, Verifiable, and Stateful Agent Systems</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le papier reformule la place du code dans les systèmes agentiques contemporains. La thèse centrale : le code n'est plus seulement une cible de génération pour les LLM, il devient le <strong>substrat opérationnel</strong> sur lequel un agent raisonne, agit, modélise son environnement et vérifie son progrès. Les auteurs nomment cette perspective <em>code as agent harness</em>.</p>
+<p>Le terme <em>harness</em> désigne la couche logicielle qui transforme un modèle stateless en agent fonctionnel : outils, API, sandboxes, mémoire, validateurs, frontières de permission, boucles d'exécution. Les auteurs distinguent trois éléments couplés des systèmes long-horizon : capacités internes du modèle, infrastructure de harness fournie par le système, et artefacts de code initiés par l'agent. Ce dernier point — tests de régression, outils temporaires, programmes DSL, workflows exécutables, skills réutilisables — reste sous-exploré dans la littérature, ce qui justifie la synthèse.</p>
+
+<h2>Méthodologie</h2>
+<p>Il s'agit d'un survey de littérature couvrant les travaux jusqu'à 2026. La structuration repose sur trois couches : interface de harness (§2), mécanismes (§3), passage à l'échelle multi-agents (§4), suivies d'applications et de problèmes ouverts (§5). Chaque sous-section présente un ou deux tableaux de systèmes représentatifs avec mécanisme, paradigme et innovation-clé.</p>
+<p>Aucun protocole explicite de sélection bibliographique n'est documenté — pas de PRISMA, pas de critères d'inclusion formels, pas de stratégie de recherche reproductible. Le repository GitHub <em>Awesome-Code-as-Agent-Harness-Papers</em> sert de complément, mais reste un agrégat curaté plutôt qu'une revue systématique. Cette absence de procédure formelle constitue une limite méthodologique standard du genre.</p>
+
+<h2>Résultats principaux</h2>
+<p>La taxonomie produite est la contribution centrale. Trois axes structurent l'interface de harness :</p>
+<ul>
+<li><strong>Code pour le raisonnement</strong> : program-delegated reasoning (PoT, PAL), interfaces de vérification formelle (Lean, Coq, Isabelle), raisonnement code-grounded itératif (NExT, CodePRM, RLEF).</li>
+<li><strong>Code pour l'action</strong> : sélection de skills ancrés (SayCan, KnowNo), génération de politiques programmatiques (Code-as-Policies, RoboCodeX), agents lifelong (Voyager, LYRA).</li>
+<li><strong>Code pour la modélisation d'environnement</strong> : représentations structurées (ViStruct, FactoredScenes), modèles du monde par traces d'exécution (SemCoder, CWM, WorldCoder), environnements d'évaluation code-grounded (SWE-bench, AgentBench), construction d'environnements vérifiables (SWE-smith, EnvScaler).</li>
+</ul>
+<p>Les mécanismes de harness sont décomposés en cinq catégories : planification (linéaire, structure-grounded, search-based, orchestration), mémoire (working, semantic, experiential, long-term, multi-agent, plus compaction de contexte), usage d'outils (fonction-oriented, environment-interaction, verification-driven, workflow-orchestration), contrôle par boucle Plan-Execute-Verify, et ingénierie agentique du harness lui-même (télémétrie profonde, agents d'évolution, mutation gouvernée).</p>
+<p>Sur le passage à l'échelle multi-agents, les auteurs proposent une typologie par rôles (manager, planner, coder, reviewer, tester), modes d'interaction (collaboration, adversariat, débat, red-teaming) et topologies (centralisée, distribuée, streaming).</p>
+
+<h2>Discussion et limites</h2>
+<p>Le cadrage conceptuel est solide. La distinction entre infrastructure prédéfinie et artefacts code initiés par l'agent clarifie un débat souvent confus dans la communauté coding agents. La formulation du code comme medium <em>exécutable, inspectable, stateful</em> donne trois critères opérationnels qui se déclinent bien dans chaque section.</p>
+<p>Les faiblesses sont celles du format. Première limite : la taxonomie hérite des effets de mode bibliographiques. Quand un système comme MapCoder apparaît à la fois dans planification orchestration-based et dans multi-agent memory, la frontière entre catégories devient poreuse. Deuxième limite : aucune méta-analyse quantitative. Le survey ne compare pas les performances rapportées sur des benchmarks communs (SWE-bench, LiveCodeBench), ne tente pas d'identifier les facteurs explicatifs des gains, ne discute pas la reproductibilité empirique des claims. Troisième limite : la position défendue dans §4.3 (<em>The Shared Code-Centric Harness Substrate</em>) reste programmatique, sans démonstration empirique propre.</p>
+<p>Les auteurs reconnaissent explicitement plusieurs problèmes ouverts : évaluation au-delà du succès final, vérification sous feedback incomplet, amélioration sans régression, état partagé cohérent, supervision humaine, extensions multimodales. Cette section §5.2 est honnête sur les fragilités du champ.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le repository GitHub fournit la liste des papiers cités. Aucune donnée empirique propre n'étant produite, la reproductibilité se réduit à la traçabilité des références — bonne dans l'ensemble, avec des citations numérotées exploitables. Manque toutefois un protocole de sélection formel : un autre groupe travaillant sur le même périmètre construirait probablement une taxonomie partiellement différente.</p>
+
+<h2>Impact et applications</h2>
+<p>Cinq domaines d'application sont passés en revue : assistants de coding (patches, tests, résolution d'issues sur dépôts vivants), automatisation GUI/OS (DOM, accessibility APIs), découverte scientifique (pipelines de test d'hypothèses, automatisation de labo), agents incarnés (politiques exécutables, skill libraries), personnalisation (profils long-terme, politiques adaptatives).</p>
+<p>L'apport principal pour les praticiens est conceptuel. La distinction entre <em>code généré comme artefact</em> et <em>code comme harness opérationnel</em> permet de relire des outils comme Claude Code, Codex CLI ou OpenHands à travers une grille unifiée. La discussion sur les fichiers persistants <code>PLAN.md</code>, <code>Implement.md</code>, et sur le harness comme objet filesystem versionnable, formalise une pratique déjà émergente dans les workflows long-horizon.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier dialogue avec les surveys récents sur les coding agents (sur la génération de code, l'agentique LLM, l'ingénierie de skills) en se démarquant par son recentrage sur l'infrastructure plutôt que sur les capacités du modèle. La filiation avec les discussions sur les <em>agent harnesses</em> [13-23] est revendiquée, mais le papier va plus loin en organisant explicitement le code comme axe taxonomique central.</p>
+<p>Par rapport à Meta-Harness ou aux travaux sur Natural-Language Agent Harnesses cités en §3.1.4, ce survey joue un rôle d'agrégateur conceptuel plutôt que de proposition technique nouvelle. Sa valeur réside dans la cartographie d'un champ qui a explosé en 2024-2026 et qui manquait d'un référentiel structurant.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Cadrage clair et original autour du code comme substrat opérationnel</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Format survey sans protocole de sélection formel</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>Couverture large, plusieurs centaines de références</td></tr>
+<tr><td>Qualité des métriques</td><td>2</td><td>Aucune méta-analyse quantitative, pas de comparaison sur benchmarks</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Biais de sélection inévitable, pas de procédure de double-codage</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Repository GitHub public, citations traçables</td></tr>
+<tr><td>Transparence sur les limites</td><td>3</td><td>Problèmes ouverts bien identifiés, méthodologie du survey non discutée</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Synthèse opportune d'un champ en expansion rapide, cadrage conceptuel utile</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3.5/5</strong> — survey solide et bien structuré, utile comme point d'entrée et grille de lecture, mais qui reste à mi-chemin entre la revue systématique et la collection thématique commentée.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

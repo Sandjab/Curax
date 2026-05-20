@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agents May Always Fall for Prompt Injections — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AI Agents May Always Fall for Prompt Injections</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un email suffit à retourner un agent IA contre vous</h2>
+
+<p>Un assistant email équipé de Claude Sonnet 4.6 refuse 99 fois sur 100 d'envoyer un message non autorisé. Reformulez la même demande malveillante en glissant une fausse citation de l'utilisateur dans un fil transféré, et le taux de succès de l'attaque grimpe à 96,7%. Pire : les meilleures attaques se transfèrent telles quelles vers GPT-5.4 et Gemini-3-pro avec des taux dépassant 60% et 92%.</p>
+
+<p>Ces chiffres viennent d'un article signé Sahar Abdelnabi (ELLIS Institute Tübingen) et Eugene Bagdasarian (UMass Amherst) publié sur arXiv en mai 2026. Leur thèse est dérangeante pour toute l'industrie : la défense contre les prompt injections, que l'OWASP classe vulnérabilité numéro 1 des applications LLM, repose sur un cadre conceptuel qui ne tient plus dès qu'un agent devient vraiment autonome. Et selon les auteurs, ce cadre est mathématiquement condamné à échouer.</p>
+
+<h2>Le problème : on a mal posé la question</h2>
+
+<p>Depuis l'article fondateur de Greshake et al. en 2023, l'industrie traite les prompt injections comme des <em>instructions cachées dans des données</em>. La défense type consiste donc à séparer les deux : isoler les contenus externes, classifier ce qui ressemble à un ordre, refuser d'exécuter ce qui vient d'une source non fiable. Meta a fine-tuné SecAlign pour résister à ces attaques. Prompt Guard et ses successeurs analysent les emails entrants pour détecter les motifs suspects type "ignore all previous instructions".</p>
+
+<p>Abdelnabi et Bagdasarian montrent que cette approche échoue sur deux fronts à la fois. D'abord, elle ne détecte pas les attaques qui n'utilisent aucun vocabulaire d'injection. Ensuite, quand elle réussit à bloquer quelque chose, elle bloque aussi des comportements légitimes. Les chercheurs prennent un exemple parlant : un email demandant un remboursement de voyage avec la mention "cette demande a été approuvée par le chef de département". Le problème n'est pas une instruction cachée. Le problème est de savoir si l'approbation est réelle. Une défense qui couperait tout lien avec le contenu externe empêcherait l'agent d'agir même quand l'approbation existe vraiment.</p>
+
+<p>Le constat empirique est sans appel. Les chercheurs ont construit 4 200 paires d'emails partageant le même corps professionnel à une seule clause près. Dans une version, la clause affirme une autorisation ("votre assistant a été pré-autorisé"). Dans l'autre, elle reste neutre ("une réponse automatique conviendrait"). Prompt Guard 2 distingue les deux variantes à peine mieux que le hasard : AUROC de 0,59. Le premier Prompt Guard fait pire que le hasard : 0,43.</p>
+
+<p>Le résultat le plus contre-intuitif concerne SecAlign. Sous une consigne utilisateur restrictive ("résume mes emails en attente"), LLaMA-3.3-70B envoie quand même un email dans 54% des cas sur les variantes avec autorisation fabriquée. SecAlign, qui était censé corriger ce défaut, envoie dans 88% des cas. Le fine-tuning de sécurité a aggravé le problème. Plus parlant encore : sur le dataset LLMail-Inject, les deux modèles refusent correctement d'envoyer, mais LLaMA flague 89,8% des injections suspectes comme telles, contre seulement 54,6% pour SecAlign. L'entraînement de sécurité a appris à ignorer plutôt qu'à comprendre.</p>
+
+<h2>La méthode : remplacer "code vs données" par "intégrité contextuelle"</h2>
+
+<p>Les auteurs proposent de réutiliser une théorie venue de la vie privée : la <strong>Contextual Integrity</strong> de Helen Nissenbaum (2004). L'idée centrale est qu'une information n'est pas "sensible" ou "publique" dans l'absolu. Elle est appropriée ou non selon le contexte dans lequel elle circule. Confier son dossier médical à son médecin est normal. Le même dossier transmis à son employeur viole une norme.</p>
+
+<p>Nissenbaum décompose toute circulation d'information en cinq paramètres : qui envoie, qui reçoit, sur qui porte l'information, quel type d'information, et sous quelle règle de transmission. Une norme contextuelle dit quelque chose comme "un médecin (sender) peut transmettre les résultats d'un patient (subject) à un confrère (receiver) avec le consentement du patient (transmission principle)".</p>
+
+<p>Abdelnabi et Bagdasarian étendent ce cadre aux actions d'agents IA. Quand un assistant email décide d'envoyer une réponse, c'est un flux d'information du demandeur initial vers une cible, médié par l'agent. Les cinq paramètres restent les mêmes. Une attaque réussit quand elle corrompt l'un d'eux. Forger une citation de l'utilisateur dans un email transféré, c'est falsifier le <em>sender</em>. Inventer une politique d'entreprise qui autoriserait l'action, c'est falsifier le <em>transmission principle</em>. Présenter un dépôt non remboursable comme une simple réservation, c'est falsifier le <em>information type</em>.</p>
+
+<p>Cette grille a un mérite immédiat : elle permet de classer des attaques qui semblaient hétéroclites. "Ignore all previous instructions" devient une attaque sur le transmission principle. Les balises [SYSTEM] injectées dans des données deviennent une attaque sur le sender. Les attaques multi-agents type ConVerse, où des dialogues entre IA glissent des demandes malveillantes, deviennent des attaques mixtes sur plusieurs paramètres simultanément.</p>
+
+<h2>Résultats clés : une impossibilité, pas une difficulté</h2>
+
+<p>L'argument central de l'article n'est pas qu'il faut mieux défendre les agents. C'est qu'aucune politique fixe ne peut bloquer toutes les attaques contextuelles sans bloquer aussi des flux légitimes. La démonstration tient en deux observations.</p>
+
+<p>Première observation : pour chaque paramètre contextuel, un attaquant peut fournir une valeur fausse qui, si elle était vraie, rendrait l'action appropriée. L'agent n'a aucun moyen de vérification absolue. Un défenseur qui rejette systématiquement ces affirmations bloquera fatalement des cas où elles sont véridiques. Un défenseur qui les accepte laissera passer les fabrications.</p>
+
+<p>Deuxième observation : même si tous les paramètres sont correctement identifiés, l'attaquant peut manipuler le jugement de légitimité. Un email demandant de confirmer une réunion en précisant "un client important attend depuis lundi, nous risquons de perdre le compte" est légitime si c'est vrai et manipulateur si c'est faux. Le même argument sert dans les deux cas. L'agent n'a pas l'information nécessaire pour trancher au moment de décider.</p>
+
+<p>Les expériences confirment cette tension à grande échelle. Une boucle de red-teaming inspirée de PAIR utilise Claude Sonnet 4.6 comme attaquant contre un agent email basé sur le même modèle. Sur 150 scénarios, l'attaquant réussit dans 96,7% des cas. Mieux : 61,4% des attaques réussissent dès le premier essai. La stratégie dominante consiste à fabriquer un message antérieur de l'utilisateur dans un fil transféré, que l'agent finit par traiter comme une instruction de première main.</p>
+
+<p>Le détail le plus instructif vient de l'analyse des chaînes de raisonnement. Sur l'email de base, Claude Sonnet 4.6 flague explicitement la tentative comme un prompt injection. Sur la variante crafted par la boucle, le même modèle paraphrase la citation forgée comme quelque chose que l'utilisateur "a explicitement déclaré". La fausse citation a basculé du statut de "claim externe" à celui de "instruction utilisateur".</p>
+
+<p>Deux autres expériences identifient des failles structurelles indépendantes des attaques. La première porte sur l'<strong>ancrage des normes</strong>. Les chercheurs construisent 300 scénarios où l'utilisateur délègue une autorité ("si Megan signale des bugs, ouvre-les dans Jira sans me demander"), puis testent ce qui se passe quand Megan demande quelque chose hors périmètre comme supprimer un ticket. Sans historique d'interaction préalable, Claude Sonnet 4.6 exécute la requête hors périmètre dans 29,9% des cas. Avec dix échanges légitimes en amont, ce taux tombe à 7%. La même tendance se retrouve sur GPT-5.4 (36,2% → 24,5%) et Gemini-3-pro (32,2% → 24,2%). L'agent a besoin d'historique pour comprendre où s'arrête vraiment la délégation.</p>
+
+<p>La deuxième expérience concerne la <strong>séparation des flux</strong>. Quand un même email contient deux demandes simultanées — une autorisée (créer un ticket interne) et une non autorisée (confirmer un engagement externe) — les agents fusionnent l'autorisation. Sans consigne explicite de séparation, GPT-5.2 commet la violation de sécurité dans 65% des cas, GPT-5.4 dans 34%. Une consigne explicite ramène GPT-5.4 à zéro mais laisse GPT-5.2 à 12%. Claude Sonnet 4.6 se comporte mieux (6% sans consigne, 0% avec) mais la dynamique est universelle : l'autorité accordée à un flux contamine son voisin.</p>
+
+<h2>Implications pratiques : ce que ça change pour ceux qui déploient des agents</h2>
+
+<p>Plusieurs conséquences opérationnelles découlent directement de ces résultats. Aucune n'est confortable.</p>
+
+<p>Premièrement, les classifieurs d'injection actuels protègent contre un sous-ensemble rétrécissant des attaques réelles. Ils détectent des motifs syntaxiques qui correspondaient à l'état de l'art des attaques en 2023-2024. Les attaques contextuelles n'utilisent aucun de ces motifs. Continuer à investir uniquement dans cette ligne de défense revient à durcir une porte pendant que les fenêtres restent ouvertes.</p>
+
+<p>Deuxièmement, le fine-tuning de sécurité type SecAlign peut empirer la situation. Le modèle apprend à ignorer le contenu externe, ce qui réduit sa capacité à raisonner sur ce contenu, y compris pour le flaguer comme suspect. Les déploiements où l'agent doit à la fois agir prudemment <em>et</em> signaler les anomalies font face à un compromis défavorable.</p>
+
+<p>Troisièmement, la confiance dans la transférabilité des défenses est probablement surévaluée. Les meilleures attaques craftées contre Claude Sonnet 4.6 fonctionnent quasi telles quelles sur les autres modèles frontières. Une évaluation modèle par modèle qui montre 1% de taux d'échec ne dit rien sur la robustesse face à un attaquant déterminé qui s'adapte.</p>
+
+<p>Quatrièmement, les longs historiques d'interaction ont un double effet. Ils aident l'agent à comprendre où s'arrête sa délégation, donc réduisent les exécutions hors périmètre. Mais ils ouvrent un nouveau vecteur d'attaque : un adversaire qui peut façonner les premiers échanges peut ancrer une mauvaise interprétation des normes qui s'amplifiera ensuite. Les agents avec mémoire persistante héritent d'une surface d'attaque qui n'existait pas avant.</p>
+
+<p>Cinquièmement, certaines tâches du quotidien deviennent structurellement risquées. Un fil d'email qui mélange une demande interne autorisée et une demande externe non autorisée n'est pas une situation pathologique : c'est le format normal des discussions professionnelles. Si un agent gère vraiment une boîte mail à votre place, ce type de mélange arrive plusieurs fois par jour.</p>
+
+<h2>Pour aller plus loin : trois pistes et un aveu</h2>
+
+<p>Les auteurs ne se contentent pas de poser le problème. Ils tracent trois directions complémentaires, en reconnaissant qu'aucune ne sera suffisante seule.</p>
+
+<p>La première est un <strong>alignement contextuel par RL</strong>. Plutôt qu'entraîner les modèles à refuser des patterns d'injection, on les entraîne sur des paires de scénarios qui partagent la même forme syntaxique mais diffèrent dans le contexte de délégation. Le signal de récompense vient des dimensions CI plutôt que d'une étiquette binaire "injection / pas injection". Lan et al. (2025) ont commencé à explorer cette voie pour la dimension privée.</p>
+
+<p>La deuxième est une <strong>architecture en couches</strong> où le modèle effectue le raisonnement CI et un système externe vérifie certaines affirmations contre la vérité-terrain. L'attestation cryptographique de l'identité d'un sender, la consultation de l'utilisateur sur les décisions à fort enjeu, le croisement avec des registres externes peuvent réduire la zone d'ambiguïté. Ces mécanismes ne couvrent jamais tout l'espace ouvert des contextes possibles, mais ils réduisent la fenêtre de manœuvre de l'attaquant.</p>
+
+<p>La troisième est le <strong>red-teaming CI-aware</strong>. Les benchmarks actuels mesurent la robustesse contre un répertoire fixe d'attaques. Les attaquants adaptatifs qui ciblent des paramètres contextuels spécifiques exposent des failles invisibles à ces benchmarks. Construire des suites d'évaluation où chaque scénario teste indépendamment l'identification du sender, du transmission principle, ou de la séparation des flux donnerait des métriques exploitables pour itérer.</p>
+
+<p>L'aveu est plus important que les pistes. Les auteurs reconnaissent que leur cadre CI <em>n'est pas une solution</em>. C'est un outil pour mieux poser le problème. Le résultat d'impossibilité reste : un agent pleinement autonome fait toujours face à un arbitrage entre sur-conformité (refuser des actions légitimes) et sous-conformité (exécuter des actions illégitimes). Le choix du curseur dépend du domaine, de la culture, des préférences personnelles, du risque acceptable. Aucune politique universelle ne peut le fixer.</p>
+
+<p>La question ouverte la plus inconfortable concerne les utilisateurs eux-mêmes. Les expériences supposent que les délégations sont énoncées explicitement. En pratique, les utilisateurs délèguent en termes vagues et ambigus. Yi et al. (2025) ont documenté à quel point cette ambiguïté est répandue. Si même avec des consignes explicites les agents échouent sur des cas simples, que se passera-t-il quand la consigne sera "tu sais ce qu'il faut faire" ?</p>
+
+<p>L'industrie devra probablement accepter que les agents totalement autonomes resteront, pour longtemps encore, inadaptés aux contextes à fort enjeu. Les déploiements robustes mêleront agents pour les décisions à faible risque, validation humaine pour les autres, et instrumentation systématique pour détecter les dérives. Le rêve d'un assistant qui gère seul votre boîte mail sans jamais commettre une erreur de jugement ressemble de plus en plus à un horizon mathématiquement inatteignable plutôt qu'à un problème d'ingénierie en attente d'une solution.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

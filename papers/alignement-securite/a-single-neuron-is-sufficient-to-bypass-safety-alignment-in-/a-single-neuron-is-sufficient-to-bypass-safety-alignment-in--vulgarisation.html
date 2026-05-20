@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Single Neuron Is Sufficient to Bypass Safety Alignment in Large Language Models — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>A Single Neuron Is Sufficient to Bypass Safety Alignment in Large Language Models</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Un seul neurone pour faire tomber la sécurité d'un LLM</h2>
+
+<p>Sur Llama-3.1-70B, un modèle de 70 milliards de paramètres, il existe plus de deux millions de neurones dans les couches MLP. Une équipe de chercheurs d'Apple vient de montrer qu'il suffit d'en désactiver <strong>un seul</strong> pour faire sauter quasiment tous les garde-fous de sécurité du modèle. Pas un sous-réseau, pas une direction dans l'espace des activations, pas un cluster de features. Un neurone. Une seule valeur scalaire à modifier, à une seule couche du réseau.</p>
+
+<p>Le taux de succès moyen de cette attaque atteint 91,7 % sur JailbreakBench, un benchmark standard de jailbreak, à travers sept modèles allant de 1,7 à 70 milliards de paramètres. Aucun entraînement, aucun fine-tuning, aucune ingénierie de prompt. Juste un accès en lecture-écriture aux activations internes du modèle.</p>
+
+<p>Ce résultat secoue une hypothèse fondatrice de l'alignement moderne : que la sécurité d'un LLM serait <em>distribuée</em>, répartie sur l'ensemble du réseau, donc robuste aux perturbations locales. La réalité semble plus inquiétante. Le travail, signé Hamid Kazemi, Atoosa Chegini et Maria Safi, identifie deux systèmes mécanistiquement distincts : des neurones de refus qui contrôlent l'expression du contenu nocif, et des neurones de concept qui encodent la connaissance nocive elle-même. Chacun se réduit à un point unique dans l'architecture.</p>
+
+<h2>Le problème : où vit vraiment la sécurité dans un modèle ?</h2>
+
+<p>Quand un LLM aligné refuse de répondre à une demande dangereuse, la question naturelle est : qu'est-ce qui, dans les 175 milliards de paramètres du réseau, déclenche ce refus ? L'intuition standard, héritée du deep learning classique, c'est que le savoir et les comportements émergent de la coopération de millions de neurones. La sécurité serait donc diffuse, et tout retrait local de capacité reviendrait à essayer d'éteindre une foule en assassinant un spectateur.</p>
+
+<p>Plusieurs travaux récents ont commencé à fissurer cette image. Arditi et al. ont montré en 2024 qu'une <em>direction</em> unique dans le résidu (le canal d'information qui traverse toutes les couches du Transformer) suffit à supprimer le refus, à condition de l'ablater simultanément à chaque couche. C'est déjà une simplification radicale, mais cette direction reste globale : elle s'étale sur l'ensemble du réseau, et elle vit dans une base abstraite — le résidu — qui ne correspond à aucun composant physique du modèle.</p>
+
+<p>La nouvelle équipe pose une question plus tranchée. Peut-on localiser le refus dans une seule unité physique du modèle, identifiable par ses coordonnées (couche, indice de neurone) ? Si oui, la borne inférieure de la sécurité ne serait plus une direction, mais un point. Et le diagnostic sur la fragilité de l'alignement actuel deviendrait beaucoup plus sévère.</p>
+
+<h2>La méthode vulgarisée : trouver l'aiguille dans la botte de foin</h2>
+
+<p>Trouver un neurone causal parmi deux millions, sans entraînement, demande une stratégie de recherche fine. Les auteurs en construisent une qui combine deux signaux complémentaires sur un petit jeu de 128 prompts nocifs et 128 prompts inoffensifs.</p>
+
+<p>Premier signal : <strong>l'activation</strong>. On regarde, pour chaque neurone d'une couche MLP, la valeur qu'il prend en moyenne sur les prompts nocifs versus les prompts bénins. Un bon candidat pour un neurone de refus doit s'allumer fortement sur les premiers et rester silencieux sur les seconds. C'est un critère de discrimination simple, à la manière d'un détecteur.</p>
+
+<p>Deuxième signal : <strong>le gradient</strong>. On demande au modèle, via le calcul classique de backpropagation, quels neurones, si on les bougeait dans une direction donnée, augmenteraient le plus la probabilité que le modèle <em>cesse</em> de refuser. C'est le critère de causalité : un bon neurone de refus doit non seulement s'allumer sur le danger, mais sa modification doit changer le comportement du modèle.</p>
+
+<p>Les chercheurs combinent ces deux signaux en un score par neurone, puis prennent les cinq meilleurs candidats. Ce classement n'est qu'une présélection — il s'appuie sur un signal local autour de quelques tokens. Pour départager les finalistes, ils mesurent empiriquement le taux de succès d'attaque réel sur un jeu de validation indépendant (HarmBench, 191 prompts) en figeant chaque candidat à différentes valeurs. Le triplet gagnant (couche, neurone, valeur cible) est alors évalué sur le jeu de test final, JailbreakBench, sans aucun ajustement supplémentaire.</p>
+
+<p>L'intervention elle-même est minimaliste. À chaque passage avant du modèle, on accroche un hook sur la couche concernée, et on remplace la valeur de ce neurone précis par une constante choisie. Le reste du réseau opère normalement. Côté code, ça tient en quatre lignes Python.</p>
+
+<p>Pour préserver la cohérence des réponses, les auteurs proposent aussi une variante dite <em>anchor</em> : au lieu de fixer le neurone à une valeur constante quel que soit le contexte, ils modulent l'intervention en fonction de l'activation naturelle du neurone sur le prompt courant. Si le prompt active fortement le neurone (donc s'il est probablement nocif), on tire fort. S'il l'active à peine, on ne touche presque rien. Le modèle conserve ainsi ses capacités générales.</p>
+
+<h2>Résultats clés : un point de défaillance ridiculement petit</h2>
+
+<p>Les chiffres sont saisissants. À travers les sept modèles testés — Qwen3 en 1,7B, 4B, 8B, 14B et 32B, plus Llama-3.1 en 8B et 70B — l'intervention sur un seul neurone atteint en moyenne 91,7 % de réussite d'attaque sous le juge LLM, et 91,9 % sous Llama-Guard-3-8B, le classificateur de sécurité dédié d'origine Meta. C'est statistiquement équivalent à la méthode d'Arditi, qui ablate une direction entière à toutes les couches (93,1 % et 91,6 % respectivement).</p>
+
+<p>La version anchor préserve presque parfaitement les capacités générales : -0,6 % sur MMLU (compréhension multidisciplinaire) et -0,1 % sur GSM8K (raisonnement mathématique) en moyenne. Autrement dit, le modèle continue à résoudre des problèmes, à raisonner, à coder — il a juste perdu la capacité à refuser.</p>
+
+<p>Trois résultats secondaires renforcent le diagnostic.</p>
+
+<p>D'abord, ces neurones de refus existent <strong>déjà dans les modèles de base</strong>, avant l'alignement par fine-tuning. Sur les quatre checkpoints Qwen3 disponibles en version pré-RLHF, le même neurone discrimine déjà nettement les prompts nocifs des prompts bénins. L'alignement ne crée pas la sécurité, il la <em>câble</em> : il modifie le moment où ces neurones s'activent dans la séquence (sur les tokens du prompt pour le modèle de base, sur les tokens de la frontière assistant pour la version instruct), pas leur fonction sémantique. La sécurité émerge du pré-entraînement, et l'alignement ne fait que connecter ce signal préexistant au pipeline de génération.</p>
+
+<p>Ensuite, ces neurones fonctionnent comme <strong>détecteurs autonomes</strong> de prompts nocifs. En seuillant simplement l'activation d'un seul neurone du Llama-3.1-8B, on obtient sur XSTest une AUROC de 0,969 et un rappel de 0,950 — meilleur que Llama-Guard-3-8B (0,834 de rappel), qui est pourtant un modèle complet de 8 milliards de paramètres entièrement dédié à cette tâche. Une seule valeur scalaire à la couche 11 d'un réseau de 32 couches rivalise avec un classifieur dédié de 8B. La sécurité <em>fait son travail</em>, dans le sens où l'information est bien là, propre et exploitable. Elle est juste concentrée dans un goulot d'étranglement minuscule.</p>
+
+<p>Enfin, les auteurs étendent leur méthode aux <strong>neurones de concept</strong>. Plutôt que de chercher le gate du refus, ils cherchent le substrat qui encode une connaissance dangereuse précise — ici, le suicide. Sur trois tailles de Qwen3, ils identifient un seul neurone par modèle dont l'amplification injecte du contenu lié au suicide dans des réponses à des prompts complètement anodins. Demandez à Qwen3-1.7B d'écrire un poème sur l'océan en amplifiant un neurone précis, et le modèle produit des vers parfaitement structurés sur le fait de se donner la mort. Demandez-lui une histoire courte en trois phrases, et il décrit un suicide collectif. La forme reste, le contenu bascule.</p>
+
+<p>Cette dernière expérience est conduite à petite échelle — un seul concept, trois modèles, 20 prompts bénins de test — mais elle suggère une architecture en deux étages : une <em>porte</em> (les neurones de refus) qui décide si la connaissance nocive peut sortir, et un <em>substrat</em> (les neurones de concept) qui encode cette connaissance. Les deux sont localisables à l'échelle de l'unité individuelle.</p>
+
+<h2>Implications pratiques : ce que ça change pour qui déploie des LLM</h2>
+
+<p>Premier point très concret : la méthode exige un accès <em>white-box</em>, c'est-à-dire la capacité de manipuler les activations internes du modèle pendant l'inférence. Cela exclut de fait les modèles servis derrière une API fermée comme GPT-4 ou Claude, où l'utilisateur ne voit que les sorties textuelles. L'attaque ne concerne <strong>que les modèles open-weights</strong>. Pour Qwen3, Llama, Mistral, DeepSeek et tout ce qui se télécharge sur Hugging Face, en revanche, elle est triviale à reproduire.</p>
+
+<p>Les auteurs reconnaissent ce point de manière nette : les modèles open-weights étaient déjà jailbreakables par fine-tuning, donc l'attaque n'aggrave pas substantiellement le profil de risque. Mais elle change la nature du problème. Le fine-tuning demande des données, du compute et plusieurs heures. La méthode présentée demande quatre lignes de code et une minute d'inférence pour identifier le neurone, après quoi le bypass est gratuit et persistant. Le coût opérationnel d'un jailbreak white-box vient de chuter d'un ou deux ordres de grandeur.</p>
+
+<p>Deuxième implication, pour les équipes d'alignement. Si la sécurité est ce concentrée, alors les techniques actuelles de RLHF et de DPO produisent un alignement <em>topologiquement fragile</em>. Toute la difficulté du métier consistait à construire un comportement robuste à partir de signaux indirects (préférences humaines, modèles de récompense). On découvre que ce travail produit en pratique des goulots d'étranglement uniques. SafeNeuron, cité dans la related work, propose une piste constructive : geler les neurones de sécurité identifiés pendant le fine-tuning pour forcer la redistribution du signal. La défense est en retard d'au moins une génération sur l'attaque.</p>
+
+<p>Troisième implication, plus large. La sécurité d'un LLM <em>n'émerge pas</em> de l'alignement au sens où on l'imaginait. Elle préexiste dans les neurones du modèle de base — qui ont appris à reconnaître les contenus sensibles simplement en lisant le web. L'alignement se contente d'ajouter un fil qui relie ce détecteur préexistant à la sortie de génération. Couper le fil suffit. Cette perspective recadre le débat sur l'alignement : la question n'est pas tant d'apprendre la sécurité au modèle, mais de robustifier le câblage entre des capacités de détection qu'il possède déjà.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent ouvertes. La plus évidente : les neurones de concept se généralisent-ils au-delà du suicide ? Les auteurs n'ont testé qu'un concept, à petite échelle. Si la même localisation à un neurone unique tient pour la fabrication d'armes, les contenus pédopornographiques, les instructions de cyberattaque, alors on aurait une carte assez complète du contenu nocif dans les LLM — et inversement, des leviers redoutables pour l'injection ciblée de toxicité.</p>
+
+<p>Deuxième question : pourquoi exactement les neurones MLP, et pas les directions du résidu ? L'article fournit une réponse partielle. Le résidu est <em>rotation-invariant</em> : ses dimensions individuelles n'ont pas de sens sémantique stable, parce qu'aucune opération non linéaire ne brise la symétrie de rotation. Les neurones MLP, eux, vivent dans une base privilégiée : la non-linéarité de la fonction d'activation (SiLU dans ces modèles) rend chaque coordonnée individuelle interprétable. C'est cohérent avec une ligne entière de recherche en interprétabilité mécaniste, mais ça reste une explication structurelle plutôt qu'une preuve.</p>
+
+<p>Troisième axe, peut-être le plus prometteur. Si un seul neurone suffit à porter le refus, alors la même unité pourrait servir de <em>signal de monitoring</em> en production. Un système qui surveille les activations du neurone de refus pendant l'inférence peut détecter en temps réel qu'un prompt déclenche un signal nocif — même si la réponse produite reste superficiellement bénigne. Llama-Guard-3-8B nécessite un forward complet de 8 milliards de paramètres. Lire une seule activation à une couche intermédiaire coûte essentiellement zéro. Le ratio coût/qualité de cette approche défensive est si avantageux qu'on peut imaginer chaque requête de production passer par un tel sniffer interne, sans impact mesurable sur la latence.</p>
+
+<p>Le débat sur la sécurité des LLM se déplace. On parlait de comportements distribués, robustes par construction. On découvre des points uniques, identifiables, manipulables. Ce changement de cadre va sans doute reconfigurer plusieurs sous-domaines — interprétabilité, alignement, red-teaming — autour d'une question commune : combien d'autres goulots d'étranglement à un neurone se cachent dans nos modèles, et qu'encodent-ils ?</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

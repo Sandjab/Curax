@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Single Neuron Is Sufficient to Bypass Safety Alignment in Large Language Models — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>A Single Neuron Is Sufficient to Bypass Safety Alignment in Large Language Models</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>L'hypothèse dominante en alignement postule que la sécurité émerge d'une réorganisation distribuée des poids du modèle : aucun composant isolé ne devrait être décisif. Kazemi, Chegini et Safi attaquent frontalement cette croyance. Leur question : peut-on ramener la borne inférieure de l'intervention sécuritaire à <strong>un seul neurone</strong>, contre la direction résiduelle complète identifiée par Arditi et al. (2024), les ensembles de neurones de NeuroStrike (Wu et al., 2025), ou les ~5% de neurones de Chen et al. (2024) ?</p>
+<p>Le travail s'inscrit dans la lignée de l'interprétabilité mécaniste, en exploitant la propriété de <strong>base privilégiée</strong> des activations MLP post-gating : la non-linéarité SiLU rend les coordonnées de neurones sémantiquement significatives, contrairement au flux résiduel invariant par rotation.</p>
+
+<h2>Méthodologie</h2>
+<p>Le protocole d'identification combine trois étapes. D'abord, calcul du gradient de la log-vraisemblance de refus par rapport à l'activation pré-down-projection sur 128 prompts nuisibles (AdvBench, MaliciousInstruct, TDC2023) et 128 prompts inoffensifs (Alpaca). Ensuite, scoring par produit gradient × écart d'activation harmful/harmless au token post-instruction. Enfin, reranking empirique des 5 meilleurs candidats sur HarmBench (191 prompts) avec balayage du multiplicateur d'intervention, puis évaluation hold-out sur JailbreakBench (100 comportements).</p>
+<p>L'intervention "constante" épingle l'activation du neurone à une valeur fixe <em>m*</em> à chaque token. La variante "anchor" module cette valeur selon l'activation naturelle observée en forward pass préalable, préservant les capacités générales. Deux juges indépendants évaluent le succès : un LLM judge (Claude) et Llama-Guard-3-8B, avec détection explicite des "silent pivots" que les heuristiques par phrase de refus manqueraient.</p>
+<p>Sept modèles instruction-tuned sont testés : Qwen3 (1.7B, 4B, 8B, 14B, 32B) et Llama-3.1 (8B, 70B). Quatre checkpoints base Qwen3 permettent de tester l'émergence pré-alignement. Une preuve de concept étend l'approche aux "concept neurons" via l'amplification d'un neurone "suicide" sur 20 prompts inoffensifs.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur JailbreakBench, l'intervention sur un neurone unique atteint 91,7% d'ASR moyen (LLM judge) et 91,9% (Llama-Guard), à parité avec la direction de refus complète d'Arditi (93,1% / 91,6%) qui modifie pourtant l'intégralité des couches. La variante anchor préserve les capacités (–0,6% MMLU, –0,1% GSM8K) contre –8,8% MMLU pour l'intervention constante.</p>
+<p>Trois résultats secondaires renforcent la thèse. Premièrement, les neurones de refus identifiés sur les modèles instruct discriminent déjà nettement harmful/harmless sur les checkpoints base — l'alignement <em>recâble</em> quand le neurone tire (du token de contenu vers la frontière assistant) plutôt qu'il ne crée le signal. Deuxièmement, l'activation d'un neurone unique sur Llama-3.1-8B (couche 11/32) égale Llama-Guard-3-8B en AUROC sur XSTest (0,969 vs 0,975) avec un rappel supérieur (0,950 vs 0,834). Troisièmement, les features résiduels sous-performent nettement (45% ASR max sur Llama-3.1-8B contre 95% pour MLP), confirmant l'argument de base privilégiée.</p>
+<p>L'analyse géométrique en annexe G montre que deux des sept modèles convergent vers le même neurone via deux méthodes indépendantes (gradient-activation et cosinus avec la direction d'Arditi), avec des p-values jusqu'à 10⁻⁴⁷ sous null aléatoire.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs reconnaissent eux-mêmes plusieurs faiblesses. Les "concept neurons" ne sont démontrés que pour le suicide ; généraliser à d'autres concepts nuisibles reste ouvert. Le multiplicateur <em>m*</em> est choisi par sweep empirique sans procédure principielle. Tous les modèles testés sont open-weight ; rien n'est dit sur les modèles propriétaires (Claude, GPT-4, Gemini) où l'accès aux activations est impossible.</p>
+<p>Limites non discutées : l'étude porte sur deux familles seulement (Qwen3 et Llama-3.1), toutes deux à base Transformer dense — Mamba, MoE et architectures hybrides ne sont pas testées. La taille d'échantillon JailbreakBench (100 prompts) reste modeste pour des comparaisons fines entre interventions. Le LLM judge utilisé pour l'évaluation est lui-même un LLM commercial (Claude) sans validation contre annotation humaine sur ce corpus.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le protocole est précisément spécifié : templates de chat (Table 3), phrases-cibles de refus (Table 4), couches scannées (deux tiers initiaux), bornes de sweep (0–200 par pas de 5), précision (bfloat16), hardware (B200 unique). Le code n'est pas explicitement publié dans le préprint mais l'implémentation tient en quelques lignes (Figure 13). Les modèles sont tous publics. Reproductibilité réelle : élevée mais pas turnkey — l'absence de repo GitHub mentionné réduit le score.</p>
+
+<h2>Impact et applications</h2>
+<p>L'article établit un résultat fort pour la communauté safety : la sécurité d'alignement, telle qu'elle est actuellement entraînée, dépend de bottlenecks ponctuels et non d'une diffusion robuste sur les poids. Cela motive des stratégies d'alignement explicitement résistantes aux interventions mono-composant — par exemple SafeNeuron (Wang et al., 2026) qui gèle les neurones de sécurité pendant le fine-tuning.</p>
+<p>Côté offensive, le risque est circonscrit aux modèles open-weight avec accès white-box, déjà jailbreakables par fine-tuning. L'article ne change pas le profil de risque opérationnel mais expose un défaut de conception structurel. Application complémentaire : utiliser un neurone unique comme détecteur de prompts nuisibles à coût quasi-nul, alternative pratique aux classifieurs dédiés de 8B paramètres.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail prolonge trois lignées convergentes. Arditi et al. (2024) avaient identifié une direction globale dans le flux résiduel ; les auteurs montrent qu'on peut descendre d'un cran. Wei et al. (2024) et NeuroStrike (Wu et al., 2025) opéraient sur des ensembles de neurones (3% et 0,6% respectivement) ; ici un seul suffit. Chen et al. (2024) avaient documenté la présence des neurones de safety avant alignement sur ~5% des unités MLP ; la localisation se resserre à une unité causalement suffisante. Templeton (2024) localisait des features de sécurité via sparse autoencoders ; les auteurs montrent que le neurone brut suffit, sans décomposition apprise.</p>
+<p>Le rapprochement avec la littérature sur les knowledge neurons (Geva et al., 2021 ; Dai et al., 2022 ; Meng et al., 2022) suggère que safety knowledge et factual knowledge partagent les mêmes propriétés de concentration. Le cadre "two-system view" (gate + substrat) proposé en conclusion est conceptuellement utile mais demanderait validation sur d'autres concepts nuisibles que le suicide.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+<tr><td>Question de recherche</td><td>5</td><td>Question précise, falsifiable, conséquence forte pour le paradigme d'alignement.</td></tr>
+<tr><td>Design expérimental</td><td>5</td><td>Split train/val/test rigoureux, deux juges indépendants, baselines fortes, ablations multiples.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>Sept modèles couvrent 1.7B–70B mais deux familles seulement ; JBB à 100 prompts reste modeste.</td></tr>
+<tr><td>Qualité des métriques</td><td>5</td><td>ASR double-jugée, détection des silent pivots, MMLU/GSM8K pour capacités, AUROC pour détection.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Comparaison avec Arditi sur conditions identiques ; biais d'évaluation LLM judge non validé contre humains.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Protocole détaillé, modèles publics, hooks triviaux ; pas de repo de code explicite mentionné.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Limites principales reconnues (un seul concept, sweep empirique) ; angle architectures non-Transformer absent.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Première démonstration causale d'un neurone unique suffisant ; conséquences directes pour la pratique d'alignement.</td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

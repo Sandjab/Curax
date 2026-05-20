@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>δ-mem: Efficient Online Memory for Large Language Models — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>δ-mem: Efficient Online Memory for Large Language Models</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les LLM déployés en assistants long-terme et systèmes d'agents accumulent des historiques que la simple extension de la fenêtre de contexte ne sait pas exploiter efficacement : coût quadratique de l'attention, dégradation du contexte long, perte d'information lors des compactions. Les auteurs proposent δ-mem, un mécanisme de mémoire qui maintient un état matriciel compact (8×8) mis à jour à la volée par delta-rule, et qui injecte ses lectures sous forme de corrections low-rank dans l'attention d'un backbone Transformer gelé. L'objectif déclaré : couvrir le besoin d'une mémoire évolutive directement couplée au calcul d'attention, sans fine-tuning complet ni remplacement architectural.</p>
+<p>Le positionnement est explicite face à trois familles concurrentes : mémoires textuelles (RAG, MemoryBank), mémoires hors canal (Memorizing Transformers, MLP Memory) et mémoires paramétriques (LoRA, prefix-tuning, ROME/MEMIT). Chacune souffre soit de bruit de récupération, soit d'un coût d'intégration, soit d'une mémoire statique.</p>
+
+<h2>Méthodologie</h2>
+<p>L'état S est mis à jour par une règle delta gated dimension-par-dimension : S_t = diag(λ_t)·S_{t−1} + diag(β_t)·(v_t − S_{t−1}·k_t)·k_t^⊤. Le terme résiduel n'écrit que l'écart de prédiction le long de la clé courante, ce qui évite l'accumulation aveugle de produits externes. Les portes β_t et λ_t = 1 − β_t sont calculées depuis l'état caché courant. La lecture r_t = S_{t−1}·q_t^m est ensuite projetée par deux matrices fixées à l'entraînement vers une correction sur la query (Δq_t) et sur la sortie d'attention (Δo_t), pondérées par α/r.</p>
+<p>Trois granularités d'écriture sont comparées : TSW (par token), SSW (moyenne par message) et MSW (N sous-états parallèles concaténés à la lecture). L'entraînement est un SFT standard où le contexte est d'abord absorbé dans l'état avant la prédiction, sans rejouer les tokens en entrée du backbone. Les paramètres entraînables (W_q^m, W_k^m, W_v^m, W_β, W_q^Δ, W_o^Δ) sont les seuls optimisés, le backbone restant gelé.</p>
+<p>Le protocole expérimental couvre cinq benchmarks (HotpotQA, GPQA-Diamond, IFEval, LoCoMo, MemoryAgentBench) et trois backbones (Qwen3-4B-Instruct, Qwen3-8B, SmolLM3-3B). L'entraînement utilise une seule épopée sur 2 219 échantillons de QASPER, avec longueur de séquence backbone à 512 et budget d'écriture mémoire à 8 192 tokens.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur Qwen3-4B-Instruct, δ-mem TSW atteint un score moyen de 51,66 % contre 46,79 % pour le backbone et 44,90 % pour Context2LoRA, la meilleure baseline paramétrique. Les gains se concentrent sur les benchmarks mémoire : MemoryAgentBench passe de 29,54 à 38,85 (MSW) et la sous-tâche TTL bondit de 26,14 à 50,50. Sur LoCoMo, MSW obtient 49,12 % de moyenne. Les baselines textuelles (BM25 RAG, LLMLingua-2, MemoryBank) dégradent souvent les performances par bruit de récupération.</p>
+<p>L'expérience de récupération de contexte est l'argument central : en retirant le contexte explicite et en n'injectant que l'état compressé, δ-mem fait passer l'EM HotpotQA de 0,08 à 6,48 et l'F1 de 8,27 à 15,20. C'est faible en absolu mais établit que l'état 8×8 conserve un signal historique exploitable. Les ablations montrent que les corrections q et o sont les plus utiles, que toutes les couches valent mieux que les couches isolées, et que MSW aide surtout les petits backbones (SmolLM3-3B : 26,08 → 36,96).</p>
+<p>L'efficacité computationnelle est mise en avant : 4,87 M de paramètres entraînables pour TSW/SSW (0,12 % du backbone), contre 3 078 M pour MLP Memory. La consommation GPU et le throughput de décodage restent proches du backbone vanilla jusqu'à 32 K tokens de prompt.</p>
+
+<h2>Discussion et limites</h2>
+<p>La principale faiblesse méthodologique est l'absence presque totale de section limitations explicite. L'article ne discute pas la dépendance du résultat à QASPER comme unique corpus d'entraînement, alors que la généralisation sur LoCoMo et MemoryAgentBench se fait hors-distribution. Les variances ne sont pas rapportées : un seul seed (42), un seul run par configuration, ce qui rend les écarts de 1 à 3 points entre TSW/SSW/MSW difficilement interprétables.</p>
+<p>Le résultat phare de récupération de contexte est sur-vendu. Passer de 0,08 à 6,48 d'EM montre certes que l'état stocke quelque chose, mais 6,48 % reste très loin d'une mémoire utilisable seule. La formulation « can recover useful historical information » masque l'écart résiduel énorme avec la baseline contexte-disponible.</p>
+<p>Le choix de comparer à BM25 plutôt qu'à un dense retriever moderne avantage mécaniquement δ-mem côté baselines textuelles. De même, MemGen et MLP Memory chutent à 30,66 % et 22,85 % sur Qwen3-4B-Instruct, scores anormalement bas qui interrogent sur les conditions de réimplémentation. Aucun intervalle de confiance, aucune erreur standard.</p>
+<p>La justification du paramètre r = 8 et d'un état 8×8 reste empirique sans étude de scaling de la taille d'état. La dimension réellement utile de la mémoire associative n'est pas explorée, ce qui empêche de comprendre où se situe le compromis capacité/coût.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est annoncé sur GitHub (declare-lab et MindLab-Research) et l'hyperparamétrage est détaillé en annexe : 8 × A800, bfloat16, DeepSpeed ZeRO-2, AdamW fused, LR 2e-4 cosine, warmup 0,1, batch effectif 32, seed 42. Les benchmarks utilisés sont publics. Manquent les checkpoints, les seeds multiples, et une mesure de variance qui permettrait de valider la stabilité des comparaisons. Les prompts d'évaluation sont décrits comme « officiels » sans être joints.</p>
+
+<h2>Impact et applications</h2>
+<p>δ-mem propose une alternative crédible aux mémoires textuelles pour les agents long-horizon : une mémoire en ligne couplée à l'attention, à faible coût paramétrique et sans modification du backbone. Le cas d'usage principal est l'assistant personnalisé continu où l'historique dépasse durablement la fenêtre de contexte. La compatibilité avec un backbone gelé rend la technique exploitable en post-déploiement d'un modèle de fondation, sans réentraînement.</p>
+<p>Les gains restent toutefois conditionnés à la disponibilité de données d'entraînement adaptées (ici QASPER) et à un budget de calcul d'inférence légèrement supérieur au backbone vanilla. Le passage à des contextes très longs (>100 K) et à des historiques multi-sessions reste à démontrer.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article s'inscrit dans la lignée des travaux récents sur les mémoires associatives en ligne (Titans de Behrouz et al., 2024 ; Kimi Linear de Kimi Team, 2025) et hérite directement du gated delta-rule popularisé par Qwen-Next. La différence revendiquée avec LoRA est nette : la projection low-rank de δ-mem est conditionnée dynamiquement par un état évolutif, alors que LoRA reste statique après entraînement.</p>
+<p>Face à MemGPT, MemoryBank ou Mem0, δ-mem abandonne la représentation textuelle au profit d'une représentation latente compacte intégrée au flux d'attention. Face à Memorizing Transformers et LongMem, il supprime le pathway externe de retrieval. Cette double séparation (ni texte, ni canal externe) est la contribution conceptuelle la plus claire de l'article.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+  <thead>
+    <tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Question de recherche</td><td>4</td><td>Problème clair et bien motivé : mémoire compacte couplée à l'attention pour backbones gelés.</td></tr>
+    <tr><td>Design expérimental</td><td>4</td><td>Cinq benchmarks variés, trois backbones, trois variantes d'écriture, ablations sur tête et profondeur.</td></tr>
+    <tr><td>Taille d'échantillon</td><td>3</td><td>Un seul seed, un seul corpus d'entraînement (QASPER, 2 219 échantillons), pas de variance rapportée.</td></tr>
+    <tr><td>Qualité des métriques</td><td>4</td><td>Métriques officielles par benchmark (EM, F1, accuracy, recall@5) correctement appliquées.</td></tr>
+    <tr><td>Contrôle des biais</td><td>3</td><td>Backbone et configuration partagés entre baselines, mais BM25 comme retriever textuel et scores anormalement bas de MemGen/MLP Memory interrogent.</td></tr>
+    <tr><td>Reproductibilité</td><td>4</td><td>Code annoncé, hyperparamètres détaillés, benchmarks publics ; manquent seeds multiples et checkpoints.</td></tr>
+    <tr><td>Transparence sur les limites</td><td>2</td><td>Pas de section limitations, pas d'intervalles de confiance, généralisation hors-distribution non discutée.</td></tr>
+    <tr><td>Impact et nouveauté</td><td>4</td><td>Combinaison originale delta-rule gated + correction low-rank d'attention sur backbone gelé, avec gains mesurables sur tâches mémoire.</td></tr>
+  </tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

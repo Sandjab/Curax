@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nested Learning: The Illusion of Deep Learning Architecture — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Nested Learning: The Illusion of Deep Learning Architecture</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand l'optimiseur devient une mémoire qui apprend</h2>
+
+<p>Un modèle de langage entraîné en 2024 ne peut plus rien apprendre après sa sortie d'usine. Il génère, il raisonne, il jongle avec son contexte immédiat — mais il a oublié comment intégrer durablement une nouvelle information. C'est l'équivalent d'une amnésie antérograde permanente : le patient garde tous ses souvenirs antérieurs à l'accident, fonctionne normalement dans l'instant, mais ne peut former aucun souvenir nouveau. Cette comparaison clinique, les chercheurs de Google et de Columbia la prennent au sérieux dans un papier publié à NeurIPS 2025. Et leur réponse remet en cause une séparation que tout le monde considérait comme acquise : celle entre l'architecture d'un réseau de neurones et l'algorithme qui l'entraîne.</p>
+
+<p>Le papier s'appelle <em>Nested Learning</em>. Sa thèse tient en une phrase : un Transformer et son optimiseur Adam ne sont pas deux briques distinctes qu'on combine, mais un seul et même système de mémoires emboîtées qui tournent à des fréquences différentes. À partir de cette idée, les auteurs reconstruisent une partie du deep learning moderne et proposent une nouvelle architecture, baptisée <strong>Hope</strong>, capable d'apprendre en continu là où GPT-4 reste figé.</p>
+
+<h2>Le mur invisible des grands modèles</h2>
+
+<p>Empiler des couches a longtemps suffi. Plus de paramètres, plus de profondeur, plus de données : la recette du scaling a porté les LLM jusqu'aux performances qu'on connaît. Mais quatre limites résistent à cette logique. La profondeur computationnelle d'un modèle ne croît pas vraiment avec ses couches — un Transformer à 96 couches n'exécute pas des algorithmes 96 fois plus complexes qu'un à une couche. Certaines classes de paramètres saturent : on les agrandit, ils n'apprennent pas plus. L'entraînement converge souvent vers des solutions médiocres, faute d'un bon optimiseur. Et surtout, aucune couche supplémentaire ne donne au modèle la capacité d'apprendre une nouvelle compétence après son déploiement.</p>
+
+<p>Cette dernière limite a un nom dans la littérature : l'<strong>oubli catastrophique</strong>. Apprenez à un modèle pré-entraîné une nouvelle langue, et il perd une partie de ce qu'il savait. La seule forme d'adaptation qui marche sans casser le reste, c'est l'apprentissage en contexte (<em>in-context learning</em>) — montrer au modèle quelques exemples dans son prompt. Mais cette mémoire-là disparaît dès que la fenêtre de contexte se ferme.</p>
+
+<h2>Le cerveau ne fonctionne pas à une seule vitesse</h2>
+
+<p>Pour sortir de l'impasse, les auteurs regardent vers la neurophysiologie. Le cerveau humain consolide ses souvenirs grâce à des ondes cérébrales qui tournent à des fréquences très différentes. Les ondes gamma (30 à 150 Hz) traitent l'information sensorielle. Les ondes bêta (13 à 30 Hz) accompagnent la pensée active. Les ondes delta et thêta (0,5 à 8 Hz) consolident la mémoire pendant le sommeil. Chaque groupe de neurones se met à jour à son propre rythme, et c'est cette polyphonie temporelle qui rend possible l'apprentissage continu.</p>
+
+<p>Un Transformer, à côté, vit dans deux régimes extrêmes. L'attention se reconfigure à chaque token : fréquence infinie. Les couches MLP, elles, ne bougent plus du tout après l'entraînement : fréquence zéro. Entre les deux, rien. Cette pauvreté temporelle, soutiennent les auteurs, n'est pas un détail d'implémentation. C'est la racine du problème.</p>
+
+<h2>L'optimiseur est une mémoire associative</h2>
+
+<p>Voici le pivot conceptuel du papier. Quand on entraîne un réseau avec la descente de gradient, on calcule à chaque pas un gradient — un signal qui dit « voilà à quel point ta prédiction était surprenante ». L'algorithme met ensuite à jour les poids. Les auteurs proposent de relire cette opération autrement : la couche en train d'apprendre est une <strong>mémoire associative</strong> qui mémorise la correspondance entre une entrée et la surprise qu'elle a provoquée. La rétropropagation n'est plus une procédure technique d'ajustement, mais un processus de compression. Le réseau range dans ses poids un dictionnaire entrée-erreur.</p>
+
+<p>Le glissement devient encore plus intéressant avec le moment, ce mécanisme qu'utilisent Adam, SGD avec momentum, RMSProp et la plupart des optimiseurs modernes. Le moment accumule une moyenne mobile des gradients passés. Vu à travers la grille de lecture du papier, c'est une <em>seconde</em> mémoire associative, imbriquée dans la première, qui compresse cette fois les gradients eux-mêmes. Entraîner un réseau avec Adam, ce n'est donc pas appliquer un algorithme à une architecture. C'est faire tourner deux systèmes de mémoire à deux fréquences différentes : une mémoire rapide (le moment) qui digère les gradients, une mémoire lente (les poids du réseau) qui digère les données.</p>
+
+<p>Une fois cette équivalence posée, tout le deep learning se réorganise. Adam devient « la mémoire associative optimale pour une régression L2 sur les gradients ». AdaGrad, Shampoo, Muon, Lion : autant de variantes de mémoires avec des règles de mise à jour différentes. L'attention <em>softmax</em> est une mémoire associative qui résout une régression non paramétrique sur le contexte. Les RNN linéaires modernes (DeltaNet, RWKV, Mamba) sont des mémoires associatives qui résolvent la même régression par descente de gradient. Tous descendent de la même famille, ils diffèrent par leur fréquence de mise à jour et par leur fonction-objectif interne.</p>
+
+<h2>Empiler des niveaux plutôt que des couches</h2>
+
+<p>La descente de gradient avec moment se lit comme un problème à deux niveaux : le moment tourne vite, les poids tournent lentement. Rien n'oblige à s'arrêter à deux. Les auteurs proposent une nouvelle dimension de stacking : non plus empiler des couches identiques, mais empiler des niveaux d'optimisation, chacun avec son propre flux de contexte et sa propre fréquence.</p>
+
+<p>Concrètement, un module d'apprentissage neuronal peut ressembler à ceci. Au niveau 0, des paramètres figés stockent le savoir du pré-entraînement. Au niveau 1, une mémoire rapide adapte le modèle au contexte courant (c'est ce que fait déjà l'attention). Au niveau 2, une mémoire intermédiaire ingère les épisodes récents et les transfère vers le niveau 0. Au niveau 3, un optimiseur qui apprend à modifier sa propre règle de mise à jour. Chaque niveau a son objectif interne, sa fenêtre temporelle, sa capacité.</p>
+
+<p>Cette hiérarchie change la nature du calcul. La profondeur computationnelle ne dépend plus du nombre de couches, mais du nombre de niveaux et de la façon dont l'information circule entre eux. L'apprentissage en contexte cesse d'être une propriété émergente mystérieuse des Transformers : il devient la conséquence mécanique d'avoir un niveau rapide qui s'adapte aux tokens.</p>
+
+<h2>Hope : un modèle qui apprend à se modifier</h2>
+
+<p>Les auteurs tirent trois objets concrets de ce cadre. D'abord, des <strong>optimiseurs plus expressifs</strong>. Si le moment est une mémoire, on peut le remplacer par une mémoire plus profonde — un MLP au lieu d'une simple moyenne mobile. On peut aussi changer sa règle d'apprentissage : la <em>Delta Gradient Descent</em> proposée par les auteurs mélange l'état précédent des poids dans la mise à jour, ce qui permet de gérer des données non i.i.d. Et le <em>Multi-scale Momentum Muon</em> (M3) ajoute plusieurs termes de moment à des fréquences différentes, l'équivalent algorithmique des ondes cérébrales.</p>
+
+<p>Ensuite, un <strong>module séquentiel auto-référentiel</strong> : un modèle qui apprend sa propre règle de mise à jour. Au lieu de figer l'algorithme d'apprentissage, on le rend lui aussi paramétrable et entraînable.</p>
+
+<p>Enfin, un <strong>système de mémoire continu</strong> qui généralise la dichotomie classique mémoire court terme / mémoire long terme. Au lieu de deux compartiments, un spectre : des neurones haute fréquence pour l'adaptation rapide, des neurones basse fréquence pour les connaissances persistantes, et toute une gradation entre les deux. Cette boucle multi-fréquences a une propriété frappante : un savoir oublié à un niveau peut être partiellement reconstruit à partir d'un autre, parce qu'il a laissé une trace ailleurs dans le système.</p>
+
+<p>Combinez les trois et vous obtenez <strong>Hope</strong>, l'architecture vitrine du papier. Les auteurs la testent sur cinq familles de tâches : apprentissage continu (apprendre une nouvelle langue sans tout oublier), compréhension de contexte long (BABILong, needle-in-a-haystack jusqu'à plusieurs millions de tokens), modélisation du langage et raisonnement de bon sens, rappel en contexte, et comparaison d'optimiseurs. Hope l'emporte sur des références solides — Transformer++, Mamba2, DeltaNet, Titans — dans la plupart des benchmarks. Sur le needle-in-a-haystack en très long contexte, l'écart se creuse à mesure que la séquence s'allonge, ce qui suggère que le système de mémoire continu encaisse mieux la distance.</p>
+
+<h2>Pourquoi ça compte au-delà du papier</h2>
+
+<p>Les LLM actuels sont vendus comme intelligents, mais ils sont structurellement coincés dans leur date de sortie. Chaque mise à jour de Claude ou GPT exige un nouvel entraînement complet, des milliards d'euros, des mois de calcul. Personne ne sait faire mieux que des hacks coûteux : fine-tuning, RAG, MCP, mémoire externe. <em>Nested Learning</em> propose une voie différente. Si l'apprentissage continu n'est pas un module à ajouter mais une propriété qui émerge naturellement d'une hiérarchie multi-fréquences, alors l'architecture elle-même peut porter cette capacité.</p>
+
+<p>Pour les équipes qui construisent des produits IA, l'implication la plus immédiate est conceptuelle : arrêter de penser optimiseur et architecture comme deux choix indépendants. Le couple compte. Un même Transformer entraîné avec Adam ou avec SGD ne produit pas le même modèle — pas seulement en termes de qualité, mais en termes de comportements émergents. Le papier suggère que des architectures conçues main dans la main avec leur optimiseur pourraient libérer des capacités que personne n'a vues parce que personne ne les a cherchées dans la bonne direction.</p>
+
+<p>Pour les chercheurs en optimisation, c'est une invitation à reconsidérer Adam comme une référence parmi d'autres, pas comme un sommet définitif. Si le moment est une mémoire, on peut le rendre profond, lui donner une règle d'apprentissage non triviale, le faire tourner à plusieurs vitesses. Les premières expériences sur M3 montrent que ce n'est pas spéculatif : les gains se mesurent.</p>
+
+<h2>Ce que le papier ne résout pas</h2>
+
+<p>Plusieurs questions restent ouvertes. Les auteurs se concentrent sur la consolidation « en ligne », l'équivalent de la mémorisation à l'éveil. Ils mettent de côté la phase « hors ligne » — l'équivalent du sommeil, où le cerveau rejoue ses traces pour les renforcer. Or les neurosciences indiquent que cette seconde phase compte autant que la première, voire davantage. Comment l'implémenter dans un modèle sans tomber dans des coûts d'entraînement prohibitifs reste à inventer.</p>
+
+<p>Le passage à l'échelle interroge aussi. Hope est testé sur des modèles de taille modeste comparés aux frontières actuelles. Rien ne garantit que les bénéfices observés tiennent à 100 milliards de paramètres ou plus. La hiérarchie de fréquences ajoute des hyperparamètres, et chaque niveau supplémentaire complique l'analyse de convergence.</p>
+
+<p>Enfin, le cadre <em>Nested Learning</em> est explicatif autant que constructif. Il offre une grille de lecture unifiée pour ce qui existait déjà — meta-learning, hypernetworks, RNN linéaires, attention, optimiseurs adaptatifs. Cette unification a une valeur en soi : elle aide à voir des connexions qu'on ne voyait pas. Mais elle ne garantit pas que les architectures qu'elle suggère seront les meilleures dans dix ans. L'histoire du deep learning regorge de cadres élégants dépassés par des hacks pragmatiques.</p>
+
+<p>Reste que la thèse principale du papier mérite d'être prise au sérieux. L'amnésie antérograde des LLM n'est pas un bug qu'on corrigera avec un patch. C'est la signature d'une architecture qui ne sait fonctionner qu'à deux fréquences. Donner à nos modèles la palette temporelle d'un cerveau, c'est peut-être le prochain saut — et il ne se fera pas en empilant davantage de couches.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Distilled Agentic Reinforcement Learning — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Self-Distilled Agentic Reinforcement Learning</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA se contredit lui-même pour mieux apprendre</h2>
+
+<p>Un agent conversationnel qui doit acheter un produit sur un site web enchaîne en moyenne quinze à vingt actions avant d'aboutir : cliquer sur une catégorie, lire les résultats, affiner la recherche, comparer les prix, valider le panier. À chaque étape, il décide. Et à chaque étape, il peut se tromper. Quand l'entraînement traditionnel ne lui dit que « tu as réussi » ou « tu as échoué » à la toute fin de la séquence, comment savoir lequel des vingt clics était le mauvais ?</p>
+
+<p>C'est précisément le mur sur lequel butent les agents IA modernes. Une équipe sino-chinoise réunissant l'Université de Zhejiang, Meituan et Tsinghua propose une réponse élégante dans un article publié en mai 2026 : <strong>SDAR</strong> (Self-Distilled Agentic Reinforcement Learning). Leur méthode fait grimper les performances de 7 à 10 points sur trois benchmarks de référence, sans tomber dans les pièges d'instabilité qui guettent les approches concurrentes. L'idée centrale tient en une phrase : laisser chaque mot généré par l'agent décider lui-même de l'intensité de l'apprentissage qu'il mérite.</p>
+
+<h2>Le problème : un signal trop maigre pour des décisions trop longues</h2>
+
+<p>Les grands modèles de langage transformés en agents font face à une difficulté que les chercheurs appellent la <em>supervision clairsemée</em>. Quand un humain entraîne un agent par renforcement, il lui donne une récompense globale en fin de parcours. L'agent doit alors deviner, parmi les centaines de tokens qu'il a générés, lesquels ont contribué au succès et lesquels ont saboté le résultat.</p>
+
+<p>Pour combler ce manque, les chercheurs utilisent depuis quelques années une technique appelée <strong>distillation auto-supervisée</strong>. Le principe : faire tourner deux versions du même modèle en parallèle. La première, l'élève, travaille dans des conditions normales. La seconde, le professeur, reçoit une aide supplémentaire — par exemple, un catalogue de compétences pré-stockées qu'elle peut consulter. Quand l'élève hésite sur un token, on regarde ce que le professeur aurait choisi avec son aide privilégiée, et on pousse l'élève dans cette direction.</p>
+
+<p>Sur des tâches courtes (une seule question, une seule réponse), cette approche fonctionne bien. Sur des séquences longues, elle s'effondre. Les auteurs documentent deux pathologies précises.</p>
+
+<p>Première pathologie : <strong>l'instabilité multi-tour</strong>. Dès que l'élève dévie un peu de la trajectoire que le professeur aurait suivie, le décalage s'amplifie tour après tour. À l'étape 10, le professeur et l'élève raisonnent sur des contextes tellement différents que le « conseil » du professeur devient incohérent avec la situation réelle de l'élève. Les courbes de divergence KL explosent, et les performances s'effondrent jusqu'à atteindre des taux de succès proches de zéro.</p>
+
+<p>Deuxième pathologie, plus subtile : <strong>l'asymétrie de confiance</strong>. Quand le professeur attribue une probabilité plus haute que l'élève à un token donné, le signal est clair : « cette réponse mérite d'être renforcée ». Mais quand le professeur attribue une probabilité plus basse, l'interprétation devient ambiguë. Est-ce que le professeur juge ce token mauvais ? Ou est-ce que la compétence qu'il a récupérée dans son catalogue n'a aucun rapport avec la situation ? Une analyse préliminaire sur Qwen2.5-3B montre que plus de 50% des tokens tombent dans cette zone grise. Traiter aveuglément ces signaux négatifs revient à dégrader l'élève en lui imposant les confusions de son propre professeur.</p>
+
+<h2>La méthode : un portier qui filtre token par token</h2>
+
+<p>L'astuce de SDAR consiste à introduire un mécanisme de portier — les auteurs parlent de <em>gate</em> — qui examine chaque token un par un et décide combien d'attention l'élève doit accorder au conseil du professeur sur ce token précis.</p>
+
+<p>L'analogie la plus parlante : imaginez un apprenti cuisinier qui suit le travail d'un chef étoilé en cuisine. Sur certains gestes, le chef est manifestement plus précis que l'apprenti — il faut l'imiter sans hésiter. Sur d'autres, le chef hésite lui aussi, ou applique une technique qui ne convient pas au plat du moment — il faut prendre du recul. Le portier de SDAR joue le rôle du jugement professionnel de l'apprenti : il pondère, à chaque geste, combien le conseil du chef doit peser.</p>
+
+<p>Concrètement, les chercheurs calculent pour chaque token la différence entre la probabilité que le professeur lui attribue et celle que l'élève lui attribue. Cette différence, appelée <em>gap</em>, passe à travers une fonction sigmoïde — une courbe en S qui transforme n'importe quelle valeur en un poids compris entre 0 et 1. Quand le gap est positif (le professeur est plus confiant), le portier s'ouvre largement et la distillation s'applique pleinement. Quand le gap est négatif (le professeur est moins confiant), le portier se referme partiellement et le signal de distillation s'atténue en douceur.</p>
+
+<p>Trois variantes sont testées : un portier basé sur l'incertitude de l'élève (entropie), un portier basé sur le gap professeur-élève, et un portier hybride combinant les deux. Le gap pur l'emporte dans presque tous les cas, parce qu'il mesure directement le désaccord pertinent là où l'entropie ne capte qu'une incertitude diffuse.</p>
+
+<p>Un autre choix de conception mérite l'attention : les chercheurs ne remplacent pas l'algorithme de renforcement classique (GRPO, dérivé de DeepSeek). Ils ajoutent la distillation comme une couche complémentaire, pondérée par un coefficient minuscule (λ = 0,01). Le moteur principal reste le signal de récompense issu de l'environnement. La distillation murmure ; elle ne crie pas.</p>
+
+<h2>Résultats : trois benchmarks, trois confirmations</h2>
+
+<p>Les expériences couvrent trois environnements aux profils très différents. <strong>ALFWorld</strong> simule un agent domestique qui doit accomplir des tâches du quotidien dans une cuisine virtuelle (« prends la pomme, lave-la, puis range-la dans le frigo »). <strong>WebShop</strong> reproduit un site marchand et demande à l'agent de trouver un produit correspondant à des critères précis. <strong>Search-QA</strong> regroupe sept jeux de données de questions-réponses qui exigent une ou plusieurs requêtes sur un moteur de recherche.</p>
+
+<p>Sur ALFWorld, SDAR atteint 84,4% de taux de succès avec un modèle Qwen2.5-3B, contre 75,0% pour la méthode GRPO seule. Sur Search-QA, le gain est de 7 points. Sur WebShop, l'amélioration de précision atteint 10,2 points pour le modèle 7B. Ces écarts se confirment sur les trois familles de modèles testés (Qwen2.5-3B, Qwen2.5-7B, Qwen3-1.7B), ce qui exclut un effet d'aubaine lié à une taille de modèle particulière.</p>
+
+<p>Le contraste le plus frappant concerne la méthode naïve qui combine GRPO et distillation sans portier. Sur le petit modèle Qwen3-1.7B, cette combinaison fait pire que GRPO seul : 32,0% contre 46,1%. La distillation aveugle écrase le signal de renforcement. SDAR, en revanche, monte à 53,9% sur le même modèle.</p>
+
+<p>Un résultat secondaire mérite qu'on s'y arrête. Les chercheurs testent quatre stratégies de récupération de compétences pour alimenter le professeur : recherche optimale (UCB), correspondance de mots-clés, récupération complète, et récupération <em>aléatoire</em>. Même avec des compétences tirées au hasard, SDAR bat la méthode de référence GRPO. Le portier filtre suffisamment bien le bruit pour que des conseils sans rapport avec la tâche n'aient quasiment pas d'effet négatif. C'est une propriété rare en apprentissage automatique : la méthode dégrade gracieusement quand la qualité des entrées baisse, au lieu de s'effondrer.</p>
+
+<h2>Pourquoi cela compte au-delà du laboratoire</h2>
+
+<p>L'industrie qui déploie des agents IA en production se heurte chaque jour à la même réalité : entraîner un agent pour qu'il accomplisse des tâches longues coûte cher, prend du temps, et donne des résultats fragiles. Les méthodes classiques exigent souvent qu'on conserve une bibliothèque de « compétences » récupérables à l'inférence — c'est-à-dire au moment où l'agent travaille en production. Cette dépendance pose deux problèmes : la latence augmente (il faut interroger une base de données avant chaque action), et la qualité dépend directement de la curation manuelle de cette base.</p>
+
+<p>SDAR fait disparaître cette dépendance. Les expériences montrent que le modèle entraîné internalise les connaissances apportées par les compétences pendant l'entraînement. À l'inférence, il fonctionne sans aucune récupération externe et bat les méthodes qui, elles, continuent de récupérer leurs compétences. Pour une équipe produit, cela signifie un agent qui s'exécute en autonomie, sans pipeline de récupération à maintenir.</p>
+
+<p>L'autre apport pratique concerne la stabilité de l'entraînement lui-même. Les ingénieurs qui ont déjà piloté un entraînement par renforcement connaissent cette anxiété : un run de 150 étapes qui plante au bout de 80 parce qu'un terme s'est emballé. Les méthodes hybrides qui re-pondèrent agressivement les gradients (comme RLSD) souffrent de cette fragilité. SDAR borne mathématiquement l'amplitude du signal de distillation grâce à la fonction sigmoïde. L'article démontre formellement que les gradients ne peuvent jamais excéder ceux d'un apprentissage par maximum de vraisemblance standard. Pour un praticien, c'est une garantie précieuse.</p>
+
+<p>Enfin, la simplicité d'implémentation joue en faveur de l'adoption. Le code complet tient dans un dépôt GitHub public. L'algorithme ajoute une vingtaine de lignes à une boucle GRPO existante : calculer le gap, appliquer la sigmoïde, multiplier la perte de distillation par ce poids, ajouter le tout à la perte principale. Aucune architecture nouvelle, aucun planificateur exotique de température, aucune heuristique fragile à régler.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Le portier sigmoïde est un mécanisme d'une simplicité presque suspecte. Les auteurs eux-mêmes l'analysent comme un cas particulier d'une famille plus large : celle des curriculums auto-paced opérant à la granularité du token. D'autres signaux pourraient nourrir le portier — la cohérence syntaxique du token, sa fonction grammaticale, sa position relative dans le tour de parole. La grille d'analyse présentée dans la figure 3 de l'article (gap moyen par position relative dans le tour, gap moyen par numéro de tour) suggère que les pathologies de la distillation suivent des patterns prévisibles. Un portier qui les anticiperait pourrait gagner encore quelques points.</p>
+
+<p>Une question reste ouverte : que se passe-t-il quand les tâches deviennent plus longues que celles testées ici ? Les benchmarks utilisés tournent autour de 10 à 20 tours d'interaction. Les agents de production traitent parfois des séquences de plusieurs centaines d'actions (assistance technique étalée sur une heure, par exemple). À cette échelle, les mécanismes documentés par les auteurs — élargissement progressif du gap professeur-élève au fil des tours — pourraient se manifester avec une intensité qui dépasse ce que la sigmoïde peut amortir. Les futurs travaux devront tester cette limite.</p>
+
+<p>Une autre piste, esquissée dans les travaux récents cités par les auteurs (SkillRL, Skill0), consiste à boucler la méthode sur elle-même : utiliser un agent entraîné par SDAR pour générer de nouvelles compétences, qui alimentent un nouveau cycle d'entraînement. Cette auto-amélioration récursive ressemble aux approches d'évolution dirigée en biologie. Si elle converge effectivement, elle dessine une voie pour des agents qui progressent au-delà de la qualité de leur jeu d'entraînement initial.</p>
+
+<p>Le code est disponible sur le dépôt GitHub des auteurs (ZJU-REAL/SDAR), et la méthode mérite qu'on la branche sur d'autres familles de modèles que Qwen — notamment les modèles open-weights de classe Llama et Mistral, dont les caractéristiques d'entropie diffèrent sensiblement. Les premières équipes qui reproduiront ces résultats sur leurs propres pipelines auront probablement un avantage opérationnel concret face à la concurrence.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

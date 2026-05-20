@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un LLM devient l'architecte d'un autre LLM</h2>
+
+<p>39,87 dollars et 160 minutes. C'est le coût total qu'il a fallu à une équipe de chercheurs de l'Université du Maryland, de l'UVA, de WashU et de Meta pour qu'un agent Claude Code découvre seul une stratégie d'inférence qui bat les meilleurs algorithmes conçus à la main depuis trois ans. Pas une variation, pas un fine-tuning : une recette d'allocation de calcul entièrement nouvelle, avec une mécanique de stop par moyenne mobile exponentielle, un système de priorité par âge de probe, et un mode de coupure conservateur qui maintient toujours au moins deux branches actives. Aucun humain n'a écrit ces règles. Toutes ont émergé d'une boucle de recherche automatisée.</p>
+
+<p>Ce papier, <em>LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling</em>, ne cherche pas à proposer un énième algorithme de raisonnement. Il propose quelque chose de plus subtil : changer le métier du chercheur. Au lieu de passer des semaines à imaginer des heuristiques de branchement, les auteurs construisent un environnement dans lequel un agent IA explore lui-même l'espace des stratégies possibles. Et le résultat est troublant : la machine trouve mieux, plus vite, et pour le prix d'un dîner à deux.</p>
+
+<h2>Le casse-tête de l'allocation de calcul</h2>
+
+<p>Quand un grand modèle de langage doit résoudre un problème difficile — disons une équation d'olympiade mathématique — il existe une idée intuitive : lui donner plus de temps de réflexion. C'est ce qu'on appelle le <strong>test-time scaling</strong>. On peut lui demander de produire 64 raisonnements parallèles puis voter à la majorité, ou bien le laisser explorer un seul fil de pensée très long, ou encore un mélange des deux.</p>
+
+<p>Le souci, c'est que la performance ne dépend pas seulement du <em>volume</em> de calcul, mais de la <em>manière</em> de le répartir. Faut-il préférer la largeur (beaucoup de branches superficielles) ou la profondeur (peu de branches mais très développées) ? Quand abandonner une piste qui semble mauvaise ? Quand s'arrêter parce que la réponse est devenue stable ? Chaque réponse à ces questions définit une stratégie, et chaque stratégie a son coût en jetons consommés.</p>
+
+<p>Jusqu'ici, ces stratégies portent toutes la signature d'un humain qui a deviné. Self-Consistency tire 64 trajectoires et vote. Adaptive Self-Consistency arrête dès que la majorité semble écrasante. Early-Stopping Self-Consistency surveille la stabilité dans une fenêtre glissante. Parallel-Probe combine arrêt et élagage. Chaque méthode trace un chemin différent dans le même espace de décisions, et chaque choix de seuil — 0,95 ici, fenêtre de 8 là — est le fruit d'une intuition tunée à la main.</p>
+
+<p>Les auteurs font un constat simple : cet espace de décisions est massif, et l'humain n'en explore qu'une fraction minuscule. Le reste reste dans l'ombre.</p>
+
+<h2>Changer le métier du chercheur</h2>
+
+<p>L'idée centrale d'AutoTTS tient en une phrase : ne plus concevoir les stratégies, mais concevoir les terrains où elles seront découvertes.</p>
+
+<p>Le chercheur ne décide plus quand brancher, sonder, élaguer ou arrêter. Il définit les états possibles, les actions disponibles, les feedbacks à donner et l'objectif à optimiser. Puis il lance un agent (Claude Code en l'occurrence) qui propose un contrôleur, le teste, observe les résultats, et propose une version améliorée. Pendant cinq tours. C'est tout.</p>
+
+<p>Cette philosophie ressemble à ce qu'on a vu en AutoML, où l'on cherche à automatiser la conception de réseaux de neurones, ou plus récemment à FunSearch et AlphaEvolve, qui font découvrir des algorithmes mathématiques par des LLMs. La nouveauté ici, c'est l'application au scaling d'inférence, et surtout la mécanique qui rend la chose vraiment praticable.</p>
+
+<h2>L'astuce du replay : éviter de payer le calcul plusieurs fois</h2>
+
+<p>Un agent qui propose 5 stratégies différentes, chacune testée sur des dizaines de problèmes mathématiques, avec un grand modèle qui doit générer des chaînes de raisonnement complètes... le budget exploserait en quelques minutes. Les auteurs utilisent une parade élégante.</p>
+
+<p>Avant le démarrage de la recherche, ils génèrent une fois pour toutes 128 trajectoires de raisonnement complètes pour chaque problème, segmentées en intervalles fixes de 500 jetons. Toutes les données possibles sont mises en cache. Ensuite, quand l'agent propose un contrôleur, celui-ci ne fait plus appel au LLM : il <em>rejoue</em> les décisions sur les données déjà enregistrées. Décider de probe une branche revient à lire la réponse intermédiaire correspondante dans un fichier. Arrêter une branche, c'est ignorer la suite.</p>
+
+<p>L'analogie est simple. C'est la différence entre tester une stratégie d'échecs en jouant chaque partie en temps réel, et la tester en analysant les coups d'un million de parties déjà enregistrées. Le résultat est déterministe, instantané, et coûte zéro en calcul de modèle. Toute la dépense est faite une seule fois au début.</p>
+
+<h2>Le piège de la sur-paramétrisation</h2>
+
+<p>Premier essai des chercheurs : laisser l'agent inventer librement son contrôleur. Le résultat est désastreux. Claude Code propose des stratégies avec dix hyperparamètres, et avec seulement cinq tours de recherche, il finit par tordre brutalement les seuils pour gagner sur le jeu d'entraînement — au prix d'un effondrement sur les benchmarks tenus à l'écart. Classique sur-apprentissage.</p>
+
+<p>Leur réponse a un nom élégant : <strong>la paramétrisation beta</strong>. Chaque contrôleur ne peut exposer qu'un seul paramètre, appelé beta, qui contrôle l'agressivité du budget. Toutes les autres décisions internes — seuils de confiance, taille des fenêtres, patience avant abandon — doivent être des fonctions déterministes de ce beta unique. Et cette fonction doit être monotone : beta plus élevé veut toujours dire plus de calcul, plus de prudence avant d'arrêter.</p>
+
+<p>L'effet est radical. L'espace de recherche s'effondre d'une dizaine de dimensions à une seule. L'agent ne peut plus tricher en cherchant un coin pathologique de l'espace des paramètres. Et la performance sur les benchmarks tenus à l'écart bondit : sans paramétrisation beta, la précision moyenne tombe à 49,0 ; avec, elle remonte à 53,1.</p>
+
+<h2>Les traces, ou comment dire à l'agent pourquoi il a échoué</h2>
+
+<p>Deuxième problème de la version naïve : quand l'agent reçoit pour seul feedback un score d'exactitude et un coût en jetons, il navigue à l'aveugle. Une note de 60% ne dit pas <em>pourquoi</em> le contrôleur a échoué — était-ce un arrêt prématuré ? Un élagage trop agressif ? Une mauvaise répartition entre largeur et profondeur ?</p>
+
+<p>Les auteurs ajoutent donc un système d'enregistrement détaillé de chaque décision. Pour chaque problème, on conserve la trace complète : à quel moment une nouvelle branche est créée, quelle réponse intermédiaire a été observée, quand une branche a été coupée, sur quel critère le contrôleur a décidé de s'arrêter. À chaque tour, l'agent reçoit non seulement les scores agrégés, mais aussi ces journaux fins pour diagnostiquer les modes d'échec.</p>
+
+<p>L'effet est massif. Sans les traces, le contrôleur découvert atteint 51,6 de précision moyenne en consommant 824 000 jetons. Avec les traces, il atteint 53,1 pour seulement 575 000 jetons. Un meilleur score, pour 30% de calcul en moins.</p>
+
+<h2>Cinq tours, et un algorithme inédit émerge</h2>
+
+<p>Le processus complet ressemble à une partie d'enquête. Au premier tour, l'agent propose un contrôleur très conservateur sur la consommation, qui plante en précision. Il observe la chute, et au tour suivant alloue plus de budget pour récupérer. Les tours suivants alternent : un coup d'efficacité, un coup de performance, jusqu'à converger vers un équilibre.</p>
+
+<p>Au cinquième tour, l'agent produit ce que les auteurs appellent le <strong>Confidence Momentum Controller</strong> (CMC). Il combine quatre mécanismes que personne n'avait pensé à assembler ainsi :</p>
+
+<ul>
+<li>Un arrêt fondé sur la <em>tendance</em> de la confiance, pas sur sa valeur instantanée. On maintient une moyenne mobile exponentielle de la confiance du pool de réponses, et on n'arrête que si le niveau est haut <em>et</em> que la tendance n'est pas négative. Cela évite les arrêts prématurés sur un pic transitoire de consensus.</li>
+<li>Un couplage largeur-profondeur via le même signal de momentum. Quand la confiance accélère, on ne crée pas de nouvelles branches. Quand elle stagne, on en spawn plusieurs d'un coup.</li>
+<li>Une priorité aux branches déjà bien investies. Les branches qui ont reçu beaucoup de probes obtiennent leurs ressources en premier, parce qu'elles sont les plus proches d'aboutir.</li>
+<li>Un abandon conservateur : une branche ne peut être tuée qu'après avoir été en désaccord avec le consensus pendant plusieurs tours consécutifs, et au moins deux branches restent toujours actives.</li>
+</ul>
+
+<p>Aucune de ces idées n'est triviale, et leur combinaison ne ressemble à aucun algorithme publié auparavant. Les auteurs reconnaissent eux-mêmes qu'un humain aurait eu beaucoup de mal à coordonner ces quatre dimensions à la main.</p>
+
+<h2>Les chiffres qui comptent</h2>
+
+<p>Le CMC découvert sur AIME24 est ensuite gelé et testé sur des benchmarks qu'il n'a jamais vus : AIME25, HMMT25, GPQA-Diamond. Voici ce qui se passe :</p>
+
+<p>Sur Qwen3-1.7B, le contrôleur découvert avec beta = 0,5 obtient 38,6% de précision moyenne pour 343 500 jetons, contre 34,3% pour Self-Consistency à 1 093 500 jetons. Précision en hausse de 12%, coût divisé par trois. Sur Qwen3-4B avec beta = 0,5, le coût passe de 1 128 000 jetons à 348 000 — une réduction de 69% — tout en conservant 59,8% de précision contre 60,1%. Quasi identique pour un tiers du budget.</p>
+
+<p>La généralisation surprend tout autant. Testé sur DeepSeek-R1-Distill-Llama-8B, une famille de modèles complètement différente, le contrôleur reste le meilleur. Sur GPQA-Diamond, un benchmark de questions scientifiques qui n'a rien à voir avec les maths, il dépasse Self-Consistency en utilisant moins du tiers des jetons. Le contrôleur n'a pas appris une astuce spécifique aux Qwen ou aux problèmes d'arithmétique ; il a découvert un principe d'allocation transférable.</p>
+
+<h2>Pourquoi cela change le travail en entreprise</h2>
+
+<p>Pour une équipe qui déploie des modèles de raisonnement en production, ces chiffres parlent un langage très direct : la facture d'inférence peut être divisée par trois sans perdre en qualité. Sur un déploiement à grande échelle où chaque requête peut consommer des centaines de milliers de jetons, c'est une économie qui se chiffre rapidement en dizaines de milliers d'euros par mois.</p>
+
+<p>Mais l'impact stratégique va plus loin. Jusqu'à présent, optimiser le scaling d'inférence demandait des ingénieurs spécialisés capables de comprendre les subtilités du raisonnement multi-branches, de tuner des heuristiques, de comparer empiriquement. Un travail coûteux, lent, et qui résiste mal aux changements de modèle ou de domaine.</p>
+
+<p>AutoTTS suggère un autre modèle d'organisation. L'effort humain ne porte plus sur l'algorithme mais sur l'environnement de découverte. Une fois ce dernier construit, on relance l'agent à chaque nouvelle famille de modèles ou à chaque nouvelle distribution de tâches, pour 40 dollars et trois heures de calcul. L'expertise humaine se capitalise dans le terrain, pas dans la solution. Et l'agent peut être rappelé à volonté.</p>
+
+<p>Pour les fournisseurs de modèles, c'est aussi un signal sur la trajectoire de l'optimisation : ce qui était jusqu'ici un domaine peuplé d'astuces artisanales devient un terrain d'automatisation par les agents.</p>
+
+<h2>Limites et ce qui vient après</h2>
+
+<p>Le travail n'a rien d'une solution finale. Les auteurs eux-mêmes pointent plusieurs restrictions claires.</p>
+
+<p>D'abord, l'environnement actuel ne couvre que le contrôle largeur-profondeur. Beaucoup de stratégies de raisonnement plus riches existent : recherche par arbre, vérificateurs guidant le raffinement, mémoires partagées entre branches. Étendre l'environnement à ces actions plus complexes demanderait un travail substantiel, et la combinatoire grimperait vite.</p>
+
+<p>Ensuite, le processus dépend d'un agent codeur de pointe — Claude Code dans l'expérience. La question reste ouverte de savoir si des agents open-source moins puissants peuvent produire des découvertes comparables. Si la réponse est non, AutoTTS reste dépendant de l'infrastructure d'un grand fournisseur de modèles, ce qui limite sa démocratisation.</p>
+
+<p>Plus subtilement, la mécanique de replay déterministe a un coût caché : les 128 trajectoires pré-générées par problème doivent exister avant la recherche. Cette pré-collecte est elle-même coûteuse, et n'est rentable que si l'on recherche plusieurs stratégies différentes sur le même corpus. Pour des cas d'usage qui changent vite, le rapport coût-bénéfice se déplace.</p>
+
+<p>Enfin, la philosophie générale soulève une question intéressante. À mesure que les agents IA deviennent capables de découvrir leurs propres heuristiques d'inférence, voire de mettre à jour leurs poids au test-time comme le proposent les méthodes ThetaEvolve et TTT-Discover citées dans le papier, la frontière entre conception humaine et auto-amélioration des modèles se brouille. Les chercheurs n'écrivent plus les règles. Ils écrivent les conditions dans lesquelles les règles s'écriront. La compétence rare devient la capacité à formaliser un environnement où la découverte est possible, mesurable et bornée. Une compétence d'architecte, plus que d'ingénieur.</p>
+
+<p>Le code est ouvert sur GitHub. Pour un coût d'expérimentation à la portée d'un développeur curieux, n'importe qui peut désormais lancer son propre agent à la recherche d'algorithmes d'inférence inédits. Le terrain de jeu vient de s'élargir.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

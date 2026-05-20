@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELF: Embedded Language Flows — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>ELF: Embedded Language Flows</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les modèles de langage empruntent la route des générateurs d'images</h2>
+
+<p>En 2022, DALL·E et Stable Diffusion ont popularisé une famille de modèles génératifs appelés <strong>modèles de diffusion</strong>. Le principe : partir d'une image de bruit pur, puis la débruiter étape par étape jusqu'à révéler un chat, un astronaute ou une cathédrale gothique. Ces modèles dominent aujourd'hui la génération d'images et de vidéos. Pour le texte, en revanche, l'architecture reine reste celle des modèles autorégressifs comme GPT, qui prédisent un mot après l'autre.</p>
+
+<p>Plusieurs équipes ont tenté de transposer la diffusion au texte. Sans succès retentissant. Les meilleurs modèles dits <em>discrete diffusion language models</em> manipulent directement des tokens, parce que le langage est par nature une suite de symboles discrets. Les variantes continues, qui transforment d'abord les tokens en vecteurs numériques avant de débruiter, traînaient derrière.</p>
+
+<p>Le papier <strong>ELF (Embedded Language Flows)</strong>, signé par une équipe du MIT incluant Yoon Kim, Jacob Andreas et Kaiming He, remet en cause cette hiérarchie. Avec un modèle de 105 millions de paramètres entraîné sur dix fois moins de données que ses concurrents, ELF surpasse les meilleurs modèles de diffusion textuelle, discrets comme continus. Le code source est publié sur GitHub.</p>
+
+<h2>Le problème : pourquoi la diffusion peine sur le texte</h2>
+
+<p>Pour bien saisir l'enjeu, posons les bases. Un modèle de diffusion fonctionne en deux temps. Pendant l'entraînement, il apprend à débruiter : on lui donne une image bruitée et il doit retrouver l'image propre. Pendant la génération, on inverse le processus. On part de bruit pur, et le modèle, étape après étape, sculpte le bruit pour faire émerger un échantillon plausible.</p>
+
+<p>Sur des images, ça marche admirablement. Une image est un tableau de pixels, chaque pixel ayant des valeurs continues (entre 0 et 255 par exemple). On peut ajouter du bruit gaussien, le retirer progressivement, et obtenir des résultats fluides.</p>
+
+<p>Le texte oppose une résistance fondamentale : il est discret. Un mot est un mot, pas un mélange flou entre « chat » et « chien ». Comment ajouter un peu de bruit à « bonjour » ? Que signifie un état intermédiaire entre deux phrases ?</p>
+
+<p>Deux écoles ont émergé. La première, la diffusion discrète, accepte cette contrainte de front. Au lieu d'ajouter du bruit gaussien, elle remplace progressivement les mots par un token spécial <code>[MASK]</code> et apprend à les retrouver. Cette approche, illustrée par MDLM et Duo, fonctionne bien.</p>
+
+<p>La seconde école, la diffusion continue, projette d'abord les mots dans un espace numérique (les fameux <em>embeddings</em>) où chaque mot devient un vecteur de plusieurs centaines de nombres. Là, on peut ajouter du bruit gaussien classique. Mais l'arrimage au monde discret reste pénible. Comment passer du vecteur final, presque mais pas tout à fait celui d'un vrai mot, à un mot précis ? La plupart des méthodes ajoutent à chaque étape une supervision qui rappelle au modèle quel token devrait apparaître à cette position. Ce harnais alourdit l'entraînement et restreint la dynamique du modèle.</p>
+
+<p>D'où la question que pose ELF : et si on laissait le modèle évoluer librement dans l'espace continu pendant presque tout le parcours, en ne touchant à la discrétisation qu'à la toute dernière étape ?</p>
+
+<h2>La méthode : un seul réseau, deux casquettes</h2>
+
+<p>L'idée centrale d'ELF tient en une image. Imaginez un sculpteur qui part d'un bloc de marbre brut (le bruit gaussien). Il dégrossit, affine, polit, sans jamais s'arrêter pour vérifier à chaque coup de burin que sa forme correspond précisément à une statue connue. Ce n'est qu'au tout dernier instant qu'il décide : voilà, c'est un cheval, pas un cerf. Les modèles précédents, eux, demandaient au sculpteur de nommer son œuvre à chaque coup de burin.</p>
+
+<p>Techniquement, ELF s'appuie sur le <strong>Flow Matching</strong>, une généralisation moderne des modèles de diffusion qui trace une trajectoire continue entre le bruit et les données. Le modèle apprend la « vitesse » à laquelle un échantillon doit se déplacer le long de cette trajectoire. C'est la même mécanique qui fait tourner les meilleurs générateurs d'images actuels comme FLUX.</p>
+
+<p>Le tour de force d'ELF tient à la mutualisation. Un seul réseau de neurones joue deux rôles. Pendant 99 % du trajet, il débruite des vecteurs dans un espace continu. À la toute dernière étape, le même réseau passe en mode décodage : il prend le vecteur quasi-propre et le projette sur le vocabulaire pour produire un token concret. Les chercheurs appellent ça un <em>shared-weight network</em>.</p>
+
+<p>Pour distinguer les deux modes, le modèle reçoit un petit signal supplémentaire, une sorte d'interrupteur logiciel qui lui indique : « là tu débruites », ou « là tu décodes ». Pendant l'entraînement, 80 % des exemples passent par le mode débruitage et 20 % par le mode décodage. Le réseau apprend les deux tâches en parallèle, et le partage de poids force une cohérence naturelle entre les deux régimes.</p>
+
+<p>Autre détail qui pèse lourd : ELF choisit de prédire directement les vecteurs propres (la cible finale), plutôt que la vitesse de débruitage comme le font les méthodes classiques de Flow Matching. Cette option, baptisée <em>x-prediction</em>, s'aligne mieux avec l'objectif de décodage final, qui consiste lui aussi à produire des vecteurs propres prêts à être discrétisés.</p>
+
+<p>Pour fabriquer les vecteurs initiaux des tokens, les auteurs utilisent un encodeur T5 préentraîné, gelé. T5 est un modèle de Google rodé depuis 2019, qui produit des représentations contextuelles riches. ELF ne réinvente pas l'encodage : il s'appuie sur cette base solide et concentre son effort sur la dynamique de débruitage.</p>
+
+<h3>Le bonus : la guidance comme dans les générateurs d'images</h3>
+
+<p>Parce qu'ELF reste continu jusqu'au bout, il hérite gratuitement d'une technique très efficace du monde de l'image : la <strong>classifier-free guidance (CFG)</strong>. CFG permet d'arbitrer entre qualité et diversité des échantillons. On combine une prédiction conditionnelle (le modèle sait ce qu'il essaie de générer) et une prédiction inconditionnelle (le modèle improvise), avec un coefficient ajustable. Plus le coefficient monte, plus la génération devient « tirée » vers ce que le modèle considère comme typique.</p>
+
+<p>Dans les modèles de diffusion discrète, CFG ne se transpose pas naturellement et donne des résultats décevants. ELF, lui, la branche directement et en tire un gain net.</p>
+
+<h2>Résultats : moins de paramètres, moins de données, meilleurs scores</h2>
+
+<p>Les chiffres frappent par leur netteté. Sur le benchmark de référence OpenWebText, ELF en version 105 millions de paramètres bat MDLM, Duo, FLM et LangFlow, tous autour de 170 millions de paramètres.</p>
+
+<p>La métrique principale, la <em>perplexité générative</em>, mesure à quel point un échantillon généré paraît plausible à un modèle externe (ici GPT-2 Large). Plus c'est bas, mieux c'est. Avec seulement <strong>32 étapes de génération</strong>, ELF atteint une perplexité de 24. Les modèles concurrents demandent souvent 1024 étapes pour s'approcher de ce niveau, et les versions distillées (un raffinement coûteux en temps de calcul) restent derrière.</p>
+
+<p>Côté budget d'entraînement, l'écart est encore plus impressionnant. ELF consomme environ <strong>45 milliards de tokens</strong> pendant son entraînement. Les baselines en utilisent plus de 500 milliards, soit un facteur douze. Le coût d'entraînement déclaré sur les TPU de Google : 1,5 heure par époque sur 64 TPU v5p, cinq époques au total. Pour un labo académique, c'est accessible. Pour comparaison, GPT-3 avait nécessité l'équivalent de plusieurs mois de calcul sur des milliers de GPU.</p>
+
+<p>ELF se débrouille aussi en génération conditionnelle, c'est-à-dire avec un texte d'entrée à transformer. Sur la traduction automatique allemand-anglais (WMT14), il obtient un score BLEU de 26,4, devant les baselines AR, MDLM, Duo et E2D2. Sur le résumé automatique (XSum), il domine également sur les trois métriques ROUGE-1, ROUGE-2 et ROUGE-L.</p>
+
+<p>Les expériences de mise à l'échelle, conduites avec des modèles de 342 et 652 millions de paramètres (ELF-M et ELF-L), montrent une amélioration régulière. Plus le modèle grossit, plus la qualité monte sans dégrader la diversité des échantillons.</p>
+
+<h2>Pourquoi ça compte au-delà du laboratoire</h2>
+
+<p>Les modèles de diffusion textuelle ne sont pas qu'une curiosité académique. Leur intérêt pratique tient à un point précis : la <strong>parallélisation</strong>. Un modèle autorégressif comme GPT génère un token à la fois, en attendant le précédent. Un modèle de diffusion travaille sur toute la séquence en parallèle à chaque étape. Avec quelques dizaines d'étapes au lieu de centaines de tokens à générer en séquence, la latence peut chuter.</p>
+
+<p>Concrètement, si ELF tient ses promesses à plus grande échelle, on imagine des assistants conversationnels qui répondent en un quart du temps actuel, ou des moteurs de traduction quasi instantanés. Le facteur 32 étapes contre 1024 chez les concurrents pour une qualité équivalente change la donne sur les déploiements à grande échelle, où chaque milliseconde se paie en serveurs.</p>
+
+<p>L'efficacité en données entraîne un second effet bénéfique. Entraîner un modèle de cette taille avec 45 milliards de tokens ouvre la porte à des adaptations spécialisées : médecine, droit, programmation, où les corpus disponibles restent modestes par rapport au web. Là où les approches autorégressives demandent souvent un préentraînement massif suivi d'un fine-tuning, ELF démontre qu'un budget restreint peut suffire à obtenir un modèle performant.</p>
+
+<p>Un troisième angle mérite attention : la <strong>contrôlabilité</strong>. Les modèles de diffusion ont prouvé sur l'image qu'on pouvait les piloter finement, avec des conditions multiples, des contraintes, des modifications partielles. Stable Diffusion ou Midjourney offrent un degré de contrôle qu'aucun modèle autorégressif texte n'égale aujourd'hui. Si ELF et ses descendants démocratisent ces techniques pour le langage, l'édition de texte assistée pourrait connaître un saut comparable à celui qu'a connu l'édition d'images.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>ELF reste un modèle de recherche. Plusieurs questions restent ouvertes.</p>
+
+<p>La première touche au passage à l'échelle. Les expériences plafonnent à 652 millions de paramètres. Les modèles autorégressifs commerciaux dépassent souvent la centaine de milliards. Rien ne garantit que la mécanique d'ELF tienne aussi bien quand on multiplie la taille par cent ou mille. Les comportements émergents observés sur les grands modèles autorégressifs, comme la capacité à suivre des instructions complexes ou à raisonner par étapes, pourraient ne pas se transposer.</p>
+
+<p>La seconde concerne le raisonnement et la planification. Les modèles autorégressifs profitent du <em>chain-of-thought</em>, cette habitude de dérouler un raisonnement token après token. Un modèle de diffusion produit toute la séquence en parallèle, ce qui pourrait limiter sa capacité à enchaîner des étapes logiques dépendantes. Quelques travaux récents explorent des variantes semi-autorégressives qui mêlent les deux paradigmes, et c'est probablement là que se jouera la prochaine manche.</p>
+
+<p>Troisième front : les corpus multimodaux. La diffusion brille en image. Si un même framework pouvait traiter texte et image dans un espace continu unifié, on tiendrait peut-être l'architecture native pour des assistants multimodaux. Le papier mentionne d'ailleurs en référence plusieurs travaux concurrents qui poussent dans cette direction, comme Omni-diffusion ou MMaDA.</p>
+
+<p>Enfin, la communauté devra valider la robustesse statistique des résultats. Les auteurs reportent un écart-type faible sur six exécutions indépendantes, ce qui est rassurant. Mais les benchmarks utilisés (OpenWebText, WMT14, XSum) restent relativement étroits par rapport à ce qu'on attendrait d'un modèle généraliste. Des évaluations plus larges, notamment sur les tâches d'instruction-following et de raisonnement, permettront de situer la contribution réelle.</p>
+
+<p>Le pari d'ELF, en attendant, est philosophiquement intéressant. Il suggère que la frontière entre données continues et données discrètes n'est pas aussi rigide que la communauté l'avait supposée. Avec un traitement minimal de la discrétisation, concentré sur la dernière étape, la diffusion continue redevient compétitive. Le langage est peut-être moins discret qu'on ne le pensait, ou plutôt : les bonnes représentations continues sont peut-être suffisantes pour porter sa structure.</p>
+
+<p>Reste à voir si les grandes maisons de l'IA, qui ont massivement investi sur l'autorégressif, prendront le risque de tester ce changement de paradigme à l'échelle industrielle. Le code public d'ELF, disponible sur GitHub, abaisse en tout cas la barrière à l'entrée pour ceux qui voudraient s'y essayer.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

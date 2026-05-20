@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELF: Embedded Language Flows — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>ELF: Embedded Language Flows</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les modèles de diffusion dominent la génération continue (image, vidéo) mais peinent à s'imposer en modélisation du langage face aux modèles autoregressifs et aux variantes discrètes (MDLM, Duo). Les auteurs posent une question précise : l'écart de performance des DLM continus tient-il à la nature discrète du langage, ou à des choix algorithmiques sous-explorés ?</p>
+<p>ELF (Embedded Language Flows) répond par un design minimaliste : effectuer le débruitage entièrement dans l'espace d'embeddings continus T5 figés, et ne discrétiser qu'au dernier pas de temps via un réseau à poids partagés avec le débruiteur. Le pari est que les techniques matures de la diffusion d'image (Flow Matching, classifier-free guidance, x-prediction) deviennent alors directement transférables.</p>
+
+<h2>Méthodologie</h2>
+<p>L'approche combine quatre ingrédients techniques. D'abord, un encodeur T5-small figé projette les tokens dans un espace continu de dimension 512, ramené à 128 via un bottleneck. Ensuite, le Flow Matching à temps continu définit une trajectoire linéaire (rectified flows) entre bruit gaussien et embeddings propres. Le réseau prédit directement l'embedding propre <em>x</em> (x-prediction) plutôt que la vélocité, ce qui s'avère essentiel en haute dimension et permet le partage de poids avec l'étape de décodage.</p>
+<p>La discrétisation finale exploite un mode "decode" du même réseau, conditionné par un token binaire (denoise/decode). L'entraînement alterne deux branches dans le même batch : MSE sur la vélocité (80% des échantillons) et cross-entropy au pas <em>t=1</em> sur des embeddings corrompus par token (20%). Le self-conditioning fournit le signal pour un CFG entraîné en une seule passe (training-time CFG), évitant le surcoût d'inférence.</p>
+<p>L'évaluation suit les protocoles établis : OpenWebText (9B tokens, séquences de 1024) pour la génération inconditionnelle avec perplexité générative sous GPT-2 Large et entropie unigramme, WMT14 De-En pour la traduction (BLEU), XSum pour la summarisation (ROUGE). Trois tailles de modèle (105M, 342M, 652M), optimiseur Muon, 5 époques sur OWT.</p>
+
+<h2>Résultats principaux</h2>
+<p>ELF-B atteint une perplexité générative de 24 en 32 étapes d'échantillonnage, surpassant MDLM, Duo, FLM et LangFlow qui utilisent 170M de paramètres. L'écart se creuse à budget d'inférence réduit : à 16 et 8 étapes, ELF reste compétitif face aux baselines distillées (MDLM+SDTT, Duo+DCD, FMLM) sans avoir nécessité d'étape de distillation supplémentaire.</p>
+<p>L'argument de coût d'entraînement est fort : 45B tokens effectifs contre 524-577B pour les baselines, soit un facteur 10×. Sur les tâches conditionnelles, ELF-B obtient 26.4 BLEU sur WMT14 De-En (vs 24.9 pour CDCD, 24.8 pour E2D2) et domine sur tous les ROUGE de XSum. Les ablations montrent que l'embedding contextuel pré-entraîné, le bottleneck à 128, le sampler SDE avec γ=1 et la prédiction de <em>x</em> sont les leviers déterminants.</p>
+
+<h2>Discussion et limites</h2>
+<p>La perplexité générative sous GPT-2 Large comme métrique principale reste contestable : un modèle qui imite la distribution de GPT-2 obtient mécaniquement un bon score, indépendamment de la qualité réelle. Les auteurs justifient ce choix par la continuité avec la littérature existante, mais ne discutent pas explicitement ce biais d'évaluation.</p>
+<p>La comparaison à 105M vs 170M paramètres pour les baselines penche en faveur d'ELF — l'argument est inversé en sa défaveur, mais les configurations ne sont pas strictement appariées. Le sweep du CFG pour générer le compromis qualité-diversité n'est pas appliqué uniformément aux baselines, ce qui rend les comparaisons frontière à frontière partielles.</p>
+<p>Le mode collapse n'est pas analysé en profondeur : l'entropie unigramme sert de proxy mais ne capture pas la diversité structurelle. L'absence de comparaison directe à un AR fort de taille équivalente sur OWT laisse ouvert le verdict global sur la pertinence des DLM continus face aux LLM modernes. Les auteurs admettent que l'entraînement au-delà de 45B tokens n'a pas apporté de gains, mais sans investiguer la cause.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est publié sur GitHub (lillian039/ELF). L'article fournit pseudocode complet (5 algorithmes), configurations détaillées par taille de modèle (Tab. 3), hyperparamètres d'entraînement (Tab. 4), budgets de tokens par méthode comparée (Tab. 5), et configurations exactes des baselines reproduites (Tab. 8). La variance sur 6 seeds est rapportée pour les comparaisons système. C'est un des meilleurs standards de reproductibilité observables dans la littérature DLM récente.</p>
+
+<h2>Impact et applications</h2>
+<p>ELF reconfigure le débat sur les DLM en démontrant que l'écart entre continu et discret tenait à des choix de design, pas à une limitation structurelle. La conséquence pratique : les avancées de la diffusion d'image (Flow Matching, mean flows, training-time CFG, samplers SDE) deviennent transférables sans adaptation profonde. Pour la communauté agentique et raisonnement, cela rouvre la voie aux trajectoires de débruitage continu comme substrat de raisonnement latent, en complément des transformers bouclés et de la diffusion masquée discrète type LLaDA.</p>
+<p>L'efficience à 10× moins de tokens pose toutefois une question : à quel régime d'échelle le compromis se renverse-t-il ? L'article ne teste pas au-delà de 652M paramètres, ce qui laisse le verdict ouvert sur la viabilité d'ELF à l'échelle des LLM modernes (7B-70B).</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>ELF se distingue de trois familles. Face aux DLM continus historiques (Diffusion-LM, CDCD, DiffuSeq), qui appliquent une cross-entropy à chaque pas et contraignent la trajectoire à l'espace des tokens, ELF laisse la trajectoire libre en embedding space. Face aux DLM latents (LD4LG, PLANNER, Cosmos), qui exigent un décodeur séparément entraîné en architecture DDPM, ELF unifie débruitage et décodage dans un seul réseau Flow Matching à temps continu. Face aux travaux concurrents flow-based (FLM, LangFlow, DFM, CFM), qui maintiennent une supervision token-level sur la trajectoire, ELF n'applique cette supervision qu'à <em>t=1</em>.</p>
+<p>Le tableau récapitulatif des 8 critères de robustesse :</p>
+<table>
+<tr><th>Critère</th><th>Score /5</th></tr>
+<tr><td>Question de recherche</td><td>4</td></tr>
+<tr><td>Design expérimental</td><td>4</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td></tr>
+<tr><td>Reproductibilité</td><td>5</td></tr>
+<tr><td>Transparence sur les limitations</td><td>3</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td></tr>
+<tr><td><strong>Note globale</strong></td><td><strong>4.0</strong></td></tr>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

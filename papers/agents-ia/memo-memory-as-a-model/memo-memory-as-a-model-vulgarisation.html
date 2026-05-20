@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEMO: Memory as a Model — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>MEMO: Memory as a Model</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand la mémoire d'un LLM devient un modèle à part entière</h2>
+
+<p>Un modèle de langage entraîné en 2024 ignore tout ce qui s'est passé depuis. Il ne connaît ni les dernières publications scientifiques, ni les documents internes de votre entreprise, ni les rapports trimestriels publiés la semaine dernière. Pour intégrer ces connaissances, l'industrie a longtemps balancé entre deux options imparfaites : réentraîner le modèle (cher, risqué) ou lui donner un moteur de recherche (le fameux RAG, fragile dès que la question devient complexe).</p>
+
+<p>Une équipe regroupant des chercheurs de NUS, MIT, A*STAR et Liquid AI propose une troisième voie dans le papier <strong>MEMO : Memory as a Model</strong>. L'idée : transformer la mémoire elle-même en un petit modèle dédié, interrogeable par n'importe quel LLM en boîte noire. Pas besoin d'accéder aux poids du modèle principal. Pas de réentraînement coûteux. Et surtout, une robustesse face au bruit que les méthodes de récupération classiques peinent à atteindre.</p>
+
+<h2>Le problème : trois familles, trois impasses</h2>
+
+<p>Pour ajouter de nouvelles connaissances à un LLM, on dispose aujourd'hui de trois grandes approches, chacune avec son talon d'Achille.</p>
+
+<p>La première, <strong>non paramétrique</strong>, regroupe le RAG et l'in-context learning. On stocke les documents dans une base, on récupère les passages pertinents à la volée, on les colle dans le prompt. Simple, élégant. Mais la fenêtre de contexte reste limitée et le système devient très sensible au bruit : un document hors sujet glissé dans la sélection peut dégrader sérieusement la réponse. Pire, le RAG peine à connecter des informations dispersées dans plusieurs documents — un défaut rédhibitoire pour les questions multi-sauts.</p>
+
+<p>La deuxième famille, <strong>paramétrique</strong>, fait l'inverse : on internalise les connaissances directement dans les poids du modèle via du fine-tuning ou du continual pretraining. Ça marche, mais ça coûte cher, ça provoque souvent un oubli catastrophique (le modèle perd des capacités acquises lors de son post-training initial), et c'est tout simplement impossible avec les modèles propriétaires comme GPT-5 ou Claude, dont les poids ne sont pas accessibles.</p>
+
+<p>La troisième voie, plus récente, compresse la connaissance dans des <strong>tokens latents</strong> (AutoCompressor, Gist tokens, ICAE). Compact, efficace, mais avec un défaut majeur : ces représentations sont indissociables du modèle qui les a produites. Impossible de les transférer d'un LLM à un autre. On parle de couplage de représentation.</p>
+
+<p>MEMO part d'une intuition simple : et si la mémoire était un modèle indépendant, plus petit, qu'on entraîne sur le corpus, et qu'un LLM principal interroge comme un oracle externe ?</p>
+
+<h2>La méthode vulgarisée : un cerveau exécutif et un cerveau-bibliothèque</h2>
+
+<p>Imaginez deux personnes qui collaborent. La première, qu'on appellera <strong>l'Exécutif</strong>, est un raisonneur brillant mais sans connaissance spécifique sur votre domaine — c'est votre LLM frontière favori (Qwen, Gemini, GPT). La seconde, <strong>la Mémoire</strong>, est une junior beaucoup plus modeste en capacités générales mais qui a passé plusieurs jours à étudier intensivement la documentation interne. Quand une question complexe arrive, l'Exécutif la décompose en sous-questions ciblées, les pose à la Mémoire, agrège les réponses et synthétise la conclusion.</p>
+
+<p>C'est exactement l'architecture de MEMO. Un modèle dédié de 1,5 à 14 milliards de paramètres encode le corpus dans ses poids. Un LLM principal beaucoup plus gros (32B, ou Gemini-3-Flash) raisonne et interroge cette mémoire via un protocole structuré multi-tours.</p>
+
+<h3>Phase 1 : construire la mémoire</h3>
+
+<p>Le défi central : comment entraîner ce petit modèle pour qu'il réponde correctement à des questions inédites, y compris celles qui demandent de croiser plusieurs documents ? Si on l'entraîne juste à recracher les paragraphes du corpus, il devient un perroquet inutile.</p>
+
+<p>Les chercheurs proposent un pipeline en cinq étapes, piloté par un <strong>modèle Générateur</strong> (Qwen2.5-32B dans leurs expériences). Ce générateur transforme le corpus brut en un jeu de questions-réponses très riche, appelé jeu de <em>réflexions</em>.</p>
+
+<ol>
+<li><strong>Extraction de faits</strong> : pour chaque morceau de document, le générateur produit des questions directes (faits explicites) et indirectes (inférences).</li>
+<li><strong>Consolidation</strong> : les paires qui partagent une entité, une période, une relation commune sont fusionnées en questions multi-faits.</li>
+<li><strong>Vérification et réécriture</strong> : chaque paire est testée pour son auto-suffisance. Une question comme « Que proposent-ils ? » avec un pronom flottant est réécrite ou jetée.</li>
+<li><strong>Mise en évidence des entités</strong> : pour chaque entité nommée, le générateur produit des questions où l'attribut décrit l'entité et la réponse la nomme. Une parade au fameux <em>reversal curse</em> (un modèle entraîné sur « A est B » échoue souvent à répondre « qu'est-ce que B ? »).</li>
+<li><strong>Synthèse cross-document</strong> : le générateur identifie des indices convergents (plusieurs documents pointent vers la même entité) et des propriétés parallèles (entités différentes partageant un attribut). C'est l'étape qui produit le plus de données et qui s'avère, l'ablation le montrera, la plus cruciale.</li>
+</ol>
+
+<p>Le résultat : pour un corpus comme NarrativeQA (104 livres), on obtient 1,2 million de paires de questions-réponses. Ce jeu sert ensuite à fine-tuner la Mémoire en supervised fine-tuning classique, en ne calculant la loss que sur les tokens de réponse — donc en forçant la Mémoire à intérioriser les connaissances dans ses paramètres, sans jamais copier depuis un contexte.</p>
+
+<h3>Phase 2 : interroger la mémoire</h3>
+
+<p>À l'inférence, l'Exécutif suit un protocole en trois étapes pour répondre à une question utilisateur.</p>
+
+<p><strong>Ancrage</strong> : la question est décomposée en sous-questions atomiques, chacune ciblant une contrainte identifiante. La Mémoire répond à chacune indépendamment, sans contexte partagé. On récupère ainsi un faisceau de réponses qui servent de matière première.</p>
+
+<p><strong>Identification d'entité</strong> : l'Exécutif utilise ces ancrages pour resserrer progressivement un ensemble de candidats. Il pose des questions de suivi ciblées jusqu'à converger sur une entité unique, ou jusqu'à épuiser son budget d'interactions.</p>
+
+<p><strong>Recherche de réponse et synthèse</strong> : conditionné sur l'entité identifiée, l'Exécutif sollicite la Mémoire pour les faits supplémentaires nécessaires, puis fabrique la réponse finale.</p>
+
+<p>Toutes les interactions passent par l'interface texte standard. L'Exécutif n'a jamais besoin d'accéder aux poids, aux gradients ou aux logits de quoi que ce soit. C'est cette propriété qui rend MEMO compatible avec n'importe quel LLM, y compris les APIs propriétaires.</p>
+
+<h2>Résultats clés : robustesse au bruit et performance sur le multi-hop</h2>
+
+<p>L'évaluation porte sur trois benchmarks exigeants : BrowseComp-Plus (deep research, multi-hop), NarrativeQA (compréhension de longs récits) et MuSiQue (raisonnement composé sur Wikipédia). Les baselines couvrent les meilleures méthodes RAG actuelles : BM25, NV-Embed-V2, HippoRAG2 (graph-RAG, état de l'art), et Cartridges (équivalent paramétrique).</p>
+
+<p>Sur NarrativeQA avec Gemini-3-Flash comme Exécutif, MEMO atteint <strong>53,58 %</strong> contre 23,21 % pour HippoRAG2 — plus du double. Sur MuSiQue, MEMO obtient 60,20 % contre 57,00 % pour HippoRAG2. Sur BrowseComp-Plus, MEMO mène avec 66,67 % face à 66,33 % pour HippoRAG2. La hiérarchie reste stable avec Qwen2.5-32B comme Exécutif, avec une exception : BrowseComp-Plus, où HippoRAG2 garde l'avantage de 1,9 point. Les chercheurs l'expliquent par le profil particulier de ce benchmark, dont les réponses sont totalement absentes des connaissances paramétriques du modèle, ce qui favorise les méthodes qui passent les documents bruts au LLM.</p>
+
+<p>La démonstration la plus parlante concerne la <strong>robustesse au bruit</strong>. Les chercheurs comparent les performances quand on ajoute des documents distracteurs au corpus. NV-Embed-V2 et HippoRAG2 chutent de 5 à 6 points dès qu'on double le corpus avec des distracteurs. MEMO ? Il gagne 0,55 point sur BrowseComp-Plus et n'en perd que 1,77 sur MuSiQue, dans l'écart-type. La Mémoire ne se laisse pas distraire parce qu'elle ne récupère pas des documents bruts : elle produit des réponses précises et compactes aux sous-requêtes de l'Exécutif.</p>
+
+<p>Autre propriété frappante : le <strong>plug-and-play fonctionne vraiment</strong>. Une Mémoire entraînée avec un Générateur Qwen-32B peut être interrogée par Gemini-3-Flash sans aucune adaptation. Le gain en passant de Qwen-32B à Gemini-3-Flash atteint 26,73 points sur NarrativeQA. La même mémoire bénéficie immédiatement d'un meilleur raisonneur.</p>
+
+<p>Côté coûts, MEMO est aussi évalué sur la <strong>fusion de modèles</strong>. Quand un nouveau corpus arrive, plutôt que de tout réentraîner, on entraîne une Mémoire séparée et on la fusionne avec l'existante dans l'espace des paramètres. Pour deux corpus de 640k paires QA chacun, la fusion coûte 48 GPU-heures contre 72 pour le réentraînement complet — 33 % d'économie. Et l'écart se creuse avec le nombre de corpus : à K=10, la fusion gagne un facteur 5,5×. Le prix à payer : une perte de précision de 11 à 19 points selon l'Exécutif, qui reste supérieure aux baselines RAG.</p>
+
+<h2>Implications pratiques : ce que ça change pour l'industrie</h2>
+
+<p>Pour les équipes qui déploient des LLM en entreprise, MEMO touche un point sensible. Aujourd'hui, l'option par défaut pour brancher une base documentaire à un modèle propriétaire reste le RAG. On accepte sa fragilité face au bruit, ses difficultés sur les questions qui croisent plusieurs sources, et le fait qu'il dépend entièrement de la qualité du retriever. Avec MEMO, on peut entraîner une fois un petit modèle de mémoire — typiquement 1,5B à 14B paramètres — et l'interroger via n'importe quelle API LLM. Le coût de récupération à l'inférence devient <strong>indépendant de la taille du corpus</strong>, ce qui est inhabituel.</p>
+
+<p>Le cas d'usage évident, ce sont les domaines à forte densité documentaire qui changent peu : juridique, médical, scientifique, technique interne. Une fois la Mémoire entraînée sur les textes de loi, les guidelines cliniques ou la documentation produit, on peut la brancher derrière le LLM du moment sans renégocier les contrats d'API et sans repartir de zéro à chaque montée de version du modèle.</p>
+
+<p>Il y a aussi un angle économique. Le fine-tuning d'un modèle frontière coûte cher et reste impossible sur les modèles fermés. MEMO transfère ce coût sur un modèle bien plus petit — un Qwen-1.5B à 14B selon la complexité du corpus. Les ablations montrent qu'un modèle de 1,5B reste compétitif sur la plupart des tâches. Et la fusion de modèles offre un chemin pour faire évoluer la base de connaissances sans tout reconstruire.</p>
+
+<p>Le revers : MEMO n'est pas magique. L'entraînement de la Mémoire pour un corpus de 1000 questions MuSiQue consomme déjà 150 GPU-heures de génération de données et 90 d'entraînement. Pour des corpus très dynamiques, qui changent quotidiennement, le RAG reste pertinent. MEMO vise les corpus de taille moyenne à grande qui se mettent à jour par lots, pas le flux temps réel.</p>
+
+<p>Côté gouvernance, l'article soulève honnêtement une question gênante : MEMO réduit la traçabilité des sources. Un RAG vous dit quel document a alimenté la réponse. Une Mémoire entraînée internalise tout dans ses poids et ne sait plus dire d'où vient telle information. Pour des cas d'usage où l'audit et l'attribution comptent — santé, finance, juridique — c'est un sujet à anticiper.</p>
+
+<h2>Pour aller plus loin : les questions qui restent ouvertes</h2>
+
+<p>MEMO est élégant mais incomplet. Plusieurs angles méritent d'être creusés.</p>
+
+<p>D'abord, la <strong>capacité de la Mémoire</strong>. Les expériences n'ont pas atteint le plafond de ce qu'un modèle de taille fixe peut compresser, mais les auteurs soupçonnent qu'un corpus suffisamment dense saturera la Mémoire. Comment scaler ? Faut-il une famille de Mémoires spécialisées, une architecture mixture-of-experts dédiée, ou de meilleurs algorithmes de fusion ? Le sujet est ouvert.</p>
+
+<p>Ensuite, le <strong>coût du pipeline de génération de données</strong>. L'étape 5, la synthèse cross-document, est en O(k·C²·Q²) — quadratique en nombre de chunks par groupe et en nombre de paires QA par chunk. C'est elle qui consomme l'essentiel du budget de génération. Réduire cette complexité tout en préservant la qualité des réflexions cross-document est un problème non trivial.</p>
+
+<p>L'<strong>évaluation des stratégies de chunking</strong> reste également embryonnaire. Les auteurs ont choisi un fenêtrage glissant de 6400 mots avec 10 % de recouvrement pour NarrativeQA et pas de chunking pour les deux autres benchmarks. C'est pragmatique, pas optimisé. Une étude systématique du compromis entre granularité de chunk, coût de pipeline et qualité finale manque encore.</p>
+
+<p>Le pendant pédagogique : MEMO entraîne sa Mémoire en supervised fine-tuning pur. Or des travaux récents (Chu et al., 2025) suggèrent que le SFT mémorise quand le RL généralise. Appliquer du reinforcement learning à l'entraînement de la Mémoire pourrait améliorer la généralisation aux questions vraiment inédites. Les auteurs le signalent comme piste prioritaire.</p>
+
+<p>Enfin, la <strong>coordination Exécutif-Mémoire</strong>. Le protocole en trois étapes fonctionne bien mais ses budgets d'interaction (7 tours pour l'identification d'entité, 8 pour la recherche de réponse) ont été choisis empiriquement. Les ablations montrent que des budgets différents marchent mieux selon les datasets : NarrativeQA bénéficie de 15 tours de recherche plutôt que 8, BrowseComp-Plus préfère 8. Une politique adaptative apprise par l'Exécutif lui-même, plutôt que des budgets fixes, semble une évolution naturelle.</p>
+
+<p>MEMO ne remplace pas le RAG du jour au lendemain. C'est un nouveau point dans l'espace des compromis : plus cher à initialiser qu'un RAG, moins cher qu'un fine-tuning complet ; plus robuste au bruit que la récupération, moins traçable ; portable entre LLM, mais bornée par la capacité d'un petit modèle. Pour des corpus stables et des questions qui croisent plusieurs sources, l'arbitrage devient intéressant. Et l'idée centrale — découpler la mémoire du raisonnement en faisant de la première un modèle à part entière — risque d'inspirer une famille entière d'architectures hybrides dans les mois qui viennent.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

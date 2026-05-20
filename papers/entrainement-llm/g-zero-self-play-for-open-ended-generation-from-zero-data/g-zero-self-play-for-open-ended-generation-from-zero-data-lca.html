@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>G-Zero: Self-Play for Open-Ended Generation from Zero Data — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>G-Zero: Self-Play for Open-Ended Generation from Zero Data</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Lecture critique — G-Zero : self-play sans vérificateur pour la génération ouverte</h2>
+
+<h3>1. Objectif et contexte</h3>
+<p>La publication s'attaque à un verrou central du paradigme self-evolving : étendre l'auto-amélioration des LLM aux domaines non vérifiables (suivi d'instructions, dialogue, écriture créative) où n'existe aucun oracle programmatique. Les approches dominantes (LLM-as-a-judge, R-Zero par vote majoritaire) butent sur deux pathologies bien identifiées : plafond de capacité fixé par le juge proxy et reward hacking exploitant les biais stylistiques du juge.</p>
+<p>La question de recherche est précisément formulée et originale : comment construire un signal de supervision intrinsèque au modèle lui-même, qui co-évolue avec ses capacités sans dépendre d'un vérificateur externe ? La motivation est étayée par une revue de littérature ciblée sur les méthodes verifier-free récentes (NoVer, RLPR, flux probabilistes).</p>
+
+<h3>2. Méthodologie</h3>
+<p>L'innovation centrale, Hint-δ, mesure le décalage en log-probabilité par token entre la réponse non assistée du Generator et la même réponse conditionnée sur un indice auto-généré. La construction est élégante : un δ élevé exige conjointement une question difficile (réponse incertaine) et un indice informatif (changement distributionnel marqué). La normalisation par token neutralise un biais évident de longueur — vérifiée empiriquement par une corrélation Spearman de −0,41 entre δ et longueur de réponse.</p>
+<p>Le pipeline alterne deux phases : entraînement du Proposer par GRPO avec récompense composite (δ moins pénalités de longueur et de duplication BLEU), puis entraînement du Generator par DPO normalisé en longueur sur paires (réponse assistée, réponse non assistée). Le filtrage des paires retient la moitié inférieure de la distribution δ — choix contre-intuitif mais justifié par deux arguments cohérents : éviter les paires triviales (gros écarts) qui violent la contrainte KL implicite du DPO, et concentrer l'apprentissage sur les distinctions fines.</p>
+<p>L'analyse théorique formalise la garantie en régime linéaire avec modèle Bradley-Terry, et démontre une borne de suboptimalité best-iterate dépendant de la couverture induite par le Proposer et du bruit de pseudo-labels δ-certifié. La preuve mobilise des outils standards (potentiel elliptique, concentration auto-normalisée) appliqués proprement au cadre cumulatif.</p>
+
+<h3>3. Résultats principaux</h3>
+<p>Les expériences portent sur Qwen3-8B-Base et Llama-3.1-8B-Instruct, évaluées sur AIME24/25 (raisonnement), IFEval (suivi d'instructions), AlpacaEval 2.0 LC (qualité conversationnelle). Les gains absolus moyens après deux rounds atteignent +1,48 point sur Qwen3 et +1,13 sur Llama-3.1, avec un transfert frappant : alors que le pool DPO est dominé à 70 % par des tâches non vérifiables (écriture, conseil), AIME25 progresse de +5,21 points sur Qwen3.</p>
+<p>Le comportement contraste nettement avec R-Zero : ce dernier obtient des gains plus marqués sur AIME24 (+4,5 pts) mais dégrade Chat et IFEval, tandis que G-Zero produit des mouvements positifs sur quasi toutes les métriques. L'analyse de la dynamique distributionnelle (Figure 4) documente la course aux armements co-évolutive : la médiane de δ se décale vers la droite au round 2, confirmant que le Proposer doit produire des indices plus complexes pour perturber un Generator devenu plus fort.</p>
+
+<h3>4. Discussion et limites</h3>
+<p>La faiblesse principale, reconnue franchement dans la section Limitation, est l'absence de seeds multiples. Chaque cellule du tableau principal repose sur une exécution unique. Sur AIME24/25 (30 problèmes uniques, mean@32), l'écart-type empirique d'environ 8 points de pourcentage à p ≈ 0,3 rend plusieurs des gains rapportés statistiquement fragiles. Le budget Tinker de ~2 000 USD est l'explication honnête mais ne résout pas le problème de puissance statistique.</p>
+<p>Le second aveu lourd concerne le round 3 sur Llama-3.1 : effondrement complet, le filtre rejette les 1 994 paires candidates car le Generator a convergé vers des réponses trop courtes. Les auteurs imputent ce collapse à un reward hacking résiduel du Proposer combiné à l'effet mécanique du DPO normalisé par token sur la longueur — analyse plausible mais qui souligne que la stabilité multi-round, vendue comme propriété du framework, n'est pas démontrée au-delà de R=2.</p>
+<p>Le filtre δ ∈ [0, 50] n'est pas strictement dominant : le Tableau 3 montre que [20, 80] obtient un meilleur score Math (12,54 vs 11,78) mais un IFEval plus faible, et [0, 100] gagne légèrement sur deux des trois domaines. Le choix est défendu comme "le plus équilibré testé", formulation honnête mais qui relativise la nécessité théorique invoquée dans le texte.</p>
+
+<h3>5. Reproductibilité</h3>
+<p>Le code est mis à disposition sur GitHub (Chengsong-Huang/G-Zero). L'Annexe C détaille intégralement les hyperparamètres (LoRA rank 32, batch sizes, learning rates, seuils de filtrage). L'Annexe A fournit l'ensemble des prompts système et templates utilisés pour le Proposer, le Generator, AIME, IFEval et le juge AlpacaEval. Les modèles de base et le juge (Qwen3-235B-A22B-Instruct-2507) sont identifiés. L'absence de seeds multiples reste un obstacle réel à la réplication exacte, mais la transparence des paramètres et l'usage de Tinker (API standardisée) facilitent matériellement la reproduction.</p>
+
+<h3>6. Impact et applications</h3>
+<p>Le résultat le plus intéressant scientifiquement est le transfert structurel : entraîner sur des paires de tâches ouvertes (écriture, conseil) améliore le raisonnement mathématique. Cela appuie l'hypothèse que la profondeur logique et la décomposition de problèmes sont des invariants partiellement domain-agnostic, et fournit une voie pratique pour améliorer les capacités de raisonnement sans corpus mathématique dédié. Les applications immédiates concernent l'alignement open-source à budget contraint, libéré de la dépendance à GPT-4 ou Claude comme juge.</p>
+
+<h3>7. Positionnement dans la littérature</h3>
+<p>G-Zero se positionne explicitement contre R-Zero (vote majoritaire, fermé aux tâches vérifiables) et contre Absolute Zero. Le travail s'inscrit dans la lignée des méthodes verifier-free récentes (NoVer, RLPR, RLCE) qui exploitent les log-probabilités internes plutôt qu'un reward model séparé. La contribution distinctive tient au signal Hint-δ couplant difficulté et informativité dans un scalaire unique, et à la formalisation théorique d'un cadre habituellement traité de façon purement empirique. Le rapprochement avec SPIN, SPIRAL et les autres pipelines de self-play est correctement discuté.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr>
+<tr><td>Question de recherche</td><td>5</td><td>Verrou clairement identifié, motivation forte, originalité réelle du Hint-δ.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Deux familles de modèles, trois axes de capacité, comparaison à R-Zero, ablations sur le filtre δ et la taille du pool.</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>Aucune réplication par seeds multiples ; AIME n'a que 30 problèmes uniques avec écart-type ~8 pp à p≈0,3.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Benchmarks standards et bien choisis (AIME mean@32, IFEval, AlpacaEval LC), juge externe identifié.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Pénalités de longueur et BLEU, normalisation par token, mais juge AlpacaEval = Qwen3-235B (même famille que le modèle testé sur certaines cellules).</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, hyperparamètres et prompts complets en annexe, mais seeds uniques limitent la réplication statistique.</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Coût Tinker, absence de multi-seed et effondrement R3 explicitement documentés et expliqués.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Signal Hint-δ original, transfert structurel ouvert→mathématique remarquable, théorie formelle utile.</td></tr>
+</table>
+
+<p><strong>Note globale : 3,7/5.</strong> Travail méthodologiquement solide et théoriquement étayé, dont la portée empirique reste contrainte par l'absence de seeds multiples et la non-démonstration de la stabilité au-delà de deux rounds.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

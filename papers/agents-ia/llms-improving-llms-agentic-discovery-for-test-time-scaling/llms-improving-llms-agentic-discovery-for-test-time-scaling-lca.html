@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le test-time scaling (TTS) consiste à allouer du calcul supplémentaire au moment de l'inférence pour améliorer les performances d'un LLM. Les stratégies existantes — self-consistency, ASC, ESC, Parallel-Probe, ST-BoN — sont conçues à la main : un chercheur formule une heuristique de branchement, de pruning ou d'arrêt, l'implémente, puis règle les seuils à l'intuition. Cette dépendance au prototypage humain laisse une grande partie de l'espace d'allocation calcul-précision inexploré.</p>
+<p>AutoTTS déplace le rôle humain : au lieu de coder l'heuristique, le chercheur construit un environnement de découverte (états, actions, feedback, objectif) dans lequel un agent LLM explore l'espace des contrôleurs. La contribution centrale est de montrer que la synthèse de contrôleur TTS peut être traitée comme un problème de recherche algorithmique au sens de FunSearch, AlphaEvolve, ADAS ou Meta-Harness, et que l'environnement bien conçu — pas l'algorithme — devient le vrai produit de recherche.</p>
+
+<h2>Méthodologie</h2>
+<p>Le problème est formalisé comme un MDP sur un état <em>s<sub>t</sub> = (q, m<sub>t</sub>, I<sub>t</sub>, ℓ<sub>t</sub>, Ω<sub>t</sub>)</em> où l'agent contrôleur choisit parmi cinq actions atomiques : BRANCH, CONTINUE, PROBE, PRUNE, ANSWER. L'objectif est <em>maximiser E[1{ŷ=y} − γ·coût]</em>.</p>
+<p>Trois choix de design rendent la recherche tractable :</p>
+<ul>
+<li><strong>Environnement de replay hors-ligne.</strong> 128 trajectoires de raisonnement par paire (modèle, problème) sont pré-générées à température 0,7 avec un intervalle de probe de 500 tokens. Chaque évaluation d'un contrôleur candidat rejoue ces trajectoires sans appel LLM supplémentaire, ce qui rend les évaluations déterministes et bon marché.</li>
+<li><strong>Paramétrisation β.</strong> Chaque contrôleur expose un unique scalaire β qui détermine tous les hyperparamètres internes via une fonction monotone produite par l'agent. Cela évite l'overfitting aux seuils trouvés sur l'ensemble de recherche.</li>
+<li><strong>Feedback par traces d'exécution.</strong> Au lieu de ne renvoyer que des scalaires (précision, tokens), l'environnement remonte la trajectoire complète des décisions du contrôleur, ce qui permet à l'agent de diagnostiquer pourquoi un candidat échoue.</li>
+</ul>
+<p>La boucle de découverte tourne sur cinq rounds avec Claude Code comme proposeur. L'historique cumulé (code, courbes de scaling, traces) est fourni en entrée à chaque round. AIME24 sert d'ensemble de recherche, AIME25 et HMMT25 d'ensembles held-out, sur quatre modèles Qwen3 (0.6B, 1.7B, 4B, 8B).</p>
+
+<h2>Résultats principaux</h2>
+<p>Le contrôleur découvert, baptisé Confidence Momentum Controller (CMC), améliore la frontière de Pareto précision-coût face à quatre baselines manuelles (SC@64, ASC, ESC, Parallel-Probe). Sur Qwen3-1.7B / AIME25, CMC à β=0,5 atteint 46,7 % de précision pour 327,9 k tokens contre 44,4 % / 1054 k pour SC@64. Sur Qwen3-4B / AIME24, β=1 monte à 83,5 % contre 80,1 % pour la meilleure baseline. La réduction moyenne de tokens à précision équivalente atteint 69,5 % par rapport à SC@64.</p>
+<p>La généralisation est testée hors du périmètre de découverte : DeepSeek-R1-Distill-Llama-8B sur HMMT25 et Qwen3-1.7B sur GPQA-Diamond (non-mathématique). CMC reste compétitif dans les deux cas, suggérant que la stratégie n'est pas surajustée à la famille Qwen ou au raisonnement mathématique.</p>
+<p>L'ablation est nette. Sans paramétrisation β, l'agent converge vers des seuils agressifs qui réduisent les tokens de 575 k à 93 k mais font chuter la précision moyenne de 53,1 à 49,0. Sans traces d'exécution, le contrôleur dépense plus (824 k tokens) pour une précision plus faible, ce qui confirme que les scalaires seuls ne suffisent pas à diagnostiquer les modes d'échec.</p>
+<p>Le contrôleur final exploite quatre mécanismes non-triviaux : arrêt basé sur une EMA de la confiance (au lieu de la confiance instantanée), couplage largeur-profondeur via le delta d'EMA, allocation de profondeur favorisant les branches alignées avec le consensus émergent, et abandon conservateur des branches déviantes après plusieurs rounds. Le code complet de CMC est fourni en annexe D.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le découpage à un seul environnement de recherche (AIME24) reste une fragilité. Bien que le held-out couvre AIME25, HMMT25 et GPQA-Diamond, les trois premiers benchmarks ne contiennent que 30 problèmes chacun. La variance entre les seeds n'est pas exhaustivement caractérisée : la méthodologie déclare 64 réévaluations par contrôleur via sous-échantillonnage des 128 trajectoires pré-générées, mais les intervalles de confiance ne sont pas reportés dans les tables principales.</p>
+<p>L'abstraction largeur-profondeur, présentée comme tractable, est aussi une restriction. Les auteurs reconnaissent qu'elle ne couvre pas les structures plus riches type tree-of-thoughts ou verifier-guided refinement. Le périmètre est donc « controller synthesis sur trajectoires linéaires segmentées », pas la découverte de stratégies TTS arbitraires.</p>
+<p>La dépendance à un agent frontière (Claude Code) limite la reproductibilité épistémique : on ne sait pas si un agent open-source produirait un CMC équivalent. La section limitations le mentionne mais ne fournit aucune donnée comparative. Cette dépendance pose aussi une question méta-évaluative : la « créativité » du contrôleur découvert (mécanismes EMA, alignment-aware burst) reflète-t-elle des patterns présents dans le corpus d'entraînement de Claude plutôt qu'une véritable invention algorithmique ?</p>
+<p>Le coût de découverte annoncé (39,9 $, 160 minutes) est honnête mais ignore le coût de pré-collecte des trajectoires offline, qui domine en pratique le budget total une fois sommé sur les quatre modèles.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code et les données sont annoncés open-source sur <code>github.com/zhengkid/AutoTTS</code>. Le prompt complet de l'agent explorer est en annexe C, et le code du contrôleur découvert CMC est en annexe D — fait rare et bienvenu pour un papier de discovery agentique. Les hyperparamètres d'évaluation (température 0,7, intervalle 500 tokens, 128 trajectoires, 64 réévaluations) sont explicites.</p>
+<p>Les points manquants sont les seeds aléatoires précises, les versions exactes de Claude Code utilisées (modèle, date) et l'historique complet des cinq rounds proposés. Sans ces éléments, reproduire la trajectoire de découverte elle-même reste hors de portée — seul le contrôleur final l'est.</p>
+
+<h2>Impact et applications</h2>
+<p>Le papier illustre concrètement le slogan « investir dans l'environnement, pas dans l'algorithme ». Le principe — pré-collecter un cache de rollouts pour rendre les évaluations cheap, exposer un knob scalaire monotone pour éviter l'overfitting, remonter les traces pour rendre les échecs diagnostiquables — est transposable à d'autres problèmes de synthèse de politique : ordonnancement de RAG, gating d'outils, scheduling de tool-calls dans les agents.</p>
+<p>Le cadre suggère aussi une route praticable pour les laboratoires sans budget RL : automatiser la conception d'heuristiques d'inférence à coût quasi-nul une fois le cache construit. C'est un complément peu coûteux aux approches type TTT-Discover ou ThetaEvolve qui modifient les poids.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>AutoTTS s'inscrit dans la lignée FunSearch → AlphaEvolve → ADAS → Meta-Harness, en appliquant la découverte agentique à une classe spécifique : les contrôleurs TTS. La filiation avec Meta-Harness [20] est explicite, notamment pour l'idée d'exposer des traces d'exécution au proposeur. La nouveauté revendiquée tient à la formalisation MDP du contrôle largeur-profondeur et à l'environnement de replay déterministe — points faibles des travaux antérieurs où chaque évaluation candidate déclenchait des appels LLM.</p>
+<p>Vis-à-vis de la littérature TTS (SC, ASC, ESC, Parallel-Probe, AlphaOne, DeepPrune), le papier reformule plutôt qu'il ne supplante. Le CMC découvert combine des primitives déjà connues isolément (EMA, beta-majority confidence, burst sur consensus) en un mécanisme cohérent qu'aucune baseline ne réalise. L'apport est moins « un meilleur algorithme TTS » que « une procédure pour en synthétiser à la demande ».</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Reframing clair de la conception TTS comme problème de discovery ; angle original et bien motivé.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Environnement de replay propre, ablations ciblées sur β et traces, généralisation testée hors-domaine.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>AIME24/25 (30 problèmes), HMMT25 ; pas de bootstrap ni d'intervalle de confiance dans les tables principales.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Précision + total tokens, courbes de Pareto, 64 réévaluations par contrôleur — standard et adapté.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Un seul ensemble de recherche (AIME24) ; risque d'overfitting au domaine math malgré le held-out GPQA.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code annoncé, prompt et contrôleur découvert en annexe, hyperparamètres explicites ; versions de l'agent et seeds manquants.</td></tr>
+<tr><td>Transparence sur les limites</td><td>3</td><td>Section limitations brève ; dépendance à un agent frontière mentionnée mais non quantifiée.</td></tr>
+<tr><td>Impact / nouveauté</td><td>4</td><td>Premier papier qui cadre formellement la synthèse de stratégies TTS comme problème de search algorithmique exécutable à 40 $.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

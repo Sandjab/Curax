@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Discovery of Neural Architectures: AIRA-Compose and AIRA-Design — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Agentic Discovery of Neural Architectures: AIRA-Compose and AIRA-Design</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le travail s'inscrit dans le programme de recherche sur l'auto-amélioration récursive (RSI) : des agents LLM capables de découvrir et d'optimiser les architectures neuronales qui les motorisent. Les auteurs partent d'un constat structurel : le Transformer reste la norme mais ses limites (complexité quadratique de l'attention, coût mémoire du cache KV) poussent la communauté vers des architectures hybrides combinant attention, MLP et State Space Models. L'espace combinatoire de ces hybrides (3<sup>16</sup> ≈ 43M de configurations pour 16 couches sur 3 primitives) excède ce que l'exploration manuelle ou la Bayesian Optimization classique peuvent traiter efficacement.</p>
+<p>Deux frameworks complémentaires sont introduits : <strong>AIRA-Compose</strong> traite l'arrangement de primitives prédéfinies comme un problème de recherche agentique haut-niveau ; <strong>AIRA-Design</strong> exige des agents qu'ils écrivent du code fonctionnel de zéro pour des mécanismes d'attention sous-quadratiques (Long Range Arena) et des boucles d'entraînement (Autoresearch de Karpathy).</p>
+
+<h2>Méthodologie</h2>
+<p>Les tâches sont formulées dans le standard AIRS-Bench, chacune définie par un triplet {problème, dataset, métrique}. Le harness AIRA-dojo orchestre une recherche par arbre avec quatre opérateurs (Draft, Debug, Improve, Analyze) et deux scaffolds (one-shot et greedy). AIRA-Compose recast les étapes de search et evaluation du framework Composer (Acun et al., 2025) en tâches agentiques, tout en conservant les étapes d'aggregation et d'extrapolation comme pipelines déterministes.</p>
+<p>Pour la partie 2 primitives (M, mA), 10 agents combinent 5 LLM (CWM, o3-mini, gpt-oss-20b/120b, GPT-4o) avec les deux scaffolds, augmentés de 20 runs greedy GPT-5. Pour 3 primitives (M, mA, Mb), 170 runs sont effectuées. AIRA-Design déploie 20 agents incluant Opus 4.5/4.6, Gemini 3 Pro/3.1 Pro, GPT-5, sur 1 680 runs LRA et 100 runs Autoresearch. Chaque agent dispose d'une H200 et de 24h (60h pour BabiStories/DCLM).</p>
+<p>L'évaluation IsoToken préentraîne les architectures découvertes à l'échelle 1B sur ∼37,5 milliards de tokens, avec 3 seeds par configuration. L'évaluation IsoFLOP couvre trois échelles (350M, 1B, 3B) sur cinq budgets FLOPs, pour un total de 120 + 165 = 285 préentraînements. Les métriques combinent validation loss, accuracy 0-shot sur 6 benchmarks (HellaSwag, WinoGrande, ARC, PIQA, SciQ), DCLM Core score sur 14 tâches, Valid Submission Rate, et Normalized Score via la transformation «&nbsp;march of 9s&nbsp;» (Karpathy &amp; Patel, 2025).</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur 2 primitives, AIRAformer-D Stretched atteint 2,734 de validation loss contre 2,815 pour Llama 3.2, avec un gain de 2,4 points d'accuracy moyenne 0-shot. Les architectures découvertes convergent vers des ratios attention-to-MLP non triviaux (7:9 pour A/B, 11:5 pour C/D). En régime IsoFLOP, AIRAformer-C/D Stacked présentent les pentes de scaling les plus favorables (∆q jusqu'à -0,34 vs Llama 3.2), traduisant une efficacité supérieure à grande échelle.</p>
+<p>Sur 3 primitives, AIRAhybrid-D Stretched obtient la meilleure validation loss (2,719) et la meilleure accuracy moyenne (60,5%), dépassant Nemotron-2 approximé (2,732 ; 60,3%) avec un échantillonnage de seulement 0,0052% de l'espace. AIRAhybrid-C Stretched, attention-heavy, scale 37% plus vite que le meilleur hybride trouvé par Composer.</p>
+<p>Sur Long Range Arena, Greedy Gemini 3 Pro et Greedy Opus 4.6 atteignent une accuracy à 2,3pp du SOTA humain sur document matching (82%) et 2,6pp sur text classification (91%). Le Valid Submission Rate révèle une stratification nette : Opus 4.6 atteint 100% de soumissions valides, tandis que les agents one-shot échouent systématiquement à produire du code fonctionnel. Sur Autoresearch, Greedy Opus 4.5 +Lit obtient 0,968 BPB, surpassant la référence publiée de Karpathy.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs documentent honnêtement plusieurs faiblesses. Sur LRA, les architectures découvertes recombinent des idées de Performer, Longformer et Conformer sans introduire de contribution théoriquement nouvelle&nbsp;: les agents excellent dans la synthèse d'ingénierie mais pas dans l'innovation algorithmique réelle. Le setup Configurable, censé augmenter la flexibilité, dégrade au contraire les performances des agents plus faibles (CWM -11,5pp, Devstral -10,8pp), trahissant une incapacité à exploiter l'espace d'hyperparamètres élargi.</p>
+<p>L'accès à la littérature ne produit pas un gain uniforme : GPT-5 +Lit et Opus 4.5 +Lit régressent par rapport à leurs variantes de base. Le scaffold greedy d'AIRA-dojo, en régénérant tout le fichier à chaque étape, empêche les éditions chirurgicales et complique l'attribution causale des améliorations. La fenêtre 24h est insuffisante pour les architectures les plus coûteuses, et les agents souffrent d'un biais d'entraînement PyTorch qui les pénalise sur le code JAX/Flax requis par LRA.</p>
+<p>Plus fondamentalement, l'aggregation et l'extrapolation restent non-agentiques&nbsp;: les architectures «&nbsp;agent-discovered&nbsp;» sont en réalité post-traitées par clustering layer-wise et stretching/stacking déterministes. Le claim «&nbsp;RSI&nbsp;» mérite d'être tempéré&nbsp;: les agents n'ont pas amélioré leur propre architecture, ils ont conçu des architectures qui pourraient les remplacer.</p>
+
+<h2>Reproductibilité</h2>
+<p>L'infrastructure repose sur AIRS-Bench (Lupidi et al., 2026), AIRA-dojo (Toledo et al., 2025) et Composer (Acun et al., 2025), tous publiés. La structure modulaire des tâches (project_description.md, prepare.py, evaluate.py, metadata.yaml) est documentée. Les seeds, budgets compute et hyperparamètres sont spécifiés. Le code complet de la meilleure solution Autoresearch figure en Annexe H.</p>
+<p>Le coût compute est prohibitif pour la réplication académique : 640 runs agentiques sur H200 plus 285 préentraînements à 1B/3B paramètres représentent plusieurs millions d'heures-GPU. Les modèles propriétaires (Opus 4.5/4.6, Gemini 3 Pro/3.1 Pro, GPT-5) introduisent une dépendance à des APIs dont le comportement n'est pas garanti stable dans le temps, ce qui érode la reproductibilité externe même si la méthodologie est transparente.</p>
+
+<h2>Impact et applications</h2>
+<p>L'étude établit un protocole crédible pour mesurer la capacité des agents LLM à conduire de la recherche scientifique sur le design d'architectures. Les architectures découvertes (AIRAformers, AIRAhybrids) sont des candidates concrètes pour les prochaines générations de modèles de fondation, avec des frontières Pareto latence-loss améliorées à 1B. Le cadre AIRS-Bench fournit un standard d'évaluation transposable à d'autres problèmes ML ouverts.</p>
+<p>Pour le déploiement industriel, le constat le plus actionable est la stratification claire entre agents&nbsp;: Opus 4.6 et Gemini 3 Pro dominent largement, le scaffold greedy domine le one-shot, et l'augmentation par littérature curatée modifie qualitativement les stratégies d'optimisation sans garantir un gain. Ces résultats orientent le choix de modèles et de harness pour des pipelines de NAS agentique en production.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans une vague récente d'agents de recherche autonomes (AI Scientist v2, MLGym, PaperBench, SciReplicate-Bench) et prolonge Composer (Acun et al., 2025) en y substituant une recherche agentique aux opérateurs d'optimisation classiques. Il dialogue avec les architectures hybrides récentes (Mamba, Nemotron-H/2, Jamba, Hymba, Samba) et s'appuie sur l'infrastructure AIRA-dojo de MLE-bench (Toledo et al., 2025) et AIRS-Bench.</p>
+<p>La nouveauté principale n'est pas le NAS agentique pris isolément (Gu et al. 2025 avec Jet-Nemotron, Javaheripi et al. 2022 avec LiteTransformerSearch ont précédé) mais l'échelle (12 tâches RSI, 20 agents, 285 préentraînements jusqu'à 3B) et le double niveau d'abstraction Compose/Design. Le positionnement RSI rejoint la lignée Schmidhuber 1987/2003 et Good 1966, sans toutefois fermer la boucle autoreferentielle.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>RSI sur le design d'architectures, formulation claire, originale et industriellement pertinente.</td></tr>
+<tr><td>Design expérimental</td><td>5</td><td>Triplet AIRS-Bench rigoureux, double scaffold, double benchmark complémentaire, IsoToken + IsoFLOP.</td></tr>
+<tr><td>Taille d'échantillon</td><td>5</td><td>640 runs agentiques, 285 préentraînements 1B/3B, 3 seeds par configuration scaled.</td></tr>
+<tr><td>Qualité des métriques</td><td>5</td><td>Validation loss, 6 tâches 0-shot, DCLM Core sur 14 tâches, VSR, Normalized Score march of 9s, latence H100-profilée.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Test set caché, validation indépendante via evaluate.py. Biais PyTorch reconnu mais non corrigé. Variance d'un seul seed pour le tableau 3 limite l'inférence.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Infrastructure publique, code Annexe H, mais coût compute prohibitif et dépendance à des LLM propriétaires non versionnés.</td></tr>
+<tr><td>Transparence sur les limites</td><td>5</td><td>Section dédiée explicite&nbsp;: pas de vraie innovation algorithmique, gap small-scale/large-scale, échec one-shot, biais JAX, aggregation non agentique.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Architectures concrètes battant Llama 3.2 et Nemotron-2, protocole AIRS-Bench transposable. Nouveauté pondérée par les précurseurs en NAS agentique.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

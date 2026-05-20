@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEMO: Memory as a Model — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>MEMO: Memory as a Model</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les LLM pré-entraînés gèlent leur connaissance après la phase de pré-entraînement, ce qui rend leur déploiement difficile dès qu'une application requiert de l'information à jour ou hautement domaniale. Les auteurs cadrent le problème comme une question d'intégration de connaissances sans modifier les poids du modèle de raisonnement, et présentent les trois familles d'approches existantes (non-paramétrique de type RAG/ICL, paramétrique par fine-tuning ou pré-entraînement continu, mémoire latente) avec leurs faiblesses respectives.</p>
+<p>MEMO propose un quatrième paradigme : entraîner un petit modèle dédié, appelé MEMORY, sur une distillation du corpus, puis l'interroger via un modèle EXECUTIVE figé traité en boîte noire. L'argument central est que cette séparation cumule les avantages des trois familles tout en évitant l'oubli catastrophique, le couplage représentationnel et la dépendance à un index de retrieval dont le coût croît avec la taille du corpus.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline d'entraînement repose sur un modèle GENERATOR (Qwen2.5-32B-Instruct) qui transforme le corpus en un jeu de paires question-réponse appelé <em>reflections</em>. Cinq étapes structurent cette transformation : extraction directe et indirecte des faits, consolidation des paires redondantes, vérification et réécriture pour garantir l'auto-suffisance, surfaçage des entités pour atténuer la <em>reversal curse</em>, et synthèse inter-documents par groupes thématiques. Le MEMORY est ensuite entraîné par SFT classique (next-token sur les tokens de réponse uniquement, jamais sur les documents sources).</p>
+<p>À l'inférence, l'EXECUTIVE interroge le MEMORY via un protocole en trois étapes : grounding par sous-questions atomiques, identification d'entité par interactions itératives, puis recherche et synthèse de la réponse finale. Les budgets sont fixés à 1 / 7 / 8 interactions par étape, avec des températures distinctes côté EXECUTIVE (0,4 / 0,4 / 1,0) et MEMORY (0,1 / 0,1 / 0,3).</p>
+<p>L'évaluation porte sur BrowseComp-Plus (300 questions, 3541 documents), NarrativeQA (293 questions, 104 documents longs) et MuSiQue (1000 questions multi-hop, 5296 documents). Les baselines incluent BM25, NV-Embed-V2, HippoRAG2 et Cartridges, plus une borne supérieure <em>Perfect Retrieval</em>. La métrique est une accuracy binaire jugée par Gemini-2.5-Flash-Lite via DeepEval, moyennée sur trois runs pour Qwen2.5-32B-Instruct et un seul run pour Gemini-3-Flash.</p>
+
+<h2>Résultats principaux</h2>
+<p>MEMO domine sur NarrativeQA et MuSiQue avec les deux EXECUTIVE testés, avec un écart particulièrement marqué sur NarrativeQA (26,85 % vs 21,39 % pour HippoRAG2 sous Qwen2.5-32B ; 53,58 % vs 23,21 % sous Gemini-3-Flash). Sur BrowseComp-Plus, MEMO devance HippoRAG2 avec Gemini-3-Flash (66,67 % vs 66,33 %) mais reste derrière avec Qwen2.5-32B (54,22 % vs 56,11 %).</p>
+<p>L'ablation sur le bruit de retrieval est l'argument le plus convaincant : en passant de 0×N à 1×N documents distracteurs, NV-Embed-V2 et HippoRAG2 perdent jusqu'à 6,22 points, tandis que MEMO varie de +0,55 à −1,77 point, dans l'écart-type. L'ablation des étapes du pipeline confirme que l'étape 5 (synthèse inter-documents) est dominante : son retrait fait chuter NarrativeQA à 6,37 % et MuSiQue à 24,17 %.</p>
+<p>Le merging de modèles (TIES ρ=0,3) divise le coût cumulé par 1,5 à K=2, mais paye une perte de 11 à 19 points par rapport au réentraînement complet. L'ablation de taille (1,5B vs 14B) et de famille (Qwen, Gemma3, LFM2.5) montre que MEMO bénéficie d'un MEMORY plus gros mais reste peu sensible à la lignée de pré-entraînement.</p>
+
+<h2>Discussion et limites</h2>
+<p>Plusieurs faiblesses méritent d'être pointées sans détour. Le juge d'évaluation est unique (Gemini-2.5-Flash-Lite), ce qui introduit un biais d'évaluation LLM-as-a-judge non discuté ; aucun accord humain ou inter-juge n'est rapporté. Les résultats sous Gemini-3-Flash reposent sur un seul run sans écart-type, ce qui rend les comparaisons fines avec Qwen2.5-32B-Instruct fragiles.</p>
+<p>Le coût d'entraînement est massif et largement sous-discuté dans le corps du texte : 150 à 240 GPU-heures H200 pour la génération de données par dataset, 90 à 180 GPU-heures pour entraîner un MEMORY de 14B. Le pipeline scale en O(k·C²·Q²) à l'étape 5, ce que les auteurs reconnaissent en annexe mais qui rend l'extension à des corpus dynamiques peu réaliste sans innovation supplémentaire.</p>
+<p>Le résultat anormal du retrait de l'étape 3 sur NarrativeQA (accuracy qui <em>augmente</em> de 24,00 % à 28,90 %) suggère que le pipeline n'est pas universellement bénéfique et qu'il interagit mal avec certains types de corpus. Les auteurs proposent une explication a posteriori plausible mais sans validation contrôlée. La taille du benchmark NarrativeQA (10 documents seulement, 293 questions) est faible pour soutenir des conclusions sur la compréhension long-contexte.</p>
+<p>La comparaison avec Cartridges est partiellement biaisée : ce dernier obtient 0,00 % sur BrowseComp-Plus, ce qui laisse soupçonner un problème d'implémentation ou de configuration plutôt qu'une faiblesse intrinsèque. Les auteurs n'enquêtent pas. Le protocole d'inférence repose sur des budgets et températures choisis sans tuning systématique (reconnu en App. J.2), et la sensibilité à ces hyperparamètres est non triviale.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le matériel supplémentaire est annoncé comme contenant le code et les datasets. Les hyperparamètres d'entraînement (AdamW fused, lr=2e-5, 3 époques, BF16, FlashAttention 2) et les budgets d'inférence sont explicitement documentés. Les modèles utilisés sont publics (Qwen2.5, Gemma3, LFM2.5), à l'exception de Gemini-3-Flash. La méthodologie de génération de données est décrite avec un pseudo-code algorithmique clair.</p>
+<p>Trois limites entachent la reproductibilité pratique : le coût compute est hors de portée pour la plupart des laboratoires (plusieurs centaines de GPU-heures H100/H200 par dataset), le juge propriétaire Gemini-2.5-Flash-Lite peut dériver sans avertissement et compromettre la comparabilité future, et les seeds de génération ne sont pas explicitement mentionnés.</p>
+
+<h2>Impact et applications</h2>
+<p>MEMO s'attaque à un point sensible du déploiement industriel des LLM : intégrer de la connaissance domaniale sans accès aux poids et sans subir la sensibilité au bruit du retrieval. La compatibilité boîte noire avec des modèles propriétaires (Gemini, et par extension GPT, Claude) est un atout réel pour l'usage en entreprise. La taille fixe du MEMORY garantit un coût de retrieval constant, propriété rare parmi les approches existantes.</p>
+<p>Les applications immédiates concernent les domaines à corpus stable et de taille moyenne — documentation interne, dossiers médicaux structurés, jurisprudence — où le coût d'entraînement amortit l'utilisation. L'incompatibilité avec des corpus dynamiques ou très volumineux reste un verrou. Les auteurs signalent honnêtement le risque dual-use et la perte de provenance par rapport à un système RAG explicite, ce qui est appréciable.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article s'inscrit dans une lignée bien identifiée : compression de contexte (AutoCompressor, Gist, ICAE), mémoire plug-and-play (Memory Decoder), et RAG graphique (HippoRAG2). La contribution propre est moins l'idée d'entraîner un modèle mémoire que l'articulation d'un pipeline de distillation en cinq étapes et d'un protocole d'inférence multi-tour structuré. Le positionnement vis-à-vis de Memory Decoder, qui partage l'esprit plug-and-play mais reste lié au tokenizer, est explicite et juste.</p>
+<p>La filiation avec les travaux de Allen-Zhu et Li sur la <em>physics of language models</em> et la <em>reversal curse</em> est revendiquée et justifie l'étape de surfaçage des entités. Le rapprochement avec Cartridges (Eyuboglu et al. 2025) est pertinent mais la comparaison empirique est défavorable à Cartridges sans diagnostic. L'article s'aligne sur la tendance récente à traiter la mémoire comme un artefact paramétrique queryable plutôt que comme un store externe, courant porteur dans la recherche agentique.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+<table>
+  <thead>
+    <tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Question de recherche</td><td>5</td><td>Problème bien posé, motivation industrielle claire, taxonomie des alternatives explicite.</td></tr>
+    <tr><td>Design expérimental</td><td>4</td><td>Trois benchmarks complémentaires, baselines pertinentes, ablations sérieuses ; budgets d'inférence non tunés.</td></tr>
+    <tr><td>Taille d'échantillon</td><td>3</td><td>300 à 1000 questions par dataset ; NarrativeQA limité à 10 documents ; trois runs seulement pour Qwen, un seul pour Gemini.</td></tr>
+    <tr><td>Qualité des métriques</td><td>3</td><td>Accuracy binaire jugée par un LLM unique propriétaire ; pas d'accord humain ni de juge multiple.</td></tr>
+    <tr><td>Contrôle des biais</td><td>3</td><td>Vérification de la connaissance parametric en App. I ; aucun examen du biais du juge LLM ; anomalie Cartridges non investiguée.</td></tr>
+    <tr><td>Reproductibilité</td><td>4</td><td>Code et données promis, hyperparamètres détaillés, mais compute prohibitif et dépendance à un juge propriétaire.</td></tr>
+    <tr><td>Transparence des limitations</td><td>4</td><td>Annexes B et C honnêtes sur coût, scaling, et future work ; impact statement dual-use mentionné.</td></tr>
+    <tr><td>Impact et nouveauté</td><td>4</td><td>Combinaison originale plus que primitive nouvelle ; positionnement clair contre Memory Decoder et Cartridges.</td></tr>
+  </tbody>
+</table>
+<p><strong>Note globale indépendante : 3,7 / 5.</strong> Travail solide d'ingénierie système, motivé et bien documenté, mais limité par un protocole d'évaluation à un seul juge LLM, un coût d'entraînement difficilement transférable, et une nouveauté conceptuelle modérée par rapport à Memory Decoder et Cartridges.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

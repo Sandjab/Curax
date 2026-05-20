@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reinforced Agent: Inference-Time Feedback for Tool-Calling Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Reinforced Agent: Inference-Time Feedback for Tool-Calling Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA fait relire ses devoirs avant de les rendre</h2>
+
+<p>Un agent conversationnel reçoit une question banale : « Quelle est la météo à New York ? ». Il prépare un appel à son outil météo avec les paramètres <code>"NYC"</code> et l'unité Celsius. Avant que l'appel ne parte vers le serveur, un second agent intercepte la requête, signale deux problèmes — l'abréviation au lieu du nom complet, et le mauvais système d'unités pour une ville américaine — et renvoie la copie. L'agent principal corrige, le second valide, et seulement alors l'appel est exécuté.</p>
+
+<p>C'est le mécanisme proposé par trois chercheurs d'Apple, Anh Ta, Junjie Zhu et Shahin Shayandeh, dans un article publié en avril 2026 sous le titre <em>Reinforced Agent: Inference-Time Feedback for Tool-Calling Agents</em>. L'idée tient en une phrase : ajouter un relecteur qui intervient au moment où l'agent décide, pas après. Les résultats annoncés sont concrets : +5,5 % sur la détection des cas où aucun outil n'est pertinent, +7,1 % sur les tâches conversationnelles multi-tours, sans réentraîner le modèle de base.</p>
+
+<h2>Le problème : un agent qui se trompe et personne pour l'arrêter</h2>
+
+<p>Les agents qui appellent des outils — réservation de vol, gestion d'agenda, requête API — font trois types d'erreurs récurrentes. Ils choisissent le mauvais outil. Ils passent des arguments incorrects. Ou ils inventent un appel d'outil alors qu'aucun ne convient à la demande de l'utilisateur. Ces erreurs sont mesurées par des benchmarks comme BFCL (Berkeley Function Calling Leaderboard) ou τ²-Bench, qui notent les performances après coup.</p>
+
+<p>Le problème, c'est que cette évaluation arrive trop tard. Quand un agent supprime un rendez-vous au lieu de le modifier, ou réserve un vol sans vérifier la disponibilité du siège, le mal est fait. Les approches classiques de correction reposent soit sur du réentraînement coûteux (méthodes type GRPO), soit sur des techniques d'auto-correction comme Self-Refine ou Reflexion, où l'agent réfléchit sur ses propres actions après coup.</p>
+
+<p>Ces techniques d'auto-correction butent sur ce que les auteurs appellent <strong>le problème de la récupération d'état</strong>. Pour qu'un agent corrige son erreur, il doit garder en mémoire l'état précédent, comprendre ce qu'il a cassé, et reconstruire un chemin alternatif. Dans un dialogue à 40 tours avec des effets de bord persistants, l'espace des trajectoires alternatives explose. Sans fenêtre de contexte démesurée, l'agent ne sait plus revenir en arrière. Et certaines actions sont tout simplement irréversibles : on ne « dérembourse » pas un paiement d'un simple clic.</p>
+
+<p>D'où l'idée d'intervenir <em>avant</em> l'exécution, pas après.</p>
+
+<h2>La méthode : séparer celui qui agit de celui qui relit</h2>
+
+<p>L'architecture proposée est volontairement simple. Deux agents distincts, chacun avec son rôle. L'agent principal (un GPT-4o dans les expériences) génère des appels d'outils. L'agent relecteur (testé avec GPT-4o puis avec un modèle de raisonnement, o3-mini) reçoit l'appel d'outil <em>provisoire</em>, l'examine, et soit le valide, soit renvoie un retour structuré pour correction. Le tout avant que la requête ne touche le serveur.</p>
+
+<p>Cette séparation des rôles rappelle ce qu'on fait dans une équipe : le développeur qui écrit du code n'est pas celui qui le relit en pull request. Le second regard détecte ce que le premier a manqué, sans avoir besoin de réécrire le code lui-même.</p>
+
+<p>Les chercheurs testent trois stratégies de collaboration entre les deux agents :</p>
+
+<p>La première, <strong>Progressive Feedback</strong>, fonctionne comme un aller-retour de relecture. L'agent principal propose, le relecteur critique, l'agent principal corrige, et ainsi de suite jusqu'à validation ou jusqu'à atteindre une limite de boucles (typiquement 2 ou 5).</p>
+
+<p>La deuxième, <strong>Best-of-N Selection</strong>, demande à l'agent principal de générer cinq versions de la réponse avec des températures variées. Le relecteur choisit la meilleure d'un coup.</p>
+
+<p>La troisième, <strong>Best-of-N Grading</strong>, est une variante de la précédente : le relecteur attribue une note explicite (entre 0 et 1) à chaque candidat avec sa justification, puis sélectionne celui qui a le score le plus élevé.</p>
+
+<h3>Le piège du relecteur trop zélé</h3>
+
+<p>Premier essai, premier ratage. Avec un prompt minimal, le relecteur GPT-4o se met à signaler des appels d'outils parfaitement valides comme « incomplets », réclamant des explications utilisateur que BFCL ne demande pas. Le relecteur attend le résultat de l'exécution… qui n'a pas encore eu lieu, puisque tout son rôle est justement de juger avant l'exécution. Résultat : 23 % des cas ont des boucles de révision redondantes.</p>
+
+<p>Les chercheurs corrigent ça par une instruction explicite ajoutée au prompt du relecteur : <em>« Les réponses contenant uniquement des appels d'outils sont complètes. Ne marquez pas une réponse comme incomplète au motif qu'elle manque de phrase d'introduction ou de présentation des résultats. »</em> Les boucles redondantes tombent de 23 % à 8 %.</p>
+
+<h3>Mesurer le bénéfice et le risque</h3>
+
+<p>Tout l'intérêt d'avoir un relecteur, c'est qu'il corrige des erreurs. Tout son danger, c'est qu'il en introduit de nouvelles en cassant des réponses qui étaient déjà bonnes. Aucune étude antérieure n'avait quantifié ce compromis. Les auteurs introduisent deux métriques pour le faire :</p>
+
+<p>La <strong>Helpfulness</strong> mesure le pourcentage de cas où l'agent de base avait tort et où le relecteur le corrige effectivement. La <strong>Harmfulness</strong> mesure le pourcentage de cas où l'agent de base avait raison et où le relecteur l'amène à se tromper. Le <strong>ratio bénéfice/risque</strong> divise simplement la première par la seconde.</p>
+
+<p>Ces deux chiffres changent la conversation. On ne se demande plus seulement « le système final est-il meilleur ? » mais « quel relecteur fait gagner combien d'erreurs corrigées par erreur introduite ? ». C'est une métrique pratique pour décider quel modèle déployer comme relecteur.</p>
+
+<h2>Résultats : le raisonnement bat la conversation</h2>
+
+<p>Sur BFCL, le benchmark de référence pour les appels d'outils en un seul tour, la configuration la plus aboutie fait passer la détection d'irrelevance de 84,9 % à 90,4 %. La suite « relevance » (tâches où un outil doit effectivement être appelé) progresse de 90,9 % à 92,5 %. Sur τ²-Bench, qui simule des conversations multi-tours sur des domaines comme la téléphonie, l'aérien et la vente en ligne, le gain moyen atteint +7,1 % (de 48,7 % à 55,8 %).</p>
+
+<p>Mais le résultat le plus parlant concerne le choix du modèle relecteur. Avec un GPT-4o standard comme relecteur, le ratio bénéfice/risque est de 2,1 pour 1 : pour chaque erreur introduite, deux erreurs sont corrigées. Avec o3-mini, un modèle conçu pour raisonner étape par étape, ce ratio monte à 3,1 pour 1. Le relecteur corrige 36,8 % des erreurs de l'agent de base, tout en ne dégradant que 11,7 % des réponses initialement correctes.</p>
+
+<p>Sur la détection d'irrelevance, o3-mini fait 0,6 point de mieux que GPT-4o. C'est précisément la catégorie où il faut <em>raisonner</em> pour conclure qu'aucun des outils disponibles ne répond à la demande — pas seulement choisir parmi des options évidentes.</p>
+
+<h3>Les mécanismes ne se valent pas</h3>
+
+<p>Le Progressive Feedback (les allers-retours) bat les deux variantes Best-of-N de 3 à 8 points en moyenne sur τ²-Bench. La sélection parmi des candidats fonctionne pour des tâches simples, mais dès qu'il faut identifier précisément ce qui cloche dans une réponse — par exemple un appel à <code>book_flight()</code> sans vérification préalable de la disponibilité — le retour ciblé du relecteur surpasse le simple choix entre alternatives.</p>
+
+<p>L'analyse des erreurs sur τ²-Bench est éclairante. Les violations de contraintes métier (réserver sans vérifier les conditions) passent de 31 % à 18 % avec le relecteur. Les oublis de contexte conversationnel passent de 24 % à 15 %. En revanche, une nouvelle catégorie d'erreurs apparaît, baptisée <em>over-verbalization</em> : le relecteur pousse l'agent à formuler des explications utilisateur dans des contextes où le benchmark n'en attend pas. Cette erreur grimpe de 10 % à 27 %. Le compromis n'est pas gratuit, mais il reste favorable.</p>
+
+<h3>Optimiser le prompt du relecteur automatiquement</h3>
+
+<p>Plutôt que d'affiner manuellement le prompt du relecteur — un travail d'ingénieur en prompt long et qui passe à côté de cas subtils — les auteurs utilisent GEPA (<em>Genetic-Pareto prompt evolution</em>), un algorithme d'optimisation automatique qui itère sur le prompt à partir des cas d'échec observés. Le prompt optimisé devient 4,5 fois plus long que la version manuelle (1 599 jetons contre 358), avec des règles détaillées, des cas limites et des listes de vérification.</p>
+
+<p>Le gain : +1,5 % sur la suite relevance et +2,8 % sur l'irrelevance par rapport à la version manuelle v2. Plus impressionnant, sur la catégorie <em>parallel_multiple</em> — la plus difficile, qui demande d'orchestrer plusieurs appels d'outils en parallèle — GEPA gagne 2,1 points en repérant automatiquement des stratégies que les humains n'avaient pas anticipées.</p>
+
+<h2>Implications pratiques : un patch sans réentraînement</h2>
+
+<p>L'argument principal des auteurs pour l'industrie tient en trois points opérationnels. D'abord, on ne touche pas au modèle principal. Le pipeline existant continue de tourner, on greffe simplement un agent supplémentaire en amont de l'exécution. Pour une équipe qui a déjà déployé un agent en production, c'est un changement de configuration, pas une refonte.</p>
+
+<p>Ensuite, le relecteur est tunable indépendamment. On peut tester o3-mini, puis le remplacer par GPT-5 mini quand il sort, puis optimiser son prompt avec GEPA — sans jamais retoucher l'agent principal. C'est l'inverse du fine-tuning : les améliorations s'empilent sans casser ce qui marche.</p>
+
+<p>Enfin, le compromis latence/précision devient explicite et choisissable. Et là, les chiffres ne sont pas anodins. Sur BFCL, la latence moyenne passe de 1,27 seconde à 7,87 secondes — un facteur 6,2. Sur τ²-Bench, l'épisode complet passe de 158,7 à 384,3 secondes — un facteur 2,4 seulement, parce que le coût du relecteur est amorti sur la quarantaine de tours moyens.</p>
+
+<p>Cette différence de coût relatif dicte les cas d'usage viables :</p>
+
+<ul>
+<li>Pour des applications à fort volume et faible tolérance à la latence (un widget de chat sur un site web), un facteur 6 est probablement rédhibitoire. La piste : déclencher le relecteur seulement sur les cas incertains.</li>
+<li>Pour des agents conversationnels complexes (support client multi-tours, agents internes pour des workflows métier), le facteur 2,4 reste acceptable, surtout si la précision évite des erreurs coûteuses en aval.</li>
+<li>Pour des workflows à forte intensité d'API payantes, le coût du relecteur peut être rentabilisé en empêchant des appels inutiles ou destructeurs.</li>
+</ul>
+
+<p>Un détail qui passera inaperçu mais qui mérite attention : les auteurs constatent qu'un prompt générique (v1) fait parfois mieux qu'un prompt spécifique au domaine (v2-tau) sur τ²-Bench. Cela rappelle une réalité que beaucoup d'équipes d'IA appliquée découvrent : l'optimisation manuelle de prompt par domaine ne généralise pas toujours, et l'automatisation devient nécessaire dès qu'on dépasse quelques cas d'usage.</p>
+
+<h2>Pour aller plus loin : distillation, généralisation, limites</h2>
+
+<p>L'étude reste circonscrite. Le modèle de base testé est uniquement GPT-4o. Les modèles open source — Llama, Mistral, Qwen — n'ont pas été évalués comme agents principaux. Rien ne garantit que les gains se transposent à des modèles plus petits ou différemment entraînés. L'architecture est conçue pour être agnostique au modèle de base, mais cette propriété reste à vérifier empiriquement.</p>
+
+<p>L'optimisation GEPA et les métriques helpfulness/harmfulness n'ont été appliquées qu'à BFCL, pas à τ²-Bench. L'extension aux scénarios multi-tours pose des questions méthodologiques nouvelles : comment compter une erreur introduite à mi-conversation qui contamine les tours suivants ? Comment attribuer le crédit ou la faute quand une trajectoire entière échoue ?</p>
+
+<p>La piste la plus prometteuse pour la suite, mentionnée en conclusion par les auteurs, c'est la <strong>distillation</strong>. Si un relecteur o3-mini ou GPT-5 mini fournit des retours de qualité, on peut entraîner un modèle plus petit et plus rapide à imiter ses jugements. Un classifieur léger embarqué localement remplacerait alors un appel API à chaque tour. Cela ouvre deux applications concrètes : du déploiement on-device pour des agents privés, et la création de modèles de récompense pour de l'apprentissage par renforcement classique. Le relecteur devient alors un professeur dont on capture la connaissance.</p>
+
+<p>Une question reste ouverte : à partir de quel taux d'erreur de l'agent principal le surcoût d'un relecteur cesse-t-il d'être rentable ? Si l'agent est déjà à 98 % de précision, ajouter un relecteur risque de dégrader plus qu'il ne corrige. Les métriques helpfulness/harmfulness donnent les outils pour répondre, mais la décision dépend du coût relatif d'une erreur dans le domaine considéré. Une erreur sur une réservation aérienne ne coûte pas la même chose qu'une erreur sur une recommandation de film.</p>
+
+<p>Le mérite principal de ce travail est moins dans la performance brute que dans la discipline méthodologique qu'il introduit. Mesurer ce que le relecteur casse autant que ce qu'il corrige, c'est une exigence qu'on ne retrouve pas systématiquement dans la littérature sur les systèmes multi-agents. Beaucoup d'architectures empilent les agents en espérant que les bénéfices s'additionnent. Ces résultats rappellent que chaque agent supplémentaire est aussi un risque supplémentaire, et qu'il faut compter les deux.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

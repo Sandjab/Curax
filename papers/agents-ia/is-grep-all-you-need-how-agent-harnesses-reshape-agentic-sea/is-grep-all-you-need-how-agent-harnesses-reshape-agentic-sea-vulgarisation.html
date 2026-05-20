@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Is Grep All You Need? How Agent Harnesses Reshape Agentic Search — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Is Grep All You Need? How Agent Harnesses Reshape Agentic Search</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un outil Unix des années 70 bat la recherche vectorielle</h2>
+
+<p>Sur un benchmark de mémoire conversationnelle longue, un agent équipé de <code>grep</code> — la commande de recherche textuelle inventée en 1973 par Ken Thompson — atteint 93,1 % de bonnes réponses. Le même agent, branché sur une recherche vectorielle moderne avec embeddings et reranker, plafonne à 83,6 %. Dix points d'écart, sur la technologie qui structure aujourd'hui presque tous les systèmes RAG en production.</p>
+
+<p>Cette inversion vient d'une étude empirique menée par cinq chercheurs de PricewaterhouseCoopers. Ils ont comparé deux familles de recherche — lexicale et sémantique — à travers quatre environnements d'exécution différents pour agents LLM. Leur conclusion bouscule un consensus tacite de l'industrie : la recherche vectorielle n'est pas toujours le bon choix par défaut, et la façon dont on enveloppe l'agent compte autant que la méthode de recherche elle-même.</p>
+
+<h2>Le problème : un trou dans la littérature RAG</h2>
+
+<p>Depuis trois ans, les systèmes RAG (Retrieval-Augmented Generation) se sont imposés comme la solution standard pour donner à un modèle de langage accès à des connaissances externes. Le schéma est connu : on encode les documents en vecteurs, on encode la question en vecteur, on cherche les plus proches voisins, on injecte le résultat dans le prompt. Tout le monde fait ça, des startups aux grands éditeurs.</p>
+
+<p>Mais ce schéma suppose un pipeline figé : une question entre, des documents sortent, point final. Les agents modernes ne fonctionnent pas comme ça. Ils décident eux-mêmes quoi chercher, quand relancer une requête, et quand s'arrêter. Ils opèrent dans un <em>harness</em> — l'enveloppe logicielle qui gère la boucle d'appels d'outils, la construction du contexte, le formatage des résultats.</p>
+
+<p>Les chercheurs pointent un angle mort : la littérature évalue les méthodes de recherche en silo, sur des pipelines statiques. Personne n'avait sérieusement mesuré comment ces méthodes se comportent une fois branchées dans une boucle agentique réelle, avec un Claude Code ou un Codex CLI qui exécute du shell. Pire : personne n'avait étudié comment la <strong>présentation</strong> des résultats — affichés en ligne dans le contexte ou écrits dans un fichier que l'agent doit lire — modifie la performance.</p>
+
+<p>Trois questions structurent leur étude. Quelle méthode de recherche gagne, lexicale ou sémantique, une fois plongée dans une boucle d'agent ? Le harness change-t-il vraiment la donne, ou n'est-il qu'une couche cosmétique ? Et comment les deux familles dégradent-elles quand on noie l'agent dans du bruit conversationnel ?</p>
+
+<h2>La méthode : un benchmark de mémoire et quatre environnements</h2>
+
+<p>L'équipe a choisi LongMemEval, un benchmark conçu pour tester la mémoire conversationnelle longue. Le principe : chaque question porte sur des informations dispersées dans plusieurs sessions de chat antérieures. Certaines sessions contiennent la réponse (les <em>oracles</em>), d'autres sont du bruit pur (les <em>distracteurs</em>). L'agent doit retrouver l'information utile au milieu du fatras. Les questions couvrent six catégories : mises à jour d'état, agrégation multi-session, rappel de préférences utilisateur, faits déclarés par l'utilisateur, contenus générés par le modèle, et raisonnement temporel.</p>
+
+<p>116 questions, cinq modèles testés (Claude Opus 4.6, Claude Haiku 4.5, GPT-5.4, Gemini 3.1 Pro, Gemini 3.1 Flash-Lite), et surtout quatre harnesses différents : un harness maison appelé Chronos, plus les trois CLI officiels des grands éditeurs — Claude Code (Anthropic), Codex (OpenAI) et Gemini CLI (Google).</p>
+
+<p>Côté recherche, deux outils strictement comparables. <code>grep</code>, qui parcourt le texte brut et retourne les correspondances exactes par regex ou sous-chaîne. La recherche vectorielle, avec embeddings, index par question, ANN (approximate nearest neighbors) et un reranker pour affiner le top-k. Aucun avantage donné à l'un ou l'autre : ils tournent sur les mêmes données.</p>
+
+<p>Le deuxième axe expérimental concerne la livraison des résultats. En mode <strong>inline</strong>, les résultats reviennent directement dans la conversation, l'agent les lit immédiatement. En mode <strong>programmatique</strong>, les résultats sont écrits dans un fichier ; l'agent reçoit un chemin et doit explicitement déclencher une lecture pour y accéder. La différence ressemble à un détail technique. Elle ne l'est pas.</p>
+
+<p>Une analogie utile : la recherche vectorielle, c'est comme demander à un bibliothécaire qui comprend le sens de votre question de vous ramener une pile de livres thématiquement proches. <code>grep</code>, c'est comme chercher vous-même dans la table des matières un mot précis. Le premier excelle quand vous ne savez pas exactement quoi chercher ; le second gagne quand vous savez que la réponse contient une date, un nom propre, une formulation précise.</p>
+
+<h2>Résultats : la victoire contrariée du <code>grep</code></h2>
+
+<p>Première expérience, avec tout le corpus disponible. En mode inline, <code>grep</code> bat la recherche vectorielle dans <strong>tous</strong> les couples harness-modèle testés. Le record absolu : Chronos avec Claude Opus 4.6 atteint 93,1 % en grep contre 83,6 % en vectoriel. Codex CLI avec GPT-5.4 monte au même score de 93,1 % en grep, mais redescend à 75,9 % en vectoriel.</p>
+
+<p>L'écart se creuse encore plus avec les modèles plus légers. Gemini 3.1 Flash-Lite sur Chronos affiche 86,2 % en grep contre 62,9 % en vectoriel — 23 points d'écart sur un même modèle, un même corpus, une même question. Le changement vient uniquement de la méthode de recherche.</p>
+
+<p>Deuxième observation, plus surprenante : le harness pèse autant que la méthode de recherche. Claude Opus 4.6 atteint 93,1 % sous Chronos mais seulement 76,7 % sous Claude Code — pour le même modèle, le même corpus, la même méthode grep. Changer d'enveloppe logicielle coûte 16 points. C'est l'équivalent, en ampleur, de passer d'une recherche vectorielle à une recherche lexicale dans un harness fixe.</p>
+
+<p>Le mode programmatique brouille tout. Sur cinq des dix configurations, la recherche vectorielle reprend l'avantage. Le cas le plus spectaculaire : Codex avec GPT-5.4 plonge de 93,1 % (grep inline) à 55,2 % (grep programmatique). Quasi-quarante points évaporés, sans qu'on touche au moteur de recherche. L'agent n'arrive plus à boucler correctement le cycle "lire le fichier → intégrer les résultats → relancer si besoin".</p>
+
+<p>La deuxième expérience teste la robustesse au bruit. Les chercheurs font varier le nombre de sessions exposées à l'agent : 5, 10, 20, 30, puis le corpus complet (jusqu'à 66 sessions par question). Plus de sessions, plus de distracteurs.</p>
+
+<p>Intuition classique : la recherche lexicale tient sur les petits corpus mais s'effondre quand le volume monte ; la recherche vectorielle prend le relais à grande échelle. Les chiffres racontent autre chose. Sous Claude Code, <code>grep</code> reste devant à toutes les tailles pour Opus et Haiku. Sous Gemini CLI, la recherche vectorielle reste devant à toutes les tailles pour Gemini Pro. Sous Chronos, l'ordre change selon le modèle et le niveau de bruit — Claude Opus passe en avantage vectoriel à 5-20 sessions, puis grep reprend la main à 30 sessions, puis vectoriel ressort à 84,5 % contre 89,7 % au corpus complet.</p>
+
+<p>Bref : les deux méthodes ne dégradent pas en parallèle quand le bruit augmente. Elles dégradent différemment selon le harness et le backbone. Aucune loi monotone n'émerge.</p>
+
+<h2>Implications : repenser l'architecture des systèmes RAG</h2>
+
+<p>Pour un ingénieur qui construit aujourd'hui un système agentique en production, trois enseignements sortent de cette étude.</p>
+
+<p>Le premier : <strong>arrêter de considérer la recherche vectorielle comme le choix par défaut</strong>. Sur des tâches où les réponses sont fondées sur des spans littéraux — dates, noms, préférences explicites, citations — <code>grep</code> peut surpasser nettement les embeddings, à coût négligeable. Pas d'index à maintenir, pas de modèle d'embedding à hoster, pas de re-indexation à chaque mise à jour. Une simple recherche textuelle dans des fichiers, et l'agent gère le reste.</p>
+
+<p>La nuance : LongMemEval est un benchmark de mémoire conversationnelle. Les questions portent sur des faits vérifiables littéralement dans le corpus. Sur de la synthèse scientifique paraphrasée, de la sémantique de code, ou de la documentation visuelle, le verdict serait probablement différent. Les auteurs sont clairs sur ce point — ils ne prétendent pas que <code>grep</code> bat les vecteurs en général, seulement qu'il gagne dans la distribution de tâches étudiée.</p>
+
+<p>Le deuxième enseignement : <strong>le harness n'est pas une couche neutre</strong>. Migrer un agent de Claude Code vers Codex CLI, ou d'un framework maison vers un CLI officiel, n'est pas une opération iso-performance. Les prompts système par défaut, la manière dont stdout est tronqué dans la transcription, les outils additionnels exposés implicitement, la gestion d'erreur — tout cela injecte des biais inductifs stables. Un benchmark de retrieval qui ignore le harness sous-évalue massivement la variance réelle de production.</p>
+
+<p>Le troisième : <strong>la livraison file-based promet plus qu'elle ne tient</strong>. L'argument classique est imparable : écrire les résultats dans un fichier économise des tokens de contexte, l'agent peut filtrer progressivement, on évite le <em>context rot</em>. En pratique, ce gain de bande passante se paie en compétence compositionnelle de l'agent. Si le modèle peine à boucler "lire le fichier → comprendre le format → relancer une sous-recherche → produire une réponse", les économies de contexte ne servent à rien. Le coût caché, ce n'est pas la recherche, c'est l'orchestration multi-étapes qui en découle.</p>
+
+<p>Pour les équipes qui déploient des agents en production, ces trois points convergent vers une recommandation pragmatique : tester en bout-en-bout, sur sa propre distribution de tâches, avec le harness cible. Les benchmarks de retrieval isolés (BM25 vs ANN, MRR, recall@k) restent utiles pour calibrer un composant, mais ils n'arrivent pas à prédire la performance d'un système agentique complet.</p>
+
+<h2>Pour aller plus loin : ce que l'étude ne dit pas encore</h2>
+
+<p>L'étude a des trous assumés. Certaines cellules du tableau de mise à l'échelle ne sont pas remplies — la ligne Codex vectoriel intermédiaire est incomplète. Surtout, l'évaluation reste cantonnée à une famille de tâches (mémoire conversationnelle longue). Étendre à d'autres domaines — synthèse de littérature scientifique, navigation de codebase, exploration de documents juridiques — donnerait probablement des classements différents et plus contrastés.</p>
+
+<p>Une question intrigante reste ouverte : pourquoi certains couples harness-vendor montrent-ils des biais aussi stables ? Pourquoi Gemini CLI favorise-t-il systématiquement la recherche vectorielle, alors que Claude Code favorise <code>grep</code> ? Les auteurs émettent l'hypothèse que les prompts par défaut, la culture de chaque éditeur, et la manière dont les outils shell sont présentés au modèle créent des "réflexes" stables. Mais sans accès aux transcripts complets et aux instructions internes des CLI, le diagnostic reste spéculatif.</p>
+
+<p>Une autre piste : les <strong>politiques hybrides</strong>. Plutôt que choisir grep ou vectoriel, donner à l'agent les deux outils et le laisser arbitrer dynamiquement. La fusion par rang réciproque (RRF) ou les modèles d'interaction tardive comme ColBERT existent depuis des années dans la communauté IR, mais leur intégration dans des boucles agentiques reste peu étudiée. Un agent qui commence par un <code>grep</code> précis et bascule sur le vectoriel quand la recherche lexicale échoue serait probablement plus robuste que n'importe quelle stratégie monolithique.</p>
+
+<p>Enfin, le résultat le plus inconfortable de l'étude concerne la régression dramatique de Codex+GPT-5.4 en mode programmatique — de 93 % à 55 %. Cette chute suggère que les modèles actuels, même les plus capables, ont encore du mal avec des workflows d'outils qui empilent plus de deux ou trois étapes. Si la promesse des agents repose sur leur capacité à enchaîner sans erreur des dizaines d'appels d'outils, ce genre de résultat invite à la modestie. Avant d'optimiser le retrieval, peut-être faut-il d'abord apprendre aux modèles à clôturer fiablement leurs boucles d'action.</p>
+
+<p>Le titre de l'article — <em>Is Grep All You Need?</em> — joue évidemment avec celui du papier fondateur des Transformers. La réponse est : non, <code>grep</code> ne suffit pas. Mais il rappelle, sans condescendance, que les outils les plus simples méritent une chance avant d'empiler les couches d'embeddings, d'index vectoriels et de rerankers. Parfois, lire le texte suffit.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

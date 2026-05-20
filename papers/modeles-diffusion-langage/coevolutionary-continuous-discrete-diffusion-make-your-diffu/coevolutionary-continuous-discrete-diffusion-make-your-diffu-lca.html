@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coevolutionary Continuous Discrete Diffusion: Make Your Diffusion Language Model a Latent Reasoner — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Coevolutionary Continuous Discrete Diffusion: Make Your Diffusion Language Model a Latent Reasoner</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le papier attaque une contradiction empirique frappante dans les modèles de langage par diffusion : les modèles continus (CDM) sont théoriquement plus expressifs que les modèles discrets masqués (DDM), mais sous-performent en pratique. Les auteurs reformulent ce paradoxe comme un dilemme expressivité-trainabilité et proposent CCDD, un processus de diffusion conjoint sur l'espace produit X × Z (tokens discrets × représentations continues contextualisées).</p>
+<p>Le cadrage théorique est ambitieux : il s'agit de montrer une hiérarchie stricte CDM ≽ DDM et CDM ≽ Looped Transformer (LT) en termes de classes de trajectoires, puis d'expliquer pourquoi cette domination théorique ne se matérialise pas empiriquement. La position dans la classe TC1 (vs TC0 pour les transformers à CoT logarithmique) sert d'ancrage en théorie de la complexité circuitale.</p>
+
+<h2>Méthodologie</h2>
+<p>Trois piliers méthodologiques. <strong>(1) Analyse théorique :</strong> théorèmes d'inclusion stricte des familles de trajectoires (Lemmes B.6, B.7 sur le caractère atomique des marginales discrètes vs absolument continues des CDM), Proposition 3.4 montrant qu'un sampler PF-ODE Euler peut reproduire exactement un looped rollout, et un résultat de suffisance asymptotique des kernels factorisés (Théorème B.19 via Lie-Trotter).</p>
+<p><strong>(2) Conception architecturale :</strong> trois variantes — MDiT (fusion avant le premier bloc, paramètres et FLOPs équivalents au baseline discret), MMDiT (cross-attention multimodale, paramètres doublés), MoEDiT (attention partagée sur 2L tokens, FFN MoE séparant les modalités). L'espace continu est tiré de Qwen3-Embedding-0.6B (dimension 32, normalisé).</p>
+<p><strong>(3) Pretraining :</strong> LM1B (33B tokens, séquences de 128) et OpenWebText (131B tokens, séquences de 512), 1M steps, batch 512, 8 H100/A100. Évaluations sur perplexité de validation (borne ELBO), NLL générative via GPT2-Large, et trois tâches de raisonnement (Sudoku, 3-SAT, Countdown) avec des modèles 6M entraînés from scratch.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur LM1B avec tokenizer Qwen-2, CCDD-MDiT réduit la perplexité de validation de 39,17 (MDLM réimplémenté) à 29,22 à paramètres et FLOPs équivalents. L'accélération en convergence est notable : 40k itérations pour atteindre la performance que MDLM atteint en 1M (25× plus rapide). MoEDiT et MMDiT poussent jusqu'à 25,76 PPL.</p>
+<p>Sur OWT, le gain est de l'ordre de 35% de perplexité. La performance en few-step est l'un des résultats les plus saillants : CCDD à 8 steps bat MDLM à 256 steps — gain d'un facteur 16 en efficacité d'échantillonnage attribué à la modélisation conjointe de la distribution sur les tokens.</p>
+<p>Sur le raisonnement, CCDD à profondeur 2 atteint 100% sur Sudoku, 91,9% sur 3-SAT et 67,8% sur Countdown, dominant les LLM AR pré-entraînés (LLaMA 13B à 33,8/51,1) et les LT à profondeur 2. À profondeur 3, le gain sur Countdown monte à 73,7% contre 68,2% pour LT.</p>
+
+<h2>Discussion et limites</h2>
+<p>Plusieurs faiblesses méritent d'être signalées sans euphémisme. <strong>Échelle modeste :</strong> les modèles font 92M à 216M paramètres. Les conclusions sur la supériorité de CCDD sur les LLM ne tiennent qu'à cette échelle ; la comparaison Table 4 avec Llama110M réentraîné montre que ce dernier (16,11 PPL) reste meilleur que CCDD-MoEDiT (24,56 PPL) sur OWT. Le papier mélange ainsi des comparaisons à paramètres équivalents et des comparaisons à tokenizer équivalent qui ne sont pas directement transitives.</p>
+<p><strong>Perplexités ELBO :</strong> toutes les valeurs sont des bornes supérieures, dont la tightness varie selon les paramétrisations. Les comparaisons CCDD vs baselines sont effectuées en réimplémentant les baselines avec le tokenizer Qwen-2, ce qui est honnête, mais l'écart 39,17 → 29,22 attribué à CCDD recouvre aussi un effet de la guidance par représentations Qwen3-Embedding pré-entraînées — la contribution architecturale propre vs l'apport du modèle d'embedding externe n'est pas isolée proprement.</p>
+<p><strong>Coût d'entraînement asymétrique :</strong> MMDiT et MoEDiT doublent les paramètres et multiplient les FLOPs par 2 à 4 pour les gains les plus marquants. Le récit "MDiT à paramètres égaux" reste valable mais les configurations qui produisent les meilleurs nombres ne sont pas à coût constant.</p>
+<p><strong>Justification théorique vs gain empirique :</strong> les théorèmes 3.2 et B.14 établissent des inclusions strictes au niveau des distributions de trajectoires, mais ne quantifient pas l'écart en pratique. L'argument "CDM domine DDM" justifie l'existence d'un gain, pas son ampleur. La Section 3.2 reconnaît honnêtement les limitations de trainability des CDM seuls.</p>
+
+<h2>Reproductibilité</h2>
+<p>Code public sur github.com/zhouc20/CCDD. Datasets publics (LM1B, OpenWebText). Tokenizers et modèles d'embedding (Qwen3-Embedding-0.6B, RoBERTa-base) accessibles. Hyperparamètres documentés en Appendix D (LR, warmup, weight decay, gradient clipping, schedules). Les configurations matérielles sont précisées (135-255h sur 8 H100 selon l'architecture), ce qui place une barrière d'entrée modérée mais pas prohibitive pour la réplication. Les preuves mathématiques sont détaillées en Appendix B.</p>
+
+<h2>Impact et applications</h2>
+<p>Trois axes d'impact. <strong>Théorique :</strong> la mise en relation explicite entre CDM, DDM et LT clarifie un paysage où ces familles étaient comparées de façon ad hoc. La Proposition 3.4 (simulation des LT par PF-ODE) fournit un pont conceptuel utile et l'argument que la diffusion continue résout le problème d'OOD des LT par supervision intermédiaire est convaincant.</p>
+<p><strong>Méthodologique :</strong> CCDD est un patron architectural transférable à d'autres modalités où l'on dispose d'un encodeur sémantique fort (la connexion avec les diffusion models images via DiT/MM-DiT est explicite). Les architectures MoEDiT pour le débruitage joint multimodal pourraient se généraliser.</p>
+<p><strong>Applicatif :</strong> les gains sur Sudoku/3-SAT/Countdown suggèrent que le "latent reasoning" via diffusion continue pourrait débloquer des classes de problèmes structurés où les LLM AR plafonnent. À surveiller : la mise à l'échelle au-delà de 216M paramètres.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier se situe au confluent de trois lignées. La diffusion discrète masquée (D3PM, SEDD, MDLM, GIDD, SimpleDM de Sahoo et al. 2024) fournit les baselines directs. La diffusion continue pour le texte (Diffusion-LM, Plaid, SSD-LM, Diffuseq) constitue le précédent théorique. La théorie des looped transformers (Giannou et al. 2023, Saunshi et al. 2025, Merrill & Sabharwal 2025, Fan et al. 2024) fournit le cadre de complexité circuitale TC0/TC1.</p>
+<p>Des travaux concomitants explorent aussi la diffusion multimodale jointe (Rojas et al. 2025 "Diffuse Everything", Campbell et al. 2024 sur les protéines, Diffuseq-v2). CCDD se démarque par l'argument explicite que la diffusion continue est une généralisation du LT et par l'application aux tâches de raisonnement plutôt qu'à la génération multimodale. La connexion avec le "continuous chain-of-thought" (COCONUT de Hao et al. 2024) est traitée mais reste à explorer empiriquement à plus grande échelle.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Paradoxe expressivité-trainabilité clairement formulé, originalité de la formalisation du dilemme.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Multi-datasets, multi-architectures, ablations sur les couches d'embedding, tâches de raisonnement variées. Comparaison à tokenizer équivalent.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>33B-131B tokens corrects, mais modèles plafonnés à 216M paramètres. Pas d'expérience à l'échelle LLM moderne.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Perplexité ELBO (bornes supérieures), NLL générative via GPT2-Large, accuracy sur tâches structurées. Standard mais tightness des bornes variable.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Réimplémentation des baselines au même tokenizer = bon point. Mais l'effet de Qwen3-Embedding pré-entraîné vs la contribution architecturale propre n'est pas isolé.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, datasets ouverts, hyperparamètres documentés, preuves complètes en annexe. Coût compute non négligeable.</td></tr>
+<tr><td>Transparence des limitations</td><td>3</td><td>Reconnaît les difficultés de trainability des CDM seuls. Moins explicite sur les limites de scaling et les coûts asymétriques entre variantes.</td></tr>
+<tr><td>Impact / nouveauté</td><td>4</td><td>Cadre théorique unificateur CDM/DDM/LT, gains empiriques substantiels en few-step et raisonnement structuré. Mise à l'échelle restant à démontrer.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Note globale : 4,0/5.</strong> Papier théoriquement rigoureux, empiriquement convaincant à son échelle, mais dont les conclusions sur la supériorité face aux LLM AR doivent être lues avec prudence — l'expérience décisive serait CCDD à plusieurs milliards de paramètres pré-entraînés sur trillion+ tokens, qui n'est pas conduite ici.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

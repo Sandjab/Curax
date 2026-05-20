@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Theory of Generalization in Deep Learning — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>A Theory of Generalization in Deep Learning</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Un réseau surparamétré peut mémoriser des étiquettes arbitraires, y compris du bruit pur (Zhang et al., 2017), pourtant la même procédure d'entraînement généralise sur données réelles. Les bornes classiques de capacité sont vacueuses à l'échelle pratique, et la théorie du noyau gelé (Jacot et al., 2018) ne décrit que le régime paresseux, alors que les architectures modernes s'entraînent en régime de feature learning complet où le noyau dérive de O(1) en norme opérateur. Litman et Guo proposent une théorie non-asymptotique de la généralisation qui couvre ce régime et débouche sur un objectif de risque population calculable à partir d'un seul run, sans données de validation.</p>
+
+<p>Le cadre repose sur une partition spectrale du noyau tangent neuronal empirique (eNTK) : le Gramien de dissipation cumulée W<sub>S</sub> sépare l'espace de sortie en un <strong>canal de signal</strong> (range(W<sub>S</sub>), où l'entraînement a dissipé la perte) et un <strong>réservoir</strong> (ker(W<sub>S</sub>), directions à valeurs propres quasi-nulles où l'erreur résiduelle est piégée mais invisible au test).</p>
+
+<h2>Méthodologie</h2>
+<p>Le travail combine deux registres. Côté théorique, les auteurs travaillent en espace de sortie le long de la trajectoire réalisée. Trois ingrédients structurent l'analyse : l'opérateur de dissipation cumulée W<sub>S</sub>(s,T), l'opérateur de transfert test G<sub>Q</sub>(T,s) et leur propagateur de gradient P<sub>g</sub>. La Proposition 3.2 établit l'invisibilité du réservoir (ker W<sub>S</sub> ⊆ ker G<sub>Q</sub>), conséquence algébrique du partage du facteur J<sub>S</sub><sup>⊤</sup> entre les noyaux train-train et test-train.</p>
+
+<p>Le Théorème 4.1 traite la séparation drift-diffusion : sous SGD minibatch, le drift accumule en Θ(T) sur les directions de signal alors que la fluctuation centrée diffuse en O(√(ηT/b)). Le Théorème 5.1 prouve que sous perte quadratique, le déplacement test est déterminé exactement par le déplacement train sur la fenêtre réalisée, même sous dérive O(1) du noyau. Pour les pertes non quadratiques, le reste irréductible R<sub>⊥</sub> est borné en h<sub>S</sub><sup>m−d<sub>M</sub>/2</sup> sur des variétés compactes de dimension d<sub>M</sub> avec réseaux C<sup>m</sup> (Théorème E.9).</p>
+
+<p>L'exchangeabilité (Lemme 6.1) convertit ces opérateurs en taux de risque population non biaisé : chaque point d'entraînement sert de test à un point contre le reste du batch. Localisé à une fenêtre d'un pas, ce taux se ramène à tr(MA<sub>B</sub>) avec A<sub>B</sub> = ḡ<sub>B</sub>ḡ<sub>B</sub><sup>⊤</sup> − Σ<sub>B</sub>/(b−1), et le masque binaire optimal met à jour le paramètre k seulement si μ<sub>k</sub><sup>2</sup> > σ<sub>k</sub><sup>2</sup>/(b−1).</p>
+
+<p>Côté empirique, trois bancs sont mobilisés : un PINN résolvant u<sub>t</sub> + βu<sub>x</sub> = 0 à β=5 avec condition initiale bruitée gaussienne, le grokking sur division modulaire a·b<sup>−1</sup> mod 97 à 25% de fraction d'entraînement, et un fine-tuning DPO de Qwen2.5-0.5B-Instruct avec 30% de préférences UltraFeedback inversées. L'implémentation est une modification d'une ligne d'Adam ajoutant un vecteur d'état EMA s<sub>t</sub> traquant la variance des gradients par paramètre.</p>
+
+<h2>Résultats principaux</h2>
+<p>La décomposition à quatre cellules (Figure 1) localise les phénomènes classiques : le grokking devient migration du signal du réservoir vers le canal de signal à mesure que le noyau évolue, la double descente correspond au déplacement de bruit entre canaux selon la capacité, le biais implicite est l'ordonnancement spectral remplissant le canal de signal des plus grandes valeurs propres aux plus petites, et le benign overfitting est du bruit confiné au réservoir à l'interpolation.</p>
+
+<p>Les résultats empiriques sont calibrés. Sur le PINN à condition initiale bruitée, l'algorithme atteint une erreur ℓ<sub>2</sub> relative ≤ 0,40 en 2,4× moins d'itérations que la meilleure variante AdamW. Sur le grokking modulaire, l'algorithme atteint 95% de précision held-out à l'étape 5 950 contre 29 450 pour AdamW, soit un facteur 4,9×. Sur DPO bruité, l'accuracy de récompense finale passe de 0,566 à 0,641 tout en restant 3,05× plus proche de la politique de référence en drift absolu moyen.</p>
+
+<p>Le panneau C de la Figure 2 mesure une dérive opérateur du noyau atteignant 4,8× la norme initiale, bien au-delà du régime paresseux où ce ratio reste o(1) — pourtant le prédicteur A<sup>°</sup> du Théorème 5.1 reste exact (corrélation 0,991 entre déplacement test prédit et observé).</p>
+
+<h2>Discussion et limites</h2>
+<p>L'identité G = A<sup>°</sup>D, exacte sous perte quadratique, demande une condition de smoothness Sobolev pour s'étendre aux autres pertes. Le Théorème E.7 démontre que sans smoothness, deux réseaux peuvent partager une trajectoire d'entraînement identique mais diverger sur un point test — la borne n'est donc pas un artifact de preuve. La borne dépend de h<sub>S</sub><sup>m−d<sub>M</sub>/2</sup> avec h<sub>S</sub> fill-distance des données : en haute dimension intrinsèque d<sub>M</sub>, le résultat n'est utile que pour des réseaux beaucoup plus lisses que la dimension ne l'exige, ce que les auteurs reconnaissent explicitement (Remark E.11).</p>
+
+<p>Le résultat one-step LOO du Théorème F.1 suppose le minibatch indépendant de l'historique de l'optimiseur, hypothèse violée en multi-epoch. Les auteurs bornent le résidu par la variation totale mais cette correction n'est pas mesurée empiriquement. La stabilité replace-two utilisée pour le Théorème 4.1 sur les canaux de bruit (ε<sub>k,n</sub> = O(1/n)) est une hypothèse non triviale qui n'est pas vérifiée empiriquement.</p>
+
+<p>L'évaluation expérimentale est ciblée mais peu représentative. Qwen2.5-0.5B-Instruct est un modèle de très petite taille pour le DPO ; aucun test sur 7B+ n'est rapporté. Trois seeds pour DPO, pas de comparaison avec d'autres préconditionneurs SNR existants (par exemple Adafactor, RMSprop avec normalisation), pas de mesure de coût de calcul réel au-delà de l'argument "un vecteur d'état supplémentaire". L'absence de banc à grande échelle (ImageNet, LLM pré-entraînement) laisse ouverte la question de la portée pratique du gate.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le manuscrit fournit pseudocode complet (Algorithm 1) et formules pour les trois variantes du gate (hard, soft, SNR). Les hyperparamètres sont listés en Table 3 et Table 4. En revanche, aucun lien de dépôt code n'est mentionné dans le texte fourni, et les configurations expérimentales (architecture PINN, transformer à 2 couches, paramètres DPO complets) ne sont accessibles que via les appendices référencés. La reproductibilité dépend de la publication du code, non confirmée dans le préprint.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport conceptuel le plus marquant est l'unification : un même filtre spectral (la limite à noyau gelé du Théorème H.1) reproduit benign overfitting, double descente, biais implicite, grokking et régression ridge selon le choix d'un préconditionneur. Cette consolidation rivalise avec les programmes de recherche de Belkin et al. (2019) ou Bartlett et al. (2020) qui traitaient chaque phénomène séparément.</p>
+
+<p>Côté algorithmique, le gate population-safe se présente comme un Adam augmenté d'une seule décision par paramètre. Son coût marginal négligeable et ses gains démontrés sur le grokking en font un candidat pour les régimes où l'entraînement empirique mémorise avant de généraliser. Les applications PINN et DPO ouvrent deux niches concrètes : régularisation contre la mémorisation de bruit en physique informée, et alignement robuste aux préférences corrompues.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail se place explicitement en réponse à trois courants. Face aux bornes worst-case (VC, Rademacher, PAC-Bayes), les auteurs offrent une localisation path-dependent en espace de sortie. Face à la théorie NTK gelée (Jacot et al., 2018 ; Du et al., 2019 ; Lee et al., 2019), ils étendent l'analyse au feature learning complet, le régime gelé devenant un cas particulier. Face aux fonctions d'influence classiques (Cook & Weisberg, 1982 ; Koh & Liang, 2017), l'opérateur G<sub>Qi,S</sub>(T) intègre le long de la trajectoire réalisée plutôt que linéariser autour de l'optimum, restant exact sous dérive O(1) du noyau.</p>
+
+<p>La contribution s'inscrit dans le programme plus large d'une théorie scientifique unificatrice du deep learning au-delà de l'empirisme. L'article ne supplante pas les approches existantes mais leur fournit un cadre commun, dont la portée empirique reste à valider sur des échelles industrielles.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Problème central de la théorie du deep learning, posé avec précision.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Trois bancs ciblés bien choisis (PINN, grokking, DPO bruité) mais étroits.</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>Qwen 0,5B, 3 seeds pour DPO, pas de banc à grande échelle.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Métriques pertinentes (steps-to-target, reward drift, ℓ<sub>2</sub> error).</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Architecture et hyperparamètres fixés, mais peu de baselines au-delà d'AdamW.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Pseudocode et hyperparamètres fournis ; dépôt code non mentionné dans le texte.</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Hypothèses listées en Table 1, Remark E.11 reconnaît la limite dimensionnelle.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Unification théorique de quatre phénomènes majeurs et algorithme dérivé.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

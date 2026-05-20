@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Long Context Pre-Training with Lighthouse Attention — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Long Context Pre-Training with Lighthouse Attention</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand l'attention devient le goulot d'étranglement</h2>
+
+<p>Entraîner un modèle de langage sur un million de tokens de contexte consomme aujourd'hui plus de ressources que la quasi-totalité du reste du calcul. La raison tient en un mot : <strong>attention quadratique</strong>. Doubler la longueur d'une séquence multiplie par quatre le temps et la mémoire nécessaires au mécanisme d'attention. Pour les contextes de 128 000, 1 million ou plus de tokens que réclament les agents multi-étapes, la lecture de documents longs ou les entrées multimodales, ce mur devient infranchissable avec les techniques classiques.</p>
+
+<p>Trois chercheurs de Nous Research, Bowen Peng, Subho Ghosh et Jeffrey Quesnelle, proposent une réponse originale baptisée <em>Lighthouse Attention</em>. Leur idée tient en une intuition contre-intuitive : compresser la séquence pendant l'entraînement, puis redonner au modèle son attention complète vers la fin. Et le tout sans ajouter un seul paramètre apprenable.</p>
+
+<p>Le résultat se mesure en chiffres : <strong>1,4 à 1,7 fois plus rapide</strong> que l'attention dense classique sur des contextes de 100 000 tokens, et une perte d'entraînement finale équivalente, parfois meilleure. Sur des séquences de 512 000 tokens, le gain atteint un facteur 21 sur le passage avant.</p>
+
+<h2>Le problème : la malédiction quadratique de l'attention</h2>
+
+<p>Pour comprendre l'enjeu, revenons sur ce que fait l'attention dans un transformeur. Chaque token de la séquence doit comparer sa requête (Q) avec les clés (K) de tous les autres tokens, puis pondérer leurs valeurs (V). Si la séquence contient N tokens, il faut N×N comparaisons. Pour 100 000 tokens, c'est 10 milliards de comparaisons par couche, par tête, à chaque passage.</p>
+
+<p>FlashAttention, devenu un standard, optimise les constantes d'accès mémoire mais ne change pas cette nature quadratique. Au-delà de quelques centaines de milliers de tokens, même un GPU H100 ou B200 sature.</p>
+
+<p>Plusieurs familles de solutions existent déjà. Les attentions <em>linéaires</em> et les modèles d'espace d'état comme Mamba remplacent le softmax par un état compressé de taille fixe, mais perdent en capacité de rappel à longue distance. Les méthodes <em>sparses</em> par blocs comme MoBA ou NSA sélectionnent des blocs contigus de tokens, tandis que des approches comme DeepSeek Sparse Attention (DSA) classent chaque token via un indexeur appris pour ne garder que les meilleurs.</p>
+
+<p>Ces méthodes partagent deux défauts pour le pré-entraînement long contexte. D'abord, l'<strong>asymétrie</strong> : les requêtes restent en pleine résolution pendant que les clés et valeurs sont compressées. Ensuite, l'<strong>enchevêtrement architectural</strong> : la sélection vit à l'intérieur du noyau d'attention, ce qui empêche de réutiliser les noyaux denses optimisés et oblige chaque méthode à livrer son propre code GPU.</p>
+
+<p>Il y a un problème supplémentaire propre à l'entraînement. Une méthode sparse appliquée seulement à l'inférence est, par construction, plafonnée par les capacités du modèle dense sous-jacent. Mais une méthode sparse utilisée pendant l'entraînement doit répondre à une question plus dure : une fois l'entraînement terminé, le modèle reste-t-il capable d'utiliser correctement l'attention dense complète ?</p>
+
+<h2>La méthode : un phare dans la séquence</h2>
+
+<p>L'approche de Lighthouse Attention repose sur quatre étapes qui entourent l'attention sans la modifier. L'image qui résume le mieux le mécanisme : imaginez une pyramide construite au-dessus de votre séquence, où chaque étage résume l'étage du dessous en regroupant des fenêtres de tokens.</p>
+
+<h3>Construire la pyramide</h3>
+
+<p>Première étape : la <strong>pyramide symétrique</strong>. À partir des projections Q, K et V d'origine, on construit plusieurs niveaux en moyennant des fenêtres de p tokens consécutifs. Avec un facteur p=4 et trois niveaux, le premier niveau garde la résolution complète, le second regroupe par 4, le troisième par 16. La clé de l'innovation réside dans le mot <em>symétrique</em> : on compresse simultanément Q, K et V. Là où les méthodes concurrentes ne compriment que les clés et valeurs, Lighthouse traite les trois ingrédients de la même manière.</p>
+
+<p>Cette symétrie a une conséquence directe : une requête compressée et une clé compressée vivent dans le même espace de représentation. Le modèle peut donc faire dialoguer des résumés avec d'autres résumés, ce qu'une approche asymétrique ne permet pas.</p>
+
+<h3>Scorer sans paramètres</h3>
+
+<p>Deuxième étape : <strong>noter et sélectionner</strong>. Comment décider quels résumés méritent d'être retenus ? Les chercheurs auraient pu apprendre un mini-réseau pour scorer les candidats, comme le font DSA ou NSA. Ils ont choisi plus simple : la norme L2 du vecteur de la requête et de la clé. Pas de paramètres, pas de fonction de perte auxiliaire, juste une longueur de vecteur.</p>
+
+<p>Ce choix paraît trop dépouillé. Les auteurs l'assument comme un plancher : si un scoreur aussi rudimentaire fonctionne, un scoreur plus sophistiqué fera nécessairement mieux. Leur ablation montre que la norme L2 est à 0,01 près du scoreur plus coûteux basé sur une attention diluée. Le mécanisme de sélection compte plus que la fonction qui le pilote.</p>
+
+<h3>Faire confiance à FlashAttention</h3>
+
+<p>Troisième étape : <strong>l'attention dense sur une sous-séquence</strong>. Une fois les meilleurs candidats identifiés à travers tous les niveaux de la pyramide, on les rassemble dans une sous-séquence contiguë, dans le bon ordre causal. Cette sous-séquence, de taille S très inférieure à N, est ensuite passée à un FlashAttention classique. Aucun noyau spécialisé, aucun code sparse à maintenir.</p>
+
+<p>C'est l'astuce architecturale centrale. La sélection vit <em>en dehors</em> du noyau d'attention. Le même code GPU s'exécute pendant l'entraînement et l'inférence. Et désactiver la sélection redonne exactement le baseline dense.</p>
+
+<h3>Redistribuer les résultats</h3>
+
+<p>Quatrième étape : <strong>scatter-back</strong>. Le résultat de l'attention sur la sous-séquence doit être réinjecté dans la séquence d'origine. Chaque sortie est distribuée vers les positions de base qu'elle représente, avec un décalage soigneusement choisi pour préserver la causalité — un résumé ne doit jamais voir le futur d'une position avant qu'elle existe.</p>
+
+<h3>Le geste final : revenir à l'attention complète</h3>
+
+<p>La recette d'entraînement se déroule en deux temps. Pendant 10 000 à 12 000 étapes, on entraîne avec Lighthouse Attention, ce qui économise beaucoup de calcul. Puis, pendant les 4 000 à 6 000 étapes restantes, on bascule sur de l'attention dense classique. Le modèle s'ajuste rapidement à l'attention complète qu'il devra utiliser à l'inférence.</p>
+
+<p>Crucial : aucun gradient ne passe par la sélection top-K, qui est discrète. Les gradients remontent uniquement à travers les valeurs gathered et atterrissent dans les matrices de projection W_Q, W_K, W_V. Conséquence inattendue : les projections n'apprennent pas à <em>bien scorer</em>, elles apprennent à <em>produire des valeurs utiles quand elles sont sélectionnées</em>. Ce déplacement subtil évite les pathologies classiques des sélecteurs apprenables.</p>
+
+<h2>Résultats : la récupération comme critère central</h2>
+
+<p>L'expérience principale est conçue autour d'une question dure : un modèle entraîné avec Lighthouse Attention peut-il vraiment se comporter comme un modèle dense après le basculement final ?</p>
+
+<p>Le banc d'essai utilise un transformeur de 530 millions de paramètres, style Llama-3, entraîné sur 50 milliards de tokens du corpus C4 avec un contexte de 98 304 tokens. La baseline dense atteint une perte finale de 0,7237. Les trois variantes Lighthouse (12k+4k, 11k+5k, 10k+6k étapes) atteignent respectivement 0,7102, 0,7001 et 0,6980. Toutes les variantes égalent ou battent la baseline dense, avec un avantage qui croît à mesure que la phase dense finale s'allonge.</p>
+
+<p>Au moment du basculement, la perte d'entraînement remonte brièvement (de 1,12 à 1,57) puis redescend en 1 000 à 1 500 étapes. Le modèle digère son changement de régime sans dommage durable.</p>
+
+<p>Côté vitesse, les chiffres parlent. Sur un seul GPU B200, à un contexte de 512 000 tokens, Lighthouse exécute le passage avant <strong>21 fois plus vite</strong> que SDPA via cuDNN, et le passage avant+arrière 17,3 fois plus vite. Autrement dit, le temps que prend Lighthouse pour traiter 512 000 tokens équivaut au temps que prend l'attention dense pour traiter seulement 113 000 tokens.</p>
+
+<p>En bout de chaîne, l'entraînement complet sur 50 milliards de tokens prend entre 22,5 et 27 heures avec Lighthouse, contre 37,9 heures avec l'attention dense. Le gain wall-clock se situe entre 1,40× et 1,69×.</p>
+
+<p>Les chercheurs ont également démontré la mise à l'échelle vers 1 million de tokens sur 32 GPU Blackwell répartis sur 4 nœuds. Le parallélisme de contexte fonctionne directement avec Lighthouse parce que la sous-séquence sélectionnée reste un tenseur contigu compatible avec l'attention en anneau standard.</p>
+
+<h2>Implications pratiques pour l'industrie</h2>
+
+<p>Le premier intérêt concret tient à la <strong>compatibilité kernel</strong>. Lighthouse ne livre pas un noyau d'attention sparse maison à maintenir au fil des évolutions matérielles. Le code utilise FlashAttention, qui est déjà optimisé sur tous les accélérateurs récents. Quand FlashAttention-4 sortira, Lighthouse en bénéficiera automatiquement. Cette propriété compte beaucoup pour les équipes d'ingénierie qui ne veulent pas réécrire leurs noyaux à chaque génération de GPU.</p>
+
+<p>Le deuxième point est économique. Réduire de 30 % le temps d'entraînement d'un modèle long-contexte représente, à l'échelle d'un laboratoire qui pré-entraîne plusieurs modèles par an, des millions de dollars d'économie sur le compute. Pour des startups qui veulent entraîner leur propre modèle long contexte sans budget d'hyperscaler, l'écart peut faire la différence entre un projet faisable et un projet impossible.</p>
+
+<p>Le troisième point est plus subtil. La plupart des méthodes sparses actuelles servent à <em>accélérer l'inférence</em>, pas l'entraînement. Lighthouse s'inscrit dans une catégorie différente : c'est une <strong>technique d'entraînement</strong> qui produit en sortie un modèle dense parfaitement standard, déployable sur n'importe quelle infrastructure d'inférence sans adaptation particulière. Cette propriété simplifie énormément l'intégration en production.</p>
+
+<p>Le quatrième intérêt concerne l'accès au long contexte. Aujourd'hui, peu d'acteurs au monde peuvent entraîner un modèle natif à 1 million de tokens. Lighthouse abaisse cette barrière. Combinée à du parallélisme de contexte standard, la technique rend accessible à un laboratoire de taille moyenne un régime jusqu'ici réservé aux géants.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent ouvertes. Les auteurs n'ont testé qu'un modèle de 530 millions de paramètres sur un budget de 50 milliards de tokens. Reste à voir si les conclusions tiennent à l'échelle de 70 milliards de paramètres ou de 10 000 milliards de tokens. Une observation contre-intuitive du papier mérite d'être suivie : la perte finale diminue quand on <em>réduit</em> le budget de sélection k, de 0,6951 à k=4096 à 0,6825 à k=1536. L'effet pourrait s'inverser à plus grande échelle ; les chercheurs eux-mêmes posent la question sans la trancher.</p>
+
+<p>Le test de retrieval Needle-in-a-Haystack apporte un signal nuancé. Trois des quatre configurations Lighthouse égalent ou dépassent la baseline (jusqu'à 0,76 contre 0,72), mais une configuration avec scoreur par norme et k petit chute à 0,65. Le choix du scoreur compte plus pour le retrieval que pour la perte d'entraînement.</p>
+
+<p>Les pistes futures évoquées par les auteurs ouvrent sur plusieurs fronts. Remplacer la résumption SDPA dense par une cible sparse asymétrique (DSA, NSA) produirait un modèle directement servable en mode efficace. Un budget k adaptatif par couche ou par tête pourrait surpasser le budget fixe utilisé ici. Et la pyramide multi-échelle se généralise naturellement à la vision, à l'audio et à la vidéo, où les hiérarchies temporelles ou spatiales sont déjà bien comprises.</p>
+
+<p>Une limitation honnête : la compression symétrique des requêtes suppose que toutes les requêtes coexistent dans un même passage avant, ce qui colle au pré-entraînement mais pas au décodage autoregressif. C'est précisément pour cela que la résumption dense finale est indispensable. Lighthouse ne remplace pas l'attention dense à l'inférence, il optimise la phase la plus coûteuse de la vie d'un modèle : son pré-entraînement.</p>
+
+<p>Le code complet est disponible publiquement sur GitHub. Pour les équipes qui pré-entraînent des transformeurs longs contextes, c'est l'une des contributions récentes les plus actionnables — la technique se branche sur l'infrastructure existante sans réécrire la stack d'attention.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

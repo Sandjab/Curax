@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coevolutionary Continuous Discrete Diffusion: Make Your Diffusion Language Model a Latent Reasoner — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Coevolutionary Continuous Discrete Diffusion: Make Your Diffusion Language Model a Latent Reasoner</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un modèle de 6 millions de paramètres bat LLaMA-13B</h2>
+
+<p>Un modèle de 6 millions de paramètres qui surpasse LLaMA-13B sur le Sudoku, avec seulement deux étapes de raisonnement. Voilà le résultat le plus surprenant d'un article récent signé par une équipe du MIT, de Microsoft Research et de plusieurs universités chinoises de premier plan. Les auteurs proposent une nouvelle famille de modèles de langage par diffusion qu'ils nomment CCDD — Coevolutionary Continuous Discrete Diffusion.</p>
+
+<p>Derrière ce nom austère se cache une idée simple : combiner deux manières radicalement différentes de générer du texte, là où les approches actuelles obligent à choisir l'une ou l'autre. Le résultat n'est pas qu'académique. Sur des benchmarks de raisonnement complexe comme le Sudoku, le 3-SAT ou le jeu Countdown, CCDD bat à la fois les modèles autorégressifs classiques, les modèles de diffusion discrète et les transformers à boucles — souvent avec dix à cent fois moins de paramètres.</p>
+
+<h2>Le problème : deux mondes incompatibles</h2>
+
+<p>Les grands modèles de langage que nous utilisons tous les jours fonctionnent en mode autorégressif. Ils génèrent un mot après l'autre, de gauche à droite, en s'appuyant sur tout ce qui a été produit avant. Cette approche a fait ses preuves, mais elle souffre d'une limite démontrée mathématiquement : même équipée d'un raisonnement étape par étape, l'architecture transformer ne peut pas résoudre certaines classes de problèmes. Reconnaître des langages formels, suivre la connectivité d'un graphe, planifier des coups dans un jeu complexe — autant de tâches où ces modèles trébuchent.</p>
+
+<p>Deux familles d'alternatives ont émergé pour dépasser ces limites.</p>
+
+<p>La première s'appelle <strong>looped transformer</strong>. L'idée : prendre un transformer standard et le faire tourner plusieurs fois sur lui-même, en boucle, avant de produire le résultat final. Chaque tour de boucle approfondit la réflexion sans toucher au texte généré. C'est ce qu'on appelle le raisonnement latent — penser dans un espace continu plutôt que dans des mots. Théoriquement très puissant, mais l'entraînement bute sur un problème : pendant l'apprentissage, on ne supervise que la sortie finale. Le modèle ne sait pas ce qu'il est censé faire aux étapes intermédiaires, ce qui le rend instable.</p>
+
+<p>La seconde famille, plus récente, regroupe les <strong>modèles de diffusion pour le langage</strong>. Importée du monde de la génération d'images, l'approche consiste à partir d'un texte complètement bruité — par exemple, une séquence de mots masqués — puis à débruiter progressivement jusqu'à obtenir un texte cohérent. Deux variantes coexistent. La version discrète manipule directement des tokens : à chaque étape, on remplace un mot masqué par un mot probable. La version continue manipule des vecteurs flottants dans un espace géométrique, et ne décode en tokens qu'à la toute fin.</p>
+
+<p>Voici le paradoxe que l'article met en lumière. <em>En théorie</em>, la diffusion continue est strictement plus expressive : elle peut représenter des distributions que la diffusion discrète ne peut pas. <em>En pratique</em>, c'est l'inverse — les modèles discrets dominent largement les benchmarks. Pourquoi cet écart ?</p>
+
+<p>Les auteurs identifient trois raisons. L'espace de décision est plus vaste dans le continu, donc plus difficile à parcourir. Les embeddings utilisés comme cible sont souvent de mauvaise qualité, soit trop atomiques, soit trop ambigus. Et surtout, décoder un vecteur continu vers un mot précis introduit une complexité combinatoire que la diffusion discrète évite par construction.</p>
+
+<h2>La méthode : faire coopérer le flou et le précis</h2>
+
+<p>L'astuce de CCDD tient en une phrase : pourquoi choisir, quand on peut faire les deux en parallèle ?</p>
+
+<p>Le modèle entretient simultanément deux représentations du texte en cours de génération. Une version discrète — des tokens, certains masqués, d'autres déjà décodés. Une version continue — des vecteurs sémantiques riches, eux aussi partiellement bruités. Les deux versions évoluent ensemble, étape après étape, et chacune nourrit l'autre.</p>
+
+<p>Une analogie utile : pensez à la rédaction d'un article. Vous avez d'un côté les phrases déjà écrites (le discret, précis mais figé) et de l'autre vos notes mentales, vos intuitions, vos idées encore floues (le continu, riche mais ambigu). Quand vous écrivez la phrase suivante, vous combinez les deux. Vos notes guident le choix des mots, et les mots déjà posés contraignent vos notes. CCDD reproduit ce va-et-vient à chaque étape du débruitage.</p>
+
+<p>Concrètement, le modèle apprend à prédire deux choses en parallèle pour chaque position : quel mot devrait apparaître à cet endroit, et quel vecteur sémantique devrait s'y trouver. La perte d'entraînement est une somme pondérée des deux objectifs : entropie croisée pour les tokens masqués, erreur quadratique pour les vecteurs.</p>
+
+<p>Le choix de l'espace continu mérite qu'on s'y arrête. Les auteurs n'inventent pas leur propre représentation — ils réutilisent les embeddings produits par Qwen3-Embedding, un modèle de représentation de texte récent et performant. Ces vecteurs ont deux qualités précieuses : ils sont contextualisés (le sens d'un mot dépend de la phrase entière) et ils proviennent d'un modèle déjà bien entraîné, ce qui injecte de la connaissance pré-acquise dans le système. C'est l'équivalent textuel de ce que font les modèles de diffusion d'images depuis Stable Diffusion : générer dans l'espace latent d'un autoencodeur plutôt que dans l'espace des pixels bruts.</p>
+
+<p>Côté architecture, les auteurs explorent trois variantes. MDiT, la plus économe, ajoute simplement quelques couches linéaires en entrée et en sortie d'un transformer standard pour gérer la modalité continue. MMDiT traite les deux modalités comme deux flux de tokens distincts avec des poids dédiés. MoEDiT introduit un mélange d'experts pour spécialiser le traitement selon que le token est plutôt en phase discrète ou continue. Les trois offrent des compromis différents entre nombre de paramètres et performance.</p>
+
+<p>Un détail technique intéressant : le modèle peut aussi fonctionner en mode <em>classifier-free guidance</em>, une technique empruntée à la génération d'images. Pendant l'entraînement, on cache parfois complètement la modalité continue. Pendant l'inférence, on combine les prédictions avec et sans cette modalité, avec un paramètre qui règle l'influence du raisonnement latent. Plus on augmente ce paramètre, plus le modèle s'appuie sur ses représentations continues — son intuition, si l'on veut filer la métaphore.</p>
+
+<h2>Des chiffres qui frappent</h2>
+
+<p>Sur le benchmark LM1B, CCDD avec une architecture MDiT (donc à nombre de paramètres équivalent à la baseline discrète MDLM) réduit la perplexité de validation de 25 %. En passant à MMDiT, la réduction grimpe à 34 %. Sur OpenWebText, dataset plus large et plus difficile, la version MoEDiT atteint une perplexité de 21,9 contre 33,8 pour la baseline — un gain de 35 %.</p>
+
+<p>Mais le chiffre qui retient l'attention est ailleurs. En génération à peu d'étapes, CCDD avec seulement 8 étapes de débruitage produit du texte de meilleure qualité que MDLM avec 256 étapes. Soit une accélération de 16× à qualité supérieure. Pour un modèle de production où chaque étape coûte une passe de calcul, ce n'est pas une optimisation marginale.</p>
+
+<p>L'entraînement bénéficie aussi de la combinaison. Pour atteindre la perplexité de référence sur LM1B, MDLM avait besoin d'un million d'itérations. CCDD y arrive en 40 000 — vingt-cinq fois moins.</p>
+
+<p>Le plus spectaculaire concerne les tâches de raisonnement. Sur le Sudoku, un GPT-2 de 303 millions de paramètres entraîné à fond plafonne à 19,4 % de précision. LLaMA-13B atteint 33,8 %. Un transformer à boucles de 6 millions de paramètres avec deux boucles atteint 100 %. CCDD avec deux étapes de débruitage : également 100 %, mais avec un coût d'entraînement bien moindre que le transformer à boucles, qui doit dérouler toutes ses boucles pendant l'apprentissage.</p>
+
+<p>Sur 3-SAT, problème classique de satisfaction de contraintes, CCDD passe à 91,9 % contre 91,3 % pour le looped transformer. Sur Countdown, jeu arithmétique : 73,7 % contre 68,2 %. À chaque fois, CCDD se positionne devant ou à égalité, avec un coût d'entraînement plus faible.</p>
+
+<h2>Pourquoi ça change la donne</h2>
+
+<p>Le résultat le plus important n'est pas dans les chiffres, mais dans ce qu'ils suggèrent sur la nature du raisonnement par modèles.</p>
+
+<p>Les modèles autorégressifs actuels misent tout sur la longueur du raisonnement explicite — le fameux <em>chain of thought</em>. Plus le modèle "écrit" d'étapes intermédiaires, plus il peut résoudre de problèmes complexes. Cette approche atteint ses limites : elle coûte cher en tokens, elle est lente, et certaines classes de problèmes restent hors de portée même avec un raisonnement très long.</p>
+
+<p>CCDD pointe vers une alternative crédible : le raisonnement latent. Penser dans un espace continu, riche en information, sans avoir besoin de tout verbaliser. Pour les applications industrielles, les conséquences sont concrètes. Génération de code, où la structure globale importe plus que la séquence linéaire des tokens. Résolution de problèmes contraints — planification, scheduling, configuration. Tâches nécessitant de la cohérence globale, comme l'écriture de documents structurés.</p>
+
+<p>La capacité de génération en peu d'étapes ouvre aussi des cas d'usage que les modèles autorégressifs servent mal aujourd'hui. Édition interactive de texte. Correction par lots. Génération conditionnée par des contraintes complexes. Tout ce qui demande de revenir sur ce qui a été produit, ce que l'autorégressif fait mal par construction.</p>
+
+<p>Pour les équipes qui déploient des modèles de langage, le ratio performance-coût change la conversation. Un modèle dix fois plus petit qui obtient de meilleurs résultats sur le raisonnement, c'est dix fois moins de GPU à provisionner. Si ces gains se confirment à l'échelle, l'économie du déploiement bouge sensiblement.</p>
+
+<h2>Ce qui reste à éclaircir</h2>
+
+<p>L'article reste prudent sur plusieurs points et identifie des zones d'ombre.</p>
+
+<p>Le passage à l'échelle est la question évidente. Les expériences plafonnent à des modèles de 216 millions de paramètres entraînés sur 131 milliards de tokens. C'est sérieux pour une publication académique, mais c'est trois ordres de grandeur en dessous des modèles de production actuels. Rien ne garantit que les avantages observés se maintiennent à l'échelle des modèles à plusieurs centaines de milliards de paramètres. Les courbes d'apprentissage publiées sont prometteuses mais ne suffisent pas à trancher.</p>
+
+<p>La dépendance à Qwen3-Embedding pose aussi question. CCDD hérite des forces et des faiblesses de ce modèle pré-entraîné. Que se passe-t-il pour les langues mal couvertes par Qwen3 ? Pour les domaines techniques spécialisés où ses embeddings sont moins pertinents ? L'article ne traite pas ces cas.</p>
+
+<p>L'alignement et la sécurité restent absents de l'analyse. Tout l'écosystème autour de RLHF, du fine-tuning d'instructions, des garde-fous de sécurité a été développé pour les modèles autorégressifs. Transposer ces techniques à un modèle de diffusion joint qui raisonne dans un espace latent demande un travail méthodologique entier.</p>
+
+<p>Enfin, il y a la question du raisonnement vraiment difficile. CCDD brille sur le Sudoku, le 3-SAT, Countdown — des problèmes structurés avec des règles claires. Comment se comporte-t-il sur les tâches de raisonnement ouvertes, type benchmarks de mathématiques niveau olympiade ou raisonnement scientifique multi-étapes ? Les premières expériences sur les benchmarks de bon sens (BoolQ, PIQA, ARC) suggèrent que la diffusion textuelle reste derrière l'autorégressif sur ces tâches.</p>
+
+<p>Une piste future intéressante, mentionnée en filigrane par les auteurs, concerne la généralisation au multimodal. La structure de CCDD — deux espaces couplés, l'un continu et riche, l'autre discret et précis — se transpose naturellement aux scénarios texte-image, texte-audio, ou même texte-protéine. Plusieurs travaux récents explorent déjà cette direction, et la formalisation théorique proposée dans l'article fournit un cadre cohérent pour les unifier.</p>
+
+<p>Le code est <a href="https://github.com/zhouc20/CCDD">disponible publiquement sur GitHub</a>, ce qui devrait accélérer la vérification indépendante des résultats et l'exploration de variantes. Pour qui suit de près l'évolution des architectures de modèles de langage, CCDD mérite l'attention non pas comme un produit fini, mais comme un signal : le compromis entre expressivité théorique et entraînabilité pratique, qu'on croyait coûteux, est peut-être moins inéluctable qu'il n'y paraissait.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

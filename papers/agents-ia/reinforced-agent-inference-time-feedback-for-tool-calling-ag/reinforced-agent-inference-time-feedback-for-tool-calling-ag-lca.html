@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reinforced Agent: Inference-Time Feedback for Tool-Calling Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Reinforced Agent: Inference-Time Feedback for Tool-Calling Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le papier attaque un problème concret des agents tool-calling déployés en production : les évaluations de trajectoires LLM sont structurellement <em>post-hoc</em>. Une erreur détectée dans un log n'est plus rattrapable, surtout quand l'action a déjà modifié l'état du système (suppression d'alarme, réservation de vol). Les auteurs proposent de déplacer l'évaluation à l'intérieur de la boucle d'exécution via un reviewer spécialisé qui inspecte les appels d'outils <strong>avant</strong> leur exécution.</p>
+<p>Le positionnement par rapport à Self-Refine et Reflexion est explicite : plutôt que de demander à l'agent de s'auto-critiquer, les auteurs externalisent la critique vers un second agent, ce qui découple la qualité de la révision de celle du modèle générateur. La question de recherche est claire et pertinente pour l'industrialisation des agents, même si l'idée d'un reviewer externe n'est pas conceptuellement nouvelle (LLM-as-a-judge, judge agents).</p>
+
+<h2>Méthodologie</h2>
+<p>Trois mécanismes sont testés : Progressive Feedback (rN, boucle itérative jusqu'à acceptation ou N=5 tours), Best-of-N Selection (sN, génération de N candidats puis choix) et Best-of-N Grading (gN, scoring numérique). L'agent de base est figé sur GPT-4o (gpt-4o-2024-11-20, temperature=0, seed=42). Les reviewers comparés sont GPT-4o, o3-mini, puis GPT-5 mini pour l'optimisation de prompt via GEPA.</p>
+<p>La contribution méthodologique la plus utile réside dans les métriques <strong>Helpfulness</strong> (% de cas où le base agent se trompe et le reviewer corrige) et <strong>Harmfulness</strong> (% de cas où le base agent a raison mais le reviewer dégrade). Ces métriques répondent à un trou réel dans la littérature multi-agents : la précision finale agrégée masque le fait qu'un reviewer peut casser autant de réponses qu'il en corrige.</p>
+<p>Plusieurs faiblesses méthodologiques limitent la portée. Aucun intervalle de confiance n'accompagne les pourcentages, à l'exception d'une moyenne sur 3 runs pour τ²-Bench. Le seed unique (seed=42) sur GPT-4o ne dit rien sur la variance inter-runs du reviewer, qui utilise reasoning_effort=medium sans contrôle de seed mentionné. Le choix de comparer un reasoning model (o3-mini) à un non-reasoning model (GPT-4o) confond deux variables : capacité de raisonnement et budget de compute test-time. Sans ablation à compute égal, l'affirmation « les reasoning models font de meilleurs reviewers » reste corrélationnelle.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur BFCL, la meilleure configuration (4o-r2-5-mini-v3-gepa) atteint 92,5% sur la suite de pertinence (vs 90,9% baseline) et 90,4% sur l'irrelevance (vs 84,9%). Le ratio bénéfice/risque culmine à 3,1:1 pour o3-mini contre 2,7:1 pour GPT-4o. L'optimisation automatique de prompt via GEPA produit un prompt 4,5× plus long (1599 tokens vs 358) et apporte +1,5%/+2,8% sur les deux suites BFCL.</p>
+<p>Sur τ²-Bench, le gain moyen atteint +7,1% (48,7% → 55,8%), mais l'analyse domaine par domaine révèle un résultat plus nuancé : le reviewer dégrade légèrement la performance sur Airline (42,0% → 40,7%) et Retail (62,9% → 62,6%), et tout le gain vient du domaine Telecom (+22,8 points). Cette concentration extrême du bénéfice sur un seul domaine est passée sous silence par les auteurs, qui rapportent uniquement la moyenne.</p>
+<p>L'analyse des modes de défaillance (Table 4) est l'apport le plus honnête du papier : le reviewer réduit les violations de policy (-13%) et le manque de contexte (-9%), mais introduit +17% d'erreurs « over-verbalization » et +3% de mauvaise sélection d'outil. Le bilan net n'est positif que parce que les violations de policy étaient initialement plus pénalisantes.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs reconnaissent eux-mêmes plusieurs limites importantes : un seul modèle de base évalué (GPT-4o), pas d'extension de GEPA et des métriques Helpfulness-Harmfulness à τ²-Bench, et le fait que les prompts génériques v1 surpassent parfois les prompts spécifiques au domaine v2-tau. Cette dernière observation suggère que l'ingénierie manuelle de prompts ne capture pas les invariants utiles.</p>
+<p>Plusieurs angles morts subsistent. La latence multipliée par 6,2× sur BFCL et 2,4× sur τ²-Bench n'est pas mise en regard du coût en tokens (un reviewer reasoning model coûte significativement plus en facturation API). L'argument du « state recovery problem » est rhétoriquement fort mais empiriquement faible : aucun cas concret d'erreur destructive évitée n'est documenté, l'exemple weather de la Figure 1 est cosmétique. Enfin, le baseline naïf (laisser GPT-4o se relire lui-même en self-refine) n'est pas reporté, ce qui empêche d'isoler la valeur ajoutée de la séparation des concerns par rapport à une simple seconde passe.</p>
+<p>Le ratio 3:1 vs 2,1:1 entre o3-mini et GPT-4o est présenté comme une preuve de la supériorité des reasoning models, mais l'écart absolu (36,8% vs 30,2% helpfulness, 11,7% vs 14,2% harmfulness) tient dans une plage qui n'est pas testée pour la significativité statistique.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les benchmarks (BFCL, τ²-Bench) sont publics et bien identifiés. Le snapshot exact de GPT-4o est mentionné (gpt-4o-2024-11-20), avec temperature=0 et seed=42. Les prompts v1, v2-bfcl et v2-tau sont reproduits en annexe. Cependant, le prompt v3-gepa de 1599 tokens n'est donné que partiellement (« Full prompt available in supplementary materials » sans lien). Aucun dépôt de code n'est annoncé. Le pipeline GEPA appliqué nécessite ses propres hyperparamètres (nombre d'itérations, taille des batches de réflexion) non précisés. La reproductibilité reste partielle, typique d'un travail industriel non accompagné de release open-source.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport pratique principal est l'architecture modulaire : le reviewer peut être amélioré indépendamment via model swap ou APO, sans toucher à l'agent de base. C'est pertinent pour des équipes en production qui ne peuvent pas réentraîner leur agent principal mais peuvent itérer rapidement sur un reviewer. Les métriques Helpfulness-Harmfulness sont réutilisables et combleront un trou méthodologique dans les évaluations de systèmes multi-agents.</p>
+<p>La portée concrète reste limitée par la latence. Multiplier par 6 le temps de réponse sur un appel d'outil unique exclut la plupart des cas d'usage temps réel. La piste de distillation du reviewer dans un classifier léger, mentionnée en conclusion, est la suite logique mais reste à démontrer.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier s'inscrit dans la lignée Self-Refine (Madaan 2023) et Reflexion (Shinn 2023), avec comme différence l'externalisation du reviewer. Cette séparation rejoint les travaux sur LLM-as-a-judge et les architectures critic-actor, sans toutefois les citer explicitement. L'usage de GEPA (Agrawal 2025) pour l'optimisation de prompt reviewer est une application directe, pas une contribution algorithmique. Le travail est mieux compris comme une <strong>étude d'ingénierie système</strong> sur l'intégration pratique de feedback inference-time, que comme une innovation conceptuelle. Sa valeur tient dans l'instrumentation rigoureuse (métriques Helpfulness-Harmfulness, comparaison de trois mécanismes, analyse latence) plutôt que dans l'idée centrale.</p>
+
+<h2>Tableau récapitulatif — Robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème concret et bien posé du state recovery, pertinent pour la production.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Comparaison de mécanismes correcte mais confond reasoning et compute, pas de baseline self-refine.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>BFCL et τ²-Bench complets, mais une seule moyenne sur 3 runs, pas d'intervalles de confiance.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Helpfulness-Harmfulness est une contribution utile, réutilisable au-delà du papier.</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Seed=42 unique côté base, pas de contrôle de variance reviewer, agent base figé sur GPT-4o.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Benchmarks publics, snapshot modèle précis, mais prompt v3-gepa incomplet et pas de code.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Section Limitations honnête, modes de défaillance documentés en Table 4.</td></tr>
+<tr><td>Impact / nouveauté</td><td>3</td><td>Ingénierie solide, mais l'idée du reviewer externe n'est pas conceptuellement nouvelle.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3,0/5</strong> — Travail soigné d'ingénierie système avec une contribution métrologique réutilisable (Helpfulness-Harmfulness), mais affaibli par l'absence d'analyse statistique formelle, le périmètre de modèles restreint et la concentration des gains τ²-Bench sur un seul domaine non discutée.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

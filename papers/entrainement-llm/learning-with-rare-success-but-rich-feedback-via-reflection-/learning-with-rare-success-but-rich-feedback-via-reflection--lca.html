@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning with Rare Success but Rich Feedback via Reflection-Enhanced Self-Distillation — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Learning with Rare Success but Rich Feedback via Reflection-Enhanced Self-Distillation</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>L'auto-distillation on-policy (SDPO, OPSD) propose de remplacer le signal de récompense scalaire du RL classique par une distribution cible token-level produite par un « auto-professeur » conditionné sur du feedback environnemental. Le problème central que les auteurs adressent : ce paradigme s'effondre dans les régimes où les rollouts réussis sont rares, car le professeur s'appuie implicitement sur des démonstrations positives échantillonnées dans le même batch. Quand la taille de groupe est ramenée à un seul rollout par prompt (N=1), SDPO perd l'essentiel de son signal.</p>
+<p>L'hypothèse défendue déplace la question : le goulot d'étranglement n'est pas l'absence de feedback mais sa <strong>représentation</strong>. Un message d'erreur brut est diagnostic, pas instructif. RESD propose donc d'interpréter activement les échecs via une réflexion rétrospective générée par le modèle lui-même, et de capitaliser ces leçons dans un playbook persistant entre étapes.</p>
+
+<h2>Méthodologie</h2>
+<p>RESD greffe deux composants sur la boucle SDPO standard. Pour chaque trajectoire échouée, un appel <code>REFLECT</code> produit une explication en langage naturel reliant le feedback final aux décisions intermédiaires fautives, et tague les entrées du playbook existant comme utiles, nuisibles ou neutres. Un appel <code>CURATE</code> distille ensuite ces réflexions en nouvelles entrées de playbook non redondantes. Une opération <code>CONCISE</code> élague périodiquement les entrées dont le compte « nuisible » dépasse le compte « utile », ou les plus anciennes si la taille dépasse un budget Mmax.</p>
+<p>Le contexte enrichi (playbook, réflexion locale, trajectoire précédente, feedback, solution mise en cache si disponible) conditionne ensuite la distribution du professeur, dont les logits servent de cible à une perte de divergence f-générique (KL, KL inverse, JSD selon la tâche). Une pondération par taux de succès rééquilibre les batches déséquilibrés.</p>
+<p>L'évaluation porte sur quatre tâches : MANUFACTORIA-HAS (synthèse de programmes DSL d'automates), BOUNCINGSIM-EASY et MEDIUM (simulation physique en Python), FINER (étiquetage XBRL d'entités financières). Les trois premières ont des taux de succès initiaux proches de zéro, FINER part déjà à ~40 % de précision. Le modèle de base est Qwen3-4B-Thinking-2507 (Qwen3-30B-A3B pour la tâche MEDIUM). Les baselines comparées sont SDPO, SDPO+ss (qui distille aussi sur les succès), et GRPO avec groupe de 8.</p>
+
+<h2>Résultats principaux</h2>
+<p>Le gain le plus spectaculaire apparaît sur MANUFACTORIA-HAS : la précision par tâche passe de 0,57/2,27 (SDPO+ss en mean@4/best@4) à 35,80/65,91 avec RESD. La précision par cas de test grimpe de 37,97/71,93 à 76,95/96,53. Sur les tâches BOUNCINGSIM, les gains sont plus modestes mais nets (4,25 vs 1,00 par exemple). Sur FINER, régime de succès moins rare, l'écart se resserre mais RESD reste devant (53,66 vs 50,25 en mean@4).</p>
+<p>La comparaison avec GRPO est l'argument fort de l'article. RESD atteint plus rapidement de bonnes performances en utilisant un seul rollout par prompt contre huit pour GRPO. Sur MANUFACTORIA-HAS, GRPO reste proche de zéro pendant que RESD décolle. L'ablation montre que retirer la réflexion provoque la plus grande chute (76,95→51,41 sur MANUF.-HAS), suivie du playbook puis du buffer de solutions.</p>
+<p>L'étude de cas section 4.6 illustre concrètement le mécanisme : sur la tâche « accepter si la bande contient BRBR », le modèle progresse par étapes — erreur de syntaxe (étape 45), gestion des transitions (46), cas limite de bande vide (47), solution correcte (48) — chaque étape enrichissant le playbook d'une règle situationnelle.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs reconnaissent eux-mêmes plusieurs zones d'ombre. Les courbes de validation ne sont pas monotones : chute brutale autour de l'étape 50 sur FINER (attribuée à la troncature des réponses), dégradation tardive sur BOUNCINGSIM-EASY après l'étape 60. La stratégie recommandée — utiliser RESD pour atteindre un régime de succès puis basculer sur GRPO — confirme implicitement que RESD ne suffit pas sur tout l'horizon d'entraînement.</p>
+<p>Plusieurs angles morts méritent d'être pointés. D'abord, la qualité de la réflexion dépend du modèle qui la produit (ici le student lui-même) ; l'article ne quantifie pas ce que devient RESD si le réflecteur est trop faible. Ensuite, le coût d'inférence supplémentaire pour <code>REFLECT</code> et <code>CURATE</code> est admis comme « modéré » par rapport à GRPO mais sans chiffres précis sur le coût total (tokens consommés × passes). La latence par étape (figure 8) ne capture qu'une partie de la dépense.</p>
+<p>Le périmètre expérimental reste limité à quatre tâches, toutes vérifiables par exécution automatique (programmes, simulations, étiquetage). La généralisation à des tâches au feedback bruité ou subjectif n'est pas testée. Le choix d'une seule famille de modèles (Qwen3-Thinking) limite aussi la portée des conclusions architecturales. Enfin, l'absence de seeds multiples et d'intervalles de confiance sur les tableaux principaux est gênante pour des écarts parfois petits (FINER : 53,66 vs 50,25).</p>
+
+<h2>Reproductibilité</h2>
+<p>Une page projet et un dépôt GitHub sont annoncés en première page. L'annexe G fournit les hyperparamètres par tâche (taux EMA, clipping, taille de playbook, méthode de concise, longueurs de prompt et réponse), la configuration matérielle (8×H200, environ un jour de calcul par run), et les paramètres de génération (vLLM, température 1,0, top-p 0,95). L'algorithme 1 expose la boucle complète. La stratégie CONCISE est détaillée en annexe D avec deux variantes (prioritized vs staleness). L'absence de seeds multiples et de scripts de reproduction explicites des figures empêche toutefois une réplication fine.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport central est conceptuel : repositionner le feedback comme un objet à structurer activement plutôt qu'à concaténer passivement. Le mécanisme est présenté comme un module plug-and-play, ce qui est crédible vu sa séparation propre d'avec l'objectif de distillation. Les applications immédiates concernent les régimes d'apprentissage continu en production, où chaque interaction utilisateur est coûteuse et les démonstrations positives rares : assistants de coding, agents long-horizon, ingénierie de domaine spécialisée.</p>
+<p>L'efficacité d'interaction (1 rollout vs 8 pour GRPO) en fait un candidat sérieux pour les phases initiales d'adaptation à un nouveau domaine, avant de basculer sur des méthodes plus stables. Le playbook persistant rejoint par ailleurs la tendance « agentic context engineering » (référence [29]) qui voit la connaissance accumulée comme un artefact entraînable au même titre que les poids.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>RESD se situe à l'intersection de trois lignes de recherche. Côté distillation on-policy, l'article étend SDPO (Hübotter et al. 2026) et OPSD (Zhao et al. 2026) en attaquant explicitement leur dépendance aux démonstrations positives. Côté apprentissage continu sans entraînement, il intègre le paradigme de l'experience pool (Zhang et al. 2025, Self-Refine de Madaan et al. 2023, Reflexion de Shinn et al. 2023) directement dans la boucle de gradient — alors que ces travaux restaient training-free. Côté RL pour LLM, il propose une alternative à GRPO dans les régimes pauvres en signal de récompense, complémentaire plutôt que substitutive.</p>
+<p>La contribution méthodologique tient en une phrase : convertir un signal diagnostic sparse en supervision token-level dense via un raisonnement explicite intercalé entre rollout et mise à jour. Comparée à Reflexion, qui agit sur la mémoire d'inférence sans toucher aux poids, RESD ferme la boucle en faisant ressortir les réflexions dans le gradient. Comparée à GRPO, elle remplace l'agrégation statistique de plusieurs trajectoires par une interprétation sémantique d'une seule.</p>
+
+<h2>Tableau récapitulatif — robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Diagnostic précis d'un angle mort de SDPO, formulation claire de l'hypothèse de structuration du feedback.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Quatre tâches contrastées, ablations propres, comparaison GRPO sous angle d'efficacité d'interaction explicitée.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Pas de seeds multiples rapportées, intervalles de confiance absents sur les tableaux principaux malgré des écarts parfois faibles.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Mean@4 et best@4, distinction per-task vs per-test-case, règle de sélection de checkpoint uniforme entre méthodes.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Baselines pertinentes (SDPO, SDPO+ss, GRPO), mais pas de contrôle du coût d'inférence total ni de la qualité du réflecteur.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Hyperparamètres complets en annexe, dépôt GitHub annoncé, algorithme explicite ; manquent les seeds et scripts de figures.</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Non-monotonicité des courbes assumée, recommandation explicite de basculer vers GRPO en fin d'entraînement.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Reformulation conceptuelle utile (feedback comme objet structurable) et mécanisme plug-and-play vérifié empiriquement.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

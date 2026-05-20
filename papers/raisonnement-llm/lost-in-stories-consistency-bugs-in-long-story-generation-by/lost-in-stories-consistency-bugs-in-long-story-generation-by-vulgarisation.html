@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lost in Stories: Consistency Bugs in Long Story Generation by LLMs — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Lost in Stories: Consistency Bugs in Long Story Generation by LLMs</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand le conteur oublie son histoire</h2>
+
+<p>Décembre 1982, autoroute du Nebraska. Une mère et son fils de cinq ans tombent en panne dans le froid. Un camion s'arrête. La mère demande au chauffeur : « Pouvez-vous aider mon fils de quinze ans ? » Trois lignes plus tôt, Jamie avait cinq ans. Trois lignes plus tard, il en a quinze. Ce n'est pas une faute de frappe humaine, c'est GPT-4 qui écrit, et qui vient d'oublier l'âge de son propre personnage en quelques centaines de mots.</p>
+
+<p>L'équipe de Junjie Li, Xinrui Guo et Yuhao Wu (Microsoft Beijing et Singapore University of Technology and Design) a publié en mars 2026 une étude qui met le doigt sur un défaut très concret des grands modèles de langage : leur incapacité à rester cohérents avec eux-mêmes sur de longues productions. Les fenêtres de contexte explosent — 200 000, 1 million, 2 millions de tokens — mais générer 10 000 mots cohérents reste un casse-tête. Les chercheurs ont construit <strong>ConStory-Bench</strong>, un banc d'essai de 2 000 prompts qui force les modèles à écrire des récits longs, et <strong>ConStory-Checker</strong>, un pipeline automatique pour traquer leurs contradictions.</p>
+
+<h2>Le problème : la fluidité locale masque l'incohérence globale</h2>
+
+<p>Quand on évalue un modèle de langage sur une réponse courte, tout va bien. Le texte est fluide, grammaticalement correct, souvent pertinent. Les benchmarks classiques — ROUGE, BLEU, perplexité — mesurent cette qualité de surface. Ils donnent l'illusion qu'un modèle « écrit bien ».</p>
+
+<p>Le problème surgit dès qu'on lui demande de produire un récit de 8 000 à 10 000 mots. Le modèle invente un personnage, lui donne un nom, une couleur d'yeux, une histoire. Cinq mille mots plus tard, il oublie tout cela. Une maison de l'opéra présentée comme une ruine devient soudain animée par une foule. Un narrateur qui hitchhike depuis « une décennie complète avant l'an 2000 » déclare deux paragraphes plus loin que ça fait « environ six ans ». Le frère du protagoniste change de couleur d'yeux en cours de route.</p>
+
+<p>Les benchmarks existants passaient à côté. Les évaluations de génération longue mesuraient la qualité du plot, la fluidité, l'engagement narratif — pas la cohérence factuelle interne. Et les protocoles « LLM-as-a-judge » habituels se contentent souvent d'une note globale sans pointer le texte exact qui pose problème. Les auteurs voulaient quelque chose de différent : une méthode qui détecte les contradictions <em>et</em> qui les prouve en citant les deux passages incompatibles.</p>
+
+<h2>La méthode : un détective en trois étapes</h2>
+
+<p>ConStory-Bench commence par fabriquer 2 000 prompts en piochant dans sept corpus publics (LongBench, WritingPrompts, WikiPlots, etc.). Chaque prompt vise un récit de 8 000 à 10 000 mots et appartient à l'une de quatre catégories : <em>Generation</em> (créer une histoire à partir d'un pitch minimal), <em>Continuation</em> (prolonger un fragment), <em>Expansion</em> (étoffer un synopsis), <em>Completion</em> (combler le milieu entre un début et une fin imposés).</p>
+
+<p>Une fois les modèles ayant produit leurs récits, ConStory-Checker entre en scène. Imaginez un correcteur qui ne lit pas l'histoire pour le plaisir mais pour traquer une seule chose : les contradictions internes. Il travaille en trois temps.</p>
+
+<p><strong>Première étape, l'extraction guidée.</strong> Le système balaie le texte avec cinq grilles de lecture, chacune correspondant à une dimension de cohérence : la logique temporelle, la caractérisation des personnages, les règles du monde, les détails factuels, le style narratif. Il en extrait toutes les phrases susceptibles d'entrer en contradiction avec d'autres.</p>
+
+<p><strong>Deuxième étape, l'appariement.</strong> Les phrases candidates sont comparées par paires. Soit elles sont compatibles, soit elles racontent deux versions incompatibles d'un même fait. Cette étape réduit les faux positifs : on ne retient que les vraies contradictions, pas les ambiguïtés stylistiques.</p>
+
+<p><strong>Troisième étape, la chaîne de preuves.</strong> Pour chaque contradiction, le système produit trois éléments : un raisonnement expliquant pourquoi les deux passages ne peuvent pas coexister, les citations exactes avec leur position dans le texte, et la catégorie d'erreur. C'est ce qui distingue cette approche des évaluations habituelles : chaque jugement est <em>ancré</em> dans le texte, vérifiable, auditable.</p>
+
+<p>La taxonomie comporte 19 sous-types d'erreurs regroupés en cinq familles. Parmi les plus parlantes : les <em>Memory Contradictions</em> (un personnage oublie une rencontre passée), les <em>Skill Fluctuations</em> (un combattant invincible au chapitre 3 se fait battre par un novice au chapitre 7 sans raison), les <em>Geographical Contradictions</em> (deux villes voisines deviennent éloignées de mille kilomètres), les <em>Tone Inconsistencies</em> (une scène d'enterrement basculant soudain dans le slapstick).</p>
+
+<h2>Validation : le pipeline bat les humains</h2>
+
+<p>Avant d'utiliser ConStory-Checker pour juger les modèles, les chercheurs l'ont validé. Ils ont injecté volontairement 1 000 erreurs dans 200 histoires authentiques, puis demandé à deux écrivains professionnels de les retrouver. Verdict : les humains ont attrapé 17 % des erreurs (F1 = 0,28), le pipeline automatique en a attrapé 55 % (F1 = 0,68). Lire 200 histoires de 8 000 mots à la chasse aux contradictions est épuisant. Une machine ne fatigue pas. C'est exactement le terrain où l'évaluation automatique gagne.</p>
+
+<h2>Résultats : personne ne s'en sort, mais certains résistent mieux</h2>
+
+<p>Vingt-et-un modèles sont passés sur le banc : propriétaires (GPT, Claude, Gemini, Grok), open source (Qwen, DeepSeek, GLM, Kimi), modèles spécialisés pour la génération longue, systèmes agentiques. Chacun a produit 2 000 récits.</p>
+
+<p>La métrique clé est la <strong>Consistency Error Density</strong>, ou CED : le nombre d'erreurs par 10 000 mots. Plus c'est bas, mieux c'est. Les écarts sont vertigineux.</p>
+
+<ul>
+<li><strong>GPT-5-Reasoning</strong> : 0,113 erreur pour 10 000 mots. À peine une contradiction par récit complet.</li>
+<li><strong>Gemini-2.5-Pro</strong> : 0,305.</li>
+<li><strong>Claude Sonnet 4.5</strong> : 0,520.</li>
+<li><strong>GLM-4.6, Qwen3-32B</strong> : autour de 0,53 — l'open source talonne le top propriétaire.</li>
+<li><strong>MiniMax-M1-80k</strong> : 3,447. Trente fois plus d'erreurs que GPT-5-Reasoning.</li>
+<li><strong>LongAlign-13B</strong>, un modèle entraîné spécifiquement pour les longs contextes : 3,664. L'optimisation pour la longueur ne garantit pas la cohérence.</li>
+</ul>
+
+<p>Mais l'écart ne dit pas tout. GPT-4o-1120 affiche un CED honorable de 0,711 — sauf qu'il produit en moyenne 1 241 mots par récit alors qu'on lui en demandait 10 000. Il triche par la longueur. Un texte court a mécaniquement moins d'occasions de se contredire. Les chercheurs ont donc introduit une seconde métrique, le <strong>Group Relative Rank</strong>, qui rééquilibre en récompensant les modèles qui tiennent à la fois la longueur et la cohérence.</p>
+
+<h2>Quatre observations qui changent la façon de voir le problème</h2>
+
+<p><strong>Les erreurs s'accumulent linéairement avec la longueur.</strong> Plus le texte est long, plus le nombre de contradictions monte de manière proportionnelle. Sur DeepSeek-V3.2-Exp, la corrélation entre longueur et erreurs atteint 0,97. Aucun modèle n'a découvert le secret pour rester cohérent à l'infini : tous payent un impôt proportionnel à la quantité produite.</p>
+
+<p><strong>Les erreurs se concentrent au milieu du récit.</strong> Les faits sont posés dans les premiers 15 à 30 % du texte. Les contradictions surgissent entre 40 et 60 %. Le début, le modèle s'en souvient — il est encore frais dans le contexte. La fin, il vient juste de l'écrire — elle est encore active. Le milieu, en revanche, glisse hors de portée : assez vieux pour être oublié, assez récent pour engager la suite. C'est la zone aveugle.</p>
+
+<p><strong>L'entropie prédit les erreurs.</strong> Quand le modèle hésite — quand sa distribution de probabilités sur le prochain token est aplatie au lieu d'être piquée — il a beaucoup plus de chances de produire une contradiction. Sur Qwen3-4B, les passages erronés ont une entropie 19 % plus élevée que le reste du texte. Sur Qwen3-30B, l'écart est de 12 %. Traduction : le modèle ne se trompe pas en aveugle, il se trompe précisément aux moments où il ne sait plus trop quoi écrire. Cela ouvre une piste très concrète : surveiller l'entropie locale pour déclencher une vérification quand elle dépasse un seuil.</p>
+
+<p><strong>Les erreurs factuelles entraînent les autres.</strong> La cohérence factuelle (qui s'appelle comment, qui sait quoi, combien de personnages dans la pièce) est le nœud central. Quand elle craque, la caractérisation craque avec (corrélation 0,30), le monde aussi (0,25), la temporalité aussi (0,18). Le style, en revanche, est indépendant : un modèle peut perdre son ton sans perdre ses faits, et inversement. Cela suggère deux mécanismes de défaillance distincts dans l'architecture, qui appelleraient peut-être deux remèdes distincts.</p>
+
+<h2>Pourquoi cela compte pour qui utilise ces modèles</h2>
+
+<p>Pour l'industrie, ces résultats sont une douche froide tempérée. Douche froide parce qu'aucun modèle ne tient sans contradiction sur du texte vraiment long. Si vous générez un livre, un dossier juridique, un rapport technique, un scénario, vous générez aussi des incohérences. Tempérée parce que l'écart entre le meilleur et le pire est énorme. Choisir GPT-5-Reasoning plutôt que MiniMax-M1 pour une tâche longue, c'est diviser par trente le risque d'erreur. Le choix du modèle compte plus que jamais.</p>
+
+<p>L'observation sur l'entropie est exploitable dès aujourd'hui. Quand un modèle hésite, c'est le moment de l'interrompre et de vérifier. Un système de production peut surveiller l'entropie locale en temps réel et déclencher une auto-vérification dès qu'un seuil est franchi. Plus économique que vérifier l'intégralité du texte, plus efficace que ne rien vérifier du tout.</p>
+
+<p>Le constat sur le milieu du récit suggère une autre piste : la mémoire externe ciblée. Plutôt que d'essayer de garder 10 000 mots dans la fenêtre d'attention, on peut maintenir un résumé structuré (qui, où, quand, avec quels traits) et le réinjecter au moment où le modèle entre dans la zone à risque. C'est ce que font déjà certains systèmes agentiques comme SuperWriter ou DOME, avec des résultats encourageants mais inégaux : SuperWriter atteint un CED de 0,674, comparable aux bons modèles open source, mais DOME monte à 1,033 malgré sa hiérarchie d'outlines.</p>
+
+<p>Pour les tâches critiques — médical, juridique, financier — le message est clair : on ne déploie pas un LLM sur de la génération longue sans un étage de vérification. La cohérence factuelle n'est pas un détail esthétique, c'est un risque opérationnel quantifiable.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>L'étude reconnaît trois limites. D'abord, tout est anglophone, tout suit les conventions narratives occidentales. La cohérence narrative n'a pas la même grammaire dans la fiction japonaise ou la tradition orale ouest-africaine. Étendre ConStory-Bench à d'autres cultures reste à faire.</p>
+
+<p>Ensuite, le système traite la contradiction comme un jugement binaire. Or certaines contradictions sont délibérées : retournements, narrateurs non fiables, information cachée. Distinguer l'incohérence accidentelle de l'incohérence artistique demanderait une couche d'analyse supplémentaire que les auteurs n'ont pas implémentée.</p>
+
+<p>Enfin, le terrain choisi est la fiction. Les enjeux de cohérence longue existent aussi dans la documentation technique, la rédaction académique, les contrats, les scénarios. Chacun a ses propres règles. Un benchmark spécifique reste à construire pour chacun.</p>
+
+<p>Au-delà des limites, les questions ouvertes sont nombreuses. Peut-on entraîner un modèle à <em>détecter</em> ses propres contradictions en cours de génération ? Existe-t-il une architecture qui sépare nativement la mémoire des faits de la mémoire du style ? L'apprentissage par renforcement à partir de récompenses de cohérence (et non plus seulement de qualité humaine perçue) pourrait-il faire bouger l'aiguille ? Le fait que LongWriter-Zero, entraîné par RL pour la longueur, descende à 0,669 sans avoir été optimisé pour la cohérence suggère que oui, l'objectif d'entraînement façonne bien le comportement final.</p>
+
+<p>ConStory-Bench fournit l'instrument de mesure. Reste à voir qui construira le modèle qui, sur 10 000 mots, n'oubliera plus combien d'enfants a son personnage.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

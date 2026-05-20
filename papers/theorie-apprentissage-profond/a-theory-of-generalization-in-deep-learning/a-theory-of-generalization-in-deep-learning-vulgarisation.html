@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Theory of Generalization in Deep Learning — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>A Theory of Generalization in Deep Learning</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Un mystère vieux de huit ans</h2>
+
+<p>En 2017, Chiyuan Zhang et ses co-auteurs publient un article qui met la communauté du deep learning dans l'embarras. Leur démonstration tient en une phrase : un réseau de neurones suffisamment grand peut mémoriser parfaitement n'importe quel jeu de données, y compris des étiquettes tirées au hasard. Pourtant, ce même réseau, entraîné sur des données réelles, généralise correctement à des exemples qu'il n'a jamais vus. Comment un modèle capable d'apprendre du bruit pur arrive-t-il à ignorer ce bruit quand il y en a dans ses données d'entraînement ?</p>
+
+<p>Les bornes classiques de la théorie statistique de l'apprentissage — VC, Rademacher, complexité spectrale — donnent toutes des chiffres absurdes à l'échelle des modèles modernes. Elles prédisent que GPT-4 ou Llama 3 ne devraient jamais fonctionner. Ils fonctionnent.</p>
+
+<p>Elon Litman et Gabe Guo, de Stanford, proposent dans <em>A Theory of Generalization in Deep Learning</em> une explication qui tient debout mathématiquement et qui débouche sur un algorithme concret. L'algorithme, en pratique, c'est une modification d'une ligne de code dans Adam. Cette ligne accélère le grokking d'un facteur 5, divise par 2,4 le nombre d'itérations sur les réseaux physiques informés (PINN), et stabilise le fine-tuning de modèles de langage face à des préférences bruitées.</p>
+
+<h2>2. Le problème : pourquoi la théorie existante ne suffisait pas</h2>
+
+<p>La théorie dominante depuis 2018, le <strong>Neural Tangent Kernel</strong> (NTK) de Jacot, Gabriel et Hongler, ne décrit fidèlement qu'un régime particulier : le <em>régime paresseux</em>. Quand un réseau est infiniment large, ses paramètres bougent si peu pendant l'entraînement que le réseau se comporte essentiellement comme une méthode à noyau fixé à l'initialisation. Belle théorie, beaux théorèmes, mais elle ne décrit pas ce qui se passe dans les modèles qu'on entraîne vraiment.</p>
+
+<p>Les réseaux modernes apprennent leurs <strong>features</strong>. Leurs représentations internes évoluent radicalement pendant l'entraînement — c'est tout l'intérêt du deep learning. Mathématiquement, cela veut dire que le noyau tangent bouge d'une quantité d'ordre 1 en norme d'opérateur. Les figures de l'article le montrent : pendant un entraînement typique, le noyau dérive d'un facteur 4,8 par rapport à sa valeur initiale avant de se stabiliser autour de 2,4. La théorie paresseuse y perd toute prédictivité.</p>
+
+<p>Litman et Guo construisent leur théorie directement dans l'<strong>espace de sortie</strong> du réseau — l'espace des prédictions — et le long de la trajectoire réellement parcourue pendant l'entraînement. Pas d'asymptotique, pas d'hypothèse de noyau gelé. La trajectoire observée fait foi.</p>
+
+<h2>3. La méthode : un canal de signal et un réservoir</h2>
+
+<p>L'idée centrale repose sur une décomposition géométrique de l'espace dans lequel le réseau peut faire bouger ses prédictions. Imaginez un studio d'enregistrement avec une console de mixage à 1000 pistes. Chaque piste correspond à une direction dans laquelle le réseau pourrait, en principe, modifier ses sorties. Mais pendant un entraînement donné, seule une poignée de potentiomètres bougent vraiment. Les autres restent à zéro.</p>
+
+<p>Les directions où l'entraînement a effectivement dissipé de l'erreur forment ce que les auteurs appellent le <strong>canal de signal</strong>. Les directions où rien ne s'est passé forment le <strong>réservoir</strong>. Cette séparation n'est pas conceptuelle, c'est une propriété spectrale précise d'un objet mathématique : la matrice de dissipation cumulée du noyau tangent empirique, intégrée le long de la trajectoire.</p>
+
+<h3>La propriété qui fait tout marcher</h3>
+
+<p>Voici le résultat clé, presque magique dans sa simplicité : <strong>tout ce qui est tombé dans le réservoir est invisible au test</strong>. Si le bruit d'étiquette que l'optimiseur a malheureusement appris s'est logé dans des directions du réservoir, ce bruit ne pourra <em>jamais</em> affecter une prédiction sur un exemple nouveau. Il est piégé là, visible à l'entraînement, mais hermétiquement séparé du monde extérieur.</p>
+
+<p>L'analogie : pensez à une bibliothèque municipale qui range les livres dans deux salles. La salle de consultation publique (le canal de signal) et un sous-sol fermé au public (le réservoir). Le bibliothécaire (l'optimiseur) peut bien archiver des journaux intimes douteux dans le sous-sol, aucun lecteur (les exemples de test) ne pourra jamais tomber dessus.</p>
+
+<h3>Pourquoi le SGD fait le reste du travail</h3>
+
+<p>Dans le canal de signal, il reste un problème. Le bruit que l'optimiseur a fait entrer là, lui, est potentiellement visible au test. C'est ici que la descente de gradient stochastique avec mini-batchs entre en scène. Les auteurs démontrent une séparation entre deux régimes : la composante moyenne du gradient (la <em>dérive</em>) s'accumule linéairement avec le temps, alors que sa composante centrée (la <em>diffusion</em>) ne grandit qu'en racine carrée du temps.</p>
+
+<p>Concrètement, sur une vraie direction de signal — celle où la population entière des données pointe dans la même direction — la dérive devient écrasante. Sur une direction de bruit — où chaque exemple tire dans son propre sens — la dérive moyenne s'effondre à zéro et il ne reste que la diffusion, qui croît lentement. Le rapport signal sur bruit augmente mécaniquement avec l'entraînement.</p>
+
+<h3>Du diagnostic à l'algorithme</h3>
+
+<p>Litman et Guo poussent ensuite leur raisonnement jusqu'au bout. Si l'on sait identifier, paramètre par paramètre, les directions où la dérive bat la diffusion, on peut couper la mise à jour des paramètres qui ne font qu'absorber du bruit. C'est le sens du critère qu'ils dérivent : un paramètre doit être mis à jour à l'étape courante uniquement si le <em>carré de sa moyenne de gradient</em> dépasse sa <em>variance divisée par la taille du batch moins un</i>. Sinon, il dort.</p>
+
+<p>Ce critère se branche sur Adam comme un préconditionneur. Il ne coûte qu'un seul vecteur d'état supplémentaire — une estimation glissante de la variance — et une ligne de code dans la boucle d'optimisation. Aucun coût computationnel notable.</p>
+
+<h2>4. Résultats : trois bancs d'essai, trois succès</h2>
+
+<p>Les auteurs testent leur règle sur trois cas où l'apprentissage classique se vautre. À chaque fois, ils gèlent l'architecture, le découpage des données, les hyperparamètres ; seule la mise à jour change.</p>
+
+<h3>Le grokking divisé par cinq</h3>
+
+<p>Le grokking est ce phénomène troublant découvert par OpenAI en 2022 : un petit Transformer entraîné sur la division modulaire mémorise d'abord parfaitement ses données d'entraînement, plafonne pendant des dizaines de milliers d'étapes avec une précision nulle sur l'ensemble de test, puis soudainement, sans crier gare, généralise. Le mystère du grokking, c'est ce délai gigantesque entre la mémorisation et la généralisation.</p>
+
+<p>Avec la règle de Litman et Guo, le délai s'écroule. AdamW atteint 95% de précision sur le test à l'étape 29 450. L'algorithme proposé arrive à 95% à l'étape 5 950. Un facteur 4,9. Le grokking n'est plus un délai mystique mais un signal qui migre du réservoir vers le canal de signal à mesure que le noyau évolue — et accélérer cette migration, c'est précisément ce que fait la nouvelle règle.</p>
+
+<h3>Les PINN qui ne mémorisent plus le bruit</h3>
+
+<p>Les <strong>Physics-Informed Neural Networks</strong> servent à résoudre des équations aux dérivées partielles en encodant la physique dans la fonction de perte. Leur faiblesse : quand la condition initiale est bruitée, le réseau apprend ce bruit comme s'il faisait partie de la solution. Sur l'équation d'advection avec une condition initiale gaussienne bruitée, la nouvelle règle atteint une erreur relative inférieure à 0,40 en 2,4 fois moins d'itérations que la meilleure configuration d'AdamW testée.</p>
+
+<h3>L'alignement DPO sous préférences corrompues</h3>
+
+<p>Le test le plus contemporain. Les auteurs fine-tunent Qwen2.5-0.5B-Instruct avec <strong>DPO</strong> (Direct Preference Optimization) sur le dataset UltraFeedback, mais avec 30% des préférences délibérément inversées — une simulation réaliste d'annotateurs humains qui se trompent ou se contredisent. AdamW dérive : la précision de récompense finale plafonne à 0,566, et la politique s'éloigne nettement de sa référence. Avec la règle population-risk, la précision finale monte à 0,641 et la politique reste 3,05 fois plus proche de sa référence en moyenne. Pour qui pratique le RLHF en production, c'est exactement le profil souhaité : meilleure performance sur les préférences propres, moindre dérive sous le bruit.</p>
+
+<h2>5. Pourquoi ça compte pour les équipes qui entraînent des modèles</h2>
+
+<p>Le premier apport est théorique mais ses retombées sont concrètes. La théorie unifie quatre phénomènes qui jusque-là vivaient dans des littératures séparées :</p>
+
+<ul>
+<li>Le <strong>benign overfitting</strong> — le fait qu'un modèle puisse interpoler parfaitement le bruit sans que cela dégrade ses performances de test — devient simplement du bruit logé dans le réservoir.</li>
+<li>La <strong>double descente</strong> — la courbe d'erreur qui remonte puis redescend en augmentant la capacité du modèle — devient un mouvement de bruit entre le canal de signal et le réservoir à mesure que la capacité passe le point d'interpolation.</li>
+<li>L'<strong>implicit bias</strong> — la tendance de la descente de gradient à préférer certaines solutions parmi toutes celles qui interpolent les données — devient le calendrier spectral selon lequel le canal de signal se remplit, des plus grandes valeurs propres aux plus petites.</li>
+<li>Le <strong>grokking</strong> devient la migration d'un signal du réservoir vers le canal de signal à mesure que le noyau évolue.</li>
+</ul>
+
+<p>Avoir un cadre unique qui rend compte des quatre simultanément, c'est rare. C'est ce qui donne à ce papier sa solidité.</p>
+
+<p>Le second apport est pratique. Estimer le risque population sans validation set, à partir d'un seul run d'entraînement, c'est un graal pour quiconque entraîne avec des données chères, rares ou difficiles à annoter. Les bornes classiques d'erreur de généralisation reposaient sur des constantes de Lipschitz globales — inaccessibles dans la vraie vie. Ici, la quantité estimée s'appuie sur les gradients que l'optimiseur calcule déjà. Aucune passe supplémentaire, aucun jeu de données mis de côté.</p>
+
+<p>Pour les équipes qui font du fine-tuning sur des préférences humaines (RLHF, DPO, IPO, et compagnie), le résultat sur DPO est le plus parlant. Les préférences humaines sont bruitées ; les annotateurs se contredisent, ils fatiguent, ils suivent des biais. Avoir une règle d'optimisation qui sait, paramètre par paramètre, distinguer le signal du bruit, et qui en bonus reste plus proche de la politique de référence, c'est exactement le compromis qu'on cherche en production.</p>
+
+<p>Pour les équipes de recherche en machine learning scientifique — PINN, INR, opérateurs neuronaux — le résultat est encore plus direct. Ces architectures sont notoirement instables sous bruit. Une accélération d'un facteur 2 à 5 à coût computationnel nul change la donne pour les workflows expérimentaux longs.</p>
+
+<h2>6. Ce qui reste ouvert</h2>
+
+<p>Trois angles méritent attention avant d'embrasser la théorie sans réserve.</p>
+
+<p>D'abord, les expériences sont conduites sur des modèles modestes — Qwen2.5-0.5B est le plus gros. Les phénomènes décrits par la théorie (séparation signal/réservoir, dérive-diffusion) ne dépendent pas a priori de l'échelle, mais leur traduction algorithmique pourrait se comporter différemment sur des modèles à 70 milliards de paramètres, avec des batches de plusieurs millions de tokens et des préconditionneurs comme Shampoo ou SOAP. Reste à voir comment le gate population-risk interagit avec ces optimiseurs plus sophistiqués.</p>
+
+<p>Ensuite, l'estimateur de variance utilisé en pratique est une moyenne mobile exponentielle des écarts au gradient moyen. Cette approximation suppose que les mini-batchs successifs sont à peu près i.i.d. et que la dérive des paramètres entre étapes est petite. Dans des régimes très non-stationnaires — début d'entraînement, changements de phase, curriculum learning — cette hypothèse peut casser. Les auteurs proposent une alternative exacte basée sur les gradients par exemple via <code>vmap</code>, mais elle ajoute une passe arrière par étape.</p>
+
+<p>Enfin, la théorie repose sur l'<strong>échangeabilité</strong> de l'échantillon d'entraînement — donc sur l'hypothèse i.i.d. Le multi-epoch viole cette hypothèse : un batch rejoué porte de l'information sur l'état actuel de l'optimiseur. Les auteurs gèrent ce cas par une borne en variation totale qui s'annule au premier epoch et grandit ensuite. Pour les régimes très multi-epoch — encore courants en computer vision et en science des matériaux — l'analyse devient plus délicate.</p>
+
+<p>Au-delà de ces points, la théorie ouvre une question fondamentale. Si le réservoir est mathématiquement invisible au test, qu'est-ce que les paramètres qui y vivent <em>font</em> à l'intérieur du modèle ? Sont-ils du gaspillage de capacité ? Une réserve mobilisable pour de futures tâches via transfer learning ? Une forme d'archive qui pourrait être interrogée par des techniques d'interprétabilité ? Les outils développés par Litman et Guo — projecteurs spectraux, opérateurs de transfert calculables en un seul run — donnent les briques pour le savoir. Quelqu'un va devoir construire le microscope correspondant.</p>
+
+<p>Le code de l'algorithme tient en une vingtaine de lignes. La théorie qui le justifie tient en cent pages d'annexes mathématiques. Le ratio entre la longueur de la preuve et la simplicité du résultat opérationnel est inhabituellement élevé. C'est souvent le signe d'un papier qui restera.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

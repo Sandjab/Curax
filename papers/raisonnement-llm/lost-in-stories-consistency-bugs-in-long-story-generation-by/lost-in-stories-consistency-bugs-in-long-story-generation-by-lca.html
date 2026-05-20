@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lost in Stories: Consistency Bugs in Long Story Generation by LLMs — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Lost in Stories: Consistency Bugs in Long Story Generation by LLMs</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>La cohérence narrative long-form reste un angle mort des benchmarks existants : LongBench, HelloBench, WritingBench mesurent la qualité globale ou la fluence, pas les contradictions internes. Les auteurs partent d'un constat simple : un modèle qui produit 10 000 mots peut oublier l'âge d'un personnage, déplacer une ville, faire mourir un protagoniste deux fois. ConStory-Bench cible explicitement ce type d'erreurs avec 2 000 prompts répartis sur quatre scénarios (génération libre, continuation, expansion, complétion) et une taxonomie hiérarchique de 5 catégories et 19 sous-types.</p>
+
+<h2>Méthodologie</h2>
+<p>Les prompts sont dérivés de sept corpus publics (LongBench, WritingPrompts, WikiPlots, etc.) puis réécrits par o4-mini pour cibler une longueur de 8 000–10 000 mots. Une déduplication MinHash et une inspection manuelle filtrent les doublons.</p>
+
+<p>Le pipeline CONSTORY-CHECKER comporte quatre étapes : extraction guidée par catégorie, appariement de contradictions, chaînes de preuves avec citations explicites, puis sortie JSON normalisée. o4-mini sert de juge unique. Deux métriques sont introduites : <strong>CED</strong> (erreurs par 10 000 mots, pour neutraliser le biais de longueur) et <strong>GRR</strong> (rang relatif par prompt avec score qualité <em>w/(1+e)</em>, pour neutraliser la difficulté du prompt).</p>
+
+<p>La validation du juge automatique repose sur 200 histoires générées par Qwen3-235B-A22B avec 1 000 erreurs injectées délibérément, annotées par deux écrivains professionnels rémunérés 1 $ par histoire.</p>
+
+<h3>Critères de robustesse</h3>
+<table>
+<tr><th>Critère</th><th>Score /5</th><th>Commentaire</th></tr>
+<tr><td>Question de recherche</td><td>4</td><td>Question claire et sous-explorée, déclinée en 5 sous-questions opérationnelles.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Quatre scénarios de tâches, 33 modèles couvrant propriétaires, open-source, fine-tunés long-form, agentiques.</td></tr>
+<tr><td>Taille d'échantillon</td><td>5</td><td>2 000 prompts par modèle, soit plus de 65 000 histoires générées au total.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>CED et GRR sont raisonnables mais dépendent entièrement de la fiabilité d'un seul juge LLM (o4-mini).</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Pas de juge multi-modèle, pas de mesure d'auto-préférence d'o4-mini envers GPT-5 (qui domine le classement).</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Page projet annoncée, prompts détaillés en annexe, mais corpus de validation et générations brutes non clairement libérés.</td></tr>
+<tr><td>Transparence des limitations</td><td>3</td><td>Section limitations honnête sur le périmètre anglais et la binarité du jugement, mais silencieuse sur le risque de biais du juge.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier benchmark dédié à la cohérence cross-context narrative avec preuves citationnelles, comble une vraie lacune.</td></tr>
+</table>
+
+<h2>Résultats principaux</h2>
+<p>GPT-5-Reasoning domine nettement (CED = 0,113, GRR = 3,05) devant Gemini-2.5-Pro (0,305) et Claude-Sonnet-4.5 (0,520). Les meilleurs modèles open-source — GLM-4.6, Qwen3-32B, Ring-1T, DeepSeek-V3.2-Exp — convergent autour de CED = 0,53, à un facteur 5 du leader. Les modèles fine-tunés long-form comme LongWriter-Zero (0,669) ne battent pas les modèles généralistes récents.</p>
+
+<p>Quatre régularités émergent. Les erreurs croissent linéairement avec la longueur (corrélation jusqu'à r = 0,973 pour DeepSeek-V3.2-Exp). Les contradictions se concentrent dans la zone 40–60 % du récit, alors que les faits initiaux apparaissent à 15–30 %. Les segments erronés présentent une entropie token-level supérieure de 12 à 19 % à la base, ce qui suggère un signal d'alerte exploitable en décodage. Les erreurs factuelles et temporelles dominent (Factual & Detail Consistency comme hub corrélationnel, r = 0,304 avec Characterization), tandis que les erreurs stylistiques sont quasi indépendantes (r ≈ 0).</p>
+
+<p>La validation contre les annotateurs humains donne CONSTORY-CHECKER à F1 = 0,678 contre 0,281 pour les humains, avec un rappel 3,2 fois supérieur (55 % vs 17 %).</p>
+
+<h2>Discussion et limites</h2>
+<p>Le résultat le plus problématique est la comparaison humain-machine. Deux annotateurs payés 1 $ par histoire de 8 000–10 000 mots, soit environ 30 secondes de revenu horaire défendable par récit, ne constituent pas une baseline crédible de l'expertise humaine. Cette mesure établit que des humains peu motivés détectent moins d'erreurs qu'un LLM dédié — fait peu surprenant — et non que le pipeline égale un lecteur attentif.</p>
+
+<p>Le juge unique pose un problème de validité interne. o4-mini évalue des sorties incluant GPT-5-Reasoning, modèle de la même famille OpenAI, qui finit premier. Les travaux sur l'auto-préférence des juges LLM (Chen et al. 2024, cité par les auteurs eux-mêmes) suggèrent un biais probable non quantifié. Une triangulation avec Gemini ou Claude comme juges secondaires aurait été indispensable.</p>
+
+<p>La taxonomie binaire « consistant / contradictoire » écrase les contradictions narratives intentionnelles (twists, narrateurs non fiables, ellipses délibérées). Les auteurs le reconnaissent en limitations mais ne quantifient pas la part de faux positifs liés à cet écrasement.</p>
+
+<p>Le découpage en cinq catégories est ancré dans la théorie narrative mais reste validé uniquement par injection synthétique d'erreurs avec Qwen3-235B — autre LLM. Le pipeline d'évaluation détecte donc bien les erreurs qu'un LLM sait fabriquer, pas nécessairement celles qu'un lecteur humain identifierait dans une production naturelle.</p>
+
+<h2>Reproductibilité</h2>
+<p>La page projet est annoncée mais l'article ne décrit pas la mise à disposition des 65 000+ histoires générées ni du corpus d'injection avec annotations. Les prompts de jugement par catégorie sont reproduits intégralement en annexe (figures 9–13), ce qui permet de réimplémenter le pipeline. Le coût d'évaluation à grande échelle (2 000 prompts × 33 modèles × 4 étapes via o4-mini) freine néanmoins la réplication indépendante.</p>
+
+<h2>Impact et applications</h2>
+<p>Trois retombées concrètes. D'abord, un signal exploitable : l'entropie token-level prédit les erreurs, ce qui ouvre des stratégies de décodage avec déclenchement de vérification au-delà d'un seuil. Ensuite, une cartographie des modes d'échec : entity tracking et temporal reasoning ressortent comme les goulots dominants, oriente la recherche vers des architectures à mémoire structurée plutôt que vers l'extension brute du contexte. Enfin, un classement public qui pénalise les modèles produisant des textes trop courts (Grok-4, GPT-4o-1120 plafonnent à 2–3K mots) et révèle que LongWriter-Zero, malgré son fine-tuning dédié, ne surpasse pas les généralistes récents.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans la lignée LongBench / HelloBench / WritingBench mais déplace l'objet d'évaluation : non plus la qualité globale jugée par checklist (CheckEval, ProxyQA) ni la longueur atteinte (LongWriter, Suri), mais la consistance interne mesurée par appariement de contradictions avec preuves citationnelles. CHIRON (Gurung & Lapata 2024) avait isolé la dimension personnage ; ConStory-Bench généralise à cinq dimensions et 19 sous-types. Le pipeline reprend l'architecture LLM-as-judge de MT-Bench (Zheng et al. 2023) en y greffant des chaînes de preuves explicites, contournant la critique récurrente d'opacité de ces protocoles.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

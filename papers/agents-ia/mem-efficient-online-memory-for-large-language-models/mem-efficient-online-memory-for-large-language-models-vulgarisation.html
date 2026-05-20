@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>δ-mem: Efficient Online Memory for Large Language Models — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>δ-mem: Efficient Online Memory for Large Language Models</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Une matrice 8×8 pour donner de la mémoire aux IA</h2>
+
+<p>Huit lignes, huit colonnes. Soixante-quatre cases. C'est tout ce dont une équipe sino-singapourienne a eu besoin pour transformer un grand modèle de langage figé en assistant doté d'une vraie mémoire de long terme. Pas de fenêtre de contexte d'un million de tokens, pas de réentraînement coûteux, pas de base vectorielle externe : une simple matrice numérique mise à jour à chaque interaction.</p>
+
+<p>Le travail s'appelle <strong>δ-mem</strong> (delta-mem). Il vient d'être publié par Jingdi Lei, Di Zhang et leurs co-auteurs de Nanyang Technological University, Fudan, Shanghai Jiao Tong et Mind Lab. L'idée tient en une phrase : si la mémoire d'un modèle se résume à un état compact qui évolue avec la conversation, et que cet état corrige directement le calcul d'attention au lieu de gonfler le prompt, alors on obtient des gains spectaculaires sur les tâches dites « lourdes en mémoire » — jusqu'à +31 % sur MemoryAgentBench — pour un coût en paramètres dérisoire.</p>
+
+<p>Le résultat mérite d'être regardé de près, car il interroge une croyance bien installée dans l'industrie : faut-il vraiment empiler des fenêtres de contexte toujours plus larges pour faire des agents capables de se souvenir ?</p>
+
+<h2>Le problème : la mémoire des LLM est cassée</h2>
+
+<p>Un agent conversationnel de production doit accumuler de l'information au fil des sessions. Il doit se souvenir des préférences de l'utilisateur, du contexte d'un projet, des décisions prises trois jours plus tôt. Or les architectures Transformer actuelles n'ont pas de mémoire au sens biologique. Elles ont un buffer : la fenêtre de contexte. Tout ce qui n'y rentre pas disparaît.</p>
+
+<p>La réponse industrielle a été l'expansion brutale. GPT-5.5, Gemini 3, Claude : la course à la fenêtre d'un million de tokens est lancée. Mais cette fuite en avant se heurte à deux murs.</p>
+
+<p>Le premier est computationnel. Le mécanisme d'attention coûte quadratiquement en fonction de la longueur du contexte. Doubler la fenêtre, c'est quadrupler le calcul. Le second est plus pernicieux : le <em>context rot</em>, ce phénomène où les modèles dégradent leurs réponses quand le contexte devient trop long, même si l'information utile y figure. Plusieurs études récentes (Hong et al. 2025, Du et al. 2025) ont montré que les modèles « se perdent » dans leur propre contexte. Ce n'est pas un problème de capacité, c'est un problème d'utilisation.</p>
+
+<p>Trois familles de solutions existent. Les <strong>mémoires textuelles</strong> stockent le passé sous forme de texte (résumés, entrées de journal) et le réinjectent via du RAG. Souples, mais sensibles au bruit de récupération et limitées par la fenêtre. Les <strong>mémoires externes</strong> gardent le passé dans un module séparé (kNN, banque vectorielle) consulté à chaque requête. Modulaires, mais ajoutent une latence et un risque de désalignement avec le modèle. Les <strong>mémoires paramétriques</strong> encodent l'information dans des poids supplémentaires (LoRA, prefix-tuning, ROME). Compactes, mais figées après entraînement — elles ne savent pas évoluer avec une conversation en cours.</p>
+
+<p>Aucune de ces approches n'offre la combinaison recherchée : un état compact, dynamiquement mis à jour, et couplé directement au calcul interne du modèle. C'est la niche que δ-mem vient occuper.</p>
+
+<h2>L'idée : une matrice qui apprend en marchant</h2>
+
+<p>Pour comprendre δ-mem, une analogie fonctionne bien. Imaginez un assistant humain qui prend des notes pendant une réunion. Trois stratégies sont possibles. Il peut tout transcrire mot à mot — c'est l'équivalent d'un contexte étendu, vite ingérable. Il peut consulter un classeur d'archives à chaque question — c'est le RAG, lent et bruité. Ou il peut tenir un cahier de bord miniature, qu'il met à jour en permanence avec les associations clés (qui a dit quoi, qui décide de quoi), et qu'il consulte d'un coup d'œil avant chaque réponse.</p>
+
+<p>δ-mem est ce cahier de bord. Sa forme : une matrice de taille fixe, par exemple 8×8. Sa logique : la <strong>règle delta</strong>, un mécanisme issu de l'apprentissage par descente de gradient en ligne, où chaque nouveau token entrant déclenche une petite correction de la matrice. Si l'association « clé→valeur » du token est déjà bien représentée par l'état actuel, la mise à jour est minuscule. Si elle est mal prédite, la correction est forte. La matrice apprend à représenter ce qu'elle ne savait pas encore prédire — et seulement cela.</p>
+
+<p>Un mécanisme de portes (le <em>forget gate</em>, emprunté à l'architecture Qwen-Next) module cette mise à jour dimension par dimension. Certaines lignes de la matrice retiennent l'historique stable, d'autres écrivent activement la nouveauté. Le réseau apprend lui-même cet équilibre.</p>
+
+<h3>Trois manières d'écrire dans la mémoire</h3>
+
+<p>Les chercheurs ont testé trois granularités d'écriture. <strong>Token-State Write</strong> (TSW) met à jour la matrice à chaque token : finesse maximale mais sensibilité aux artefacts (ponctuation, balises de format). <strong>Sequence-State Write</strong> (SSW) regroupe les tokens par message ou segment et n'écrit qu'une fois par segment : moins bruité, plus stable. <strong>Multi-State Write</strong> (MSW) maintient plusieurs sous-matrices en parallèle, chacune spécialisée sur un type d'information (faits, préférences, état de tâche), pour réduire les interférences entre catégories.</p>
+
+<h3>Comment la mémoire influence la réponse</h3>
+
+<p>Le point critique est là. δ-mem ne réinjecte pas du texte dans le prompt. Au moment où le modèle génère un token, la requête courante interroge la matrice mémoire et en extrait un signal vectoriel. Ce signal est ensuite transformé en deux <strong>corrections de bas rang</strong> appliquées au calcul d'attention : une correction côté requête (avant le calcul d'attention) et une correction côté sortie (après). Le squelette du modèle reste figé. Aucun poids du modèle de base n'est touché. Ce sont uniquement les corrections qui s'ajoutent, pilotées par l'état mémoire dynamique.</p>
+
+<p>La différence avec LoRA est subtile mais essentielle. LoRA ajoute des poids fixes après entraînement. δ-mem ajoute des corrections dont l'amplitude et la direction varient à chaque pas, parce que la matrice mémoire évolue à chaque token. Même paramètres entraînés, mais effet conditionnel à l'historique.</p>
+
+<h2>Les chiffres : petit modèle, grandes promesses</h2>
+
+<p>L'évaluation porte sur trois architectures de tailles variées : Qwen3-4B-Instruct, Qwen3-8B et SmolLM3-3B. Cinq benchmarks sont mobilisés : IFEval (suivi d'instructions), HotpotQA (raisonnement multi-sauts), GPQA-Diamond (questions scientifiques de niveau doctoral), MemoryAgentBench (agents avec interactions longues) et LoCoMo (conversations très longue durée).</p>
+
+<p>Sur Qwen3-4B-Instruct, δ-mem en variante TSW fait passer le score moyen de 46,79 à 51,66, soit +4,87 points. Mais la décomposition est plus parlante. Sur MemoryAgentBench, le score grimpe de 29,54 à 38,85 — un gain relatif de 31 %. Sur la sous-tâche TTL (test-time learning), il bondit de 26,14 à 50,50, presque doublant. Sur LoCoMo, l'amélioration atteint 20 % en moyenne.</p>
+
+<p>Comparé aux baselines de mémoire les plus représentatives, l'écart se creuse encore. Context2LoRA, le meilleur concurrent paramétrique, plafonne à 44,90 de moyenne. MemGen et MLP Memory, plus lourds, sont nettement en dessous. BM25 RAG et MemoryBank, les approches textuelles classiques, dégradent même certains scores à cause du bruit de récupération.</p>
+
+<p>Le résultat le plus frappant tient en une expérience d'ablation : que se passe-t-il si on supprime totalement le contexte historique du prompt et qu'on ne laisse que la matrice mémoire ? Sur HotpotQA, le score Exact Match passe de 0,08 % (modèle aveugle) à 6,48 % avec δ-mem seul. Sur la sous-catégorie Bridge (questions à raisonnement multi-sauts), le F1 passe de 6,25 à 11,05. Une matrice de 64 cases retrouve une partie significative des indices nécessaires au raisonnement, alors même que le texte source a disparu du prompt.</p>
+
+<p>Côté coût, la sobriété est radicale. δ-mem ajoute 4,87 millions de paramètres entraînables, soit 0,12 % du modèle de base de 4 milliards. Le concurrent MLP Memory en exige 3 078 millions — 76 % de la taille du modèle. La consommation mémoire GPU à l'inférence reste équivalente à celle du modèle vanille, même avec un prompt de 32 000 tokens. La vitesse de décodage est un peu plus lente que le modèle nu (chaque pas implique une lecture-écriture sur la matrice), mais reste largement supérieure à MemGen.</p>
+
+<h2>Pourquoi ce résultat compte pour l'industrie</h2>
+
+<p>Trois implications méritent d'être prises au sérieux par toute équipe construisant des agents en production.</p>
+
+<p>D'abord, la <strong>fin du dogme du contexte long</strong>. La course aux fenêtres géantes (1M, 2M, 10M tokens) part du principe que la mémoire est un problème de capacité de stockage. δ-mem suggère que c'est plutôt un problème de représentation. Une matrice 8×8 bien couplée à l'attention bat des baselines qui injectent l'historique entier dans le prompt. Pour les déploiements coûts-sensibles, c'est une voie alternative crédible.</p>
+
+<p>Ensuite, la <strong>compatibilité avec les modèles figés</strong>. δ-mem n'exige aucun réentraînement du modèle de base. Le squelette reste intact, la mémoire est un module entraîné séparément qui se branche dessus. Pour les éditeurs qui consomment des modèles fermés via API (impossible à fine-tuner), l'approche pure n'est pas applicable telle quelle, mais le principe — un état latent compact qui pilote le modèle via un canal séparé — peut inspirer des wrappers côté client.</p>
+
+<p>Enfin, la <strong>granularité d'écriture compte</strong>. Les chercheurs montrent que sur les modèles plus petits (SmolLM3-3B), la stratégie multi-états (MSW) donne les meilleurs résultats : un saut de 26,08 à 36,96 de moyenne. Sur les modèles plus capables (Qwen3-8B), c'est l'écriture par segment (SSW) qui s'impose. Le découplage par type d'information (faits vs préférences vs état de tâche) compense la moindre capacité de raisonnement du backbone. Cette observation suggère qu'un agent industriel pourrait bénéficier de plusieurs « tiroirs » mémoire spécialisés plutôt que d'un seul état monolithique.</p>
+
+<p>Pour les bâtisseurs d'agents long-horizon — assistants personnels persistants, systèmes de coding agentique, copilotes d'opérations — le message est clair : la mémoire n'a pas besoin d'être grosse pour être utile. Elle a besoin d'être bien couplée.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Plusieurs questions restent ouvertes. La première porte sur la <strong>scalabilité</strong>. Les expériences plafonnent à 8 192 tokens d'écriture mémoire. Comment se comporte δ-mem sur des conversations qui s'étalent sur des semaines, des dizaines de millions de tokens cumulés ? La matrice 8×8 risque-t-elle la saturation ? Les portes de forget suffisent-elles à éviter l'effacement progressif d'informations anciennes mais critiques ?</p>
+
+<p>La deuxième concerne la <strong>contrôlabilité</strong>. Une mémoire qui s'auto-écrit est aussi une mémoire qui s'auto-réécrit. Pour des cas d'usage régulés (santé, finance, juridique), l'opérateur doit pouvoir auditer ce que l'agent retient, l'éditer, le supprimer sur demande. Une matrice de 64 nombres flottants n'a pas d'interprétation lisible. Construire une couche d'introspection sur ce type de mémoire latente reste un chantier ouvert.</p>
+
+<p>La troisième touche à la <strong>portabilité</strong>. δ-mem est conçu pour des modèles à attention complète. Les architectures hybrides récentes (Mamba, Kimi Linear, Qwen-Next) intègrent déjà des mécanismes récurrents internes. Comment δ-mem se combine-t-il avec ces approches ? Y a-t-il redondance, ou complémentarité ?</p>
+
+<p>Les auteurs ont publié leur code sur GitHub (organisations Declare-lab et MindLab-Research). La méthode est suffisamment légère pour être prototypée par n'importe quelle équipe disposant de quelques A800. Si la promesse tient à plus grande échelle, δ-mem pourrait redéfinir ce qu'on appelle « mémoire » dans un agent : non plus un dépôt à fouiller, mais un état vivant qui évolue avec lui.</p>
+
+<p>Reste une intuition contre-intuitive à digérer. Pendant des années, l'amélioration des LLM a suivi une logique d'échelle : plus de paramètres, plus de données, plus de contexte. δ-mem montre qu'avec 0,12 % de paramètres supplémentaires et une matrice de 64 cases, on peut gagner 31 % sur les tâches qui résistent le plus aux passages à l'échelle. Le bon couplage vaut mieux que la grosse capacité. C'est une leçon que l'ingénierie applique depuis longtemps à d'autres systèmes complexes — et qui semble enfin trouver sa traduction dans l'IA.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

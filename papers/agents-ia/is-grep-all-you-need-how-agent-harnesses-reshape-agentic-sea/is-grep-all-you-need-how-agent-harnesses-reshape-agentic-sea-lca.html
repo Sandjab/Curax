@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Is Grep All You Need? How Agent Harnesses Reshape Agentic Search — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Is Grep All You Need? How Agent Harnesses Reshape Agentic Search</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les auteurs interrogent une convention installée des systèmes RAG : la supériorité supposée de la recherche vectorielle dense sur la recherche lexicale dans les boucles agentiques. Leur thèse est que cette comparaison a été conduite hors contexte agentique, sur des pipelines statiques où le top-<em>k</em> est concaténé dans le prompt. Or, dans un agent moderne, le harness décide quand chercher, comment formuler la requête, comment ingérer les résultats et quand s'arrêter.</p>
+<p>Deux questions structurent l'article. D'abord, lexical ou dense produit-il un avantage stable lorsque le harness et le mode de livraison des résultats (inline vs fichier) varient ? Ensuite, ces deux familles se dégradent-elles de la même façon quand on injecte progressivement des sessions distractrices autour des sessions oracles ?</p>
+
+<h2>Méthodologie</h2>
+<p>Le benchmark est un sous-ensemble de 116 questions de LongMemEval, couvrant six catégories de mémoire long-terme (knowledge-update, multi-session, single-session-assistant/preference/user, temporal-reasoning). Le corpus est prétraité par Chronos pour extraire des événements temporels normalisés en parallèle des tours bruts.</p>
+<p>Le plan factoriel croise quatre dimensions : retriever (grep / vector), harness (Chronos custom, Claude Code, Codex CLI, Gemini CLI), mode de livraison (inline / programmatic file-based), backbone (Claude Opus 4.6, Claude Haiku 4.5, GPT-5.4, Gemini 3.1 Pro, Gemini 3.1 Flash-Lite). L'expérience 2 ajoute un balayage du nombre de sessions distractrices (s5, s10, s20, s30, full).</p>
+<p>L'évaluation s'appuie sur un grader GPT-4o produisant un jugement binaire conditionné par la catégorie. Tous les hyperparamètres du grader sont gelés entre conditions.</p>
+<p>Le protocole présente trois limites méthodologiques notables. Premièrement, un grader unique pour toutes les conditions ne neutralise pas un biais d'auto-préférence éventuel envers les sorties du même fournisseur. Deuxièmement, l'échantillonnage des distractrices est redessiné à chaque palier de session, ce que les auteurs reconnaissent : les courbes de scaling ne mesurent donc pas une loi monotone mais un tirage stochastique. Troisièmement, la ligne Codex vector est explicitement incomplète sur les paliers intermédiaires, ce qui empêche toute conclusion vendor-complète.</p>
+
+<h2>Résultats principaux</h2>
+<p>En mode inline, grep dépasse vector pour les dix paires harness-modèle de l'expérience 1. L'écart le plus large concerne Chronos avec Gemini 3.1 Flash-Lite (86,2 % contre 62,9 %), le plus faible Claude Code avec Opus 4.6 (76,7 % contre 75,0 %).</p>
+<p>Le passage en livraison programmatique inverse partiellement la hiérarchie : vector dépasse grep sur cinq paires sur dix. Le cas le plus instructif est Codex GPT-5.4 qui chute de 93,1 % (grep inline) à 55,2 % (grep programmatique), pendant que vector programmatique tient à 67,2 %. L'hypothèse retenue est que le cycle lire-intégrer-réessayer ajoute une charge compositionnelle que certaines piles n'absorbent pas de façon fiable.</p>
+<p>L'effet du harness rivalise avec celui du retriever : Opus 4.6 atteint 93,1 % sous Chronos contre 76,7 % sous Claude Code, soit un delta du même ordre que le swap grep↔vector dans un harness fixe.</p>
+<p>L'expérience 2 montre que l'ordre grep/vector n'est pas préservé lorsque le bruit augmente, et qu'il dépend du harness et du backbone. Claude Code favorise grep pour Opus et Haiku à tous les paliers, Gemini CLI favorise vector pour Gemini 3.1 Pro à tous les paliers, et Chronos présente des croisements dépendant du nombre de sessions. La courbe globale est plate plutôt que monotone, contredisant l'intuition d'un effondrement lexical avec la taille du corpus.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'interprétation la plus défendable du papier n'est pas « grep bat vector », mais « retrieval × harness × delivery » forme un système indissociable. Cette lecture est cohérente avec les données : la même paire retrieval-modèle bouge de plus de quinze points selon le harness.</p>
+<p>L'avantage de grep sur LongMemEval reste cependant lié à la nature du benchmark. Les réponses sont souvent ancrées sur des empans verbatim (dates, préférences explicites, faits utilisateur). Cette structure favorise mécaniquement le matching exact. Sur des corpus où la preuve est paraphrasée (synthèse scientifique, code, documents visuels), la conclusion ne tient pas, et les auteurs l'admettent dans la section Limitations.</p>
+<p>Plusieurs faiblesses limitent la portée des claims. La taille de l'échantillon (116 questions) reste modeste, surtout fragmentée en six catégories. L'absence d'intervalles de confiance ou de tests de significativité rend incertain le statut des écarts inférieurs à 5 points. Les modèles cités utilisent des versions futures (Opus 4.6, Haiku 4.5, GPT-5.4, Gemini 3.1) dont la nature exacte n'est pas documentée, ce qui complique la reproduction.</p>
+<p>Le harness Chronos est référencé par auto-citation vers un autre preprint des mêmes auteurs, sans description suffisante du dynamic prompting catégorie-conditionné. Cette dépendance peut introduire un biais systématique en faveur de Chronos, dont les scores plafonnent effectivement plus haut que ceux des CLI provider sur la majorité des configurations.</p>
+
+<h2>Reproductibilité</h2>
+<p>LongMemEval est public et le sous-ensemble de 116 questions est documenté. Les implémentations de grep et vector sont décrites au niveau du principe mais sans code ni paramètres exposés (modèle d'embedding, taille de chunk, paramètres du reranker, top-<em>k</em>). Le harness Chronos n'est pas open source dans l'article. Les wrappers bash invoqués par les CLI ne sont pas publiés. Les prompts catégorie-conditionnés ne sont pas montrés. En l'état, une réplication exacte est impossible ; seule une réimplémentation approchée l'est.</p>
+
+<h2>Impact et applications</h2>
+<p>Le résultat opérationnel est utile pour les ingénieurs de coding agents : sur des corpus textuels stables où la preuve est littérale, un grep bien intégré dans le harness suffit souvent, à condition que la sortie soit inline. Cela rejoint l'observation pratique des derniers coding agents en production qui exposent grep comme outil natif plutôt qu'un index vectoriel.</p>
+<p>L'apport secondaire est méthodologique. Les auteurs montrent que comparer BM25 vs ANN sur des pipelines statiques sous-estime la variance introduite par le scaffolding agentique. Toute évaluation future de retriever pour agents devrait donc rapporter conjointement le harness et le mode de livraison.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier s'inscrit dans une vague récente de travaux qui reconfigurent les stratégies de recherche dans les agents modernes : le shell comme alternative au RAG vectoriel, la pression de contexte (Liu et al. 2024, lost-in-the-middle), MemGPT (Packer et al. 2023) pour la livraison fichier. Il dialogue aussi avec SWE-agent (Yang et al. 2024) sur l'interface agent-ordinateur.</p>
+<p>Sa contribution distincte est le plan factoriel explicite croisant retriever, harness et delivery. À notre connaissance, aucune étude antérieure n'avait isolé ces trois axes simultanément sur un benchmark de mémoire long-terme. La portée reste cependant restreinte au domaine conversationnel, et la dépendance au harness propriétaire Chronos affaiblit la généralisation vendor-neutre.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Question claire et pertinente sur un angle peu étudié : interaction retriever × harness × delivery.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Plan factoriel correct mais sur un seul benchmark conversationnel, sans validation croisée sur d'autres domaines.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>116 questions fragmentées en six catégories, sans intervalles de confiance ni tests de significativité.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Grader GPT-4o unique, jugement binaire ; pas de double-grader ni d'humain pour calibrer.</td></tr>
+<tr><td>Contrôle des biais</td><td>2</td><td>Échantillonnage stochastique des distractrices reconnu mais non répété, Chronos évalué par ses propres concepteurs.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Benchmark public, mais harness Chronos, wrappers et prompts catégorie-conditionnés non fournis.</td></tr>
+<tr><td>Transparence des limitations</td><td>3</td><td>Section Limitations honnête sur le scope conversationnel ; lignes Codex vector incomplètes signalées.</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td><td>Résultat opérationnel utile aux ingénieurs d'agents ; nouveauté méthodologique réelle mais incrémentale.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

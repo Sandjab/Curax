@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Methodology for Selecting and Composing Runtime Architecture Patterns for Production LLM Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>A Methodology for Selecting and Composing Runtime Architecture Patterns for Production LLM Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le papier formule une thèse architecturale précise : la fiabilité des agents LLM en production ne se joue plus dans la qualité par appel du modèle, mais dans la couture qui sépare la sortie stochastique du LLM des écritures déterministes du système. Srinivasan baptise cette couture <strong>stochastic-deterministic boundary</strong> (SDB) et la définit comme un contrat à quatre parts — proposer (le LLM), verifier (un check déterministe), commit (l'écriture durable), reject signal (la réponse typée renvoyée au proposer en cas d'échec).</p>
+<p>L'argument central tient en une équation stylisée : <em>y(t) = µt + σξ(t)</em>, où σ représente la variance par appel (qui se comprime à chaque génération de modèle) et µ le « momentum architectural » fixé par les patterns et la robustesse de la SDB. À mesure que σ décroît, µ devient le levier dominant. La question de recherche est claire et opérationnelle : comment outiller les équipes pour choisir explicitement les patterns qui sculptent µ ?</p>
+
+<h2>Méthodologie</h2>
+<p>Le travail combine trois registres hétérogènes. D'abord une <strong>construction conceptuelle</strong> : nommage de la SDB, taxonomie à trois préoccupations (Coordination, État, Contrôle) et catalogue de six patterns (P1 Hierarchical Delegation, P2 Scatter-Gather plus Saga, P3 Event-Driven Sequencing, P4 Supervisor plus Gate, P5 Shared State Machine, P6 Human in the Loop). Chaque pattern est rattaché à un résultat des systèmes distribués (acteurs de Hewitt, sagas de Garcia-Molina–Salem, log de Kreps, supervision Erlang, workflow nets de van der Aalst, CAS, Paxos).</p>
+<p>Ensuite un <strong>audit empirique limité</strong> : recensement de 21 sites d'appel LLM-vers-action dans cinq frameworks open-source (openai/swarm, AutoGPT, LangChain Agents, CrewAI, AutoGen), avec 19/21 sites présentant une logique explicite verifier-and-commit. En parallèle, classification de 21 post-mortems publics d'échecs d'agents, dont 15 (71 %) sont localisés à la frontière et 17 (81 %) corrigés en renforçant l'une des quatre parts du contrat. Deux cas illustratifs ancrent l'argument : la chute de 23 points de résistance au prompt-injection lors du passage GPT-4o → GPT-4.1 chez Promptfoo, et le bug <code>status: 'completed'</code> dans openai-agents-js.</p>
+<p>Enfin une <strong>méthodologie procédurale</strong> en cinq étapes (classification du runtime, choix du spine, coordination, contrôle, séquencement de build) produisant un artefact à six lignes d'architecture decision record, et un catalogue de signatures d'échecs cartographiées sur les patterns.</p>
+<p>La méthodologie est appliquée à cinq workloads : un cas de référence (renouvellement de contrat à 90 jours sur le jeu IBM Telco Customer Churn) plus quatre cas additionnels (assistance billing conversationnelle, scanner de fall-outs, port-in de numéro, lead warming).</p>
+
+<h2>Résultats principaux</h2>
+<p>Trois apports se détachent. Le premier, <strong>nominal</strong>, est l'identification d'un primitif architectural que les frameworks rediscouvrent sans le nommer. La force du résultat tient au fait que la SDB est définie par un contrat (quatre parts typées), pas seulement par une métaphore, ce qui en fait un objet de conception.</p>
+<p>Le deuxième est la mise en évidence du <strong>replay divergence</strong> : un log d'événements reste déterministe, mais les consommateurs LLM qui le rejouent sous une version de modèle différente produisent des projections divergentes. Cela transforme le choix P3 vs P5 en décision techniquement motivée et non plus en préférence de style.</p>
+<p>Le troisième est la <strong>décomposition µ/σ</strong> : structurellement, µ ne dépend pas de la qualité par appel du modèle. À mesure que les éditeurs compressent σ, l'investissement dans la SDB et le choix de pattern deviennent les seuls leviers restants. L'argument est convaincant en tant que cadre de raisonnement, même s'il n'est pas démontré quantitativement.</p>
+<p>Les cinq workloads servent de test de cohérence : deux cas long-horizon (port-in et lead warming) divergent sur le spine (P5 vs P3) parce que le prédicat 2 (« l'état au pause est-il reconstructible depuis l'input initial ? ») se déclenche différemment. C'est la propriété intéressante : la méthodologie répond au prédicat, pas à la classe de runtime.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le papier souffre d'un déficit empirique que l'auteure reconnaît elle-même. L'« audit » de 21 sites d'appel est petit ; la classification des 21 post-mortems est subjective et non auditée par des tiers ; les cinq workloads sont construits par l'auteure pour illustrer la méthodologie, donc tautologiquement cohérents avec elle. La distinction de Srinivasan entre « call for replication » et « defect of the methodology » est honnête mais ne change pas le statut épistémique du papier : il s'agit d'un cadre théorique plausible, pas d'une méthodologie validée.</p>
+<p>L'équation y(t) = µt + σξ(t) est explicitement présentée comme <em>stylized framing, not a derived model</em>. Aucune mesure de µ ou σ sur un système réel n'est fournie. Le lecteur doit accepter le formalisme comme dispositif rhétorique ; il ne peut pas le contester empiriquement.</p>
+<p>La généalogie aux systèmes distribués (Hewitt, Lamport, Helland, Kreps, Armstrong) est érudite mais parfois invoquée comme caution plus que comme argument technique. Le passage par CAP, par exemple, ne discrimine pas les choix P3 vs P5 dans le contexte agentique ; il sert d'ancrage légitimant.</p>
+<p>Une vraie tension de fond mérite d'être nommée : l'auteure pose que µ est <em>structurellement indépendant</em> de la qualité par appel. C'est une affirmation forte. Un modèle qui hallucine moins de tool calls invalides réduit la charge sur le verifier ; un modèle qui suit mieux les schémas raccourcit le reject loop. La séparation µ ⊥ σ est une commodité analytique, pas un théorème.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le repository compagnon (<code>vasundras/agent-runtime-patterns</code>) contient une implémentation runnable du renouvellement de contrat sur les données publiques IBM Telco Customer Churn, sous licence MIT. L'audit des cinq frameworks est reproductible à partir des commits cités. La classification des 21 post-mortems est, en revanche, l'opinion de l'auteure : un lecteur peut substituer son propre jugement et recalculer les totaux, mais la grille d'attribution (« localise to weaknesses at the boundary ») reste interprétative.</p>
+<p>La méthodologie elle-même est testable : un praticien peut l'appliquer à son workload et produire son ADR à six lignes. La promesse de Srinivasan est que des prédicats identiques donnent des architectures identiques. Cette propriété n'est validable que par réplication multi-équipes, ce que le papier ne fournit pas.</p>
+
+<h2>Impact et applications</h2>
+<p>La valeur pratique est réelle pour les équipes d'ingénierie en charge d'agents LLM en production. Le vocabulaire SDB, les six patterns et le catalogue de signatures d'échecs forment une boîte à outils directement utilisable lors d'une revue d'architecture ou d'un post-mortem. La distinction P3/P5 et la notion de replay divergence sont des contributions saillantes pour quiconque construit des agents long-horizon avec event sourcing.</p>
+<p>L'ADR à six lignes est l'artefact le plus opérationnel du papier. Sa simplicité (cinq décisions + un horodatage modèle) en fait un livrable réaliste qu'un staff engineer peut imposer comme gate de revue.</p>
+<p>L'impact académique sera vraisemblablement plus modéré : le papier ne produit ni benchmark, ni mesure, ni démonstration formelle. Il agit comme un papier de positionnement, dans la tradition de Helland ou Kreps, mais sans l'autorité empirique de Spanner ou du log Kafka.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Srinivasan se positionne explicitement au-dessus des frameworks multi-agents (AutoGen, MetaGPT, HuggingGPT, CAMEL, AgentVerse, DSPy) qui fournissent les moyens de composition sans guide de sélection. C'est juste : aucun de ces frameworks ne livre de procédure de choix architectural pour un workload donné.</p>
+<p>Le rapprochement avec les primitifs des systèmes distribués (sagas, Paxos, log, supervision Erlang, workflow nets) est solide sur le plan généalogique mais discutable sur le plan technique. La translittération de ces résultats au cas d'un worker stochastique reste superficielle : ni l'analyse de cohérence du saga sous un proposer non-déterministe, ni l'extension de la CAS à des transitions LLM-proposées ne sont formalisées. C'est un travail à venir.</p>
+<p>Côté fiabilité et oversight, l'article s'appuie sur la taxonomie MAST de Cemri et al. et la survey HITL de Wu et al. sans les contester. L'apport propre est de convertir ces descriptions en procédure de sélection au niveau runtime — une niche que peu d'autres papiers occupent à ce jour.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+  <thead>
+    <tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Question de recherche</td><td>4</td><td>Thèse claire, originale dans son nommage de la SDB, pertinente pour les équipes d'ingénierie.</td></tr>
+    <tr><td>Design expérimental</td><td>2</td><td>Aucun protocole expérimental contrôlé ; audit qualitatif et applications construites par l'auteure.</td></tr>
+    <tr><td>Taille d'échantillon</td><td>2</td><td>21 sites d'appel, 21 post-mortems, 5 frameworks, 5 workloads — trop petit pour soutenir des généralisations quantitatives.</td></tr>
+    <tr><td>Qualité des métriques</td><td>2</td><td>Pas de mesure de µ ni de σ ; les chiffres clés (71 %, 81 %, 19/21) reposent sur une classification subjective.</td></tr>
+    <tr><td>Contrôle des biais</td><td>2</td><td>Construction et classification par la même personne ; biais de confirmation reconnu mais non mitigé.</td></tr>
+    <tr><td>Reproductibilité</td><td>3</td><td>Repo compagnon avec code et données publiques ; audit reproductible ; classification interprétative.</td></tr>
+    <tr><td>Transparence des limites</td><td>4</td><td>Section dédiée aux threats to validity, lucide sur la construction par l'auteure et le statut métaphorique du modèle.</td></tr>
+    <tr><td>Impact et nouveauté</td><td>3</td><td>Vocabulaire utile (SDB, replay divergence, momentum), catalogue exploitable, mais contribution conceptuelle plus que scientifique.</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Appréciation globale : 2.8/5.</strong> Le papier livre un outil de conception cohérent et un vocabulaire qui manquait, mais l'étayage empirique est trop léger pour le statut d'un résultat scientifique. À lire comme un position paper d'ingénierie sérieux, pas comme une démonstration.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

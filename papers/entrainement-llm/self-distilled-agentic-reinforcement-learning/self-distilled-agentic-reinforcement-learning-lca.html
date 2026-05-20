@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Distilled Agentic Reinforcement Learning — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Self-Distilled Agentic Reinforcement Learning</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les auteurs s'attaquent à un problème précis du post-training agentique : le signal de récompense au niveau trajectoire de GRPO fournit une supervision trop grossière pour l'apprentissage long-horizon multi-tours. L'auto-distillation on-policy (OPSD) compense en générant un signal dense au niveau token depuis une branche enseignante augmentée d'un contexte privilégié (skills récupérées), mais transposer OPSD aux agents multi-tours produit deux pathologies documentées par les auteurs : instabilité par dérive compoundée (KL divergence par tour qui explose) et asymétrie de confiance dans la guidance privilégiée (plus de 50% des tokens présentent un gap enseignant-étudiant négatif sur Qwen2.5-3B).</p>
+<p>SDAR propose de garder GRPO comme épine dorsale d'optimisation et de reléguer OPSD au rang d'objectif auxiliaire gaté au niveau token via une sigmoïde σ(β·Δt), où Δt est l'écart de log-probabilité enseignant-étudiant détaché du graphe de gradient.</p>
+
+<h2>Méthodologie</h2>
+<p>L'approche se décompose en quatre éléments. Le backbone reste GRPO standard avec avantages relatifs à un groupe. La perte auxiliaire LSDAR pondère chaque token par gt = σ(β·Δt), où Δt = log πT(yt|s+t) − log πθ(yt|st) est calculé sur des tokens échantillonnés par l'étudiant (estimation single-sample du reverse-KL). Le stop-gradient sur gt évite un couplage auto-référentiel instable, démontré formellement par la Proposition 5. Trois variantes de gating sont comparées : entropie, gap et soft-OR ; le gap gating l'emporte expérimentalement.</p>
+<p>Les hyperparamètres clés sont λ=0,01 (poids de la perte auxiliaire) et β=5,0 (sharpness de la sigmoïde). Le banc de skills provient de SkillRL et la stratégie de récupération par défaut est le keyword matching. L'entraînement court sur 150 étapes seulement, sur 8 GPU H800.</p>
+
+<h2>Résultats principaux</h2>
+<p>SDAR dépasse GRPO sur les trois benchmarks et trois échelles de modèles. Les gains les plus marqués apparaissent sur ALFWorld (+9,4% en moyenne sur Qwen2.5-3B, +4,7% sur 7B, +7,8% sur Qwen3-1.7B). Sur Search-QA, l'amélioration reste modeste (+7,0% sur 3B). Sur WebShop-Acc, le gain atteint +10,2% sur 7B.</p>
+<p>Deux résultats secondaires renforcent la thèse. D'abord, l'OPSD seul s'effondre presque à zéro sur Search-QA, et GRPO+OPSD naïf dégrade Qwen3-1.7B de 46,1% à 32,0% sur ALFWorld — confirmant l'instabilité que SDAR prétend résoudre. Ensuite, SDAR internalise les skills : il surpasse Skill-GRPO* (testé avec skills) sans avoir besoin de skills à l'inférence, tandis que Skill-GRPO sans skills chute brutalement (60,2 vs 80,5 sur ALFWorld-3B).</p>
+<p>L'analyse de robustesse au retrieval montre que même une récupération aléatoire bat le baseline GRPO de 1 à 2 points, ce qui plaide pour un mécanisme qui filtre activement le bruit plutôt que pour une dépendance forte à la qualité des skills.</p>
+
+<h2>Discussion et limites</h2>
+<p>Plusieurs faiblesses doivent être soulignées. La taille d'échantillon est asymétrique selon les benchmarks : WebShop n'est évalué que sur 128 tâches fixées, ce qui rend les écarts de 1 à 2 points peu interprétables statistiquement. Aucun intervalle de confiance, aucune barre d'erreur, aucune réplication avec graines différentes ne sont rapportés dans les tableaux principaux, ce qui fragilise l'affirmation de gains "substantiels" sur certaines cellules.</p>
+<p>Le périmètre expérimental se limite à la famille Qwen (2.5 et 3) et à des tailles 1,7B–7B. La généralisation à d'autres familles (Llama, Gemma, DeepSeek) ou à des modèles 30B+ reste à démontrer. L'horizon d'entraînement de 150 étapes est court : les courbes de Figure 5 montrent que le ratio de gate actif n'a pas encore franchi 0,5 en fin d'entraînement, ce qui suggère un régime non encore stabilisé.</p>
+<p>La théorie en Appendix A est élégante mais purement descriptive : les Propositions 1–5 caractérisent la forme du gradient sans démontrer de propriété de convergence. La Proposition 4 borne le gradient auxiliaire par celui du log-vraisemblance non pondéré, ce qui rassure mais ne garantit pas l'optimalité du choix de β=5,0 — choix justifié uniquement empiriquement.</p>
+<p>Le choix du reverse-KL plutôt que forward-KL ou JSD est défendu par la propriété mode-seeking, mais l'ablation Figure 9 reste à une seule taille de modèle (7B sur ALFWorld). La transposition à des tâches où l'enseignant serait fiable plutôt que "weak" pourrait inverser ce classement.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est publié sur GitHub (ZJU-REAL/SDAR), les hyperparamètres détaillés en Table 3, les algorithmes en pseudo-code complet (Algorithmes 1–6), les prompts en Figures 15–17. Les benchmarks utilisés sont publics. Le matériel (8 GPU H800) reste accessible à des laboratoires académiques sérieux. Manquent toutefois les checkpoints intermédiaires et les seeds exactes, ce qui complique la réplication bit-à-bit.</p>
+
+<h2>Impact et applications</h2>
+<p>La contribution principale est conceptuelle : démontrer qu'un gating au niveau token, smooth et différentiable, suffit à transformer une combinaison RL+distillation instable en un signal exploitable, sans recourir à un curriculum temporel rigide comme TCOD ou Skill-SD. Cette idée se transpose directement à d'autres pipelines où un enseignant privilégié génère un signal bruité (RLHF avec reward models peu fiables, distillation depuis un modèle plus grand mais mal aligné, etc.).</p>
+<p>Pour les praticiens construisant des agents LLM multi-tours, SDAR offre un drop-in replacement de GRPO+OPSD avec deux hyperparamètres seulement (λ, β) et un coût computationnel marginal (un forward pass enseignant supplémentaire par rollout).</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>SDAR se situe à l'intersection de trois lignes de recherche : agentic RL (GRPO de Shao et al. 2024, GiGPO de Feng et al. 2025), on-policy distillation (Agarwal et al. 2024, MiniLLM de Gu et al. 2026), et méthodes hybrides RL+distillation (Skill-SD de Wang et al. 2026, RLSD de Yang et al. 2026, HDPO de Ding 2026, TCOD de Wang et al. 2026). Le différenciateur clair est le gating adaptatif au niveau token plutôt que les schedules temporels manuels, et la préservation stricte de l'objectif RL non biaisé via le stop-gradient sur la perte auxiliaire. L'inspiration vient de TIP (Xu et al. 2026) qui introduit la notion d'importance token-level dans la distillation on-policy.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien posé, motivé par deux observations empiriques précises (instabilité multi-tours, asymétrie de gap).</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trois benchmarks variés, trois échelles de modèles, comparaison contre 5 baselines pertinentes, ablations sur 4 axes (gating, β, λ, divergence).</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>WebShop limité à 128 tâches ; pas de réplications multi-seeds ; entraînement court à 150 étapes.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Success rate, accuracy, score : métriques standard et reconnues sur ces benchmarks.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Pas de variance rapportée sur les résultats ; comparaison limitée à la famille Qwen ; choix du SkillBank de SkillRL fixé sans ablation.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code public, hyperparamètres complets, prompts fournis ; seeds et checkpoints non documentés.</td></tr>
+<tr><td>Transparence sur limites</td><td>3</td><td>Les auteurs reconnaissent la dépendance au retrieval mais minimisent l'absence de tests statistiques et la courte durée d'entraînement.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Mécanisme de gating au niveau token original dans le contexte agentique, théorie supportive, gains empiriques cohérents.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

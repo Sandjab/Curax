@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agents May Always Fall for Prompt Injections — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AI Agents May Always Fall for Prompt Injections</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le prompt injection figure au sommet du classement OWASP Top 10 pour les applications LLM et reste la vulnérabilité la plus critique des agents déployés. Abdelnabi et Bagdasarian attaquent frontalement le paradigme dominant qui traite cette menace comme un problème de séparation données-instructions. Leur thèse : ce cadrage est inadéquat pour les agents autonomes futurs qui interagissent avec multiples sources, mémoires et outils, où les instructions sont par conception partout dans le contexte.</p>
+<p>La proposition centrale consiste à reformuler le prompt injection comme une violation de l'<strong>intégrité contextuelle</strong> (Contextual Integrity, CI), théorie développée par Nissenbaum pour caractériser la conformité d'un flux d'information aux normes contextuelles. L'article articule cette reformulation théorique avec un argument d'impossibilité formel et quatre axes empiriques de validation.</p>
+
+<h2>Méthodologie</h2>
+<p>Le travail combine quatre dispositifs expérimentaux distincts. D'abord, un jeu de données apparié de 4 200 scénarios email où chaque paire partage le corps professionnel mais diffère par une seule clause (assertion d'autorité versus formulation neutre), ce qui isole rigoureusement la variable contextuelle. Les classifieurs Prompt Guard et Prompt Guard 2 sont évalués sur 8 400 emails, et LLaMA-3.3-70B ainsi que SecAlign-70B sont testés sous quatre conditions croisant délégation utilisateur restrictive/permissive et variantes neutre/autoritaire.</p>
+<p>Ensuite, une boucle de red-teaming adaptative inspirée de PAIR cible deux étages distincts du cadre CI : manipulation des paramètres contextuels (sender, transmission principle) versus manipulation de l'évaluation normative pure. L'attaquant claude-sonnet-4-6 lance 150 scénarios attaqués par trois flux indépendants de 15 itérations chacun, avec transfert aveugle des meilleurs emails vers gpt-5.4, gpt-5.2 et gemini-3-pro.</p>
+<p>Le troisième dispositif construit 300 scénarios multi-tours sur quatre domaines pour mesurer l'effet de l'historique d'interaction sur l'inférence des normes de délégation. Le quatrième utilise 100 scénarios de flux simultanés où un même thread email combine une action autorisée (F1) et une action non autorisée (F2), avec ou sans contrainte explicite.</p>
+
+<h2>Résultats principaux</h2>
+<p>Les classifieurs d'injection opèrent au niveau du hasard (AUROC 0,43 à 0,59) quand les attaques passent par manipulation contextuelle plutôt que par vocabulaire d'injection. Plus préoccupant : SecAlign-70B, modèle DPO entraîné pour résister aux injections, fait pire que LLaMA-3.3-70B sur la délégation restrictive (88,2% d'envoi contre 54,0%), et son entraînement supprime aussi la capacité à signaler le contenu suspect (54,6% versus 89,8% sur LLMail-Inject). L'alignement de sécurité actuel dégrade donc à la fois l'utilité et la pertinence contextuelle.</p>
+<p>L'attaque CI-informée atteint <strong>96,7% de succès</strong> contre une baseline statique à 0,67%, avec convergence en un seul tour dans 61,4% des cas. Les meilleurs emails crafted contre claude-sonnet-4-6 transfèrent sans réoptimisation à 63,3% sur gpt-5.4, 89,3% sur gpt-5.2 et 92,6% sur gemini-3-pro, contrastant nettement avec les suffixes adversariaux token-level qui transfèrent mal.</p>
+<p>L'ancrage par historique d'interaction réduit jusqu'à quatre fois les exécutions hors-périmètre (de 29,9% à 7,0% sur claude-sonnet-4-6) tout en préservant l'utilité (>93%). Sur les flux simultanés, gpt-5.2 viole la frontière F1/F2 dans 65% des scénarios sans contrainte explicite, gpt-5.4 dans 34%, claude-sonnet-4-6 dans seulement 6% — l'autorisation pour F1 fuit vers F2 par simple co-occurrence dans le même message.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'<strong>argument d'impossibilité</strong> constitue la contribution conceptuelle majeure : un adversaire peut toujours construire un contexte où un flux bloqué semble légitime, ou un défenseur qui resserre les normes bloquera des flux authentiquement légitimes. Cette dualité ressemble structurellement aux impossibilités classiques en sécurité (Rice, undecidability) et explique pourquoi le paradigme actuel ne peut être qu'une approximation décroissante de la surface d'attaque.</p>
+<p>Les auteurs reconnaissent honnêtement plusieurs limites. Leurs scénarios supposent que la portée de délégation et les frontières de flux sont exprimables et explicites, alors qu'en pratique les utilisateurs délèguent en langage ambigu. L'historique d'interaction améliore l'inférence des normes mais introduit une nouvelle surface d'attaque (un adversaire qui façonne les premières interactions ancre l'agent). Les étiquettes d'appropriateness supposent des normes consensuelles, hypothèse fragile face aux variations culturelles et organisationnelles.</p>
+<p>Faiblesse plus discrète : les attaques de norm-evaluation pure (sans manipulation de paramètre) sont reconnues comme qualitatives, l'attaquant ne respectant pas toujours ses contraintes. Le taux de 79% sur gpt-5.2 doit donc être interprété avec prudence, car certaines attaques retombent dans la manipulation du transmission principle.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le papier fournit en annexe les prompts complets de génération du dataset apparié, les configurations des agents target/red-team/judge, et plusieurs traces complètes d'attaques itératives. Cette transparence procédurale est rare et précieuse. En revanche, le code source de la boucle d'attaque, les datasets générés (4 200 + 300 + 100 + 150 scénarios) et les modèles évalués ne font pas l'objet d'une déclaration explicite de mise à disposition publique. L'évaluation dépend en outre de modèles propriétaires (gpt-5.2/5.4, claude-sonnet-4-6, gemini-3-pro) qui rendent la réplication exacte dépendante de versions API non figées.</p>
+
+<h2>Impact et applications</h2>
+<p>Le repositionnement de la défense vers une architecture en couches — raisonnement CI-aware au niveau modèle, vérification système des claims contre des sources de vérité — fournit un programme concret. Les trois directions identifiées (entraînement contextuel sur paires de scénarios, défenses à couches avec vérification, red-teaming CI-grounded pour MAS) ouvrent des questions de recherche tractables. L'impact opérationnel immédiat concerne les coding agents, copilots d'entreprise et systèmes multi-agents, où le paradigme actuel de "ne jamais faire X" se révèle structurellement insuffisant.</p>
+<p>La portée prédictive du cadre est explicite : à mesure que les modèles deviennent robustes aux patterns d'injection classiques, la surface d'attaque migre vers les corruptions contextuelles. Cette anticipation oriente directement les benchmarks futurs (ConVerse, LLMail-Inject) et les protocoles de contractualisation comportementale des agents.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans une lignée déjà active appliquant CI aux LLM (ConfAIde, PrivacyLens, AirGapAgent, Lan et al. 2025), mais étend la théorie au-delà de la disclosure pour couvrir la question plus large de l'action appropriée. Il se positionne en complément critique d'AgentDojo, InjecAgent, PAIR, AutoInject et AgentVigil, qui optimisent des payloads dans un contexte fixe — alors que les auteurs argumentent que le contexte lui-même est le terrain de jeu adversarial.</p>
+<p>La filiation avec Abdelnabi et al. 2025b (firewalls duaux) et Tsai & Bagdasarian 2025 (contextual security) ancre l'article dans un programme cohérent de défenses contextuelles. L'argument d'impossibilité dialogue avec Debenedetti et al. 2026 (système d'isolation) en montrant que l'isolation totale supprime l'utilité, ce qui n'est pas un compromis acceptable pour les agents autonomes futurs.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table border="1" cellpadding="6" cellspacing="0">
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Cadrage théorique original et hautement pertinent pour la sécurité des agents</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Quatre dispositifs complémentaires bien articulés ; paires contrôlées rigoureuses</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>4 200 + 300 + 150 + 100 scénarios, 3 modèles frontière ; raisonnable pour position paper</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>AUROC, taux de succès, taux de transfert ; manque d'intervalles de confiance</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Transfert cross-modèles, baselines statiques, parité de vocabulaire dans les paires</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Prompts détaillés en annexe mais code/données non explicitement publics ; modèles propriétaires</td></tr>
+<tr><td>Transparence des limitations</td><td>5</td><td>Section "Open problems" lucide, argument d'impossibilité explicite, qualitatif assumé</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Reformulation théorique forte avec valeur descriptive et prédictive démontrée</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale indépendante : 4,3/5.</strong> Position paper de premier plan combinant rigueur conceptuelle (CI + impossibilité), validation empirique multi-axes sur modèles frontière, et programme de recherche concret. La principale réserve concerne la disponibilité du code et la nature qualitative reconnue des attaques de pure norm-evaluation.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

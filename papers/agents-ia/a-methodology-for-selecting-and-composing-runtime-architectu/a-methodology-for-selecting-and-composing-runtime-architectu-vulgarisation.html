@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Methodology for Selecting and Composing Runtime Architecture Patterns for Production LLM Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>A Methodology for Selecting and Composing Runtime Architecture Patterns for Production LLM Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un agent IA accorde 90% de remise à un client</h2>
+
+<p>Un agent conversationnel envoie une remise de 90% à un client. Personne ne l'a validée. Aucune règle métier ne s'y est opposée. Le modèle l'a simplement proposée, et le système l'a exécutée. Ce genre d'incident ne ressemble pas à un bug logiciel classique, et pourtant ce n'en est pas un. Le modèle a fait son travail : générer une réponse plausible. C'est tout ce qui l'entoure qui a échoué.</p>
+
+<p>Vasundra Srinivasan, architecte IA et autrice chez O'Reilly, défend une thèse simple dans un papier publié en mai 2026 : les agents LLM en production ne tombent presque jamais à cause du modèle. Ils tombent à cause de la couture entre le modèle et le reste du système. Cette couture a toujours existé. Personne ne l'avait nommée. Sans nom, impossible de la concevoir explicitement.</p>
+
+<h2>Le problème : un composant probabiliste au milieu d'un système déterministe</h2>
+
+<p>Un agent en production ressemble à une chaîne de production avec un ouvrier imprévisible au milieu. Tout ce qui arrive avant le LLM est déterministe : une requête, un événement, un déclencheur. Tout ce qui doit en sortir doit aussi être déterministe : une écriture en base, un appel API, un message envoyé. Au milieu, le LLM propose des actions qui ne sont pas reproductibles à l'identique d'un appel à l'autre.</p>
+
+<p>Cette asymétrie crée trois familles de pannes que Srinivasan identifie après avoir audité 21 post-mortems publiés d'agents en production. Un workflow finit dans le mauvais état parce qu'un gestionnaire d'événement a réagi à une instruction périmée. Une remise abusive part chez un client parce qu'aucune règle ne s'est interposée entre la proposition du modèle et l'écriture en base. Un processus long perd sa trace parce que personne n'a tranché si la source de vérité était un journal d'événements ou une ligne de base versionnée. Trois pannes différentes. Aucune n'est imputable au modèle. Toutes sont des décisions d'architecture prises avant que le LLM ne tourne.</p>
+
+<p>L'industrie traite ces pannes comme si elles relevaient du prompt engineering ou du choix de modèle. Le papier soutient l'inverse : à mesure que les modèles s'améliorent et que leur variance par appel diminue, ce sont les choix d'architecture qui dominent la fiabilité à long terme.</p>
+
+<h2>La méthode : nommer la frontière, puis cataloguer les patterns</h2>
+
+<p>L'autrice propose une primitive baptisée <strong>frontière stochastique-déterministe</strong> (SDB en anglais). C'est un contrat à quatre éléments qui spécifie comment une sortie de LLM devient une action système. Un <em>proposeur</em> (le LLM produit une suggestion), un <em>vérificateur</em> (un contrôle déterministe sur la proposition : schéma, règle de politique, transition d'état autorisée), une <em>étape de commit</em> (l'écriture durable qui suit l'acceptation), et un <em>signal de rejet</em> (la réponse typée renvoyée au LLM quand la vérification échoue).</p>
+
+<p>L'analogie qui marche : pensez à un éditeur de journal. Un journaliste écrit un article (le proposeur). Un rédacteur en chef le relit selon une grille (le vérificateur). Si l'article passe, il est publié et archivé (le commit). Sinon, il revient au journaliste avec des notes précises (le signal de rejet). Personne ne laisserait un journaliste publier directement. Pourtant, beaucoup de systèmes laissent le LLM écrire en base sans rédacteur en chef.</p>
+
+<p>Pour valider que cette primitive existe vraiment dans la nature, Srinivasan a audité cinq frameworks open-source connus — openai/swarm, AutoGPT, LangChain Agents, CrewAI, Microsoft AutoGen — sur 21 sites où le LLM déclenche une action. Résultat : 19 sur 21 implémentent déjà une logique de vérification et de commit. Les développeurs réinventent la frontière en permanence, sans avoir de nom pour la décrire.</p>
+
+<h3>Trois préoccupations, six patterns</h3>
+
+<p>Autour de la frontière, l'autrice organise trois préoccupations indépendantes que tout runtime d'agent doit traiter. La <strong>coordination</strong> : comment le travail se découpe et se recombine entre plusieurs appels LLM. L'<strong>état</strong> : comment le système se souvient entre les pauses. Le <strong>contrôle</strong> : qui décide ce qui s'exécute et quand s'arrêter.</p>
+
+<p>Pour chaque préoccupation, deux patterns issus des systèmes distribués classiques. Pour la coordination : la délégation hiérarchique (un orchestrateur dispatche à des sous-agents spécialisés) et le scatter-gather avec saga (fan-out vers des pairs symétriques avec compensations en cas d'échec). Pour l'état : le séquençage événementiel (un journal en append-only comme source de vérité) et la machine à états partagée (une ligne versionnée avec compare-and-swap). Pour le contrôle : le superviseur avec gate (qui redémarre ce qui meurt et refuse les écritures hors politique) et l'humain dans la boucle (kill switch, escalade, approbation, throttling).</p>
+
+<p>Chaque pattern hérite d'un résultat précis de la littérature des systèmes distribués : les acteurs de Hewitt, les sagas de Garcia-Molina et Salem, le log de Kreps, la supervision Erlang d'Armstrong, les réseaux de Petri de van der Aalst. Le papier ne réinvente pas la roue, il connecte ces primitives au cas où le travailleur est un LLM stochastique.</p>
+
+<h3>Une méthodologie en cinq étapes</h3>
+
+<p>Le catalogue ne sert à rien sans procédure. Srinivasan propose cinq étapes qu'une équipe parcourt en produisant des artefacts écrits à chaque palier.</p>
+
+<p>D'abord, classifier le runtime parmi trois classes : conversationnel (durée en secondes, utilisateur qui attend), autonome (durée en minutes, tâche déclenchée par un événement), long-horizon (durée en heures ou jours, processus qui pause et reprend, monde qui change entre-temps). Ensuite, choisir la colonne vertébrale d'état : machine à états si le workflow pause plus d'une heure, si l'état n'est pas reconstructible depuis l'entrée initiale, et si le monde change pendant la pause. Sinon, journal événementiel ou rien du tout. Puis envelopper avec un pattern de coordination, borner avec un pattern de contrôle, et enfin séquencer le build. La règle d'or pour le séquençage : <em>construire le tableau de bord avant l'agent</em>. Sans observabilité, on opère à l'aveugle.</p>
+
+<p>La méthodologie produit un artefact de six lignes — l'équivalent d'une fiche d'architecture lisible par n'importe quel reviewer ou auditeur, sans avoir à deviner.</p>
+
+<h2>Résultats clés : la momentum architecturale</h2>
+
+<p>Le papier introduit une idée que les équipes d'ingénierie devraient méditer : la fiabilité d'un agent en production se décompose en deux contributions distinctes. La <em>variance par appel</em>, qui mesure le bruit stochastique du modèle, et la <em>momentum architecturale</em>, qui mesure la pente de fiabilité imposée par l'architecture environnante.</p>
+
+<p>La variance par appel se compresse à chaque génération de modèle. Passez de GPT-4 à un modèle plus récent, et le bruit individuel diminue. La momentum architecturale, elle, dépend uniquement des choix de patterns et de la solidité de la frontière. Elle est structurellement indépendante de la qualité du modèle. Quand la variance diminue, la momentum devient le levier dominant. Autrement dit : changer de modèle aide de moins en moins, repenser l'architecture aide de plus en plus.</p>
+
+<p>Les chiffres extraits des post-mortems renforcent l'argument. Sur 21 défaillances d'agents publiées et classifiées, 15 (71%) se localisent à des faiblesses de la frontière elle-même. Et 17 des correctifs documentés (81%) consistent à renforcer l'un des quatre éléments du contrat : ajouter un classifieur en sortie, durcir un schéma, corriger un signal de rejet.</p>
+
+<p>Deux cas concrets ancrent la démonstration. Promptfoo a documenté qu'un client a upgradé son agent de GPT-4o vers GPT-4.1 sur le même harnais d'évaluation, et a vu sa résistance à l'injection de prompt chuter de 23 points (de 94% à 71%). Le fix : un classifieur de sortie et un gate plus strict — renforcer le vérificateur. Côté openai/openai-agents-js, un bug a été identifié où les appels d'outils rejetés étaient signalés au modèle avec le statut <code>completed</code>, ce qui le poussait à halluciner du succès. Le fix proposé : changer le signal de rejet vers <code>incomplete</code>. Le signal de rejet n'est pas un détail périphérique, c'est une partie portante du contrat.</p>
+
+<h3>Une nouvelle famille de pannes : la divergence de rejeu</h3>
+
+<p>La frontière rend visible une panne qui n'a pas de nom dans les systèmes traditionnels. Quand un agent utilise un journal d'événements comme source de vérité (le pattern P3), le journal lui-même reste déterministe et rejouable. Mais les consommateurs LLM qui lisent ce journal ne le sont pas. Rejouez le même événement sur une version plus récente du modèle, et vous obtenez des événements aval différents. La source de vérité effective — la projection que le code aval lit — devient non-déterministe entre conditions d'exécution.</p>
+
+<p>Srinivasan baptise ce phénomène <strong>divergence de rejeu</strong>, et en fait le déclencheur précis de la migration depuis le pattern journal vers le pattern machine à états. C'est le genre de panne qu'on ne voit que quand on a explicitement nommé la frontière.</p>
+
+<h2>Implications pratiques : cinq workloads, cinq architectures</h2>
+
+<p>Pour démontrer que la méthodologie n'est pas une checklist déguisée, l'autrice l'applique à cinq workloads très différents et montre qu'elle produit des architectures sensiblement différentes.</p>
+
+<p>Le cas de référence : un workflow de renouvellement de contrat télécom sur 90 jours, implémenté de bout en bout dans le repo compagnon contre le jeu de données IBM Telco Customer Churn. Workload long-horizon, machine à états comme colonne vertébrale, délégation hiérarchique plus saga, supervision plus humain dans la boucle complet. Tous les patterns engagés.</p>
+
+<p>Quatre workloads supplémentaires sont déroulés à la main pour montrer les contrastes. Une assistance facturation en temps réel à un agent humain de service client : conversationnel, pas de colonne vertébrale durable du tout. Un scanner de fall-out de gestion des commandes : autonome, journal événementiel parce que le pipeline amont émet déjà des événements autoritaires. Une coordination de portabilité de numéro entre opérateurs : long-horizon, machine à états parce que les pauses durent des jours et que les opérateurs répondent à leur propre rythme. Un drip-marketing de réchauffement de prospect : long-horizon aussi, mais journal événementiel parce que l'état est reconstructible depuis le log des touchpoints.</p>
+
+<p>Le contraste qui fait la valeur de la méthodologie : deux workloads long-horizon qui n'aboutissent pas à la même colonne vertébrale parce qu'un prédicat précis se déclenche dans un cas et pas dans l'autre. Ce n'est pas la classe de runtime qui décide. Ce sont les prédicats appliqués à la réalité du workload.</p>
+
+<p>Pour les équipes qui construisent des agents aujourd'hui, le message est clair : arrêter de débattre du choix de modèle avant d'avoir tranché les questions d'architecture. Le modèle change tous les six mois. La colonne vertébrale d'état coûte des mois de migration.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Le catalogue est ouvert. Srinivasan nomme trois patterns qu'elle s'attend à voir entrer dans le catalogue à mesure que la pratique mûrit. Un store de mémoire partagée versionnée, qui formaliserait ce que les systèmes RAG bricolent aujourd'hui en amont du runtime. Une isolation par tenant, qui sortirait l'enforcement du rayon de blast hors du pattern de supervision. Un handoff inter-runtime, pour les cas où un workflow long-horizon passe la main à un agent conversationnel et la récupère.</p>
+
+<p>Quelques limites honnêtes du papier méritent d'être pointées. Les cinq workloads sont construits par l'autrice elle-même pour démontrer les contrastes — aucune application indépendante par d'autres équipes n'a été auditée. Les seuils numériques (une heure de pause, trois retries) sont des conventions d'un contexte donné, pas des constantes universelles. La procédure de diagnostic suppose qu'on peut rejouer contre une version antérieure du modèle, ce que certains fournisseurs hébergés ne permettent pas.</p>
+
+<p>La question ouverte la plus intéressante touche à l'évolution des modèles eux-mêmes. Si une génération future produit des sorties suffisamment cohérentes entre versions, la divergence de rejeu tendrait vers zéro, et l'argument en faveur de la machine à états sur le journal événementiel s'affaiblirait. Pour l'instant, la trajectoire observée est inverse : les modèles s'améliorent vite en capacité par appel et lentement en stabilité inter-versions.</p>
+
+<p>Le repo compagnon (<code>vasundras/agent-runtime-patterns</code>) contient une implémentation runnable des six patterns en LangGraph et Google ADK, plus le bout-en-bout du renouvellement de contrat. C'est probablement le point d'entrée le plus utile pour une équipe qui veut tester la méthodologie sur son propre workload avant de s'engager.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

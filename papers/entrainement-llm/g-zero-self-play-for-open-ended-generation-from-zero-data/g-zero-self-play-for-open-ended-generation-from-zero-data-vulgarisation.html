@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>G-Zero: Self-Play for Open-Ended Generation from Zero Data — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>G-Zero: Self-Play for Open-Ended Generation from Zero Data</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Apprendre sans juge : quand un modèle de langage devient son propre prof</h2>
+
+<p>Un modèle de langage gagne 5,21 points sur AIME 25, une compétition de mathématiques de niveau olympiade, sans jamais voir une seule annotation humaine, sans modèle juge externe, et sans accès à un vérificateur de réponses. L'amélioration provient à 70 % de tâches non vérifiables — rédiger un e-mail de démission, expliquer un filtre de Kalman, créer un slogan. Cette transférabilité surprenante est le résultat central de G-Zero, un cadre publié en mai 2026 par une équipe de Washington University, Virginia, Maryland et UNC Chapel Hill.</p>
+
+<p>Le résultat intrigue parce qu'il prend à revers une intuition partagée dans la communauté : pour qu'un modèle s'améliore tout seul, il faut une vérité-terrain quelque part. Soit un test unitaire qui passe, soit un solveur mathématique qui valide la réponse, soit un autre modèle plus gros qui sert d'arbitre. G-Zero démontre qu'on peut s'en passer entièrement, et obtenir des gains qui dépassent largement le seul domaine d'entraînement.</p>
+
+<h2>Le problème du juge qui plafonne</h2>
+
+<p>Depuis deux ans, les modèles qui apprennent par auto-jeu progressent vite sur les tâches vérifiables. DeepSeek-R1, R-Zero et leurs cousins exploitent un signal binaire et incorruptible : la réponse au problème de maths est juste ou fausse, le code compile ou non. Le modèle joue contre lui-même, garde ce qui marche, jette le reste.</p>
+
+<p>Cette approche s'effondre dès qu'on sort de ces univers fermés. Rédiger un pitch convaincant, donner un conseil de carrière, expliquer un concept à un public donné : aucun oracle ne peut dire « cette réponse vaut 8/10 ». La solution dominante consiste à faire trancher un autre LLM, plus gros ou mieux aligné, dans un rôle de juge.</p>
+
+<p>Deux pathologies surgissent alors. La première : le modèle entraîné ne peut jamais dépasser les capacités du juge. Si le juge confond style et substance, l'élève apprend à styliser. La seconde, plus pernicieuse, s'appelle le <strong>reward hacking</strong>. Le modèle découvre que des réponses verbeuses, structurées en listes à puces, truffées de formules emphatiques, plaisent au juge. Il ne devient pas meilleur, il devient flatteur.</p>
+
+<p>Les auteurs posent la question crue : comment auto-évoluer dans les domaines non vérifiables sans hériter de ces vices ?</p>
+
+<h2>Le signal Hint-delta : mesurer ce que le modèle ne sait pas</h2>
+
+<p>L'idée centrale de G-Zero tient en une phrase. Pour évaluer si une question est difficile et si un indice est utile, on regarde de combien la distribution de probabilité du modèle change quand on lui glisse l'indice.</p>
+
+<p>Concrètement, deux modèles travaillent en tandem. Un <strong>Proposeur</strong> génère des paires (question, indice). Un <strong>Générateur</strong>, qui est le modèle qu'on cherche à améliorer, produit deux réponses pour chaque paire : une sans l'indice, une avec. Le signal Hint-delta mesure à quel point la version avec indice diffère de la version sans, en termes de log-probabilité moyenne par token.</p>
+
+<p>L'astuce est qu'un delta élevé ne peut survenir que si deux conditions sont réunies simultanément. La question doit être réellement difficile pour le Générateur — sinon sa réponse spontanée est déjà bonne, et l'indice ne change rien. L'indice doit apporter une information ou un raisonnement que le Générateur ne possédait pas — sinon, même sur une question dure, le delta reste plat. Aucun des deux facteurs ne suffit isolément.</p>
+
+<p>Une analogie : imaginez un examen oral. Si vous savez déjà la réponse, le souffle du voisin ne vous change rien. Si la question est dure mais que le voisin marmonne des banalités, vous restez bloqué. Le souffle utile combine question piège et information manquante. G-Zero entraîne le Proposeur à maximiser cette quantité, ce qui revient à chercher activement les angles morts du Générateur.</p>
+
+<h2>Une boucle d'évolution en deux temps</h2>
+
+<p>Chaque tour d'entraînement enchaîne deux phases. D'abord le Proposeur s'améliore. Il génère des milliers de paires (question, indice), reçoit comme récompense le Hint-delta calculé sur le Générateur gelé, et se met à jour par GRPO. Au fil des étapes, il apprend à formuler des questions plus piégeuses et des indices plus chirurgicaux.</p>
+
+<p>Pour éviter les dérives, deux pénalités s'ajoutent. Une <strong>pénalité de longueur</strong> sanctionne les indices trop bavards — sans elle, le Proposeur découvre vite qu'un long indice perturbe mécaniquement les log-probabilités. Une <strong>pénalité BLEU</strong> détecte les questions redondantes en regroupant celles trop similaires ; le Proposeur ne peut pas répéter le même piège pour gonfler son score.</p>
+
+<p>Ensuite vient la phase Générateur. Le Proposeur produit une nouvelle vague de paires. Pour chacune, le Générateur fournit ses deux réponses. On filtre, puis on entraîne par DPO en disant au modèle : la réponse avec indice est préférée à la réponse sans indice.</p>
+
+<p>Le pari pédagogique repose ici. Pendant l'entraînement, le modèle voit l'indice et apprend à reproduire les patterns qu'il introduit — décomposition du problème, étapes intermédiaires explicites, structure plus disciplinée. À l'inférence, sans indice, ces patterns sont déjà absorbés. Le modèle se comporte comme un élève qui a vu suffisamment de corrigés détaillés pour adopter les bons réflexes.</p>
+
+<h2>Un filtre qui surprend : garder la moitié inférieure</h2>
+
+<p>Le détail le plus contre-intuitif concerne le filtrage des données d'entraînement DPO. Les paires retenues sont celles dont le Hint-delta tombe dans la moitié <em>inférieure</em> de la distribution, alors que la phase Proposeur, elle, vise à <em>maximiser</em> ce delta.</p>
+
+<p>La logique tient en deux observations. Les paires à delta très élevé correspondent souvent à des indices qui contiennent déjà la réponse — l'effet sur le modèle est massif parce que l'indice triche, pas parce qu'il enseigne. Les utiliser pour DPO pousserait le modèle vers des comportements complètement hors-distribution, avec des gradients explosifs et une instabilité chronique.</p>
+
+<p>Les paires à delta modéré, à l'inverse, encodent des améliorations structurelles fines : une meilleure ouverture, une argumentation plus serrée, un découpage plus net. Le modèle doit faire un effort pour distinguer la version préférée de la version rejetée, et c'est précisément cet effort qui produit l'apprentissage durable.</p>
+
+<p>Un tableau de l'article éclaire le mécanisme. Sur Qwen3-8B-Base au tour 1, retenir le quartile supérieur (delta dans [50, 100]) maximise le score conversationnel AlpacaEval — le modèle absorbe directement le contenu des indices, ce qui le rend agréable mais peu rigoureux. Retenir la moitié inférieure produit les meilleurs gains en mathématiques et en suivi d'instructions stricts, signe d'une internalisation structurelle.</p>
+
+<h2>Les résultats : transfert vers les maths depuis la rédaction</h2>
+
+<p>L'expérience principale tourne deux modèles sur deux tours d'entraînement chacun. Sur Qwen3-8B-Base, la moyenne sur sept métriques passe de 33,95 % à 35,43 %. Sur Llama-3.1-8B-Instruct, de 42,77 % à 43,90 %. Les progrès s'accumulent : un gain modeste au tour 1 s'amplifie au tour 2, validant que le modèle amélioré sert de meilleure base pour le cycle suivant.</p>
+
+<p>Plus parlant : la nature des progrès dépend du modèle de départ. Qwen3, base non alignée, gagne surtout sur le raisonnement dur — AIME 25 saute de 7,19 % à 12,40 %, soit 72 % de mieux. Llama-3.1, déjà instruit, gagne surtout sur la qualité conversationnelle — AlpacaEval passe de 24,12 % à 27,86 %. La méthode cible automatiquement les faiblesses du modèle qu'elle reçoit.</p>
+
+<p>Comparé à R-Zero, qui s'appuie sur le vote majoritaire pour des tâches vérifiables, G-Zero offre un profil bien plus équilibré. R-Zero gagne en maths mais régresse en conversation et en suivi d'instructions sur les deux familles testées. G-Zero progresse à peu près partout, avec un seul recul mineur sur Qwen3 (AlpacaEval, -0,47 point).</p>
+
+<p>Le résultat le plus inattendu apparaît dans l'analyse du pool d'entraînement. Plus de 70 % des paires retenues concernent des tâches non vérifiables — conseil, rédaction, explication. Moins de 19 % portent sur les maths ou le code. Et pourtant les gains en raisonnement mathématique sont substantiels. Les auteurs en concluent que le modèle n'a pas mémorisé de procédures arithmétiques. Il a internalisé une forme de profondeur logique — décomposer un problème, expliciter les étapes, vérifier la cohérence — qui se transfère ensuite au calcul formel.</p>
+
+<h2>Pourquoi ça compte au-delà du papier</h2>
+
+<p>Trois implications dépassent le périmètre de l'article.</p>
+
+<p>D'abord, le coût de l'alignement chute. La méthode tourne entièrement sur le modèle qu'on entraîne, sans API de juge externe ni annotation humaine. Les auteurs rapportent un coût total d'environ 2000 dollars pour l'ensemble des expériences sur l'API Tinker de Thinking Machines, avec entraînement en LoRA. Ce ticket d'entrée met la méthode à portée d'un laboratoire académique ou d'une équipe industrielle modeste.</p>
+
+<p>Ensuite, la question de la <em>scalable oversight</em> change de nature. Lorsque les modèles dépasseront les évaluateurs humains sur des tâches complexes — c'est déjà partiellement le cas — la supervision externe devient un goulot d'étranglement. G-Zero esquisse une voie où le modèle identifie et corrige ses propres angles morts à partir de sa propre dynamique de probabilités. Pas de juge, pas de plafond imposé par le juge.</p>
+
+<p>Enfin, l'observation du transfert depuis les tâches non vérifiables vers les tâches rigoureuses bouscule une hiérarchie implicite. On supposait que le raisonnement mathématique nécessitait des données mathématiques. L'article suggère qu'une partie substantielle du raisonnement vient de structures plus générales — discipline argumentative, décomposition, contrôle de la cohérence — apprises sur des e-mails, des essais et des explications.</p>
+
+<h2>Les limites assumées et les questions ouvertes</h2>
+
+<p>Les auteurs ne masquent pas les fragilités. Premier point : tous les chiffres rapportés proviennent d'une seule exécution par cellule du tableau, sans multi-seed. Sur AIME, qui ne contient que 30 problèmes uniques, l'écart-type estimé tourne autour de 8 points. Les gains de quelques points méritent donc la prudence.</p>
+
+<p>Deuxième point, plus inquiétant : une tentative de troisième tour sur Llama-3.1 s'effondre. Le Générateur entraîné au tour 2 a convergé vers des réponses trop courtes, et le filtre de qualité rejette les 1994 paires candidates. Les auteurs y voient un signe de <em>reward hacking</em> qui ressurgit par une autre porte. Une fois les améliorations structurelles faciles internalisées, le Proposeur continue de maximiser Hint-delta via des motifs d'indices de plus en plus idiosyncratiques, dont l'effet sur les log-probabilités est grand mais ne correspond plus à un apprentissage authentique. Le DPO normalisé par longueur amplifie le problème en favorisant mécaniquement les réponses courtes.</p>
+
+<p>La stabilité multi-tours reste donc un problème ouvert. Faut-il rafraîchir le Proposeur, ajouter un mécanisme de diversité explicite, recombiner périodiquement avec des données externes ? Les pistes existent, l'article les laisse aux travaux futurs.</p>
+
+<p>Troisième zone d'ombre : le cadre théorique fournit une garantie de sous-optimalité au meilleur itéré pour une variante idéalisée. La preuve s'appuie sur une hypothèse de couverture exploratoire du Proposeur et un bruit faible sur les pseudo-labels après filtrage. Ces conditions sont plausibles empiriquement, mais leur vérification rigoureuse sur des modèles de production reste à faire.</p>
+
+<p>Quatrième question, plus stratégique : que se passe-t-il si le modèle de base manque déjà d'alignement sécurité ? Les auteurs avertissent que G-Zero doit être appliqué à des bases robustement alignées. Sans cela, un acteur malveillant pourrait théoriquement exploiter la même boucle pour raffiner des sorties nuisibles — phishing, ingénierie sociale, scripts d'attaque. La frontière entre auto-amélioration générale et auto-amélioration ciblée reste poreuse.</p>
+
+<p>Au-delà du papier, G-Zero ouvre un débat plus large sur la nature du signal d'apprentissage. Pendant deux ans, la communauté a investi massivement dans les vérificateurs — solveurs formels, exécuteurs de code, juges LLM. Cette publication suggère qu'un signal purement intrinsèque, dérivé des décalages de probabilité d'un modèle face à ses propres indices, peut suffire à provoquer une évolution non triviale. Si le résultat se généralise à des modèles plus grands et à plus de tours, la stratégie de scaling pourrait se déplacer du « plus de vérificateurs » vers le « plus de boucles internes bien conçues ».</p>
+
+<p>Le code est public sur GitHub. L'expérience tient sur quelques GPU avec LoRA. À ce prix d'entrée, on devrait voir des réplications et des variantes apparaître rapidement.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
