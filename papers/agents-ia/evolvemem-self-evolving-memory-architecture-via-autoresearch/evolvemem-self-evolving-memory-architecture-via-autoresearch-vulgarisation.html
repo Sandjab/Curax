@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EvolveMem: Self-Evolving Memory Architecture via AutoResearch for LLM Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>EvolveMem: Self-Evolving Memory Architecture via AutoResearch for LLM Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand un système d'IA mène sa propre recherche</h2>
+
+<p>Un agent conversationnel démarre avec une configuration de récupération mémoire basique : BM25 seul, cinq résultats par requête, aucune sémantique. Score initial sur le benchmark LoCoMo : 30,5 % de F1. Sept tours plus tard, sans qu'aucun ingénieur n'ait touché au code, le même système atteint 54,3 %. Il a découvert tout seul qu'il fallait activer la recherche sémantique, gérer les noms propres ambigus, décomposer les questions multi-sauts, et même ajouter une étape de vérification de réponse qui n'existait pas dans son espace d'actions initial.</p>
+
+<p>C'est l'expérience centrale d'EvolveMem, un travail mené par une équipe répartie entre l'UNC-Chapel Hill, Berkeley et UC Santa Cruz. Le système ne se contente pas d'apprendre à mieux mémoriser : il fait évoluer sa propre architecture de récupération en lisant ses échecs, en formulant des hypothèses sur leurs causes, en testant des modifications, et en conservant uniquement ce qui marche. Les auteurs nomment ce schéma <strong>AutoResearch</strong> — un agent qui mène une démarche scientifique appliquée à lui-même.</p>
+
+<h2>Le problème : la mémoire évolue, le récupérateur reste figé</h2>
+
+<p>Les assistants personnels longue durée, les agents de codage, les systèmes clients qui doivent reconnaître un utilisateur d'une session à l'autre — tous reposent sur de la mémoire persistante. Les dernières années ont vu fleurir des architectures sophistiquées : MemGPT organise la mémoire en couches inspirées des systèmes d'exploitation, Mem0 et A-MEM construisent des graphes de connaissances, MemoryBank applique des courbes d'oubli à la Ebbinghaus. Toutes ces approches améliorent ce qui est stocké et comment c'est consolidé.</p>
+
+<p>Mais elles partagent un angle mort. Le moteur de récupération — les fonctions de score, les poids de fusion entre BM25 et embeddings, les budgets de contexte, les stratégies de génération de réponse — reste figé après le déploiement. Le contenu mémorisé évolue, le mécanisme qui interroge ce contenu ne bouge pas.</p>
+
+<p>Ce déséquilibre crée un décalage croissant. Une politique de récupération calibrée pour cinquante souvenirs ne fonctionne plus pareil avec deux mille. Et surtout, différents types de questions exigent des stratégies différentes. Une recherche factuelle a besoin d'un appariement de mots-clés précis. Un raisonnement temporel demande un filtrage par date. Une question multi-saut exige de décomposer la requête en sous-questions indépendantes. Une question adversariale qui inverse délibérément les noms de personnes nécessite d'ignorer ces noms pour se concentrer sur le contenu sémantique. Aucune configuration unique ne sert bien tous ces cas à la fois.</p>
+
+<p>L'observation des auteurs est simple : un système mémoire vraiment adaptatif doit évoluer à deux niveaux. Le contenu stocké, oui. Mais aussi l'infrastructure de récupération elle-même.</p>
+
+<h2>La méthode : un agent qui s'auto-diagnostique</h2>
+
+<p>EvolveMem se compose de trois couches reliées par une boucle de rétroaction.</p>
+
+<p>La première couche est un <strong>magasin de mémoire typé</strong>. Chaque souvenir est un quadruplet : un contenu textuel, un embedding dense, un type (épisodique, sémantique, préférence, état de projet, résumé de travail, connaissance procédurale), et des métadonnées (importance, confiance, entités extraites, sujets, horodatage). L'extraction depuis les conversations utilise une fenêtre glissante et trois garde-fous : nouvelles tentatives en cas d'échec LLM, découpage si le contexte dépasse la limite, et un vérificateur de couverture qui compare les souvenirs extraits aux mots-clés du texte source pour déclencher une ré-extraction ciblée.</p>
+
+<p>La deuxième couche est un <strong>récupérateur multi-vues</strong>. Trois vues opèrent indépendamment : BM25 pour l'appariement lexical exact, similarité cosinus sur embeddings pour l'appariement conceptuel, et un filtre sur métadonnées structurées (entités, lieux, personnes). Leurs résultats sont fusionnés selon un mode configurable — somme simple, somme pondérée, ou Reciprocal Rank Fusion. À cela s'ajoutent des mécanismes optionnels : un <em>entity-swap</em> qui retire les noms de personnes de la requête pour les questions adversariales, une décomposition de requête pour le multi-saut, et une étape de vérification de réponse en second passage.</p>
+
+<p>La pièce maîtresse, c'est la troisième couche : le <strong>moteur d'auto-évolution</strong>. À chaque tour, le système évalue ses performances sur un jeu de questions, écrit un journal détaillé par question (prédiction, vérité terrain, score, sources récupérées), puis transmet ce journal à un module de diagnostic alimenté par un LLM. Ce module identifie les schémas d'échec — mauvaise entité retrouvée, contexte insuffisant, confusion temporelle — et propose des ajustements ciblés de configuration.</p>
+
+<p>Un méta-analyseur applique ensuite ces propositions avec deux garde-fous. Si la performance chute de plus d'un certain seuil, retour automatique à la meilleure configuration vue jusqu'ici. Si le score stagne pendant deux tours consécutifs, perturbation aléatoire pour explorer de nouvelles régions de l'espace de configuration. Sinon, application normale de l'ajustement proposé.</p>
+
+<p>La particularité la plus frappante : le LLM de diagnostic peut proposer des dimensions de configuration qui n'existaient pas dans l'espace d'actions initial. Le rubric d'analyse est formulé en termes de schémas d'échec génériques, pas de paramètres spécifiques. Quand le diagnostic identifie un type de problème dont la solution n'est pas dans le menu, il invente la solution. C'est ainsi qu'EvolveMem a découvert par lui-même la vérification de réponse en second passage et l'entity-swap pour les questions adversariales.</p>
+
+<h2>Résultats : des gains substantiels et un trajet lisible</h2>
+
+<p>Sur LoCoMo, un benchmark de dialogues multi-sessions (entre 19 et 32 sessions par échantillon, jusqu'à 689 tours de conversation), EvolveMem atteint 54,3 % de F1 avec GPT-4o comme backbone. Le meilleur concurrent publié, SimpleMem, plafonne à 43,2 %. Soit un gain relatif de 25,7 %. Par rapport à la configuration minimale de départ, l'amélioration relative monte à 78 %.</p>
+
+<p>Les gains se concentrent sur les catégories où la stratégie de récupération compte le plus. Sur les questions temporelles, l'amélioration relative atteint 63,4 %. Sur les questions à saut unique, 68,7 %. Avec GPT-5.1 comme backbone, la catégorie temporelle bondit même de 98,9 % par rapport à SimpleMem. Les résultats restent cohérents entre les deux modèles, ce qui suggère que la pipeline évoluée n'est pas spécifique à un seul LLM.</p>
+
+<p>Sur MemBench, un autre benchmark centré sur l'usage d'outils mémoire, EvolveMem atteint 67,9 % de précision avec GPT-4o (contre 57,1 % pour le meilleur baseline) et 71,4 % avec GPT-5.1. Les gains se concentrent sur le rappel (+40 %) et le raisonnement (+33,4 %).</p>
+
+<p>Le trajet d'évolution lui-même mérite qu'on s'y attarde. Au tour 1, le diagnostic active la planification d'intention et la fusion RRF, passant de 30,5 % à 35,8 %. Au tour 2, une proposition introduisant la diversification MMR fait chuter le score à 34,8 % — le garde-fou la rejette automatiquement. Au tour 3, activation de l'entity-swap pour la catégorie adversariale (37,2 %). Au tour 4, drapeaux de style de réponse par catégorie (38,5 %). Au tour 5, décomposition de requête (38,1 %, léger recul absorbé). Au tour 6, raffinement des sous-types inférentiels et expansion de l'entity-swap (45,4 %). Au tour 7, introduction de la vérification de réponse et balayage d'hyperparamètres (54,3 %).</p>
+
+<p>Chaque tour ajoute un mécanisme distinct. Aucun ne sature l'amélioration — le système empile progressivement des outils complémentaires.</p>
+
+<h2>Une étude de cas révélatrice</h2>
+
+<p>Les auteurs détaillent un cas concret tiré du dataset : la question <em>« Qu'est-ce que Melanie et sa famille ont fait pendant le camping ? »</em>, avec pour réponse de référence <em>« exploré la nature, fait griller des marshmallows, et fait une randonnée »</em>.</p>
+
+<p>Au tour 0, BM25 seul récupère un mauvais souvenir — une autre session de camping où Melanie avait observé la pluie de météores des Perséides — et produit la réponse erronée. F1 : 0,00.</p>
+
+<p>Au tour 1, l'activation de la vue sémantique et le triplement du budget de contexte permettent au LLM de voir tous les épisodes liés au camping. La prédiction s'élargit à quatre activités dont trois correctes, mais le souvenir des Perséides contamine encore la réponse. F1 : 0,44.</p>
+
+<p>Au tour 2, l'augmentation du poids de la vue structurée et l'activation du facteur de récence ré-ancrent la récupération sur le bon épisode. F1 : 1,00.</p>
+
+<p>Mais ce tour 2 dégrade le score global de 0,054 sur l'ensemble du benchmark. Le garde-fou de retour arrière intervient. Au tour 3, le système revient à la configuration du tour 1, et la prédiction perd seulement le connecteur « et », ce qui coûte 0,06 de F1.</p>
+
+<p>Au tour 4, le diagnostic identifie ce problème de connecteur dans les échecs uniquement liés au style, et propose un override par catégorie qui impose le format de liste avec connecteurs explicites. F1 : 1,00 à nouveau, sans régression globale cette fois.</p>
+
+<p>Quatre tours, quatre mécanismes distincts : recall, précision, sécurité, finition. C'est l'archétype de ce que le système fait à grande échelle.</p>
+
+<h2>Transfert entre benchmarks : ce qui ne casse pas en généralisant</h2>
+
+<p>Une question cruciale pour ce genre d'approche : les configurations évoluées sont-elles spécifiques au benchmark sur lequel elles ont été optimisées, ou capturent-elles des principes de récupération généraux ?</p>
+
+<p>Les auteurs testent en évoluant d'abord sur LoCoMo (configuration C_L), puis en appliquant cette configuration en zéro-shot à MemBench. C_L atteint 54,3 % sur MemBench sans aucun ajustement spécifique au nouveau benchmark. Mieux : continuer l'évolution sur MemBench depuis cette base (configuration C_LM) atteint 79,2 %, dépassant la configuration entraînée nativement sur MemBench (67,9 %) de 16,6 % relatifs. Et ce C_LM améliore aussi le score LoCoMo de 0,543 à 0,593.</p>
+
+<p>Transfert positif, Pareto-amélioration sur les deux benchmarks. C'est l'indice le plus solide que l'auto-évolution ne sur-apprend pas une heuristique locale mais découvre des principes de récupération qui se généralisent.</p>
+
+<h2>Ce que l'ablation révèle</h2>
+
+<p>L'étude d'ablation classe les composants par importance. Retirer les garde-fous d'extraction (re-tentatives, découpage, vérificateur de couverture) coûte 23,22 points de F1 — c'est de loin le composant le plus critique. Sans extraction de qualité, tout le reste s'effondre. Le récupérateur n'a simplement pas la matière première.</p>
+
+<p>Ensuite : la recherche sémantique (-10,32), le diagnostic LLM remplacé par des perturbations aléatoires (-9,63), BM25 (-6,87), l'entity-swap (-3,10), la décomposition de requête (-2,84), la recherche par métadonnées (-2,33), l'auto-évolution elle-même (-2,03), la vérification de réponse (-1,83).</p>
+
+<p>Deux enseignements. D'abord, le diagnostic LLM est mesurablement supérieur à la recherche aléatoire dans le même espace d'actions — lire les journaux d'échec apporte un signal réel, ce n'est pas juste de l'exploration sophistiquée. Ensuite, aucun composant ne domine. Les trois dimensions découvertes par le diagnostic (entity-swap, décomposition, vérification) contribuent ensemble 7,77 points de F1, démontrant une valeur au-delà de l'espace d'actions initial.</p>
+
+<h2>Implications pratiques</h2>
+
+<p>Pour les équipes qui déploient des agents conversationnels longue durée, EvolveMem propose un changement de posture. Plutôt que de figer une stack RAG après quelques expérimentations manuelles, on peut envisager une infrastructure de récupération qui se réajuste périodiquement à partir des échecs observés en production.</p>
+
+<p>Le coût computationnel reste raisonnable. Une boucle d'évolution complète sur sept tours sur un échantillon LoCoMo (200 QA, environ 900 souvenirs) prend 25 à 35 minutes, dominée par les appels LLM d'évaluation. La récupération en runtime reste sous les 15 millisecondes par requête, compatible avec un usage interactif. La base SQLite avec index FTS5 ajoute moins de 5 Mo par millier de souvenirs.</p>
+
+<p>L'approche ne remplace pas l'ingénieur — elle déplace son travail. Au lieu de tuner des hyperparamètres, on conçoit l'espace d'actions et le rubric de diagnostic. Le rubric en particulier mérite réflexion : il doit être formulé en termes assez génériques pour permettre la découverte de nouvelles dimensions, mais assez structuré pour que le LLM de diagnostic produise des propositions actionnables.</p>
+
+<p>Pour les équipes de recherche, EvolveMem suggère un patron méthodologique plus large. Tout système avec un espace de configuration structuré, des logs d'évaluation détaillés, et un objectif mesurable peut potentiellement bénéficier d'une boucle AutoResearch similaire. Les auteurs eux-mêmes pointent vers leur travail antérieur, AutoResearchClaw, qui applique le même schéma à des pipelines de recherche complets.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Quelques limites méritent d'être posées. Sur MemBench, la dimension <em>robustness</em> reste le point faible d'EvolveMem (50 % avec GPT-4o, contre 75 % pour MemoryBank). L'inspection des logs localise le problème sur la catégorie post-processing, où les souvenirs pertinents sont absents du magasin — un déficit de couverture que les ajustements de récupération seuls ne peuvent pas résoudre. Le moteur d'évolution est lucide sur ses propres limites : il sait reconnaître qu'un problème vient de l'extraction et non de la récupération, mais résoudre les déficits d'extraction est une autre affaire.</p>
+
+<p>La généralisation reste à confirmer sur des distributions de requêtes radicalement différentes. LoCoMo et MemBench partagent le format dialogue-puis-questions. Que se passerait-il sur des tâches d'agent où la mémoire serait interrogée par d'autres agents plutôt que par des questions formulées en langage naturel ?</p>
+
+<p>La dépendance au LLM de diagnostic soulève aussi des questions. Quel niveau de capacité minimal faut-il pour que les propositions soient pertinentes ? Les auteurs utilisent GPT-5.1, mais ne quantifient pas la dégradation avec des modèles plus modestes. Si la boucle AutoResearch exige un modèle frontière pour fonctionner, son applicabilité reste limitée aux acteurs capables d'absorber ce coût.</p>
+
+<p>Enfin, le schéma AutoResearch interroge la division du travail entre humain et machine dans la R&D des systèmes IA. Quand un système découvre par lui-même des composants architecturaux qui n'étaient pas dans son espace d'actions initial, qu'apporte encore l'ingénieur au-delà de la conception du méta-système ? La réponse, pour l'instant, c'est que l'ingénieur définit l'espace, le rubric, et les garde-fous. Mais à mesure que ces méta-systèmes gagnent en autonomie, la frontière se déplace.</p>
+
+<p>Le code d'EvolveMem est public, sous le nom SimpleMem, dans le dépôt aiming-lab. Pour qui construit des agents qui doivent se souvenir, il vaut le détour.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

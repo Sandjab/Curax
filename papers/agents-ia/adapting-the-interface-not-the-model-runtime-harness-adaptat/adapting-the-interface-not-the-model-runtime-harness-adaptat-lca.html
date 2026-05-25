@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adapting the Interface, Not the Model: Runtime Harness Adaptation for Deterministic LLM Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Adapting the Interface, Not the Model: Runtime Harness Adaptation for Deterministic LLM Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les agents LLM échouent fréquemment sur des tâches déterministes non par défaut de raisonnement mais par mésalignement à l'interface modèle-environnement : observations mal organisées, contrats d'outils mal compris, actions inexécutables, feedback non traduit en signal de récupération, trajectoires qui dégénèrent en répétition. Le papier cite l'écart frappant entre Qwen3.5-4B qui obtient 74,0% sur HMMT Feb (raisonnement mathématique) et seulement 43,1% sur ALFWorld pour ancrer le diagnostic.</p>
+<p>La thèse centrale renverse l'orthodoxie : plutôt qu'absorber la structure du domaine dans les poids via SFT, RL ou distillation, on évolue un <em>runtime harness</em> qui sert d'interface stable et réutilisable entre un modèle gelé et un environnement réglé. La question de recherche est explicite : les trajectoires d'entraînement peuvent-elles servir à faire évoluer une interface runtime structurée qui améliore des agents gelés sur des tâches inédites et de nouveaux backbones ?</p>
+
+<h2>Méthodologie</h2>
+<p>LIFE-HARNESS structure l'adaptation runtime en quatre couches alignées sur le cycle de vie de l'interaction :</p>
+<ul>
+<li><strong>Environment Contract Layer</strong> : calibre les descriptions d'outils et les contraintes avant l'interaction.</li>
+<li><strong>Procedural Skill Layer</strong> : maintient une bibliothèque de skills distillés des trajectoires, récupérés par BM25.</li>
+<li><strong>Action Realization Layer</strong> : valide et canonise les actions avant exécution, bloque celles qui échoueraient déterministiquement.</li>
+<li><strong>Trajectory Regulation Layer</strong> : surveille les patterns dégénératifs (répétition, stagnation, épuisement du budget) et déclenche la récupération.</li>
+</ul>
+<p>L'évolution du harness est pilotée par un coding agent (Codex) qui lit les traces d'un Qwen3-4B-Instruct gelé sur les tâches d'entraînement, mine les patterns d'échec récurrents et propose des mises à jour ciblées sur la couche responsable. Une annotation préalable des trajectoires échouées selon un protocole prioritaire (action realization → contract → trajectoire → raisonnement résiduel) fonde le design en évitant que les symptômes tardifs masquent les défaillances d'interface précoces.</p>
+<p>L'évaluation couvre sept environnements (Airline, Retail, Telecom, ALFWorld, WebShop, OS, DBBench) et 18 backbones (familles Qwen, Llama, xLAM, dont des modèles instruct, reasoning et agent-spécialisés). Température 0,0, métriques pass@1 sur AgentBench et pass@1 / pass@3 / pass^3 sur τ-bench et τ²-bench. Le harness évolué uniquement sur Qwen3-4B-Instruct est gelé puis réutilisé tel quel sur les 17 autres modèles — un protocole strict pour tester la généralisation cross-model.</p>
+
+<h2>Résultats principaux</h2>
+<p>116 configurations modèle-environnement sur 126 sont améliorées, soit 92%, avec un gain relatif moyen de 88,5%. Les gains relatifs vont de 10% (Retail pass@1) à 84% (ALFWorld). Sur ALFWorld le passage est spectaculaire : 41,1% → 75,7% en moyenne.</p>
+<p>L'ablation leave-one-layer-out confirme que les quatre couches sont indispensables mais avec une hétérogénéité forte entre environnements : retirer la Trajectory Regulation Layer fait chuter ALFWorld de 86,5%, retirer l'Action Realization Layer coûte 61,7% sur Airline et 59,6% sur OS. Aucune couche n'est universellement dominante, ce qui valide a posteriori le diagnostic des failures hétérogènes.</p>
+<p>La comparaison avec l'entraînement spécialisé est particulièrement parlante : Qwen2.5-32B + LIFE-HARNESS dépasse xLAM-2-32B (sa dérivée tool-use trained sur τ-bench) de 7,5 points en in-domain. Le harness reste utile <em>après</em> entraînement (+6,8 à +28,9 points sur xLAM). Et l'entraînement spécialisé dégrade la généralisation OOD : xLAM sous-performe sa base Qwen2.5 sur τ²-bench et AgentBench, tandis que le harness apporte des gains positifs dans les deux régimes.</p>
+<p>Face au prompt evolving (GEPA, OPRO), LIFE-HARNESS ajoute 120% de gain relatif moyen — un écart attendu puisque le prompt n'agit que sur l'entrée initiale alors que le harness intervient à chaque étape du cycle.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs reconnaissent explicitement la limite principale : la méthode cible les environnements déterministes et réglés. Étendre l'approche à des tâches ouvertes où les outils, ressources et critères de succès varient par tâche reste un défi non résolu. Les travaux antérieurs cités (Meta-Harness, AHE) partagent cette restriction au coding ou au texte.</p>
+<p>Quelques angles morts méritent discussion. D'abord, l'évolution du harness consomme un coding agent (Codex) et de nombreuses exécutions sur les tâches d'entraînement — le coût computationnel de cette évolution n'est jamais chiffré et comparé à celui d'un SFT équivalent. Deuxièmement, le harness final pour chaque environnement (voir Tables 3-5) est massif et hautement spécifique : pour Airline, on liste des dizaines de règles dures sur le tool booking. Cela soulève une question que les auteurs n'adressent pas : le harness encode-t-il de la <em>structure environnementale réutilisable</em> ou re-implémente-t-il en dur des règles métier qui auraient pu vivre dans le code du benchmark lui-même ? La frontière entre adaptation d'interface et patch task-specific est floue.</p>
+<p>Troisièmement, le transfert cross-model est élégant mais asymétrique : la Figure 5 montre que certains modèles (xLAM-2-3b sur ALFWorld, Llama-3.3-70B sur OS) gagnent très peu voire perdent. La généralisation à 92% des settings masque une variance importante. Quatrièmement, le protocole d'annotation des failures est lui-même délégué à Codex, ce qui introduit une boucle où le système diagnostique ses propres bugs avec un agent de la même famille — un risque circulaire de confirmation que les auteurs ne discutent pas.</p>
+<p>Enfin, l'évaluation se fait avec DeepSeek-V4-Flash comme user LLM pour τ-bench et τ²-bench. Le harness évolué pourrait surajuster aux patterns de ce user simulé spécifique.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est annoncé comme disponible sur GitHub (lien dans le papier). Les Appendices fournissent le protocole d'annotation, le template de prompt complet pour l'évolution du harness via Codex, et un inventaire détaillé des composants par couche pour chaque environnement (Tables 3-5). Les paramètres d'évaluation (température, max tokens, max steps) sont tabulés. Les Tables 7 donnent les scores complets par modèle et benchmark.</p>
+<p>Points moins clairs : le nombre exact d'itérations d'évolution par tâche (la Figure 6 montre 5 itérations mais sans préciser le critère d'arrêt), le budget Codex consommé, et la version exacte des modèles propriétaires utilisés (DeepSeek-V4-Flash). La nature semi-manuelle du processus d'évolution (Codex assisté) rend une réplication identique difficile, même si la généralisation cross-model atténue cette préoccupation.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport conceptuel est net : formaliser le harness comme objet d'adaptation first-class, distinct du prompt et des poids, avec une décomposition lifecycle qui localise les interventions. C'est une contribution architecturale qui s'inscrit dans la lignée récente Meta-Harness, AHE, HARBOR mais qui pousse plus loin la structuration en couches sémantiques plutôt qu'en code libre.</p>
+<p>Pour la pratique en production, le résultat le plus actionnable est la démonstration qu'on peut atteindre ou dépasser un modèle fine-tuné tool-use spécialisé sans toucher aux poids, avec l'avantage d'un asset (le harness) qui se transfère à de nouveaux modèles. Cela transforme l'économie du déploiement d'agents : amortir le coût d'ingénierie d'interface sur plusieurs générations de backbones devient une stratégie viable.</p>
+<p>L'effet de bord intéressant — l'entraînement spécialisé qui détériore l'OOD — est un signal pour la communauté agentique : sur-spécialiser un modèle sur τ-bench peut sacrifier ses capacités sur τ²-bench.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier se positionne explicitement contre la dominance du paradigme model-centric (SFT, RL, distillation, post-training) et s'aligne avec la vague récente d'optimisation de scaffold autour de modèles gelés. La distinction revendiquée vis-à-vis de Meta-Harness et AHE est la structuration en quatre couches lifecycle dérivées d'un diagnostic de failures, plutôt qu'une recherche de code harness libre. Vis-à-vis du prompt optimization (OPRO, GEPA, ProTeGi, TextGrad), la séparation est claire : le prompt n'agit qu'en entrée, le harness médie chaque étape.</p>
+<p>Le rapprochement avec les approches "code-as-harness" (cf. Reversa, l'ingénierie inverse de doc legacy) et avec les contrats agentiques formels suggère une convergence : la prochaine frontière sera probablement la spécification déclarative de contrats runtime, dont LIFE-HARNESS est une instance procédurale.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Question claire, originale, bien motivée par un écart empirique frappant.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Protocole rigoureux avec harness évolué sur un seul modèle source puis gelé pour les 17 autres ; user LLM unique reste une dépendance.</td></tr>
+<tr><td>Taille d'échantillon</td><td>5</td><td>18 backbones × 7 environnements = 126 configurations, large couverture cross-architecture.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Pass@1 et Pass^3 standards ; absence d'intervalles de confiance ou de tests statistiques sur les gains.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Annotation des failures par Codex (potentiel biais circulaire), évolution semi-manuelle ; risque de surajustement au user LLM non testé.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code annoncé, prompts et inventaire harness en appendix ; critère d'arrêt de l'évolution et coût Codex non chiffrés.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Section Limitations explicite sur le scope déterministe ; angles morts sur le coût d'évolution et la frontière harness vs patch task-specific.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Cadrage conceptuel net dans une lignée récente bien identifiée ; contribution incrémentale mais bien exécutée.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

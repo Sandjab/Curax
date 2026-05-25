@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compiling Agentic Workflows into LLM Weights: Near-Frontier Quality at Two Orders of Magnitude Less Cost — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Compiling Agentic Workflows into LLM Weights: Near-Frontier Quality at Two Orders of Magnitude Less Cost</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les frameworks d'orchestration agentique (LangGraph, CrewAI, Google ADK, OpenAI Agents SDK, Semantic Kernel, Strands, LlamaIndex) cumulent plus de 290 000 étoiles GitHub et imposent un même schéma : un orchestrateur externe injecte des instructions et route les décisions à chaque tour. Dennis et collègues attaquent frontalement ce paradigme dominant. Leur thèse : pour les tâches procédurales, compiler la procédure directement dans les poids d'un petit modèle fine-tuné — ce qu'ils appellent un <strong>subterranean agent</strong> — rivalise avec un modèle frontière orchestré, à deux ordres de grandeur moins coûteux.</p>
+<p>Les travaux fondateurs (SimpleTOD, FireAct, SynTOD, WorkflowLLM, Agent Lumos) ont déjà montré que la technique fonctionne. Pourtant, l'adoption développeur reste massivement orientée orchestration (rapport ~100× en étoiles GitHub). Les auteurs identifient trois barrières perçues — qualité, coût, flexibilité — et les attaquent empiriquement.</p>
+
+<h2>Méthodologie</h2>
+<p>Trois domaines de complexité croissante servent de banc d'essai : réservation de voyage (14 nœuds, 3 hubs de décision), support technique Zoom (14 nœuds, connaissance produit spécifique), traitement de sinistres d'assurance (55 nœuds, 6 hubs de décision, 2 381 chemins acycliques). Chaque domaine est représenté comme un graphe dirigé <em>F = (N, E, n₀, T)</em>.</p>
+<p>Le pipeline de compilation : génération de conversations synthétiques via Claude Sonnet 4.5 parcourant les chemins du flowchart, fine-tuning full-parameter du modèle de base (Qwen 2.5 3B pour voyage, Qwen3-8B pour Zoom et assurance), déploiement sans orchestrateur avec un prompt système minimal. Les auteurs justifient le full fine-tuning par une référence à un travail compagnon montrant que LoRA échoue sur les tâches procédurales.</p>
+<p>Quatre conditions évaluées avec <em>n = 200</em> scénarios chacune : agent compilé subterranean, orchestrateur same-model (uniquement sur voyage, pour isoler l'effet de la compilation), orchestrateur LangGraph utilisant Claude Sonnet 4.5 (~70× plus de paramètres), baseline in-context donnant tout le flowchart au modèle frontière. L'utilisateur est simulé dynamiquement par Claude Sonnet 4.5, sans connaissance du flowchart.</p>
+<p>Évaluation par LLM-as-judge avec rubrique à cinq critères (task success, information accuracy, consistency, graceful handling, naturalness) sur échelle 1-5 avec ancres comportementales. Statistiques : Wilcoxon signed-rank (paired) ou Mann-Whitney U (unpaired), Cohen's d, bootstrap 95 % CI (10 000 rééchantillonnages), correction Holm-Bonferroni sur les cinq critères.</p>
+
+<h2>Résultats principaux</h2>
+<p><strong>Qualité.</strong> Sur le voyage, le 3B compilé bat le 3B orchestré même-modèle sur quatre des cinq métriques (Δ = +0,17 à +0,22, p &lt; 0,001), isolant ainsi l'effet propre de la compilation indépendamment de la capacité du modèle. Contre LangGraph (modèle frontière), le 3B compilé domine sur information accuracy (4,75 vs 4,21) mais cède sur graceful handling et naturalness, atteignant ~82 % de la baseline in-context. Le passage à 8B comble l'écart : 92 % sur graceful handling, 97 % sur naturalness pour Zoom ; 92-98 % sur l'ensemble pour assurance, où le 8B compilé domine LangGraph sur graceful handling (4,81 vs 4,38), naturalness (4,92 vs 4,58) et consistency.</p>
+<p><strong>Coût.</strong> Le modèle compilé est 128× moins cher par conversation sur voyage, 296× sur Zoom, 462× sur assurance. Le rapport vient de deux facteurs multiplicatifs : ~65× de réduction par token (self-hosting vLLM sur A100 80GB vs API Claude Sonnet 4.5) et 2-7× de réduction du volume de tokens (prompt constant vs sérialisation croissante de la procédure). L'avantage croît avec la complexité du flowchart.</p>
+<p><strong>Flexibilité.</strong> Le cycle de recompilation prend 30-50 minutes sur cluster 8×H200 (15-30 min de génération de données + 10-15 min de fine-tuning + 5 min d'évaluation), soit un cycle CI/CD plutôt qu'un changement de paradigme. Sur un A100 unique, le cycle reste sous les 4 heures.</p>
+<p><strong>Taux d'échec.</strong> Sur voyage, le 3B compilé affiche 5,5 % d'échec contre 24 % pour LangGraph — l'orchestrateur perd sur des erreurs de routing aux hubs de décision, mode d'échec que la compilation élimine par construction.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le résultat le plus contre-intuitif est que des modèles 70× plus petits égalent voire battent un orchestrateur frontière sur les métriques structurelles. Les auteurs proposent une explication architecturale : l'orchestration fragmente le raisonnement au contexte local du nœud courant, introduit des modes d'échec de routing absents en monolithique, et contraint le style conversationnel via l'injection de templates. Le subterranean agent évite les trois.</p>
+<p>L'étude reconnaît honnêtement plusieurs limites. Le biais d'auto-préférence du juge (Claude juge des données générées par Claude) est traité par réplication GPT-4.1, qui retrouve un range 83-99 % comparable au 82-102 % de Claude, mais avec un classement plus défavorable au modèle compilé sur certains critères de voyage et d'assurance. Les auteurs reportent ces divergences sans les enrober. La compression des scores de naturalness sous GPT-4.1 (3,92-4,04) suggère que les conclusions sur ce critère doivent être prises avec prudence.</p>
+<p>L'évaluation reste captive du LLM-as-judge. Aucune évaluation humaine n'est rapportée, ce qui est une faiblesse standard du domaine mais une faiblesse réelle. Le user simulator est lui aussi un LLM, ce qui peut produire des conversations plus prévisibles qu'avec de vrais utilisateurs frustrés.</p>
+<p>Le périmètre est restreint aux tâches procédurales bien définies. Rien ne dit que la compilation s'étend aux tâches ouvertes, à la créativité, ou à la résolution de problèmes nécessitant raisonnement multi-domaine. Les auteurs ne le prétendent pas, mais le marketing du résumé pourrait laisser croire à une généralité plus large.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les hyperparamètres d'entraînement sont documentés avec précision : optimiseur AdamW (8-bit pour 3B, classique pour 8B avec DeepSpeed ZeRO-3), learning rate 2×10⁻⁵, batch size effectif 16/32, nombre d'époques et checkpoint sélectionné par eval loss. Les tailles de dataset (2 125, 6 264, 3 000 conversations) et le matériel (RTX 5090, 8×A100) sont précisés. Les flowcharts complets figurent en annexe D.</p>
+<p>En revanche, l'extrait fourni ne mentionne pas explicitement de dépôt de code public ni de release des datasets synthétiques. Les "full unedited transcripts available in the repository" évoqués en annexe A ne sont pas pointés par une URL. Cette opacité limite la reproductibilité indépendante, même si tout le pipeline est en principe reconstructible à partir du papier. Le score de reproductibilité reflète cette demi-mesure.</p>
+
+<h2>Impact et applications</h2>
+<p>L'enjeu pratique est considérable. Un acteur opérant un agent en production à 10 000+ conversations amortit le coût ponctuel de compilation (~50-80 USD) en moins de 0,01 USD par conversation, contre 0,10-0,33 USD pour la baseline in-context. Sur des volumes industriels (call centers, support de niveau 1, intake assurance), le différentiel se chiffre en millions d'euros annuels.</p>
+<p>Au-delà du coût, la compilation résout trois autres problèmes : protection des procédures propriétaires (rien ne sort vers un fournisseur tiers), latence réduite par self-hosting (2,8× plus rapide sur assurance), élimination par construction des erreurs de routing. Pour les workflows régulés (assurance, santé, finance), cette dernière propriété peut suffire à justifier la transition.</p>
+<p>La thèse centrale — <em>persistent structure belongs in the weights, transient state belongs in the prompt</em> — fournit un principe de design clair que la communauté ingénierie d'agents peut adopter immédiatement. Elle remet en question la pertinence des frameworks d'orchestration pour leur cas d'usage le plus fréquent.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier s'inscrit dans une lignée bien identifiée : SimpleTOD (collapsing dialogue pipelines), FireAct et AgentTuning (distillation de comportements agentiques depuis modèles frontière), WorkflowLLM et SynTOD (passage à l'échelle sur workflows complexes). La contribution distinctive est triple : la quantification rigoureuse de l'avantage coût (que les travaux antérieurs n'isolaient pas), la mesure du cycle de recompilation (souvent supposé prohibitif sans vérification), et la double baseline same-model + frontière qui permet de séparer l'effet de la compilation de l'effet de capacité du modèle.</p>
+<p>Le papier dialogue aussi avec la littérature critique sur les défaillances des agents (Cemri et al. 2026 sur les 14 modes d'échec, Zhu et al. 2026 sur les défaillances en cascade, Gupta 2026 sur l'inconsistance pass@1) en montrant qu'une partie significative de ces problèmes est éliminable par construction.</p>
+<p>L'auto-citation lourde (Dennis et al. 2026a, 2026b) suggère un programme de recherche cohérent autour de la compilation, mais aussi une dépendance forte à des résultats non encore publiés ou non encore peer-reviewed. Le statut de preprint arXiv invite à attendre la revue par les pairs avant d'élever ces résultats au rang de référence canonique.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification synthétique</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Question claire, originale, pertinence pratique immédiate sur un marché de 290k+ stars GitHub.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trois domaines de complexité croissante, baselines contrôlées (same-model + frontière), isolation propre de l'effet de la compilation.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>n = 200 par condition par domaine, suffisant pour les tests statistiques utilisés mais limité pour la robustesse fine.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Rubrique à 5 critères avec ancres comportementales, mais dépendance complète au LLM-as-judge.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Test explicite du biais d'auto-préférence par réplication GPT-4.1, comparaison same-model isolant l'effet capacité.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Hyperparamètres et matériel documentés, mais pas de pointeur explicite vers code ou datasets dans l'extrait fourni.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Divergences entre juges reportées sans enrobage, périmètre tâches procédurales clairement délimité.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Quantification inédite de l'avantage coût et du cycle de recompilation, consolidation forte d'une littérature dispersée.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 4,1 / 5.</strong> Travail empirique rigoureux qui transforme une intuition académique en argument de production. Les limites principales tiennent au statut preprint, à l'absence d'évaluation humaine, et à l'opacité relative sur la mise à disposition du code et des données.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

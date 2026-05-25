@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adapting the Interface, Not the Model: Runtime Harness Adaptation for Deterministic LLM Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Adapting the Interface, Not the Model: Runtime Harness Adaptation for Deterministic LLM Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand le modèle n'est pas le problème</h2>
+
+<p>Qwen3.5-4B, un modèle de langage relativement compact, obtient 74 % au HMMT, une compétition de mathématiques de niveau olympiade. Le même modèle, confronté à ALFWorld — un environnement simulé où il doit ranger des objets dans une cuisine virtuelle — plafonne à 43,1 %. Le raisonnement est là. La capacité brute aussi. Mais quelque chose se casse entre le cerveau du modèle et le monde dans lequel on lui demande d'agir.</p>
+
+<p>Trois chercheurs de l'Université de Pékin, Tianshi Xu, Huifeng Wen et Meng Li, ont publié en mai 2026 un travail qui prend ce constat très au sérieux. Leur thèse tient en une phrase : on cherche depuis trop longtemps à corriger les agents IA en modifiant leurs poids, alors que la plupart des défaillances se logent dans la couche d'interface — le code qui traduit ce que le modèle veut faire en actions exécutables. Leur réponse s'appelle <strong>LIFE-HARNESS</strong>, un harnais d'exécution qui améliore des modèles gelés sans toucher un seul paramètre.</p>
+
+<p>Le résultat est marquant : sur 126 combinaisons modèle-environnement testées, LIFE-HARNESS améliore les performances dans 116 cas, avec un gain relatif moyen de 88,5 %. Et le harnais conçu pour un petit modèle de 4 milliards de paramètres fonctionne aussi bien sur des modèles 17 fois plus gros.</p>
+
+<h2>Le problème : un agent n'est pas qu'un modèle</h2>
+
+<p>Quand on parle d'agent IA, on imagine souvent un LLM qui réfléchit puis agit. La réalité est plus prosaïque. Entre le modèle et l'environnement se déploie toute une plomberie : un système qui lui présente les observations, des outils qu'il peut appeler, un exécuteur qui transforme ses sorties en actions concrètes, un retour qui lui dit ce qui s'est passé. Cette plomberie porte un nom dans la littérature : le <em>runtime harness</em>, ou harnais d'exécution.</p>
+
+<p>Les auteurs ont fait quelque chose de simple et d'éclairant. Ils ont pris un modèle correct, l'ont laissé tourner sur plusieurs environnements d'agents, et ont disséqué à la main 393 trajectoires d'échec. Quatre catégories émergent.</p>
+
+<p>Les <strong>échecs de réalisation d'action</strong> représentent un tiers des cas. Le modèle veut bien agir, mais sa sortie ne ressemble pas à ce que l'environnement attend. Il écrit en texte libre ce qui devait être un appel d'outil JSON. Il oublie un argument obligatoire. Il propose une syntaxe SQL avec des espaces non échappés. L'intention est valable, la forme rejette tout.</p>
+
+<p>Viennent ensuite les <strong>mésententes de contrat</strong>, qui rassemblent un quart des échecs. L'appel est syntaxiquement correct, mais sémantiquement faux. L'agent utilise un outil de recherche pour soumettre une réponse finale. Il tente d'annuler un vol après le décollage. Il modifie une commande deux fois alors que le protocole en autorise une seule.</p>
+
+<p>Un autre tiers se loge dans la <strong>dégénérescence de trajectoire</strong>. Chaque action prise isolément est valide. Mais l'agent répète la même commande inutilement, oscille entre deux pages, ou épuise son budget de pas sans progresser. Il regarde dix fois dans le même tiroir vide.</p>
+
+<p>Reste un dernier dixième d'échecs qui relève d'une vraie erreur de raisonnement : l'agent suit correctement le protocole mais se trompe dans son calcul ou sa décision. Une minorité, autrement dit. Et c'est précisément ce que ces chiffres révèlent : neuf échecs sur dix proviennent de l'interface, pas du raisonnement. Continuer à réentraîner le modèle pour corriger ces erreurs revient à changer le moteur d'une voiture parce que les pneus glissent.</p>
+
+<h2>La méthode : un manager de scène autour d'un acteur figé</h2>
+
+<p>Imaginons un acteur de théâtre talentueux mais qui découvre une nouvelle pièce le soir de la première. Sans régisseur, il va trébucher sur les accessoires, oublier sa marque, sortir par la mauvaise porte. Un bon régisseur n'apprend pas à l'acteur à mieux jouer ; il s'assure simplement que la scène soit lisible et que les transitions fonctionnent. LIFE-HARNESS est ce régisseur.</p>
+
+<p>Il s'organise en quatre couches qui interviennent à des moments distincts du cycle d'interaction.</p>
+
+<h3>La couche de contrat d'environnement</h3>
+
+<p>Avant que l'agent ne commence à agir, cette couche réécrit la documentation des outils. Pas pour la rendre plus belle : pour la rendre exacte. Si l'outil de réservation d'une compagnie aérienne accepte au maximum cinq passagers par dossier, ou n'accepte qu'un seul bon-cadeau, ces contraintes sont injectées explicitement dans la description vue par le modèle. Beaucoup d'erreurs disparaissent quand on cesse de supposer que le modèle devinera des règles non documentées.</p>
+
+<h3>La couche de compétences procédurales</h3>
+
+<p>Au démarrage d'une tâche, cette couche fouille une bibliothèque de procédures distillées à partir des trajectoires d'entraînement. Si la tâche ressemble à un échange d'article, elle récupère la recette : vérifier le statut de livraison, identifier les items exacts, exiger des remplaçants du même produit. Cette mémoire procédurale n'est ni paramétrique ni magique. C'est essentiellement un index BM25 qui propose au modèle la stratégie la plus pertinente pour le cas en cours.</p>
+
+<h3>La couche de réalisation d'action</h3>
+
+<p>C'est probablement la plus astucieuse. Après que le modèle a produit son action mais avant que l'environnement ne l'exécute, cette couche joue le rôle de filtre. Elle vérifie que l'appel respecte le schéma. Elle corrige automatiquement les variantes proches d'un nom de fonction valide. Surtout, elle bloque les actions qui échoueront à coup sûr : un paiement avec un budget insuffisant, une annulation après embarquement, une modification d'un dossier déjà modifié. Quand elle bloque, elle renvoie un message explicatif au modèle, qui peut alors corriger sa stratégie sans perdre un tour.</p>
+
+<h3>La couche de régulation de trajectoire</h3>
+
+<p>Une fois l'action exécutée et le retour reçu, cette couche surveille la dynamique globale. Elle détecte les répétitions, les oscillations, les boucles d'examens infructueux. Quand elle repère un schéma dégénératif, elle injecte un avertissement ou une directive de récupération. Si le budget approche de l'épuisement et qu'une réponse plausible existe déjà dans la trajectoire, elle peut forcer une soumission plutôt que de laisser l'agent expirer.</p>
+
+<p>L'évolution de ce harnais se fait offline, avec l'aide d'un agent de codage (Codex). On laisse un modèle gelé tourner sur les tâches d'entraînement, on collecte les trajectoires d'échec, et l'agent de codage propose des mises à jour ciblées sur la couche appropriée. Les tâches d'évaluation restent invisibles pendant tout ce processus, garantissant que le harnais ne mémorise pas les réponses.</p>
+
+<h2>Résultats : des gains qui voyagent</h2>
+
+<p>Les expériences couvrent sept environnements de trois suites de référence : tâches ménagères simulées (ALFWorld), achats en ligne (WebShop), contrôle d'un système d'exploitation, manipulation de bases de données (DBBench), service client aérien, retail et télécom.</p>
+
+<p>Sur ces sept environnements, les gains relatifs vont de 10 % à 84 %. ALFWorld passe de 41 % à 76 % de réussite. La performance moyenne sur Airline grimpe de 50 % à 63 %. Pour la tâche Telecom, qui exige des chaînes d'actions précises, le score Pass@1 monte de 55 % à 69 %.</p>
+
+<p>Le résultat le plus inattendu concerne la transférabilité. Le harnais a été conçu uniquement à partir des trajectoires d'un seul modèle, le modeste Qwen3-4B-Instruct. Pourtant, appliqué à 17 autres modèles allant de petits modèles instruits à des géants de 70 milliards de paramètres, en passant par des modèles spécialisés pour l'usage d'outils, il améliore les performances dans 92 % des cas. Le harnais a donc capté quelque chose de structurel sur l'environnement, pas une béquille spécifique au modèle qui l'a vu naître.</p>
+
+<p>Plus surprenant encore : sur τ-bench, le modèle généraliste Qwen2.5-32B équipé de LIFE-HARNESS bat le modèle xLAM-2-32B, qui est pourtant une version spécialement réentraînée pour ces tâches d'usage d'outils. Le harnais offre 7,5 points d'avance sans toucher aux poids. Et quand on combine les deux — xLAM avec harnais — on gagne encore 6 à 29 points selon les benchmarks. L'adaptation d'interface et l'adaptation de modèle ne s'opposent pas ; elles travaillent sur des axes différents.</p>
+
+<p>Un autre détail mérite l'attention. xLAM, le modèle entraîné spécifiquement pour τ-bench, perd en performance sur τ2-bench et AgentBench par rapport à sa version de base. L'entraînement spécialisé peut nuire à la généralisation hors domaine. LIFE-HARNESS, qui ne touche pas aux poids, ne souffre pas de ce phénomène.</p>
+
+<h2>Pourquoi cela compte au-delà des laboratoires</h2>
+
+<p>Les équipes qui déploient des agents en production rencontrent toutes le même cycle : un nouveau modèle sort, on l'évalue, on le finetune sur ses cas d'usage, on découvre qu'il échoue sur des bords précis du contrat de ses outils, on relance un cycle de RLHF. Trois mois plus tard, un meilleur modèle sort, et le cycle recommence. Chaque adaptation est jetable.</p>
+
+<p>Ce que démontre LIFE-HARNESS, c'est qu'une grande partie de cette adaptation peut être désolidarisée du modèle. Le harnais, lui, survit aux migrations de modèle. Quand l'entreprise passe de Claude Sonnet 4.6 à Claude Sonnet 4.7, ou de Llama 3 à Qwen 3.5, son harnais reste valide. Seules les couches qui dépendent vraiment du modèle (rares, dans la définition adoptée par les auteurs) doivent être révisées.</p>
+
+<p>Pour les équipes qui construisent des agents sur des domaines déterministes — automatisation d'opérations IT, workflows de back-office, manipulation de bases métier, assistants de support client avec procédures fixes — cette approche change l'économie du projet. On peut investir dans la qualité du harnais comme on investit dans la qualité du code applicatif : une fois bien fait, il rapporte sur plusieurs cycles de modèles.</p>
+
+<p>L'approche éclaire aussi une question récurrente en revue d'architecture : faut-il mettre la logique métier dans le prompt système, dans des outils, ou dans le code applicatif ? LIFE-HARNESS plaide pour une distribution explicite à travers quatre couches identifiées par leur moment d'intervention dans la boucle. Les règles stables vont dans le contrat, les procédures dans la bibliothèque de compétences, la validation déterministe dans la réalisation d'action, la surveillance comportementale dans la régulation de trajectoire. Ce découpage donne un langage commun pour décider où placer chaque morceau de logique.</p>
+
+<p>Autre conséquence pratique : la possibilité d'auditer. Quand une intervention du harnais est explicite et localisée, on peut tracer pourquoi un agent a refusé une action ou pourquoi il a été redirigé. Comparée à une politique apprise dans 70 milliards de paramètres, cette traçabilité change la conversation avec les équipes de conformité.</p>
+
+<h2>Pour aller plus loin</h2>
+
+<p>Les auteurs reconnaissent la principale limite de leur travail. LIFE-HARNESS suppose un environnement déterministe et borné : un ensemble fini d'outils, des règles stables, des critères de succès clairs. Dans ces conditions, les défaillances se reproduisent et se transforment en interventions réutilisables. Quand l'environnement devient ouvert — un agent qui navigue sur le web public, qui interagit avec des utilisateurs aux objectifs flous, qui doit improviser avec des outils découverts en cours de tâche — la stabilité du contrat s'effondre. Construire un harnais pour ce régime ouvert reste un problème de recherche.</p>
+
+<p>La conception du harnais elle-même soulève des questions. Aujourd'hui, l'évolution s'appuie sur un agent de codage et une boucle d'inspection humaine occasionnelle. Peut-on automatiser davantage ? Peut-on garantir que les interventions ajoutées n'introduisent pas de régressions sur des tâches non vues ? Les auteurs implémentent des vérifications de non-régression, mais la question reste largement ouverte à grande échelle.</p>
+
+<p>Une autre piste concerne le statut de la couche de réalisation d'action. Aujourd'hui, elle code en dur les contraintes de chaque environnement. On pourrait imaginer une couche capable d'apprendre ces contraintes par observation, ce qui réduirait drastiquement le coût de mise en place d'un nouvel agent. Les travaux récents sur l'évolution automatique de harnais pour agents de codage (Meta-Harness, AHE) vont dans cette direction, mais pour des domaines plus restreints.</p>
+
+<p>Enfin, le découpage en quatre couches n'est probablement pas la dernière incarnation possible. Les auteurs eux-mêmes montrent que la suppression d'une couche dégrade différemment selon les tâches : retirer la régulation de trajectoire fait chuter ALFWorld de 86 %, mais Airline perd seulement 3 %. Cela suggère qu'un harnais idéal pourrait être adaptatif, activant ou désactivant des couches selon le profil de tâche. La taxonomie actuelle est suffisamment générale pour fonctionner sur sept environnements diversifiés, mais on peut parier que de nouvelles couches apparaîtront à mesure que les domaines d'application s'étendent.</p>
+
+<p>Au-delà des détails techniques, ce travail change subtilement la façon dont on pense les agents. Pendant deux ans, la communauté a traité chaque échec d'agent comme un appel à plus d'entraînement, plus de RLHF, plus de données synthétiques. LIFE-HARNESS rappelle qu'entre le modèle et son environnement, il y a une couche d'ingénierie qu'on a parfois sous-investie. Les modèles deviennent de meilleurs raisonneurs ; encore faut-il leur tendre une scène où ils puissent jouer.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

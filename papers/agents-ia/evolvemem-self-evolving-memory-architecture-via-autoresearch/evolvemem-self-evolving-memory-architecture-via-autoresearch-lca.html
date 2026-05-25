@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EvolveMem: Self-Evolving Memory Architecture via AutoResearch for LLM Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>EvolveMem: Self-Evolving Memory Architecture via AutoResearch for LLM Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les systèmes mémoire pour agents LLM ont massivement progressé sur l'organisation du contenu stocké (MemGPT, Mem0, A-MEM, MemoryBank) tout en laissant figée l'infrastructure de retrieval qui interroge ce contenu : fonctions de scoring, poids de fusion, budgets de contexte, styles de génération de réponse restent identiques durant toute la vie de l'agent. Les auteurs identifient ce déséquilibre comme structurel : différents types de questions (lookup factuel, raisonnement temporel, multi-hop, adversarial name-swap) requièrent fondamentalement des stratégies de retrieval différentes, qu'une configuration unique ne peut servir simultanément.</p>
+<p>EvolveMem propose une mémoire dont la configuration de récupération elle-même évolue, pilotée par un module de diagnostic LLM en boucle fermée. Le système réalise un processus baptisé AutoResearch : il observe ses propres échecs, formule des hypothèses, propose des ajustements et les valide empiriquement, sans intervention humaine.</p>
+
+<h2>Méthodologie</h2>
+<p>L'architecture repose sur trois couches. Le <strong>Structured Memory Store</strong> extrait des unités mémoire typées (six catégories : épisodique, sémantique, préférence, état projet, résumé de travail, procédural) via une fenêtre glissante avec retry, chunk-splitting et vérification de couverture par mots-clés. Trois passes de consolidation maintiennent la qualité : déduplication Jaccard (seuil 0,80), décroissance d'importance linéaire (αd=0,05/jour, plancher 0,15) et renforcement d'entités (δρ=0,05, plafond 0,30).</p>
+<p>Le <strong>Retrieval Layer</strong> expose un espace d'action θ comprenant trois vues (BM25 lexicale, sémantique BGE-base-en-v1.5, métadonnées structurées), trois modes de fusion (SUM, WEIGHTED-SUM, RRF), entity-swap adversariale, décomposition de requête multi-hop, génération de réponse avec style configurable et vérification optionnelle en seconde passe. Chaque dimension admet une surcharge par catégorie de question.</p>
+<p>Le <strong>Self-Evolution Engine</strong> exécute jusqu'à Rmax=7 rondes d'un cycle EVALUATE-DIAGNOSE-PROPOSE-GUARD. Un LLM lit le log brut par question (prédiction, référence, score, sources récupérées), classe les causes racines et propose des ajustements structurés Δθ. Un méta-analyseur applique trois règles : revert vers la meilleure config si la régression dépasse τrev, perturbation aléatoire si stagnation sur deux rondes, application clampée sinon. Le mécanisme est auto-expansif : le LLM peut proposer des dimensions absentes de l'espace d'action initial.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur <strong>LoCoMo</strong> (10 conversations, 1 986 paires QA, sessions de 369-689 tours), EvolveMem atteint 0,543 F1 global avec GPT-4o, soit +25,7% relatif sur SimpleMem (0,432) et +78,0% sur le baseline minimal initial (0,305). Les gains se concentrent sur les catégories temporelle (+63,4%) et single-hop (+68,7%). Avec GPT-5.1, l'amélioration relative atteint 36,8% sur SimpleMem et la catégorie temporelle progresse de 98,9%.</p>
+<p>Sur <strong>MemBench</strong> (28 échantillons : 7 catégories × 2 sujets × 2 échantillons), EvolveMem atteint 67,9% sur GPT-4o et 71,4% sur GPT-5.1, dépassant le meilleur baseline de 18,9% et 11,0% relatifs respectivement. La dimension Robustness reste le point faible, attribué par les auteurs à une couverture mémoire insuffisante non corrigeable au niveau retrieval.</p>
+<p>La trajectoire d'évolution sur LoCoMo (Table 4) est documentée ronde par ronde : R0 à 30,5% (BM25 seul), R1 active la fusion RRF (35,8%), R2 propose MMR mais est revert (34,8%), R3 active l'entity-swap pour Cat. 5 (37,2%), R7 atteint 54,3% via vérification de réponse et tuning combiné. L'ablation montre que la qualité d'extraction est la composante la plus critique (-23,22 F1), suivie de la recherche sémantique (-10,32) et du diagnostic LLM (-9,63 vs perturbation aléatoire).</p>
+<p>Le transfert cross-benchmark est positif : CL évolué sur LoCoMo atteint 54,3% en zero-shot sur MemBench, et l'évolution continuée CLM améliore simultanément les deux benchmarks (Pareto), suggérant que les principes appris sont génériques.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le résultat le plus convaincant est l'auto-découverte de dimensions : entity-swap (R3), décomposition de requête (R5) et vérification de réponse (R7) n'étaient pas dans l'espace d'action initial. Cela valide partiellement la thèse de l'AutoResearch comme paradigme. La comparaison avec une perturbation aléatoire sur le même espace d'action (-9,63 F1) appuie la valeur ajoutée du diagnostic LLM.</p>
+<p>Plusieurs limites pèsent sur la portée des conclusions. <strong>L'échantillon MemBench (28 cas) est dramatiquement réduit</strong> face à la richesse du benchmark complet : aucun intervalle de confiance n'est rapporté, ce qui interdit toute conclusion statistique robuste sur les écarts de quelques points. Sur LoCoMo les 10 conversations limitent aussi la puissance, même si le nombre de questions (1 986) est plus rassurant.</p>
+<p>Le coût de l'évolution est sous-traité : 25-35 min wall-clock par échantillon dominé par les appels LLM d'évaluation, sans comptage des tokens consommés ni comparaison économique avec un tuning manuel d'expert. Un baseline crucial manque : un humain disposant des mêmes logs aurait-il proposé les mêmes ajustements en moins d'itérations ? La revendication que le système remplace l'effort de recherche manuelle reste qualitative.</p>
+<p>Le risque de leakage évaluation-évolution est traité de manière floue. L'évolution optimise directement sur le set d'évaluation Q (Eq. 3), ce qui équivaut à un overfitting de configuration au benchmark cible. Le transfert positif vers MemBench atténue partiellement cette critique mais ne l'élimine pas, surtout avec deux benchmarks seulement et des QA partageant des structures similaires.</p>
+<p>Enfin, plusieurs choix de design sont peu justifiés : seuils τJ=0,80, αd=0,05, ϵ=0,005 sont posés sans étude de sensibilité ; le nombre maximal de rondes Rmax=7 semble calibré sur l'observation post-hoc plutôt que sur un critère théorique.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code est annoncé disponible (github.com/aiming-lab/SimpleMem), avec dépendances minimales (SQLite + sentence-transformers optionnel). Les prompts complets sont fournis verbatim en annexe F (extraction, décomposition, génération LoCoMo et MemBench, vérification, diagnostic), ce qui est une excellente pratique de transparence. Les hyperparamètres et leurs plages valides figurent en Table 7. Les logs bruts par question (raw_results.jsonl) sont persistés.</p>
+<p>Bémol : les expériences utilisent GPT-5.1 et GPT-4o via Azure OpenAI, modèles propriétaires dont les versions exactes ne sont pas figées dans le temps. La reproductibilité parfaite des trajectoires d'évolution (qui dépendent du jugement du LLM diagnostic) n'est pas garantie. Aucun seed n'est mentionné pour les perturbations aléatoires de la branche explore.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport conceptuel est réel : déplacer l'optimisation des hyperparamètres de retrieval depuis le tuning manuel vers une boucle LLM-driven qui exploite la sémantique des échecs. Le pattern AutoResearch appliqué à l'architecture du système lui-même se distingue des travaux antérieurs sur l'auto-amélioration des politiques ou des skills (Voyager, ExpeL, EvolveR).</p>
+<p>Les applications immédiates concernent les assistants personnels à mémoire longue, les agents de coding maintenant un état projet, et les systèmes de service client. Le coût d'évolution (quelques dizaines de minutes par déploiement) reste acceptable pour des systèmes en production avec workload stable.</p>
+<p>La généralisation à d'autres architectures de mémoire (graphes de connaissances, mémoires paramétriques type MemoryLLM) ou à d'autres tâches que le QA reste ouverte. Le transfert vers le multimodal et les scénarios dynamiques est annoncé en perspective future sans démonstration.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>EvolveMem se positionne explicitement comme le premier système combinant évolution du contenu mémoire et évolution de l'infrastructure de retrieval via diagnostic LLM (Table 1). La distinction avec MemEvolve [38] et Memory-R1 [36] tient à la cible de l'optimisation : EvolveMem optimise la mécanique de retrieval, tandis que les autres ciblent la politique de gestion mémoire ou le contenu stocké.</p>
+<p>Le travail s'inscrit dans la lignée d'Adaptive-RAG [9], Self-RAG [1] et CRAG [35] mais s'en distingue : ces approches adaptent quand et quoi récupérer, pas les paramètres de retrieval eux-mêmes sur la durée de vie du système. La filiation avec AutoResearchClaw [14] est revendiquée comme application spécifique du paradigme.</p>
+<p>La contribution mérite l'attention de la communauté agents IA, mais son évaluation gagnerait à inclure un benchmark plus large (LongMemEval, Evo-Memory cité en [31]), une étude de sensibilité aux hyperparamètres et une analyse coût-efficacité explicite face à des baselines tuning manuel ou Bayesian optimization. Sans ces compléments, le saut de performance reporté risque de refléter en partie l'overfitting au benchmark cible.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead><tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Identification claire d'un angle mort de la littérature (retrieval figé) et formulation précise du problème de co-évolution.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Protocole soigné avec ablation systématique, étude de transfert et trace détaillée des rondes ; manque un baseline tuning manuel.</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td><td>28 échantillons MemBench, 10 conversations LoCoMo, deux backbones uniquement ; aucun intervalle de confiance.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>F1 token-level et BLEU-1 standards mais pas d'analyse d'erreur quantifiée au-delà du case study qualitatif.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Optimisation directe sur le set d'évaluation, risque d'overfitting partiellement atténué par le test de transfert.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code annoncé public, prompts complets en annexe, hyperparamètres listés ; dépendance à modèles propriétaires versionnés.</td></tr>
+<tr><td>Transparence sur les limites</td><td>3</td><td>Limites mentionnées (Robustness MemBench, scénarios dynamiques) mais coût des appels LLM et risque de leakage sous-discutés.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier framework combinant co-évolution contenu/retrieval avec diagnostic LLM ; pattern AutoResearch transférable.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Efficiency Frontier: A Unified Framework for Cost–Performance Optimization in LLM Context Management — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>The Efficiency Frontier: A Unified Framework for Cost–Performance Optimization in LLM Context Management</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Le coût caché des fenêtres de contexte</h2>
+
+<p>Doubler la fenêtre de contexte d'un LLM ne double pas sa facture : elle la quadruple. Le mécanisme d'attention coûte le carré de la longueur d'entrée. Pendant ce temps, le gain de performance, lui, plafonne. On paie plus, on reçoit à peine plus.</p>
+
+<p>Cette asymétrie n'est pas un détail technique. Quand un assistant traite des milliers de requêtes par jour, chaque jeton inutile se paie en dollars, en latence et en kilowattheures. Les auteurs de <em>The Efficiency Frontier</em> partent de ce constat banal pour poser une question que personne n'avait formalisée proprement : comment choisir, de façon rationnelle, entre les différentes stratégies qui réduisent le contexte ?</p>
+
+<p>Il existe trois grandes familles d'approches. La récupération sélective (RAG) ne charge que les passages pertinents. La compression mémoire résume le contexte avant de l'envoyer au modèle. Le contexte complet, brutal et coûteux, sert souvent de référence haute. Ces trois familles ne jouent pas dans la même cour, et c'est précisément le problème.</p>
+
+<h2>2. Comparer des pommes, des poires et des coings</h2>
+
+<p>Les évaluations actuelles publient un score F1 d'un côté, un coût en jetons de l'autre, parfois une latence en bonus. Mais elles ne disent jamais ce qui intéresse vraiment l'ingénieur en charge du déploiement : <strong>à performance équivalente, quelle méthode coûte le moins cher dans <em>mon</em> cas d'usage ?</strong></p>
+
+<p>Le piège est subtil. La compression mémoire exige un travail préparatoire lourd : il faut appeler un LLM pour résumer le contexte avant même de répondre à la question. Si on évalue cette stratégie sur une seule requête isolée, elle paraît absurde — pourquoi payer deux appels au lieu d'un ? Mais si le même résumé sert pour cent requêtes différentes, le calcul s'inverse complètement.</p>
+
+<p>Cette différence entre <em>coût intrinsèque</em> (par requête) et <em>coût amorti</em> (réparti sur plusieurs requêtes) n'apparaît dans presque aucun benchmark. Les méthodes sont mesurées isolément, sur des jeux de données différents, avec des hypothèses de coût différentes. Résultat : impossible de trancher, et les équipes choisissent au doigt mouillé ou par effet de mode.</p>
+
+<blockquote>« Augmenter la longueur du contexte augmente le coût plus vite que la performance. » Les chercheurs ne découvrent pas ce phénomène — il est documenté depuis 2024 — mais ils sont les premiers à en tirer un cadre de décision.</blockquote>
+
+<h2>3. Une carte routière avec un paramètre clé</h2>
+
+<p>Le cadre proposé tient en trois étages. D'abord, chaque stratégie est explorée sur toute sa gamme de paramètres : pour la récupération, on fait varier le nombre de documents ; pour la compression, le taux de compression ; etc. On garde uniquement les configurations qui ne sont pas dominées — celles qui, pour un niveau de coût donné, offrent la meilleure performance possible.</p>
+
+<p>Ensuite, on évalue toutes ces configurations sous la même grille de coût, en intégrant l'amortissement. C'est ici qu'apparaît le paramètre central du papier : <strong>N, le nombre de fois où un prétraitement peut être réutilisé</strong>. N=1 décrit une requête unique, jetable. N=100 décrit une mémoire d'agent persistant ou une base de connaissances partagée par mille utilisateurs.</p>
+
+<p>Une analogie aide à fixer les idées. Imaginez choisir entre prendre un taxi à chaque trajet ou louer une voiture à l'année. Le taxi gagne si vous sortez deux fois par mois. La voiture gagne dès que vous roulez tous les jours. Aucun des deux n'est universellement meilleur — il faut connaître votre rythme d'usage. La compression mémoire, c'est la voiture louée : coûteuse à l'entrée, imbattable si on l'utilise beaucoup.</p>
+
+<p>Le troisième étage agrège toutes les stratégies dans une comparaison globale. En faisant varier un curseur <em>w</em> qui pondère la priorité entre performance et économie, on obtient une trajectoire continue : la <strong>frontière d'efficacité</strong>. Cette courbe matérialise les meilleurs choix possibles selon les préférences du déploiement, et fait apparaître les points exacts où une stratégie devient plus rentable qu'une autre.</p>
+
+<h2>4. Trois régimes, des transitions nettes</h2>
+
+<p>Les expériences portent sur 5 000 questions de HotpotQA, un benchmark de raisonnement multi-saut où le modèle doit combiner des informations dispersées dans plusieurs documents. L'évaluation tourne avec GPT-5.4 mini, dans des conditions déterministes. La méthodologie révèle trois régimes opérationnels distincts, séparés par des seuils tranchés.</p>
+
+<p>Le régime <strong>économique</strong> (F1 entre 0,70 et 0,78) est dominé par la récupération légère. Le TF-IDF sensible à la requête — un algorithme des années 70 enrichi par le contexte de la question — bat les approches plus sophistiquées quand N=1. C'est rare et c'est instructif : pour un assistant qui traite chaque conversation à neuf, sortir l'artillerie lourde de la compression n'a aucun sens.</p>
+
+<p>Le régime <strong>équilibré</strong> (F1 entre 0,78 et 0,82) est celui où tout se joue. À N=1, le contexte complet reste compétitif. Mais dès que N grimpe à 100, la compression mémoire prend le dessus et fait économiser 25 % de jetons effectifs à performance identique (passage de 566 à 424 jetons effectifs par question). Plus haut dans ce régime, près de F1=0,80, le gain dépasse 55 % : on tombe de 1308 jetons à 584.</p>
+
+<p>Le régime <strong>haute performance</strong> (F1 ≥ 0,82) reste verrouillé par le contexte complet. Aucune méthode de réduction n'arrive à préserver les derniers points de précision. Et le coût explose : atteindre les meilleurs scores demande plus du double des jetons utilisés en régime équilibré. C'est l'illustration parfaite des rendements décroissants — payer beaucoup plus pour gagner peu.</p>
+
+<p>Un détail mérite l'attention : le TF-IDF sensible à la requête bat systématiquement le TF-IDF classique. La leçon est moderne mais paradoxale — quand on injecte un peu d'intelligence contextuelle dans un algorithme vieux de cinquante ans, on obtient parfois de meilleurs résultats que les embeddings sémantiques. Une bonne raison de ne pas jeter immédiatement les outils éprouvés au profit du dernier modèle à la mode.</p>
+
+<h2>5. Ce que ça change pour les équipes qui déploient des LLM</h2>
+
+<p>Le cadre transforme une intuition floue en table de décision exécutable. Si vous construisez un chatbot grand public où chaque conversation repart de zéro, vous êtes en régime N=1 : la récupération légère gagne. Si vous construisez un agent persistant qui revient cent fois sur la même base de connaissances, vous êtes en N=100 : la compression mémoire mérite l'investissement initial.</p>
+
+<p>Cette grille de lecture déplace la conversation chez les équipes produit. Au lieu de demander « quelle est la meilleure méthode de RAG ? », la bonne question devient : « combien de requêtes vont partager le même contexte préprocessé ? ». Le facteur de réutilisation se transforme en variable de conception du système, pas en propriété mesurée après coup.</p>
+
+<p>L'impact économique est tangible. Pour une application en production qui sert un million de requêtes par jour, 25 % de jetons économisés à performance équivalente représentent des dizaines de milliers d'euros mensuels chez les principaux fournisseurs d'API. Sans changer de modèle, sans réentraîner, sans ajouter un seul GPU.</p>
+
+<p>L'angle environnemental n'est pas un argument cosmétique. Les LLM à grande échelle consomment de l'eau pour le refroidissement et de l'électricité pour le calcul. Réduire la consommation de jetons d'un facteur deux sur les charges de travail amorties revient à diviser par deux l'empreinte de ces requêtes. À l'échelle d'OpenAI ou d'Anthropic, multiplier ces optimisations sur tous les déploiements clients représente plusieurs centrales électriques économisées.</p>
+
+<p>Le cadre suggère aussi une bonne pratique architecturale : séparer explicitement la couche de prétraitement (résumés, embeddings, caches) de la couche d'inférence dans les systèmes en production. Les organisations qui mélangent les deux ne peuvent pas mesurer l'amortissement, donc ne peuvent pas optimiser. Construire un pipeline qui expose le paramètre N comme un levier de réglage devient une décision d'ingénierie de premier ordre.</p>
+
+<h2>6. Les angles morts et les pistes ouvertes</h2>
+
+<p>Le cadre repose sur HotpotQA, un benchmark de question-réponse multi-saut. C'est représentatif mais limité. Les tâches de génération de code, d'analyse de documents juridiques, de raisonnement long sur des transcriptions — toutes ont des structures de coût différentes et des sensibilités à la perte d'information différentes. Étendre la méthodologie à ces domaines reste à faire.</p>
+
+<p>La fonction d'utilité est fixe : un compromis logarithmique entre F1 et coût. Mais les vraies applications ont des préférences plus complexes. Un système médical n'a pas la même tolérance à la dégradation qu'un assistant de productivité. Apprendre la fonction de préférence directement depuis les retours utilisateurs serait une suite logique — et permettrait de calibrer le curseur w sans expertise humaine.</p>
+
+<p>Le papier ignore aussi des dimensions de coût qui pèsent en production : la latence (un utilisateur n'attend pas trois secondes pour une réponse), l'énergie réelle consommée (qui dépend du matériel, pas seulement du nombre de jetons), et les contraintes mémoire des GPU. Intégrer ces objectifs dans la même optimisation multi-critères ouvrirait la porte à des recommandations vraiment opérationnelles.</p>
+
+<p>Une limite plus subtile : les expériences utilisent un seul modèle, GPT-5.4 mini. La frontière d'efficacité dépend probablement du modèle. Un modèle plus grand tolère mieux la compression agressive. Un modèle plus petit décroche plus vite. Cartographier comment ces frontières se déforment selon la taille du modèle donnerait une carte de décision encore plus utile.</p>
+
+<p>Faut-il alors abandonner les fenêtres de contexte d'un million de jetons que tous les fournisseurs annoncent fièrement ? Pas exactement. Le papier ne dit pas que le long contexte est inutile, il dit que l'utiliser sans réfléchir gaspille des ressources. Le vrai progrès ne viendra pas de modèles capables d'ingérer toujours plus, mais de systèmes capables de choisir intelligemment ce qu'ils ingèrent. La différence entre force brute et finesse opérationnelle.</p>
+
+<p>Le mérite du cadre tient finalement à sa modestie : il ne promet pas de méthode magique, il fournit une grille pour choisir entre méthodes existantes. Dans un domaine saturé d'annonces spectaculaires et de benchmarks marketing, voir un papier établir des règles de décision robustes plutôt que de pousser une nouvelle architecture fait du bien. C'est l'ingénierie qui revient au premier plan, après plusieurs années où la recherche a privilégié l'effet d'annonce sur la rigueur du déploiement.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

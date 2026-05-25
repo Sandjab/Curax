@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compiling Agentic Workflows into LLM Weights: Near-Frontier Quality at Two Orders of Magnitude Less Cost — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Compiling Agentic Workflows into LLM Weights: Near-Frontier Quality at Two Orders of Magnitude Less Cost</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>1. Introduction : 462 fois moins cher pour la même qualité</h2>
+
+<p>Un modèle de 8 milliards de paramètres, tournant sur une seule carte graphique louée 2,50 dollars de l'heure, gère des conversations d'assurance aussi bien qu'un agent orchestré par LangGraph s'appuyant sur Claude Sonnet 4.5, un modèle environ 70 fois plus gros. Coût par conversation : un dixième de centime contre trente-trois centimes. Soit 462 fois moins cher.</p>
+
+<p>Ce résultat vient d'une équipe de l'Université de Melbourne (Simon Dennis, Rivaan Patil, Kevin Shabahang, Hao Guo) qui publie un travail empirique sur ce qu'ils appellent les <strong>agents souterrains</strong> (subterranean agents). L'idée tient en une phrase : au lieu d'écrire une procédure complexe en Python et de la faire piloter par un orchestrateur externe à chaque tour de parole, on entraîne directement un petit modèle à <em>incarner</em> cette procédure dans ses poids.</p>
+
+<p>Le résultat surprend par son ampleur. Pas 10 % d'économie, pas un facteur 2. Deux ordres de grandeur. Et la qualité reste à 87-98 % du modèle de référence. Pourquoi presque personne ne fait ça ?</p>
+
+<h2>2. Le problème : l'orchestration externe est devenue le réflexe par défaut</h2>
+
+<p>L'industrie des agents IA s'est massivement convertie aux frameworks d'orchestration. LangGraph, CrewAI, Google ADK, OpenAI Agents SDK, Semantic Kernel, Strands, LlamaIndex : ensemble, ces bibliothèques cumulent plus de 290 000 étoiles sur GitHub. Toutes suivent le même schéma. Un orchestrateur tourne au-dessus du LLM. À chaque tour de la conversation, il injecte un prompt spécifique au nœud actif du graphe, lit la réponse, décide de la prochaine étape, recommence.</p>
+
+<p>Cette architecture pose trois problèmes que les développeurs payent silencieusement.</p>
+
+<p>D'abord le coût. Chaque tour appelle un modèle de frontière. Le prompt contient la procédure, ou au minimum le contexte du nœud courant, ce qui gonfle la facture de tokens à chaque appel. Sur des conversations de 20 tours, l'addition devient salée.</p>
+
+<p>Ensuite la fuite d'information. La procédure métier — celle qui encode souvent une vraie valeur commerciale, des règles d'arbitrage de réclamations, un script de support produit — transite à chaque appel chez un fournisseur tiers. C'est livrer son secret industriel à OpenAI ou Anthropic, conversation après conversation.</p>
+
+<p>Enfin la fragilité. Les travaux antérieurs (Cemri et al., Zhu et al., Gupta) documentent les modes d'échec des architectures multi-agents : erreurs d'aiguillage aux nœuds de décision, perte de cohérence d'un tour à l'autre, écart énorme entre le taux de réussite au premier essai et la fiabilité réelle d'un système en production.</p>
+
+<p>Une alternative existait déjà : donner toute la procédure dans le prompt système d'un modèle de frontière et le laisser s'auto-orchestrer. Dennis et son équipe l'avaient montré dans un travail précédent : qualité quasi parfaite, mais on continue à payer le tarif premium à chaque conversation, à consommer la fenêtre de contexte et à exposer la procédure au fournisseur.</p>
+
+<p>La troisième voie, la compilation dans les poids du modèle, existe depuis SimpleTOD en 2020 et a été reprise par FireAct, SynTOD, WorkflowLLM, Agent Lumos. Toutes ces approches fonctionnent. Pourtant, leur adoption communautaire reste 100 fois inférieure à celle des frameworks d'orchestration. Les auteurs identifient trois barrières perçues : qualité supposée insuffisante, coût de fine-tuning prohibitif, manque de flexibilité face aux changements de procédure. Leur publication démolit les trois.</p>
+
+<h2>3. La méthode vulgarisée : transformer un script en réflexe</h2>
+
+<p>Imaginez un nouveau téléopérateur dans un centre d'appels. Première semaine, il a son script imprimé devant lui. À chaque interaction client, il lit la procédure, identifie où il en est, choisit la bonne formulation. C'est lent, c'est mécanique, et un superviseur derrière lui valide chaque décision. C'est l'orchestration externe.</p>
+
+<p>Six mois plus tard, le même téléopérateur n'a plus besoin du script. La procédure est devenue un réflexe. Il navigue les conversations de façon fluide, sait quand poser quelle question, anticipe les objections. C'est l'agent souterrain.</p>
+
+<p>La méthode tient en quatre étapes. On définit d'abord la procédure comme un graphe orienté : des nœuds (chaque tour de l'agent ou du client), des arcs (les transitions possibles), un nœud de départ, des nœuds terminaux (succès, abandon, escalade). Pour la réservation de voyage, 14 nœuds. Pour les réclamations d'assurance, 55 nœuds et 6 hubs de décision.</p>
+
+<p>On génère ensuite des conversations synthétiques en faisant traverser ce graphe par un modèle puissant — ici Claude Sonnet 4.5. À chaque nœud, le modèle reçoit le template de ce nœud et l'historique complet de la conversation, puis produit un tour de dialogue contextuel. Pour le domaine assurance, les chercheurs ont généré 3 000 conversations couvrant les 2 381 chemins acycliques possibles.</p>
+
+<p>Vient ensuite le fine-tuning complet (pas du LoRA, pas du PEFT) du modèle de base sur ces conversations. Pour les expériences à 8 milliards de paramètres, ils utilisent Qwen3-8B en précision bf16, DeepSpeed ZeRO-3 sur 8 cartes A100. Dix à vingt epochs, le meilleur checkpoint étant souvent atteint dès la deuxième ou troisième passe.</p>
+
+<p>Au moment du déploiement, l'orchestrateur disparaît complètement. Le modèle reçoit un prompt système minimaliste — « Tu es un assistant de réservation de voyage » — et c'est tout. Pas de flowchart injecté, pas de logique de routage, pas de templates par nœud. La procédure est désormais dans les poids, invisible mais opérante.</p>
+
+<p>Un point technique mérite d'être souligné : les auteurs citent leur propre travail montrant que les méthodes économes en paramètres comme LoRA échouent à internaliser des procédures multi-étapes, même avec des rangs élevés. Internaliser une logique d'aiguillage demande de modifier le comportement implicite de suivi d'état du modèle, pas seulement son style de réponse.</p>
+
+<h2>4. Résultats clés : la barrière qualité s'effondre à 8B</h2>
+
+<p>L'expérience la plus instructive est celle sur la réservation de voyage, parce qu'elle isole proprement l'effet de la compilation. Les chercheurs comparent un Qwen 2.5 de 3 milliards de paramètres compilé contre <em>le même modèle</em> utilisé en mode orchestré classique. Même base, même procédure, seule l'architecture diffère.</p>
+
+<p>Le modèle compilé gagne sur quatre des cinq critères de qualité avec une significativité statistique à p &lt; 0,001 : réussite de la tâche, cohérence, gestion des cas particuliers, naturel de la conversation. Sur la cinquième dimension (précision de l'information), la tendance est favorable mais ne passe pas le seuil de significativité. Plus surprenant encore, le taux d'échec total chute de 24 % avec l'orchestrateur LangGraph à 5,5 % avec le modèle compilé. Les erreurs d'aiguillage aux nœuds de décision disparaissent par construction : il n'y a plus de nœud, plus d'aiguillage explicite.</p>
+
+<p>À 3 milliards de paramètres, un écart persiste avec le modèle de frontière en mode in-context sur deux dimensions : la gestion gracieuse des imprévus (82 % du score de référence) et le naturel (82 %). Le modèle compilé apprend bien la procédure mais manque de capacité pour les cas atypiques.</p>
+
+<p>Le passage à 8 milliards de paramètres ferme cet écart. Sur le support Zoom, la gestion gracieuse atteint 92 % du modèle de référence, le naturel 97 %. Sur les réclamations d'assurance, les 55 nœuds, le modèle compilé atteint 92-98 % de la qualité du Claude Sonnet en mode in-context, et bat même le LangGraph orchestré sur la cohérence, la gestion gracieuse et le naturel.</p>
+
+<p>Côté coût, les chiffres font mal à l'orchestration. Le modèle compilé tourne sur une A100 80 Go louée à 2,50 dollars de l'heure via vLLM. Les benchmarks publiés donnent environ 15 000 tokens/seconde en prefill et 3 000 tokens/seconde en décodage autoregressif. Ramené au million de tokens, on obtient environ 0,05 dollar en entrée et 0,23 dollar en sortie. Comparé aux 3 dollars en entrée et 15 dollars en sortie de Claude Sonnet 4.5 publié, le facteur est d'environ 65 par token.</p>
+
+<p>Mais ce facteur 65 se multiplie avec une autre économie : le volume de tokens. L'approche in-context doit injecter la procédure sérialisée dans chaque prompt système. Pour les 14 nœuds du voyage, la procédure double la consommation de tokens. Pour les 55 nœuds de l'assurance, elle la multiplie par sept. Le modèle compilé, lui, garde un prompt de taille constante quelle que soit la complexité de la procédure.</p>
+
+<p>Les deux facteurs se composent : 128 fois moins cher pour le voyage, 296 fois pour Zoom, 462 fois pour l'assurance. La compilation devient d'autant plus avantageuse que la procédure est complexe.</p>
+
+<p>Sur la flexibilité, le mythe d'un fine-tuning de plusieurs jours tombe lui aussi. Sur un cluster de 8 cartes H200, le cycle complet — génération des données, fine-tuning, évaluation — boucle en 30 à 50 minutes. Sur une seule A100 80 Go, en mode dégradé, on parle de 3 à 4 heures. C'est un cycle CI/CD, pas un projet d'entraînement à part entière.</p>
+
+<h2>5. Implications pratiques : où compiler, où orchestrer</h2>
+
+<p>La conclusion opérationnelle est nette pour quiconque déploie des agents en production sur des tâches procédurales : la compilation devient le choix par défaut. Le break-even avec l'approche in-context arrive au bout de 500 conversations. Au-delà de 10 000 conversations, le surcoût de compilation représente moins d'un centime par conversation.</p>
+
+<p>Trois cas d'usage profitent immédiatement. Le support client à grand volume, où des dizaines de milliers de conversations passent par la même procédure. Les workflows métier sensibles, où la procédure encode des règles propriétaires qu'on ne veut pas exposer à un fournisseur de LLM tiers. Les déploiements latence-sensibles : sur l'assurance, le modèle compilé tourne 2,8 fois plus vite que l'orchestrateur LangGraph, simplement parce qu'il évite les allers-retours réseau et les appels d'aiguillage à chaque hub de décision.</p>
+
+<p>Une découverte secondaire mérite l'attention. L'agent compilé apprend un style « entretien » qu'aucun ingénieur n'a programmé : 64 % de ses tours contiennent exactement une question. Là où l'orchestrateur, contraint par les templates de ses nœuds, empile parfois plusieurs questions dans un même message, le modèle compilé adopte naturellement un rythme une-question-une-réponse. Le volume total de mots échangés reste comparable, mais le découpage est plus digeste pour l'utilisateur et produit des journaux d'audit plus lisibles.</p>
+
+<p>Inversement, certains cas restent mieux servis par d'autres approches. Les tâches non procédurales — recherche ouverte, raisonnement créatif, agents qui doivent improviser hors d'un script — ne tirent rien de la compilation. Les workflows qui changent toutes les semaines paieront un coût de recompilation non négligeable, même à 30-50 minutes. Et les domaines exigeant une connaissance encyclopédique large continuent de tirer parti des modèles de frontière : sur le support Zoom, l'écart résiduel du modèle 8B se concentre sur la précision factuelle, là où la connaissance du monde joue plus que la procédure.</p>
+
+<h2>6. Pour aller plus loin : ce que l'étude ne tranche pas</h2>
+
+<p>Le travail laisse plusieurs questions ouvertes que les prochaines publications devront aborder.</p>
+
+<p>La généralisation hors distribution reste sous-évaluée. Les 200 scénarios par condition couvrent l'espace prévu par la procédure, avec différents profils utilisateurs et niveaux de complexité. Mais que se passe-t-il quand un client sort radicalement du script — demande un remboursement sur une réclamation déjà clôturée, mélange deux types de sinistres dans une seule demande ? L'orchestrateur peut au moins déclencher une escalade. Le modèle compilé peut aussi le faire, à condition que les chemins d'escalade aient été couverts dans les données d'entraînement.</p>
+
+<p>La maintenance évolutive est sous-explorée. Recompiler de zéro en 30 minutes est rapide, mais la question de la régression sur les chemins existants reste posée. Une procédure d'assurance déployée depuis six mois, à laquelle on ajoute trois nouveaux nœuds pour un nouveau type de sinistre, demande-t-elle un fine-tuning incrémental ou un cycle complet ? Les auteurs n'évaluent pas cette dimension.</p>
+
+<p>La question du juge LLM mérite vigilance. Les chercheurs ont anticipé le biais d'auto-préférence (Claude évaluant des conversations générées avec Claude) en répliquant l'évaluation avec GPT-4.1. Les conclusions principales tiennent — l'in-context reste en tête, le 3B compilé bat son équivalent orchestré, la qualité reste à 83-99 % du plafond. Mais sous GPT-4.1, l'orchestrateur LangGraph remonte sur plusieurs métriques, et l'écart se rétrécit. Évaluer des agents conversationnels avec un autre agent reste un terrain méthodologique encore jeune.</p>
+
+<p>Enfin, le verdict s'applique aux <em>tâches procédurales</em>. Le terme cache une frontière floue. Une procédure de réservation de voyage, oui. Un assistant de codage qui doit raisonner sur des bases de code arbitraires, sans doute pas. Entre les deux, beaucoup de cas commerciaux qui mélangent procédure stricte et liberté d'expression. Tracer cette frontière proprement, c'est le travail empirique des deux prochaines années.</p>
+
+<p>Le message structurant de la publication tient pourtant en une formule simple, que les auteurs énoncent en clôture : <strong>la structure persistante appartient aux poids, l'état transitoire appartient au prompt</strong>. Ce qui ne change pas d'une conversation à l'autre — la logique métier, le script, les contraintes du domaine — n'a pas vocation à être réinjecté tour après tour. Ce qui change — l'identité du client, le contexte de l'appel, la situation du jour — reste dans la fenêtre de contexte. La hiérarchie est plus saine, le coût s'effondre, la souveraineté sur la procédure revient au déployeur.</p>
+
+<p>Une dernière donnée pour mesurer le déplacement en cours : les frameworks d'orchestration cumulent 290 000 étoiles GitHub, les publications de compilation environ 3 000. Un facteur 100 d'écart de visibilité, contre un facteur 100 d'écart de coût en faveur de la compilation. L'arbitrage commercial finira par rattraper l'arbitrage de mode.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
