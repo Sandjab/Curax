@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Language Models Need Sleep — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Language Models Need Sleep</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le mécanisme d'attention des transformers met à mal le passage à l'échelle sur les tâches à long horizon : la compute croît quadratiquement avec la longueur de contexte et le cache KV linéairement. Les architectures hybrides récentes intercalent attention et blocs SSM à mémoire de taille fixe (fast weights) pour atténuer ce coût, en pariant sur le fait que les fast weights compensent l'éviction du cache. Lee et collègues attaquent un présupposé rarement testé de cette littérature : une mémoire scalable est-elle équivalente à un <em>raisonnement</em> scalable sur les tokens déjà évincés ?</p>
+<p>Leur réponse expérimentale est négative. Les modèles hybrides échouent à mesure que la profondeur de raisonnement augmente, alors même que la quantité d'information à stocker reste fixe. Le goulot n'est donc pas la capacité mémoire mais la compute disponible pour transformer le contexte évincé en état interne utile. La proposition centrale consiste à introduire une phase de « sommeil » : avant éviction du KV cache, le modèle effectue N passes récurrentes offline qui raffinent itérativement les fast weights des blocs SSM via une règle locale apprise. À la prédiction, une seule passe avant suffit.</p>
+
+<h2>Méthodologie</h2>
+<p>L'architecture part d'un hybride SSM-attention avec fenêtre de contexte de taille L et éviction stricte. À chaque frontière d'éviction, le modèle exécute N passes récurrentes sur les D blocs (ou un sous-ensemble) avant de jeter le cache. Le gradient se propage à travers tout le graphe de calcul jusqu'aux fast weights raffinés, ce qui distingue la méthode des approches de context distillation (gradient descent sur une perte prédéfinie) ou de test-time training (une seule étape de gradient).</p>
+<p>Trois tâches structurent l'évaluation. L'automate cellulaire Rule 110 isole la profondeur de raisonnement t indépendamment de la longueur de séquence T : quatre états initiaux de 24 bits, prédiction du premier bit après t pas d'évolution, éviction tous les 24 tokens. Depo (Allen-Zhu et Li, 2025) ajoute une difficulté de compression : un cycle dirigé de jusqu'à 75 nœuds est fragmenté sur quatre fenêtres de cache, suivi de requêtes k-hop avec k tiré dans [1,16]. GSM-Infinite teste le passage à des modèles pré-entraînés (Jet-Nemotron 2B, Ouro 1.4B) sur du raisonnement mathématique long-contexte avec distracteurs, sans chaîne de pensée à l'inférence.</p>
+<p>Le protocole comparatif est correct : même graine aléatoire, même ordre des données, learning rate Muon réglé sur le baseline N=1 puis fixé pour les modèles bouclés (ce qui désavantage légèrement la méthode proposée). Optimiseur Muon, AdamW à 5e-5, batch sizes de 128 à 512. Une section dédiée à la sliding-window eviction (Section 6.4) complète l'analyse en testant un régime moins extrême que l'éviction dure.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur Rule 110 avec t=32, le hybride sans boucle plafonne à environ 10 % de précision après près de 5B tokens. Avec deux boucles, on atteint 20 % ; trois et quatre boucles dépassent 30 %. Sur Depo, seul le modèle à 4 boucles progresse sur les requêtes 16-hop dans le budget d'entraînement, le modèle à 1 boucle stagne dès 4 hops.</p>
+<p>Sur GSM-Infinite, le gain n'apparaît pas sur les problèmes faciles (op2, op4) où la précision sature, mais devient net sur op6 et op8. Pour Jet-Nemotron 2B, 6 boucles font passer la précision op6 de 0,742 à 0,812 (+9 %) et op8 de 0,351 à 0,388 (+11 %). Pour Ouro 1.4B, 4 boucles font passer op6 de 0,419 à 0,615 (+47 %) et op8 de 0,210 à 0,272 (+30 %). L'écart plus large sur Ouro est attribué à son pré-entraînement déjà récurrent en profondeur.</p>
+<p>Le régime sliding-window avec L=512 sur Ouro produit le résultat le plus frappant : 52 % d'amélioration sur op2 (0,596 → 0,905), ce qui suggère que le sommeil aide aussi à la compression et au retrieval sous distracteurs, pas seulement au raisonnement multi-étape. L'analyse de throughput (Section 6.5) montre que la perte de parallélisme séquence-axe est négligeable quand L est grand, et que le coût croît linéairement avec N.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les auteurs sont explicites sur ce qu'ils ne montrent pas. « Failure » s'entend sous budget d'entraînement fixé, pas comme impossibilité asymptotique. L'entraînement avec N élevé est plus lent et plus instable, et l'article renvoie aux techniques connues du domaine recurrent-depth (gradients implicites, truncated BPTT, stabilisation) sans les déployer ici. Le passage à des modèles plus grands que 2B reste hors périmètre.</p>
+<p>Quelques zones d'ombre méritent d'être pointées. Le choix de boucler sur les 14 blocs du milieu pour Jet contre tous les blocs pour Ouro est justifié par les conventions des architectures sources mais n'est pas comparé empiriquement. La phase de warm-up SSM-only pour le régime sliding-window est décrite comme « cruciale » mais sans ablation chiffrée. Le tuning du learning rate Muon a été fait sur le N=1, ce qui est honnête mais pourrait sous-estimer le potentiel des boucles à fort N. L'absence de comparaison directe à end-to-end test-time training de Tandon et al. (2025) sur GSM-Infinite laisse en suspens le verdict relatif aux méthodes les plus proches.</p>
+<p>La motivation biologique (replay hippocampique, consolidation pendant le sommeil) reste analogique. L'article ne prétend pas plus mais l'usage du mot « sleep » est marketing autant que descriptif : c'est une boucle récurrente sur l'état SSM avant éviction, pas un changement d'état cognitif.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les architectures de base sont publiques (Jet-Nemotron, Ouro, Gated Delta Net), l'algorithme d'entraînement est entièrement spécifié dans l'Algorithm 1, les hyperparamètres clés (learning rates, batch sizes, hidden dim) sont donnés. Le coût matériel est modeste : moins d'un GPU-day A6000 pour les automates, 1-2 GPU-days H100 pour Depo et GSM-Infinite. Aucun repository de code n'est cité dans le texte fourni. Les datasets Depo et GSM-Infinite sont procéduraux et reproductibles via les références. La reproductibilité est plausible pour un lecteur familier du stack hybride mais n'est pas appuyée par un artefact accompagnant l'article.</p>
+
+<h2>Impact et applications</h2>
+<p>Le résultat reposition un débat de la littérature efficient sequence modeling. Jelassi et al. (2024) et Arora et al. (2024) attribuaient l'écart SSM/transformer à la capacité mémoire ; cet article montre qu'à capacité fixée, la profondeur de calcul disponible pour consolider compte. Cela suggère que les architectures hybrides frontières gagneraient à incorporer un budget de compute pré-éviction, et que les benchmarks long-contexte standards (qui entremêlent retrieval et raisonnement) sous-estiment ce facteur.</p>
+<p>L'application pratique immédiate concerne les déploiements en production avec contrainte de latence stricte à la prédiction : le coût supplémentaire est absorbé pendant la consolidation, qui peut être planifiée différemment de la réponse utilisateur. Le travail s'inscrit aussi dans l'agenda plus large du test-time compute scaling, en proposant un axe complémentaire au looping à la prédiction.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>L'article articule trois fils distincts. Côté architectures hybrides, il prolonge Samba (Ren et al., 2024), Jet-Nemotron (Gu et al., 2025) et la lignée Mamba/GDN (Dao &amp; Gu, 2024 ; Yang et al., 2024). Côté depth-recurrent, il se rattache à Universal Transformers (Dehghani et al., 2018), aux travaux récents de Geiping et al. (2025) et McLeish et al. (2025), et à Ouro (Zhu et al., 2025) dont il reprend le modèle pré-entraîné. Côté context compression et distillation, il se distingue explicitement de Cartridges (Eyuboglu et al., 2025), Generative Adapter (Chen et al., 2024) et du test-time training de Tandon et al. (2025) par l'usage d'une règle de mise à jour <em>apprise</em> via forward pass récurrent plutôt que d'une descente de gradient sur une perte fixe.</p>
+<p>La contribution distinctive tient en une phrase : la récurrence sert non pas à la prédiction (comme dans les looped transformers classiques) mais à la <em>formation</em> de la mémoire fast-weight. C'est une réorganisation conceptuelle propre, validée par des expériences qui contrôlent ce qu'elles prétendent contrôler.</p>
+
+<h3>Tableau récapitulatif des critères de robustesse</h3>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Hypothèse nette et testable : capacité mémoire ≠ compute de consolidation. Originale dans le paysage hybride.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Tâches synthétiques bien conçues pour isoler la profondeur de raisonnement, validation sur benchmark réaliste avec deux architectures pré-entraînées.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Modèles de 256 dim à 2B paramètres, 1 600 exemples d'évaluation sur GSM-Infinite. Suffisant pour les claims, ne dit rien de l'extrapolation à plus grande échelle.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Précision exacte et test loss adaptés. L'ablation par profondeur de raisonnement (t, k, op) est exactement la bonne grille.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Mêmes graines, même ordonnancement, learning rate réglé sur le baseline. Aucune ablation sur le warm-up SSM-only.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Algorithme complet, hyperparamètres donnés, coût matériel modeste. Pas de lien vers du code dans le texte fourni.</td></tr>
+<tr><td>Transparence sur les limites</td><td>4</td><td>Section 7 honnête sur l'instabilité de l'entraînement et la sérialisation. Reste muet sur quelques choix architecturaux (boucle middle vs full).</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Reposition propre du débat SSM/attention, applicable au-delà du périmètre testé. Contribution conceptuelle nette mais incrémentale par rapport au depth-recurrent existant.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

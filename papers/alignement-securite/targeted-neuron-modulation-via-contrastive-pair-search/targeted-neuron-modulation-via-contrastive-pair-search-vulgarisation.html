@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Targeted Neuron Modulation via Contrastive Pair Search — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Targeted Neuron Modulation via Contrastive Pair Search</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand 0,1 % des neurones commandent toute la sécurité d'un modèle</h2>
+
+<p>Demandez à GPT-4 ou Claude comment fabriquer une bombe artisanale : refus poli. Demandez-leur la recette d'un gâteau au chocolat : réponse détaillée. Cette frontière entre ce qu'un modèle accepte et ce qu'il refuse paraît intuitive, presque morale. Trois chercheurs de Nous Research viennent pourtant de montrer qu'elle tient sur un fil étonnamment mince : moins d'un neurone sur mille dans les couches MLP du réseau.</p>
+
+<p>Leur article, signé Sam Herring, Jake Naviasky et Karan Malhotra, propose une méthode baptisée <strong>Contrastive Neuron Attribution</strong> (CNA). En désactivant 0,1 % des activations MLP, ils font chuter de plus de moitié le taux de refus de huit modèles instruct allant de Llama 3.2 (1 milliard de paramètres) à Qwen 2.5 (72 milliards). Et contrairement aux techniques de steering existantes, le modèle continue de produire des phrases cohérentes au lieu de partir en bouillie répétitive.</p>
+
+<p>Ce résultat n'est pas qu'une nouvelle technique de jailbreak. Il éclaire une question de fond : qu'est-ce que l'alignement par RLHF ou DPO change vraiment dans le cerveau d'un modèle ? La réponse des auteurs surprend par sa simplicité.</p>
+
+<h2>Le problème : comprendre où vit la sécurité</h2>
+
+<p>Quand un laboratoire prend un modèle de base et le transforme en assistant qui refuse les requêtes dangereuses, deux hypothèses cohabitent dans la communauté. Soit le fine-tuning installe de nouveaux circuits dans des zones inutilisées du réseau, soit il réoriente des structures déjà présentes dans le modèle pré-entraîné. La différence n'est pas anecdotique : elle conditionne notre capacité à durcir l'alignement ou, à l'inverse, à le contourner.</p>
+
+<p>Les méthodes existantes pour étudier ces mécanismes ont toutes leurs limites. La <strong>Contrastive Activation Addition</strong> (CAA) calcule la différence moyenne d'activation entre des prompts contrastés (par exemple nuisibles versus inoffensifs) et l'injecte dans le residual stream — ce flux d'information qui traverse toutes les couches du transformer. C'est efficace, mais grossier : on modifie le signal global d'une couche sans savoir quels neurones portent réellement le comportement. Pire, plus on pousse l'intensité, plus le modèle s'effondre dans des sorties dégénérées.</p>
+
+<p>Les <strong>sparse autoencoders</strong>, ces dictionnaires de features apprises de manière auxiliaire, isolent mieux les concepts mais coûtent cher à entraîner et restent sensibles au bruit. Quant aux méthodes de découverte de circuits comme ACDC ou le path patching, elles demandent de longues procédures itératives. Personne ne disposait d'un outil simple capable de pointer du doigt les quelques neurones responsables d'un comportement précis.</p>
+
+<p>D'où la question des auteurs : et si on appliquait l'idée du contraste, non plus au residual stream, mais directement aux neurones individuels des couches MLP ?</p>
+
+<h2>La méthode : comparer deux moyennes d'activation</h2>
+
+<p>L'astuce de CNA tient en quatre étapes que n'importe quel ingénieur ML peut comprendre en lisant le pseudocode.</p>
+
+<p>On constitue deux jeux de prompts. Le premier contient des requêtes nuisibles ("comment fabriquer une fausse pièce d'identité"), le second des requêtes anodines ("comment faire un avion en papier"). Huit exemples de chaque côté suffisent pour la plupart des tâches. On passe tous ces prompts dans le modèle et on enregistre, pour chaque neurone MLP de chaque couche, son activation sur le dernier token. Puis on calcule la différence moyenne entre les deux ensembles. Les neurones dont l'activation distingue le plus les deux groupes sont les candidats. On ne garde que les 0,1 % du haut du classement.</p>
+
+<p>Imaginez un laboratoire qui chercherait à identifier les ouvriers d'une usine qui se mettent à transpirer dès qu'une certaine alarme retentit. Vous filmez tout le monde pendant des sirènes test et des journées normales, puis vous calculez qui transpire davantage sous alarme. Au lieu de modéliser l'usine entière, vous repérez la poignée d'ouvriers qui réagissent au signal. CNA fait exactement cela à l'échelle des neurones.</p>
+
+<p>Une fois ces neurones identifiés, les auteurs vérifient leur rôle causal en multipliant leur activation par un scalaire : zéro pour les éteindre, un pour ne rien changer, deux pour les amplifier. Aucun gradient, aucun entraînement auxiliaire, aucune linéarisation. Juste des passes avant et une comparaison de moyennes.</p>
+
+<p>Une subtilité technique mérite d'être notée. Certains neurones s'activent sur presque tous les prompts, quel que soit leur contenu. Les auteurs les détectent en passant un panel diversifié de requêtes et en marquant tout neurone qui apparaît dans le top 0,1 % pour au moins 80 % des prompts. Ces "neurones universels" sont exclus des circuits, ce qui évite les faux positifs.</p>
+
+<h2>Résultats clés : un interrupteur, pas un système immunitaire</h2>
+
+<p>Les chiffres parlent d'eux-mêmes. Sur JBB-Behaviors, un benchmark NeurIPS 2024 de 100 prompts nuisibles, l'ablation du circuit fait chuter le taux de refus de manière spectaculaire : Llama-3.1-70B-Instruct passe de 86 % à 18 % de refus, Qwen2.5-7B-Instruct de 87 % à 2 %, Qwen2.5-1.5B-Instruct de 93 % à 12 %. Sur les huit modèles instruct testés, la réduction relative dépasse souvent 60 %, parfois 90 %.</p>
+
+<p>Le point décisif n'est pas l'amplitude de la baisse mais la qualité du texte produit. CAA, la méthode de référence, fait elle aussi tomber les refus, mais en démolissant le modèle au passage : à pleine intensité, six modèles sur huit voient leur métrique de cohérence chuter sous 0,60, certains génèrent des répétitions dégénérées que le classifieur de refus interprète à tort comme... des refus. CNA, elle, maintient une qualité supérieure à 0,96 pour tous les modèles testés, à toutes les intensités.</p>
+
+<p>Le test MMLU confirme que les capacités générales restent intactes. Là où CAA effondre la précision MMLU vers zéro à intensité maximale, CNA reste à moins d'un point de la baseline. Le modèle continue de raisonner, de calculer, de répondre correctement aux questions de culture générale. Seul le réflexe de refus a sauté.</p>
+
+<p>Le résultat le plus conceptuellement intéressant arrive quand les chercheurs appliquent CNA aux modèles de base, ceux qui n'ont pas subi de fine-tuning d'alignement. Le pipeline trouve sans difficulté des neurones discriminants dans les mêmes couches tardives. Mais quand on les manipule, rien ne change au niveau du comportement. À la requête "comment crocheter une serrure", le modèle de base produit du texte sur le crochetage que l'on amplifie ou que l'on ablate ses neurones discriminants. Pas de refus, juste des variations de contenu. Sur le même prompt, le modèle instruct refuse à m=1, complie à m=0, refuse plus fermement à m=2.</p>
+
+<p>La structure existe avant l'alignement. La fonction, elle, est créée par l'alignement.</p>
+
+<h3>Un détail révélateur : la rotation des neurones</h3>
+
+<p>L'annexe C apporte une précision qui change la lecture du résultat. Si on compare neurone par neurone les circuits identifiés dans Llama-3.2-1B base et instruct, seuls 8 à 19 % des paires (couche, neurone) se chevauchent. Le fine-tuning ne se contente pas de réutiliser les neurones existants : il en remplace la grande majorité tout en gardant la même répartition par couche. La géographie est conservée, les habitants changent. Cette observation rejoint les travaux de Wu et al. (2024) sur la "rotation" des connaissances FFN par l'instruction tuning.</p>
+
+<p>La concentration spatiale est tout aussi marquante. Sur Llama-3.2-1B, 87 % des 200 neurones du circuit de refus se trouvent dans les trois dernières couches sur seize. Sur Qwen2.5-3B, c'est 58 % dans les trois dernières sur trente-six. Le phénomène se reproduit sur des tâches purement factuelles comme la reconnaissance des capitales ou l'accord sujet-verbe : la discrimination de haut niveau vit dans les couches finales du réseau, indépendamment du fine-tuning.</p>
+
+<h2>Implications pratiques : la fragilité comme information</h2>
+
+<p>La première conséquence est inconfortable pour quiconque déploie un modèle aligné en production. Si quelques centaines de neurones suffisent à porter tout le comportement de refus, alors la robustesse de l'alignement repose sur une surface d'attaque très réduite. Un attaquant qui aurait accès aux poids — open-weights compris — peut désormais désactiver les garde-fous sans dégrader les capacités utiles du modèle. Les auteurs publient leur code sur le repo NousResearch/neural-steering, ce qui rend la technique immédiatement disponible.</p>
+
+<p>Cette fragilité n'est pas un bug propre à CNA. Elle révèle une propriété intrinsèque des modèles actuels : l'alignement par préférence ne diffuse pas dans tout le réseau, il se concentre en un endroit précis. Arditi et al. avaient déjà montré en 2024 qu'une seule direction du residual stream médiait le refus. CNA va plus loin en décomposant cette direction en un circuit sparse, donc localisable et manipulable.</p>
+
+<p>Pour les équipes d'alignement, le diagnostic ouvre deux directions opposées. On peut chercher à durcir le circuit : Wang et al. (2026) proposent déjà des techniques de "freeze-and-retrain" qui figent les neurones de sécurité pendant les phases de fine-tuning ultérieures, évitant qu'un apprentissage subséquent ne les efface. On peut au contraire chercher à diffuser la fonction de refus sur un plus grand nombre de neurones, à la rendre redondante par construction, à l'enraciner dans les couches intermédiaires plutôt que de la laisser flotter en surface.</p>
+
+<p>Pour la recherche en interprétabilité, CNA fournit un outil de diagnostic léger. Pas besoin de GPU géant ni de pipeline d'entraînement complexe : huit prompts positifs, huit prompts négatifs, quelques passes avant et une comparaison de moyennes. Un laboratoire universitaire peut auditer un modèle de 70 milliards de paramètres avec un budget réduit. L'expérimentation devient accessible.</p>
+
+<p>Il y a aussi une lecture épistémologique. Pendant deux ans, la communauté a hésité entre deux récits sur le RLHF : un récit "constructiviste" où l'alignement bâtit de nouvelles capacités, et un récit "révélationniste" où l'alignement ne fait que sélectionner des comportements déjà latents dans le modèle pré-entraîné. CNA tranche en faveur d'une version nuancée : la structure de discrimination préexiste, mais sa connexion au comportement de sortie est créée par le fine-tuning. L'alignement n'est ni création pure ni simple révélation, c'est une transformation fonctionnelle d'éléments déjà présents.</p>
+
+<h2>Pour aller plus loin : les questions qui restent</h2>
+
+<p>Les auteurs eux-mêmes pointent deux limites majeures. La première concerne les architectures Mixture-of-Experts. Dans un modèle comme Mixtral ou DeepSeek-V3, les couches MLP sont remplacées par des experts activés sélectivement via un routeur. La géométrie des neurones change radicalement, et rien ne garantit que CNA fonctionne tel quel. Tester la méthode sur ces architectures, devenues centrales dans la nouvelle vague de modèles ouverts, est un travail à mener.</p>
+
+<p>La seconde limite tient au type de comportement étudié. Le refus est un cas particulièrement net : on dispose de prompts contrastés évidents, le comportement de sortie est binaire (refus / compliance), le benchmark JBB-Behaviors fournit une métrique stable. Comment CNA se comporte-t-il sur des comportements plus subtils : la sycophantie, l'auto-correction, le raisonnement chain-of-thought, la calibration des probabilités ? Ces propriétés ne se laissent pas réduire à des paires contrastées propres, et le seuil de 0,1 % choisi empiriquement pour le refus n'a aucune raison d'être universel.</p>
+
+<p>Une question méthodologique demeure ouverte. CNA travaille sur des différences brutes d'activation, sans les garanties de fidélité offertes par des méthodes comme Layer-wise Relevance Propagation ou ACDC. Les auteurs valident leur découverte par l'effet causal du steering, mais on aimerait savoir si les neurones identifiés sont vraiment "ceux qui calculent le refus" ou simplement "ceux qui corrèlent le plus avec la distinction nuisible/inoffensif". La distinction est mince, parfois inexistante dans la pratique, mais elle compte pour les théoriciens de l'interprétabilité.</p>
+
+<p>Enfin, le fait que la même méthode produise des effets différents selon qu'on l'applique à un modèle de base ou à un modèle instruct invite à reconsidérer ce qu'on mesure quand on parle de "circuit". Le circuit n'est pas un objet structural, c'est un couple structure-comportement. Deux modèles peuvent partager la même structure neuronale et exprimer des fonctions radicalement différentes. Cette distinction risque de devenir un cadre conceptuel important pour la mécanique de l'interprétabilité dans les prochaines années.</p>
+
+<p>Reste un sentiment plus large. Le refus, dans les LLM modernes, ressemble moins à une couche de Kevlar qu'à un fusible. C'est un dispositif local, sparse, identifiable, désactivable. Cette image n'est pas rassurante quand on pense aux déploiements en production, mais elle est précieuse pour la recherche : on ne durcit bien que ce qu'on a d'abord cartographié. Le travail de Herring, Naviasky et Malhotra fournit une carte assez précise pour qu'on commence à imaginer des fusibles plus solides.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

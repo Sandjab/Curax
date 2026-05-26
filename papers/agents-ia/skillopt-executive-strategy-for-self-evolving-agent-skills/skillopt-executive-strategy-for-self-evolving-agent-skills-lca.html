@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillOpt: Executive Strategy for Self-Evolving Agent Skills — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>SkillOpt: Executive Strategy for Self-Evolving Agent Skills</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les skills d'agents LLM — documents en langage naturel encodant procédures, heuristiques de domaine, politiques d'outils et contraintes de format — sont aujourd'hui rédigés à la main, générés en one-shot, ou évolués par auto-révision faiblement contrôlée. Aucune de ces approches ne se comporte comme un véritable optimiseur deep-learning sur le skill, et aucune ne garantit une amélioration monotone sous feedback.</p>
+<p>Le papier pose une thèse forte : si le skill est la couche d'adaptation pour un agent dont les poids sont gelés, alors le document skill lui-même doit être entraîné avec la même discipline que celle qui rend l'optimisation en espace des poids reproductible. SkillOpt opérationnalise cette analogie en six éléments : skill = paramètre, édition issue de trajectoires = direction de gradient, budget d'éditions = learning rate, gate de validation = critère d'acceptation, slow-update inter-époques = momentum, et batches de rollouts = mini-batches.</p>
+
+<h2>Méthodologie</h2>
+<h3>Architecture de la boucle</h3>
+<p>Un modèle cible <strong>M</strong> figé exécute des tâches avec le skill courant <strong>s</strong> sur un split d'entraînement. Un modèle optimiseur séparé (typiquement plus capable) reçoit les trajectoires scorées et propose des éditions structurées en add/delete/replace, agrégées par mini-batches séparant succès et échecs. Le pool d'éditions est rangé par utilité attendue puis tronqué au budget <strong>L_t</strong> (learning rate textuel). Le skill candidat passe ensuite par un gate strict sur un split de sélection held-out : il n'est accepté que si son score est strictement supérieur au courant.</p>
+<h3>Mécanismes de stabilisation</h3>
+<p>Trois dispositifs ancrent la boucle. Le <strong>buffer d'éditions rejetées</strong> fournit un feedback négatif sans coût d'inférence supplémentaire au déploiement : les éditions qui échouent au gate sont conservées pour informer les appels optimiseur suivants. La <strong>slow/meta update</strong> en fin d'époque compare les mêmes tâches sous le skill de l'époque précédente et celui de l'époque courante, et écrit une guidance longitudinale dans une région protégée du document que les éditions step-level ne peuvent pas écraser. Enfin, le <strong>meta-skill</strong> reste côté optimiseur et n'est jamais expédié avec l'artefact déployé.</p>
+<h3>Protocole d'évaluation</h3>
+<p>Six benchmarks couvrent QA factuel (SearchQA), tableurs (SpreadsheetBench), documents bureautiques (OfficeQA), VQA documentaire (DocVQA), maths (LiveMathematicianBench), et environnement embodied (ALFWorld). Sept modèles cibles vont du frontière (GPT-5.5) au petit (Qwen3.5-4B, GPT-5.4-nano). Trois harnesses sont testés : chat direct, Codex CLI, Claude Code CLI. Les splits train/selection/test sont déterministes (seed 42), et les scores reportés viennent du split test disjoint. Hyperparamètres par défaut : 4 époques, batch rollout 40, mini-batch reflection 8, L_t = 4 avec décroissance cosinus.</p>
+
+<h2>Résultats principaux</h2>
+<p>SkillOpt est meilleur ou tied-best sur les 52 cellules (modèle × benchmark × harness) évaluées. Sur GPT-5.5 en chat direct, la moyenne six-benchmarks passe de 58.8 (no-skill) à 82.3, soit <strong>+23.5 points</strong>. Le meilleur baseline par cellule plafonne à 76.9 en moyenne : SkillOpt conserve un écart de +5.4 points face à un oracle qui choisirait le meilleur de six concurrents pour chaque cellule.</p>
+<p>Les gains se concentrent sur les benchmarks procéduraux : SpreadsheetBench 41.8→80.7, OfficeQA 33.1→72.1, LiveMath 37.6→66.9 sur GPT-5.5 ; ALFWorld 34.3→69.4 (×2.0) sur GPT-5.4-nano ; SpreadsheetBench 9.3→23.9 (×2.6) sur Qwen3.5-4B. Sous harness Codex, GPT-5.5 gagne +24.8 points en moyenne (+14.0 sur EvoSkill, le plus fort concurrent). Sous Claude Code, +19.1 points (+3.2 sur EvoSkill).</p>
+<p>Les transferts sont positifs sur les trois axes. Un skill SpreadsheetBench entraîné dans Codex transfère vers Claude Code avec +59.7 points, dépassant même le skill in-domain. Un skill OlympiadBench transfère vers Omni-MATH avec des gains modestes mais positifs sur trois échelles de modèle. La taille des artefacts déployés reste contenue : 379-1995 tokens, médiane ~920, et seulement 1-4 éditions acceptées par benchmark — le gate de validation fait donc un travail discriminant réel.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'analogie deep-learning n'est pas décorative : les ablations montrent que retirer le buffer d'éditions rejetées coûte 1.6 à 4.6 points, et supprimer slow + meta update fait chuter SpreadsheetBench de 77.5 à 55.0 (−22.5 points, dégradation la plus violente du papier). Les sweeps batch / mini-batch / scheduler sont remarquablement plats, ce qui suggère que les gains ne tiennent pas à un réglage fragile mais aux quatre piliers : edit budget borné, gate strict, mémoire négative, momentum textuel.</p>
+<p>Plusieurs réserves méthodologiques tempèrent l'enthousiasme. Les résultats sont reportés en runs uniques par cellule, sans intervalles de confiance ni analyse de variance, ce qui pose question quand on compare des gains de 1-3 points entre baselines. Le choix d'optimiseur GPT-5.5 évaluant GPT-5.5 comme cible crée un couplage potentiel — l'analyse "optimiseur target-matched" récupère 56-74% du gain, ce qui est rassurant mais n'élimine pas la question. Aucun test statistique n'est fourni pour la dominance "52/52" : si la variance par cellule est importante, certaines égalités déclarées pourraient être bruit.</p>
+<p>La section Limitations elle-même est brève (un paragraphe) et reste vague sur la dépendance aux vérificateurs automatiques : la boucle entière requiert un score scalaire fiable par tâche, ce qui exclut de facto les domaines à évaluation subjective sans introduire un LLM-as-judge — non discuté. Le coût d'entraînement varie d'un facteur 100 entre benchmarks (0.6M tokens/point sur SpreadsheetBench, 46.4M sur DocVQA) sans cadre théorique pour anticiper cette variance.</p>
+<p>Enfin, les noms de modèles (GPT-5.5, GPT-5.4, Qwen3.5, Qwen3.6) et plusieurs références (OfficeQA, LiveMath, SkillsBench, EvoSkill — tous arXiv 2026) reflètent un écosystème en cours de consolidation, ce qui rend la reproduction des baselines particulièrement dépendante de la disponibilité publique de ces artefacts.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le repository est annoncé (aka.ms/SkillOpt). L'annexe C reproduit verbatim les contrats de prompts pour failure analysis, success analysis, merges, ranking, slow update et meta skill, sous forme de JSON structuré — un effort de transparence appréciable. L'algorithme 1 explicite la procédure complète. Les hyperparamètres par défaut sont listés exhaustivement (époques, batch sizes, learning rates, schedulers). Le seed de split 42 est documenté.</p>
+<p>Limites : aucune indication sur les coûts API consolidés, les seeds d'exécution multi-runs ne sont pas évoqués, et les baselines (Trace2Skill, EvoSkill, GEPA, TextGrad) sont reproduites en interne sans pointer vers leurs implémentations sources — le lecteur ne peut donc pas auditer l'équité de la comparaison.</p>
+
+<h2>Impact et applications</h2>
+<p>Le papier ouvre concrètement un terrain d'optimisation jusqu'ici hand-engineered. Si la thèse se confirme, n'importe quel praticien peut entraîner un skill une fois, l'auditer comme texte, et le déployer sur des modèles voisins ou des harnesses différents sans toucher aux poids — un mode d'adaptation particulièrement attractif quand les poids des modèles frontière sont inaccessibles.</p>
+<p>Les cas d'usage immédiats sont les pipelines agentiques en production sur tableurs, documents bureautiques et environnements embodied, où les règles procédurales (format de sortie, ordre d'inspection, mémoire de visite) sont précisément ce que les modèles frontière n'ont pas zero-shot. Le coût d'entraînement reste réaliste pour des benchmarks procéduraux (<25M tokens), donc applicable hors des grands labos.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>SkillOpt se distingue clairement de la lignée prompt-optimization (TextGrad, GEPA) en optimisant un artefact skill persistant et exportable plutôt qu'un prompt système. Face à la lignée skill-construction (Trace2Skill, Voyager) il introduit la discipline du gate held-out et du budget d'éditions borné — c'est cette discipline qui empêche la dérive sémantique observée chez les concurrents. Face à EvoSkill, son rival le plus direct sur harness, il ajoute le buffer d'éditions rejetées et le momentum slow-update absents.</p>
+<p>Le papier dialogue avec la position défendue dans la littérature récente sur le scaling du harness comme objet de design first-class : ici, le skill est l'objet trainable, le harness reste fixe, et l'optimiseur est un troisième modèle séparé. C'est une décomposition propre qui pourrait inspirer des travaux ultérieurs sur la composition skill-libraries × harness-evolution × weight-distillation.</p>
+
+<h2>Tableau récapitulatif — Robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5/5</td><td>Problème clairement posé : transformer l'édition de skills en optimisation contrôlée plutôt qu'auto-révision ad hoc.</td></tr>
+<tr><td>Design expérimental</td><td>5/5</td><td>52 cellules, 6 benchmarks variés (factuel/procédural/embodied), 7 modèles, 3 harnesses, ablations exhaustives, 3 axes de transfert.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4/5</td><td>Diversité large mais certains benchmarks ont peu de tâches (ALFWorld 134 test, LiveMath 35 train/épisode) ; pas d'intervalles de confiance.</td></tr>
+<tr><td>Qualité des métriques</td><td>4/5</td><td>Métriques natives des benchmarks, splits déterministes, exact-match ; mais aucun test statistique pour les comparaisons.</td></tr>
+<tr><td>Contrôle des biais</td><td>3/5</td><td>Gate held-out strict, mais runs uniques par cellule, optimiseur GPT-5.5 sur cible GPT-5.5 crée un couplage non éliminé.</td></tr>
+<tr><td>Reproductibilité</td><td>4/5</td><td>Code annoncé, prompts complets en annexe, hyperparamètres détaillés ; mais baselines réimplémentées sans pointer sources.</td></tr>
+<tr><td>Transparence des limites</td><td>3/5</td><td>Section Limitations courte et générique, ne discute pas la variance, le coût API consolidé, ni la dépendance aux vérificateurs.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5/5</td><td>Premier optimiseur text-space systématique avec analogie deep-learning opérationnelle ; cadre potentiellement structurant pour la suite.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 4.2/5</strong> — Contribution conceptuelle forte et démonstration empirique large, tempérées par l'absence de tests statistiques, le couplage optimiseur-cible non éliminé et une section Limitations sous-développée.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

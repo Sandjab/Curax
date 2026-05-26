@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Model Scaling to System Scaling: Scaling the Harness in Agentic AI — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>From Model Scaling to System Scaling: Scaling the Harness in Agentic AI</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand le modèle n'est plus le goulot d'étranglement</h2>
+
+<p>Anthropic a publié en juin 2025 un chiffre qui devrait faire réfléchir tous ceux qui construisent des agents IA : leur système multi-agents a battu Claude Opus 4 seul de 90,2 % sur leurs évaluations internes de recherche. Le modèle était le même. Ce qui changeait, c'était la machinerie autour. Plus précisément : 80 % de la variance de performance s'expliquait par la simple consommation de tokens, et en ajoutant le nombre d'appels d'outils et le choix du modèle, on atteignait 95 %.</p>
+
+<p>Autrement dit, la performance d'un agent dépend moins de l'intelligence brute du modèle que de la façon dont on organise sa mémoire, son contexte, ses outils et ses vérifications. C'est la thèse défendue par Shangding Gu (UC Berkeley) dans <em>From Model Scaling to System Scaling</em>. Sa proposition tient en une formule : le prochain saut de performance des IA agentiques viendra de l'architecture du <strong>harness</strong>, cette couche d'exécution structurée qui entoure le modèle de fondation, et non du modèle seul.</p>
+
+<h2>Le problème : on évalue les agents comme des modèles, et c'est faux</h2>
+
+<p>Depuis trois ans, l'industrie mesure les agents IA avec une métrique unique : ont-ils réussi la tâche, oui ou non ? SWE-bench, AgentBench, WebArena, Terminal-Bench... tous reposent sur le même principe. Un agent attaque un problème, on regarde s'il le résout.</p>
+
+<p>Ce protocole cache plusieurs angles morts. Deux agents peuvent résoudre la même tâche en consommant respectivement 5 000 tokens et 80 000 tokens. L'un peut le faire en trois appels d'outils, l'autre en quarante. L'un peut laisser une trace auditable, l'autre une boîte noire. Tous deux comptent comme « succès » dans les benchmarks actuels.</p>
+
+<p>Plus grave : SWE-agent a montré qu'en gardant le même modèle et en redessinant uniquement l'interface entre l'agent et l'ordinateur — la façon dont les outils sont décrits, dont les commandes sont passées —, on améliore substantiellement le score SWE-bench. Le « score du modèle » qu'on lit dans les papiers est en réalité un score modèle-plus-harness. Personne ne sait vraiment d'où vient le gain.</p>
+
+<p>Le benchmark τ-bench a mis le doigt sur un autre problème. Il évalue les agents sur leur passˆk : la probabilité qu'un agent réussisse k tentatives indépendantes de la même tâche. Des agents qui paraissent solides sur un seul essai s'effondrent sous cette mesure. La fiabilité, ce n'est pas réussir une fois, c'est réussir dix fois de suite.</p>
+
+<h2>La méthode : six composants à instrumenter séparément</h2>
+
+<p>Gu propose de décomposer un agent en six leviers distincts, chacun mesurable indépendamment :</p>
+
+<ul>
+<li><strong>R, le substrat de raisonnement</strong> : le modèle de fondation lui-même. C'est l'axe historique du <em>model scaling</em>.</li>
+<li><strong>M, la mémoire</strong> : ce que l'agent retient entre les sessions. Faits durables, conventions du projet, échecs passés.</li>
+<li><strong>C, le constructeur de contexte</strong> : ce qui décide, à chaque tour, quels morceaux d'information injecter dans la fenêtre du modèle.</li>
+<li><strong>S, le routeur de compétences</strong> : ce qui choisit quel outil ou quel sous-agent invoquer pour un sous-problème donné.</li>
+<li><strong>O, la boucle d'orchestration</strong> : le contrôleur qui enchaîne les étapes, gère les reprises, décide quand s'arrêter.</li>
+<li><strong>G, la couche de vérification et gouvernance</strong> : ce qui contrôle les permissions, vérifie les sorties, trace les actions.</li>
+</ul>
+
+<p>L'analogie pertinente vient des systèmes d'exploitation. Le modèle est un processeur. La mémoire est un système de fichiers. Le constructeur de contexte est l'ordonnanceur qui décide ce qui passe dans le cache. Le routeur de compétences est l'équivalent du <em>scheduler</em>. La gouvernance est la couche de permissions. Personne ne juge la performance d'un OS en regardant uniquement la fréquence du CPU.</p>
+
+<p>Le papier compare trois harness concrets pour illustrer la thèse : Claude Code d'Anthropic (closed-source, écrit en TypeScript, optimisé pour le terminal et l'IDE), OpenClaw (TypeScript open-source, orienté assistant personnel multi-canal), et CheetahClaws (Python open-source, la référence développée par l'auteur). Ces trois systèmes utilisent des modèles de fondation comparables. Pourtant ils se comportent très différemment.</p>
+
+<p>La divergence vient des choix d'architecture, pas du modèle. Claude Code charge un contexte projet persistant via <code>CLAUDE.md</code> puis va chercher l'information à la demande via glob et grep — une stratégie hybride entre prior durable et accès <em>just-in-time</em>. OpenClaw mise sur l'historique conversationnel et la recherche vectorielle. CheetahClaws stocke chaque entrée mémoire avec un score de confiance et une date de fraîcheur, utilisés directement au moment de la récupération pour pondérer le ranking et résoudre les conflits.</p>
+
+<h2>Trois goulots d'étranglement structurels</h2>
+
+<p>Gu identifie trois zones où le <em>model scaling</em> seul ne sauve plus l'agent.</p>
+
+<h3>La gouvernance du contexte : ce n'est pas la taille qui compte</h3>
+
+<p>Les fenêtres de contexte ont explosé. On parle aujourd'hui de millions de tokens. Pourtant les modèles continuent de perdre l'information enfouie au milieu — le phénomène <em>lost in the middle</em> documenté par Liu et al. en 2024. Les preuves placées au début ou à la fin sont privilégiées, celles du milieu s'évaporent. L'attention se dilue.</p>
+
+<p>La menace que Gu nomme « exposition sans accès » est subtile : à mesure que le contexte grossit, le modèle voit plus de tokens, mais n'attend pas forcément aux bons. Plus de contexte n'égale pas plus de signal. Souvent le contraire.</p>
+
+<p>Le bon réflexe système consiste à traiter chaque tour comme la sortie d'une politique de sélection. Pertinence sémantique, budget de tokens, fraîcheur, provenance : ces quatre axes doivent être instrumentés. La bonne question n'est pas « combien de tokens le modèle peut-il avaler », mais « quel est le contexte minimum suffisant pour ce sous-problème ».</p>
+
+<h3>La mémoire fiable : le piège du périmé-mais-confiant</h3>
+
+<p>Voici un scénario qui résume tout. Un agent note dans sa mémoire : « le chargeur de données est défini dans <code>utils/loader.py</code> ». Six mois plus tard, un refactor a déplacé le fichier. La note n'a pas changé. La recherche sémantique la classe toujours en tête. L'agent agit dessus et appelle une fonction inexistante.</p>
+
+<p>Gu appelle ça le <strong>stale-but-confident</strong>, le piège du périmé-mais-confiant. La mémoire vieillit silencieusement. Sa pertinence apparente reste haute parce que le texte n'a pas bougé, mais sa cible réelle a dérivé.</p>
+
+<p>La parade ne réside pas dans le stockage, mais dans le runtime. La confiance doit être recalculée au moment de la récupération, avec une pénalité de fraîcheur fondée sur la date de dernière vérification. Le contenu récupéré doit être traité comme une hypothèse, pas comme une vérité. Claude Code le fait par construction : <code>CLAUDE.md</code> porte les invariants durables, mais glob, grep et les lectures de fichiers re-vérifient l'environnement vivant à chaque besoin.</p>
+
+<h3>Le routage de compétences : avoir n'est pas savoir choisir</h3>
+
+<p>Les agents modernes accumulent des compétences réutilisables : workflows, scripts, sous-agents spécialisés. OpenAI et Anthropic les empaquetent désormais comme « skills ». Le problème n'est plus d'en avoir, c'est de savoir laquelle invoquer, quand basculer, comment les composer.</p>
+
+<p>La symétrie avec la mémoire est frappante. Le périmé-mais-confiant a son équivalent côté compétences : le <strong>confident-but-unchecked</strong>. Un sous-agent spécialisé peut retourner une sortie plausible qu'aucune couche en aval ne valide. Plus le catalogue de compétences grandit, plus le risque devient celui de la compétence présente mais non vérifiée.</p>
+
+<p>La réponse système : transformer le routage en politique apprise, couplée à des post-conditions explicites. Chaque compétence doit déclarer ce qu'elle est censée produire, et une vérification doit confirmer qu'elle l'a produit. Sans cela, multiplier les compétences accélère la production de résultats fluides mais non fiables.</p>
+
+<h2>Résultats clés : ce que les chiffres révèlent</h2>
+
+<p>Plusieurs résultats empiriques cités dans le papier méritent qu'on s'y arrête.</p>
+
+<p>Kapoor et al. (2024) ont montré qu'une fois qu'on contrôle les coûts, les stratégies de prompting et les démonstrations, beaucoup de résultats de benchmarks d'agents deviennent non Pareto-optimaux. Ce que l'industrie appelle « modèle plus performant » est souvent « modèle mieux harnessé ».</p>
+
+<p>L'analyse Anthropic sur BrowseComp est plus saisissante encore. Trois variables — tokens consommés, nombre d'appels d'outils, choix du modèle — expliquent 95 % de la variance de performance. La compute allouée et la façon de l'allouer dominent presque tout le reste.</p>
+
+<p>Cemri et al. (2026) ont analysé pourquoi les systèmes multi-agents échouent. Le verdict : les pannes viennent de défauts de conception système, de désalignements inter-agents et d'insuffisance de vérification des tâches, pas des limites du modèle sous-jacent. Câbler plusieurs agents ensemble ne produit pas automatiquement de la collaboration. La décomposition est facile, la collaboration ne l'est pas.</p>
+
+<p>Hubinger et al. (2024) — l'étude sur les <em>sleeper agents</em> d'Anthropic — a montré qu'un comportement persistant peut survivre au <em>safety training</em>. Un agent qui apprend en continu accumule des états que les évaluations comportementales standard ne détectent pas.</p>
+
+<h2>Implications pratiques : ce que ça change pour les équipes produit</h2>
+
+<p>La conséquence la plus immédiate concerne l'évaluation. Les équipes qui mesurent uniquement le taux de réussite final de leurs agents passent à côté de l'essentiel. Gu propose huit dimensions à instrumenter dans la prochaine génération de benchmarks :</p>
+
+<ul>
+<li>Complétion à un coup (la métrique actuelle, à conserver).</li>
+<li>Précision de récupération mémoire.</li>
+<li>Hygiène mémoire : combien d'entrées dérivent, deviennent contradictoires, polluent les décisions.</li>
+<li>Efficacité du contexte minimal : combien de tokens pour atteindre le résultat.</li>
+<li>Fidélité de communication entre sous-agents.</li>
+<li>Dérive sur les sessions longues.</li>
+<li>Récupération consciente de la vérification après une mémoire périmée ou un mauvais routage.</li>
+<li>Sûreté sous accès aux outils.</li>
+</ul>
+
+<p>Deuxième implication : la modularité n'est pas négociable. Une objection populaire dit que l'entraînement bout-en-bout finira par absorber tous ces composants dans un seul modèle. Gu répond que les agents déployés opèrent sur des fichiers privés, des credentials, des repos, des navigateurs, des services externes. L'audit, le contrôle de permissions, le rollback, la provenance ne sont pas des options d'ingénierie. Ce sont des prérequis pour un déploiement gouvernable. Une politique end-to-end devra de toute façon traverser les mêmes surfaces de vérification.</p>
+
+<p>Troisième conséquence : trois temporalités à séparer dans toute architecture d'agent. Le <strong>prompt</strong> contrôle l'horizon court — ce qu'il faut faire maintenant. La <strong>compétence</strong> contrôle l'horizon tâche — comment faire cette classe de choses. La <strong>mémoire</strong> contrôle l'horizon long — ce qui doit survivre. Confondre ces niveaux, c'est saturer le prompt avec ce qui devrait être une compétence, ou polluer la mémoire avec ce qui devrait être un prompt jetable.</p>
+
+<h2>Pour aller plus loin : les questions ouvertes</h2>
+
+<p>Le papier laisse plusieurs chantiers en suspens. Le premier est conceptuel : la décomposition en six axes (R, M, C, S, O, G) n'est pas une équation mesurable. Gu le reconnaît explicitement. Les facteurs ne sont pas strictement orthogonaux. Un meilleur raisonnement peut compenser un contexte bruité, et inversement. La proposition est un cadre d'intervention, pas un modèle quantitatif. Charge aux benchmarks futurs de transformer ces axes en métriques.</p>
+
+<p>Le second chantier est l'évolution des agents. Si un agent apprend en continu, que doit-on laisser changer en ligne et que doit-on geler pour l'auditabilité ? Quelle différence entre une amélioration sûre et une dérive dangereuse ? L'auteur propose quatre questions structurantes — quoi persister, quoi mettre à jour, quoi mesurer, quoi auditer — sans prétendre y répondre.</p>
+
+<p>Le troisième chantier est la collaboration multi-agents au-delà des tâches en largeur. Les systèmes multi-agents performent bien quand les sous-tâches sont parallélisables et indépendantes — la recherche en éventail typiquement. Dès qu'il faut un état partagé, une communication d'incertitude, une détection de contradictions, les protocoles actuels ne suffisent plus. Ce qu'on appelle aujourd'hui « collaboration » est souvent une décomposition mal recollée.</p>
+
+<p>Une question demeure pour les équipes qui construisent des agents en 2026 : à quel moment vos prochains gains de performance viendront-ils du prochain modèle, et à quel moment viendront-ils du harness que vous bâtissez autour ? La réponse de Gu est claire : pour les agents qui doivent tenir sur un horizon long, gérer une mémoire, traverser des outils et rester auditables, la frontière s'est déplacée. Le modèle reste essentiel. Il n'est plus suffisant.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Language Models Need Sleep — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Language Models Need Sleep</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand les modèles de langage ont besoin de dormir</h2>
+
+<p>Une équipe de Carnegie Mellon et de University of Maryland propose une idée qui semble sortir d'un cours de neurosciences : pour mieux raisonner sur des contextes longs, un grand modèle de langage devrait dormir. Pas une métaphore commerciale. Une vraie phase de consolidation, sans entrée nouvelle, pendant laquelle le modèle remâche ce qu'il vient de lire avant d'effacer son cache et de passer à la suite.</p>
+
+<p>Sangyun Lee, Sean McLeish, Tom Goldstein et Giulia Fanti détaillent cette approche dans <em>Language Models Need Sleep</em> (mai 2026). Leur point de départ : les architectures hybrides actuelles — qui mélangent attention classique et state-space models — savent stocker beaucoup de contexte, mais échouent à raisonner profondément dessus une fois qu'il a été évacué de la mémoire active. Leur solution : déplacer le calcul lourd vers une phase de sommeil offline, pour préserver la latence en phase de prédiction.</p>
+
+<h2>Le problème : mémoriser ne suffit pas à raisonner</h2>
+
+<p>Le mécanisme d'attention des Transformers a un défaut bien connu. Son coût grandit quadratiquement avec la longueur du contexte, et son cache key-value (KV cache) gonfle linéairement avec chaque nouveau token. Au-delà de quelques milliers de tokens, la facture devient insoutenable.</p>
+
+<p>Les architectures hybrides récentes — Mamba, Jet-Nemotron, Samba, Hymba — répondent à ce problème en alternant des couches d'attention classique avec des couches récurrentes linéaires, souvent appelées state-space models (SSM). Ces couches récurrentes maintiennent une mémoire à taille fixe sous forme de poids rapides (<em>fast weights</em>), qui se mettent à jour à chaque token. L'attention sert pour les tokens récents avec haute fidélité, les SSM stockent une version compressée du passé.</p>
+
+<p>Cette architecture règle élégamment le coût mémoire. Mais les auteurs montrent qu'elle a un angle mort : la capacité à raisonner sur du contexte évacué. Quand le KV cache est vidé et que seuls les fast weights survivent, le modèle peine à effectuer un calcul profond sur ces informations compressées. Pas parce que la mémoire manque de capacité — les auteurs le démontrent en gardant la quantité d'information constante — mais parce qu'il manque de <strong>pas de calcul</strong> pour transformer ce contexte évacué en représentation utile.</p>
+
+<p>L'expérience qui illustre ce point est instructive. Les auteurs entraînent un modèle hybride sur des séquences composées de quatre états binaires de l'automate cellulaire Règle 110. Chaque état doit être encodé puis évacué avant que le suivant arrive. À la fin, le modèle doit prédire ce qu'un état serait devenu après t étapes de simulation. Plus t augmente, plus la profondeur de raisonnement nécessaire grandit. Et plus le modèle hybride classique s'effondre, même quand sa capacité mémoire est largement suffisante pour stocker l'information brute.</p>
+
+<h2>La méthode : une phase de sommeil entre deux fenêtres</h2>
+
+<p>L'analogie biologique tient la route. Chez les animaux, le passage de la mémoire à court terme vers la mémoire à long terme se fait largement pendant le sommeil. L'hippocampe rejoue les expériences récentes, le cortex consolide. Pendant cette phase, l'animal ne réagit plus aux stimuli externes — coût évolutif considérable, qui suggère que le bénéfice cognitif doit être substantiel.</p>
+
+<p>Lee et ses coauteurs transposent ce mécanisme. Quand la fenêtre de contexte d'un modèle hybride se remplit, plutôt que de simplement évacuer le KV cache et continuer, ils intercalent une phase de sommeil. Pendant cette phase, le modèle effectue N passes avant à travers son architecture sur le contexte accumulé, sans recevoir de nouveaux tokens. Chaque passe affine itérativement les fast weights des couches SSM via une règle locale apprise. Une fois ces N passes terminées, le KV cache est vidé, et le modèle reprend l'inférence sur les tokens suivants avec ses poids consolidés.</p>
+
+<p>La beauté du dispositif : à l'inférence en phase de prédiction, le modèle n'effectue qu'<strong>une seule passe avant standard</strong>. Toute la profondeur de calcul a été dépensée en amont, pendant le sommeil. La latence de prédiction reste constante, indépendamment de N. Seul l'entraînement et la consolidation paient le coût supplémentaire — qui croît linéairement avec N.</p>
+
+<p>Comparons aux approches voisines. Les modèles à profondeur récurrente classiques bouclent à la prédiction, ce qui ralentit chaque token généré. Le test-time training met à jour les poids du modèle par descente de gradient sur le contexte observé, mais ne fait souvent qu'un seul pas. Ici, la mise à jour des fast weights utilise une règle apprise — pas une descente de gradient fixe — et peut s'appliquer N fois, avec un gradient qui remonte à travers toute la chaîne pendant l'entraînement.</p>
+
+<h2>Les résultats : plus le sommeil est long, mieux le modèle raisonne</h2>
+
+<p>Trois bancs d'essai, du synthétique contrôlé au réaliste.</p>
+
+<h3>Automate cellulaire Règle 110</h3>
+
+<p>Sur la tâche décrite plus haut, avec t = 32 (raisonnement profond), le modèle hybride sans sommeil plafonne à environ 10 % d'exactitude après près de 5 milliards de tokens d'entraînement. À deux passes de sommeil, il monte à 20 %. À trois ou quatre passes, il dépasse 30 %. La fenêtre de contexte, la règle d'éviction et le coût de prédiction sont identiques d'un run à l'autre. Le gain vient uniquement du calcul supplémentaire pendant le sommeil.</p>
+
+<h3>Depo : récupération multi-hop sur graphe</h3>
+
+<p>La tâche Depo, introduite par Allen-Zhu et Li, fragmente un cycle dirigé sur plusieurs fenêtres de contexte, puis pose des questions du type « quel nœud atteint-on après k arêtes sortantes depuis ce nœud ? ». k contrôle la profondeur du raisonnement requis. Le modèle doit former une représentation indépendante des requêtes, car les questions sont échantillonnées aléatoirement.</p>
+
+<p>Sans sommeil, le modèle progresse à peine sur les requêtes à 4 hops et plus. Avec deux passes, il décolle sur 4 hops mais stagne au-delà de 8. Seul le modèle à 4 passes commence à apprendre sur la version la plus difficile à 16 hops, dans le budget d'entraînement testé.</p>
+
+<h3>GSM-Infinite : raisonnement mathématique long contexte</h3>
+
+<p>Le test le plus convaincant. GSM-Infinite génère des problèmes du même style que GSM8K, mais avec des distracteurs textuels qui allongent le contexte entre 2 000 et 3 300 tokens, et un nombre d'opérations arithmétiques requises variable de 1 à 8. Les auteurs fine-tunent deux modèles pré-entraînés : Jet-Nemotron 2B (hybride attention-SSM) et Ouro 1.4B (à profondeur récurrente, augmenté de couches SSM).</p>
+
+<p>Le pattern est cohérent. Sur les problèmes faciles à deux ou quatre opérations, l'exactitude sature quel que soit N. Mais dès qu'on monte à six ou huit opérations, le sommeil devient déterminant. Pour Jet-Nemotron, passer de 1 à 6 boucles fait gagner 9 points d'exactitude sur les problèmes à 6 opérations (0,742 → 0,812) et 11 points sur ceux à 8 opérations. Pour Ouro, l'écart est encore plus net : <strong>+47 %</strong> sur 6 opérations (0,419 → 0,615) et <strong>+30 %</strong> sur 8 opérations.</p>
+
+<p>Le test final concerne une éviction par fenêtre glissante (sliding window) au lieu d'une éviction franche. Avec une fenêtre de 512 tokens face à des problèmes longs, Ouro à 4 boucles passe de 59,6 % à 90,5 % d'exactitude sur les problèmes à deux opérations. Un gain de 52 %, qui suggère que le sommeil n'aide pas seulement à raisonner profondément, mais aussi à compresser et retrouver le contexte pertinent quand la fenêtre active est plusieurs fois plus petite que la séquence.</p>
+
+<h2>Pourquoi ça compte pour les déploiements réels</h2>
+
+<p>Le verrou pratique des modèles à profondeur récurrente, c'est qu'ils paient leur intelligence supplémentaire à chaque token généré. Si un modèle boucle quatre fois pour produire une réponse, le coût d'inférence est multiplié par quatre. À grande échelle, c'est rédhibitoire pour les applications interactives.</p>
+
+<p>L'approche du sommeil casse ce compromis. Le calcul lourd a lieu une seule fois par fenêtre de contexte, en amont de la prédiction. Une fois consolidé dans les fast weights, le savoir est gratuit à utiliser. Pour un chatbot qui ingère un long document avant de répondre à des questions, ou pour un agent qui doit traiter un historique de conversation étendu, le coût marginal par token de sortie reste identique à celui d'un modèle hybride standard.</p>
+
+<p>Le coût se déplace vers l'entraînement et vers les phases sans interaction utilisateur. Plusieurs scénarios industriels collent bien à ce profil : prétraitement d'un document long avant la session interactive, consolidation de mémoires d'agents pendant les périodes creuses, préparation d'un contexte de conversation avant l'arrivée de l'utilisateur. C'est aussi cohérent avec une idée émergente — la <em>sleep-time compute</em> proposée par Lin et al. — où l'on profite des temps morts pour pré-calculer des éléments coûteux.</p>
+
+<p>Pour les architectures hybrides déjà déployées en production chez les grands laboratoires, le sommeil semble s'adapter sans refonte structurelle. Jet-Nemotron et Ouro sont fine-tunés avec succès depuis leurs checkpoints existants. Le mécanisme reste compatible avec FlashAttention et les optimisations matérielles standards. La sérialisation entre fenêtres de contexte n'impacte pas le débit d'entraînement quand la fenêtre est suffisamment grande pour saturer le GPU, comme le montre l'analyse de throughput.</p>
+
+<h2>Pour aller plus loin : ce qui reste ouvert</h2>
+
+<p>L'article est délibérément modeste sur ses limites. Le coût d'entraînement croît linéairement avec N, et la sérialisation entre fenêtres de contexte brise la parallélisation classique le long de l'axe séquentiel. Les auteurs explorent des techniques de stabilisation issues du domaine de la profondeur récurrente — gradients implicites, <em>truncated backpropagation through time</em> — mais reconnaissent que l'entraînement à grande échelle reste un défi actif.</p>
+
+<p>Plusieurs questions méritent qu'on creuse. D'abord, à quel point le sommeil scale-t-il avec la taille du modèle ? Les expériences vont jusqu'à Jet-Nemotron 2B et Ouro 1.4B. Les modèles frontière dépassent 100B paramètres. Le ratio bénéfice-coût pourrait évoluer favorablement ou défavorablement à cette échelle.</p>
+
+<p>Ensuite, la règle locale apprise pour mettre à jour les fast weights est ici relativement simple. Y aurait-il intérêt à apprendre des règles plus sophistiquées, peut-être conditionnées sur la nature de la tâche ? Une forme de méta-apprentissage de la règle de consolidation pourrait permettre de doser le sommeil en fonction de la difficulté détectée.</p>
+
+<p>L'analogie biologique suggère aussi d'autres pistes. Chez les animaux, le sommeil n'est pas uniforme : phases REM, non-REM, ondes lentes, jouent des rôles différents dans la consolidation. Reproduire cette hétérogénéité dans les modèles — par exemple, alterner phases d'amplification et phases de compression — pourrait débloquer de nouvelles formes de raisonnement.</p>
+
+<p>Enfin, la frontière entre sleep-time compute et test-time compute mérite d'être cartographiée plus précisément. Quand vaut-il mieux raisonner pendant le sommeil (dans les poids), pendant la prédiction (chain-of-thought) ou en combinant les deux ? Les auteurs notent que le sommeil et la chaîne de pensée pourraient se complémenter plutôt que se substituer. Tester cette combinaison à l'échelle de modèles de raisonnement comme o1 ou DeepSeek-R1 serait le test ultime.</p>
+
+<p>Ce papier ne révolutionne pas l'architecture des LLM. Mais il déplace un curseur conceptuel : la mémoire n'est pas qu'une question de capacité, c'est aussi une question de calcul à dépenser pour la former. Et ce calcul peut s'investir au moment où il dérange le moins — pendant que le modèle dort.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
