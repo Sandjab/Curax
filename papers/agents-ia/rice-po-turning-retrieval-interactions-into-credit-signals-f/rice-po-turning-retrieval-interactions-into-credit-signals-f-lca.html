@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RICE-PO: Turning Retrieval Interactions into Credit Signals for Reasoning Agents — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>RICE-PO: Turning Retrieval Interactions into Credit Signals for Reasoning Agents</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Le retrieval moderne quitte le paradigme du matching one-shot pour un raisonnement itératif où un agent linguistique inspecte les preuves, reformule sa requête, et relance la recherche. Cette boucle pose un problème de credit-assignment : les actions exécutables (requêtes, résumés) reçoivent directement un signal du retriever, alors que les étapes de raisonnement latent n'agissent qu'indirectement sur les rounds suivants. Les méthodes RL existantes (GRPO, GiGPO, HGPO, Tree-GRPO) propagent la récompense terminale à l'ensemble des tokens, ce qui crédite indistinctement des raisonnements pertinents et des artefacts récupérés plus tard par la trajectoire.</p>
+<p>RICE-PO formalise cette asymétrie : les résumés sont des actions exécutables évaluables par NDCG@10, les spans de raisonnement sont des actions latentes dont le crédit doit être conditionnel. Le cadre vise donc à transformer la structure de l'interaction agent-environnement en supervision fine, sans critique apprise, ni reward model, ni rollouts exhaustifs par étape.</p>
+
+<h2>Méthodologie</h2>
+<p>Le cadre repose sur trois mécanismes articulés. La <strong>sélection d'ancres par entropie</strong> identifie les résumés à haute incertitude (top-K sur l'entropie moyenne par token) parmi N trajectoires échantillonnées pour la même requête. Cette sélection concentre l'estimation contrefactuelle sur les décisions ambiguës et réduit le coût d'inférence.</p>
+<p>Le <strong>branching contrefactuel local</strong> reconstruit K branches alternatives depuis l'historique fixé avant l'action de raisonnement. Chaque branche produit un nouveau couple (raisonnement, résumé) et une récompense NDCG@10 locale. Deux statistiques en sortent : la variance des récompenses locales (influence du raisonnement sur le résumé induit) et la variance des résidus entre récompense locale et récompense finale (stabilité de l'effet futur).</p>
+<p>La <strong>propagation gated</strong> ne transfère le crédit du résumé au raisonnement apparié que si l'influence dépasse un seuil τ<sub>var</sub> (fixé à 0.05) et si la variance résiduelle reste sous τ<sub>res</sub> (0.03). L'objectif final est un PPO clippé avec pénalité KL, où l'avantage par token est trajectoire, résumé ou raisonnement selon la zone du span. Une proposition formelle borne l'erreur d'approximation entre avantage raisonnement et avantage résumé par |Δε|, justifiant le gating.</p>
+<p>Les backbones évalués sont DeepSeek-R1-Distill-Qwen-1.5B, Qwen3-4B-Thinking-2507 et Qwen2.5-3B-Instruct. Le retriever est figé à Diver-4B+BM25 pour toutes les méthodes RL. K=4 ancres sélectionnées, 5 branches Monte Carlo, profondeur maximale de 5 rounds, batch 128, learning rate 1e-6.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur BRIGHT (12 tâches reasoning-intensive), RICE-PO atteint 27.49 NDCG@10 moyen avec un backbone 1.5B, contre 24.98 pour GRPO, 25.88 pour GiGPO, 25.45 pour HGPO et 26.00 pour Tree-GRPO. Avec Qwen3-4B-Thinking, la méthode monte à 37.76, devançant Diver (37.20) qui utilise pourtant un modèle 14B. Le gain sur GRPO/GiGPO/HGPO/Tree-GRPO en 4B est de +1.34, +1.45, +1.15 et +1.37 points.</p>
+<p>Sur BEIR (5 datasets), les améliorations sont plus modestes : 65.66 vs 64.55 pour Tree-GRPO (1.5B) et 65.68 vs 65.02 (3B). Les auteurs reconnaissent eux-mêmes que les tâches BEIR reposent davantage sur le matching de surface, ce qui réduit le bénéfice du credit-assignment fin.</p>
+<p>L'ablation des stratégies de propagation révèle que ni Case 1 (crédit du résumé local) ni Case 2 (crédit du résumé final) ni Random ne suffisent isolément : RICE-PO bat ces variantes de 1.67 à 1.94 points sur la moyenne BRIGHT. L'ablation Influence-only vs Effect-only montre une complémentarité réelle des deux gates — l'influence seule échoue sur Sustainable Living, LeetCode et TheoremQA, l'effet seul devient bruité sur Robotics et Pony.</p>
+<p>Le triggering par entropie surpasse le triggering aléatoire sur 9 tâches sur 12, avec un gain médian de +1.28 NDCG@10. Les gains les plus francs concernent TheoremQA-Questions (+7.65) et Psychology (+4.68).</p>
+
+<h2>Discussion et limites</h2>
+<p>La principale faiblesse est la dépendance au retriever figé Diver-4B+BM25. Tous les comparatifs supposent ce même backend, ce qui isole bien l'effet du credit-assignment mais empêche de conclure sur le comportement avec un retriever co-adapté ou avec un retriever générique BM25. Les auteurs le mentionnent explicitement comme une direction future.</p>
+<p>Le coût computationnel du branching contrefactuel n'est pas analysé en détail. Avec K=4 ancres et 5 branches Monte Carlo, chaque mise à jour de politique multiplie l'inférence par un facteur non négligeable. Le papier mentionne une analyse de coût de branching mais ne la chiffre pas dans le corps principal. Le tableau A1 (training reward) montre les courbes mais pas le temps wall-clock par step.</p>
+<p>Les seuils τ<sub>var</sub>=0.05 et τ<sub>res</sub>=0.03 sont posés sans étude de sensibilité. Or, c'est précisément ce double gating qui justifie l'apport théorique. Une analyse de la robustesse au choix des seuils manquerait pour valider que la méthode n'exige pas un tuning fin par dataset.</p>
+<p>L'écart avec Diver 14B est faible (37.76 vs 37.20) et masqué par une comparaison de tailles de modèles différentes. Sur BEIR, les marges sont parfois sous le bruit attendu : 65.66 vs 65.02 sur Tree-GRPO ne tranche pas radicalement. Aucun intervalle de confiance ni test de significativité statistique n'est rapporté.</p>
+<p>La preuve formelle de la Proposition 1 est utile mais conditionne tout sur |Δε| ≤ δ, sans estimer empiriquement δ sur les trajectoires réelles. Le lecteur doit accepter que les seuils choisis impliquent cette borne, sans vérification.</p>
+
+<h2>Reproductibilité</h2>
+<p>Les statistiques de splits (4011/1384 pour BRIGHT, 4008/1447 pour BEIR) sont fournies, les hyperparamètres documentés (KL coefficient 0.001, K=4, 5 branches, seuils, batch 128, lr 1e-6, max depth 5). Les modèles backbones sont publics avec liens HuggingFace. Le prompt template multi-step est intégralement reproduit en appendice.</p>
+<p>En revanche, aucun lien vers un dépôt de code n'apparaît dans le manuscrit consulté. Les données d'entraînement BRIGHT-style construites à partir de ReasonIR ne sont pas immédiatement disponibles sous forme de release. La reproductibilité reste donc partielle : un praticien motivé peut réimplémenter, mais sans garantie d'égaler les chiffres exacts.</p>
+
+<h2>Impact et applications</h2>
+<p>L'apport conceptuel principal — distinguer actions exécutables et latentes pour gating fin du credit-assignment — généralise au-delà du retrieval. Toute boucle agent où certaines actions reçoivent un feedback environnemental direct (compilation de code, exécution de SQL, appels d'API) tandis que d'autres restent purement internes (planification, raisonnement intermédiaire) peut bénéficier de cette logique.</p>
+<p>Pour les agents de recherche d'information en production, la méthode offre un chemin pour entraîner des modèles 1.5B-4B capables de rivaliser avec des pipelines 14B prompting-only. Le gain sur BRIGHT démontre que la qualité du training signal compense partiellement la taille du modèle, ce qui aligne avec la tendance de scaling du harness plutôt que du modèle.</p>
+<p>L'extension à des retrievers adaptatifs et au scaling vers des backbones plus grands sont identifiées par les auteurs comme directions futures, avec un cas d'usage immédiat dans les pipelines RAG agentiques multi-tour.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier se situe au carrefour de trois lignes de travaux. La famille des group-relative methods (GRPO, GiGPO, HGPO, Tree-GRPO) optimise des trajectoires sans critique apprise, mais redistribue le signal final de façon uniforme ou hiérarchique. RICE-PO rompt en utilisant le retriever comme oracle local sur les résumés.</p>
+<p>Les méthodes de query reasoning (DeepRetrieval, TongSearch-QR, ThinkQE, Diver) optimisent la génération de requêtes mais soit par prompting fixe, soit par récompense terminale. RICE-PO conserve l'architecture multi-tour de Diver mais ajoute une supervision intermédiaire.</p>
+<p>Le rapprochement avec les process reward models et la step-level supervision est explicite, mais RICE-PO se positionne comme critic-free, contournant le coût des PRM appris. Cette position est défendable techniquement, même si la comparaison directe avec un PRM dédié manque.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead><tr><th>Critère</th><th>Score (0-5)</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problématique du credit-assignment exécutable/latent clairement posée, motivée par les limites des baselines RL.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Comparaison sur deux benchmarks, deux backbones par benchmark, retriever figé pour isoler l'effet RL, ablations multiples.</td></tr>
+<tr><td>Taille de l'échantillon</td><td>3</td><td>~4000 exemples train sur chaque benchmark, suffisant mais sans intervalles de confiance ni runs multi-seed.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>NDCG@10 standard et bien défini, cohérent avec la littérature retrieval.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Même retriever et mêmes données pour tous les baselines RL, prompts identiques en agent setting.</td></tr>
+<tr><td>Reproductibilité</td><td>3</td><td>Hyperparamètres et splits documentés, modèles publics, mais pas de lien code public visible dans le manuscrit.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Section dédiée mentionnant retriever figé et budget de branching borné ; absence d'analyse de sensibilité aux seuils en revanche.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Asymétrie executable/latent comme principe d'apprentissage neuf, généralisable au-delà du retrieval.</td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

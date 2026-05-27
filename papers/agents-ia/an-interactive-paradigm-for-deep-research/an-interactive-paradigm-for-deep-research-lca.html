@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>An Interactive Paradigm for Deep Research — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>An Interactive Paradigm for Deep Research</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les systèmes de deep research basés sur les LLM (OpenAI Deep Research, Gemini Deep Research, GPT-Researcher, Search-o1, etc.) suivent un schéma rigide : une phase de cadrage initial (au mieux une question de clarification), puis un long run autonome qui produit un rapport monolithique. Si l'intention de l'utilisateur évolue en cours d'exécution — ce qui arrive régulièrement sur des tâches long-horizon — le système ne peut pas se réaligner. STEER cherche à corriger ce défaut structurel en introduisant un mécanisme de pause adaptative et un modèle de persona qui se met à jour pendant la session.</p>
+<p>Le positionnement est défendu via le Tableau 1 du papier, qui croise trois capacités (mid-process steering, adaptive pause decision, live persona modeling) face à 11 systèmes existants. STEER est le seul à combiner les trois.</p>
+
+<h2>Méthodologie</h2>
+<p>Le framework repose sur trois modules opérant sur un arbre de recherche T = (N, E) construit incrémentalement jusqu'à une profondeur D :</p>
+<ul>
+<li><strong>Diversity-aware exploration</strong> : sélection MMR gloutonne d'un sous-ensemble de K questions de suivi à chaque nœud frontière, avec une question « wild-card » imposée pour éviter le collapse thématique.</li>
+<li><strong>Pause decision</strong> : règle coût-bénéfice ∆EV(n*) > C(n*) qui compare l'utilité espérée d'une pause (basée sur des bornes upper/lower de confiance, inspirées de lil'UCB) au coût d'interruption. Le coût C(n*) = C₀ · (1 + pauses_j / Tol_j) augmente avec la fréquence des pauses dans une direction.</li>
+<li><strong>Branch utility</strong> : combinaison pondérée de trois signaux normalisés sur [0,1] — ∆Align (gain d'alignement avec les aspects inférés), Explore (bonus UCB sur les facettes sous-explorées), InfoGain (nouveauté sémantique vs centroid des learnings accumulés).</li>
+<li><strong>Persona modeling</strong> : persona vivant Ṗ(n*) = (p̂_text(n*), Â(n*)) mis à jour à chaque pause à partir des sélections et propositions utilisateur.</li>
+</ul>
+<p>L'évaluation s'appuie sur 200 query-persona pairs dérivés du dataset Researchy Questions, avec personas générés via le paradigme ALOE filtré par SBERT (seuil de similarité 0,65) et aspects (5-8 par persona) générés selon Salemi & Zamani (2025). Les comparaisons utilisent GPT-4o comme backbone unique, arbre fixé à profondeur 3 × largeur 3, avec un User Agent simulé conditionné sur la persona complète pour produire les signaux de steering. Le juge automatique est gpt-4.1-mini.</p>
+
+<h2>Résultats principaux</h2>
+<p>STEER atteint 85,70 sur l'alignement contre 79,48 pour le meilleur baseline (GPT-Researcher avec persona complet), soit un gain absolu de 6,22 points et relatif de 7,83 %. Le gain monte à 22,80 % face à OpenDeepResearch sans persona. STEER reçoit uniquement la première phrase du persona, là où les baselines reçoivent la persona complète — un point crucial pour l'applicabilité réelle (contraintes de privacy, onboarding).</p>
+<p>Sur les métriques de qualité générale (Clarity, Depth, Breadth, Insight, Balance) issues de DeepResearchGym, STEER mène sur Breadth (91,29) et Balance (84,19) mais reste légèrement en-dessous du modèle propriétaire o4-mini-deep-research sur Depth et Insight.</p>
+<p>L'étude humaine collecte 58 annotations pairwise auprès de 12 annotateurs (étudiants gradués NLP/CS). STEER remporte 86-90 % des comparaisons sur Alignment, 83 % sur Focus, avec des gains significatifs sur Coverage (+0,623, p=3,05e-12) et Findability (+0,690, p=1,64e-11) sur des échelles 0-2. Les coefficients Gwet's AC1 (0,639 pour Alignment, 0,475 pour Focus) indiquent un accord substantiel à modéré.</p>
+<p>Les ablations confirment le rôle des trois signaux d'exploration : retirer la diversification MMR cause les chutes les plus larges (depth, breadth, focus), retirer InfoGain dégrade surtout l'alignement, retirer Explore dégrade le focus. Le sweet spot empirique se situe à C₀ = 0,7 (équilibre alignement / charge utilisateur).</p>
+
+<h2>Discussion et limites</h2>
+<p>Plusieurs faiblesses méthodologiques affaiblissent les conclusions. Le User Agent de simulation est par construction un oracle quasi-parfait : précision > 0,97 sur tous les C₀, fidélité totale à la persona-cible, pas de fatigue ni d'incohérence. Les auteurs reconnaissent que cette validation surestime probablement les performances en conditions réelles, où les utilisateurs donnent des réponses partielles, contradictoires ou abandonnent.</p>
+<p>La corrélation Pearson entre le juge LLM (gpt-4.1-mini) et les annotations humaines au niveau aspect est r = 0,34 (p < 0,0001) — statistiquement significative mais qualitativement modérée. Les 22,80 % de gain en alignement automatique doivent donc être lus avec prudence : l'étude humaine sur 58 paires valide directionnellement, mais l'écart numérique exact n'est pas garanti.</p>
+<p>Le panel d'annotateurs (12 étudiants NLP/CS) est homogène et susceptible de biais favorables aux outputs structurés des systèmes ML. Le blinding est imparfait — les auteurs l'admettent — et un fingerprint stylistique entre STEER et les baselines pourrait fuiter l'identité du système.</p>
+<p>L'évaluation utilise GPT-4o pour tous les agents et fixe l'arbre à 3×3, ce qui empêche de tester comment STEER scale avec la profondeur (où le paramètre Tol devient pertinent, comme les auteurs le notent eux-mêmes). Aucune analyse de runtime ou latence n'est fournie, ce qui est problématique pour un système conçu autour de l'interaction : combien de temps un utilisateur attend-il entre deux pauses ?</p>
+<p>Les personas eux-mêmes sont synthétiques, générés à partir du dataset ALOE avec filtrage SBERT à 0,65. Cette borne supérieure de similarité ne garantit pas la représentativité des intentions de recherche réelles.</p>
+
+<h2>Reproductibilité</h2>
+<p>Point fort du papier. Les prompts complets (Planning, Search Result Processing, Persona Checklist Inference, Persona Modeling, Report Generation) sont fournis dans les annexes K-N. Le pipeline de génération de données est documenté. Les auteurs annoncent la release d'une persona-query evaluation suite. Les hyperparamètres sont explicités (C₀, Tol, λ_exp = λ_info = 0,5, D = 3, K = 3, seuil SBERT = 0,65). L'algorithme MMR diversifié est donné en pseudo-code dans l'annexe C.</p>
+<p>Réserves : pas de code disponible publiquement au moment de la soumission, dépendance à des APIs propriétaires (GPT-4o, o4-mini-deep-research, gpt-4.1-mini) qui peuvent évoluer et compromettre la reproductibilité future.</p>
+
+<h2>Impact et applications</h2>
+<p>La proposition adresse un trou réel : les systèmes de deep research actuels brûlent du compute sur des trajectoires désalignées. Une politique de pause apprenable et un persona évolutif sont des composants génériques applicables au-delà du web research — les auteurs citent la découverte scientifique (NovelSeek, AgentRxiv), le conseil financier (FinCon), et le legal research comme cibles naturelles.</p>
+<p>Le formalisme branch utility = ∆Align + λ_exp · Explore + λ_info · InfoGain est modulaire : ajouter des termes (factuality, citation quality, safety) reste trivial. C'est la principale contribution structurelle, davantage que les chiffres absolus de performance.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le papier se positionne explicitement contre deux familles : les pipelines multi-agents one-shot (ManuSearch, Search-r1, DeepResearcher) et les frameworks RL-trained (Search-o1, R1-Searcher). Le concurrent direct est EDR (Prabhakar et al., 2025), qui propose aussi un steering mid-process mais sans politique de pause adaptative ni persona vivant. STEER complète également la ligne de travaux sur la clarification (STaR-GATE, Robots that ask for help, Action-Based Contrastive Self-Training) en passant d'une décision locale « ask vs answer » à une politique globale sur un arbre de recherche.</p>
+<p>Le lien avec les bandits multi-armed (UCB, lil'UCB) est honnête : les auteurs précisent qu'ils n'invoquent pas les garanties de regret stationnaires et utilisent UCB comme prior d'optimisme plutôt que comme algorithme classique. Cette précaution intellectuelle est appréciable.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score / 5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème bien identifié et motivé, positionnement clair vs l'existant.</td></tr>
+<tr><td>Design expérimental</td><td>3</td><td>Backbone unique (GPT-4o), arbre fixé 3×3, User Agent simulé quasi-parfait.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>200 queries en éval auto, mais seulement 58 annotations pairwise humaines.</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td><td>Juge gpt-4.1-mini corrélé à r=0,34 avec les humains — significatif mais modéré.</td></tr>
+<tr><td>Contrôle des biais</td><td>3</td><td>Blinding imparfait reconnu, annotateurs homogènes (étudiants NLP/CS).</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Prompts complets, pseudo-code MMR, pipeline de données détaillé, suite d'éval annoncée.</td></tr>
+<tr><td>Transparence des limitations</td><td>4</td><td>Annexe J détaillée : simulation, blinding, robustesse au bruit, runtime — tout est discuté.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Premier framework benchmarkable combinant steering, pause adaptative et persona vivant.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 3,5 / 5.</strong> Contribution structurelle nette sur un problème pertinent, mais la validation empirique repose sur un User Agent oracle et un juge LLM imparfaitement aligné avec les humains. Les chiffres absolus sont à interpréter comme des indications directionnelles, pas comme des bornes de performance fiables en déploiement.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

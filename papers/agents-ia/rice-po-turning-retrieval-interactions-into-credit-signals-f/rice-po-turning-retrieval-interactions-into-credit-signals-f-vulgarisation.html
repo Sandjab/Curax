@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RICE-PO: Turning Retrieval Interactions into Credit Signals for Reasoning Agents — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>RICE-PO: Turning Retrieval Interactions into Credit Signals for Reasoning Agents</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand l'agent de recherche apprend à se relire</h2>
+
+<p>Un moteur de recherche moderne ne se contente plus d'une seule requête. Posez-lui une question technique pointue — disons, retrouver un théorème mathématique précis à partir d'une description informelle — et il va enchaîner plusieurs tentatives. Il reformule, relit ce qu'il a trouvé, complète sa requête avec un mot manquant, relance. Trois, quatre, parfois cinq allers-retours avant de converger vers la bonne réponse.</p>
+
+<p>Cette danse entre l'agent et son moteur s'appelle la recherche interactive. Elle marche assez bien quand on l'oriente à la main avec des prompts bien conçus. Le problème commence quand on cherche à l'entraîner par renforcement, c'est-à-dire à laisser le modèle apprendre tout seul quelles stratégies fonctionnent. Une équipe de l'Université du Massachusetts à Amherst, accompagnée de chercheurs du Texas Tech et du Connecticut, vient de publier RICE-PO, une méthode qui s'attaque à un problème central de cet apprentissage : comment savoir <em>quelle</em> partie du raisonnement a vraiment contribué au succès final.</p>
+
+<h2>Le problème : à qui attribuer le mérite ?</h2>
+
+<p>Imaginez un débat à plusieurs tours. À la fin, on annonce un vainqueur. Mais qui a fait basculer la discussion ? La première remarque qui a posé le cadre ? L'argument du tour 3 qui a forcé l'adversaire à reculer ? Le résumé final qui a convaincu le jury ? Sans observer les tours intermédiaires, impossible de distribuer correctement les points.</p>
+
+<p>Les agents de recherche multi-étapes vivent exactement ce drame. À chaque tour, le modèle produit deux choses très différentes. D'un côté, une réflexion interne, balisée par les balises <code>&lt;think&gt;</code> : il y note ce qu'il a compris, ce qui manque, l'hypothèse qu'il veut tester. De l'autre, un résumé exécutable, balisé par <code>&lt;summary&gt;</code> : la requête concrète qu'il va envoyer au moteur de recherche pour le prochain tour.</p>
+
+<p>La différence est cruciale. Le résumé peut être évalué directement : on l'envoie au moteur, on récupère les documents, on mesure leur pertinence avec une métrique comme NDCG@10. La réflexion interne, elle, est invisible pour le moteur. Elle n'influence le résultat qu'indirectement, en façonnant le résumé suivant.</p>
+
+<p>Les approches précédentes contournaient le problème en attribuant la récompense finale à <strong>tous</strong> les jetons générés, qu'ils soient réflexion ou résumé. C'est rapide, mais cela revient à donner la même prime à chaque membre d'une équipe sans regarder qui a vraiment contribué. Pire, cela peut renforcer des raisonnements ratés simplement parce qu'un tour ultérieur a rattrapé le coup.</p>
+
+<h2>La méthode : du contrefactuel local pour démêler les contributions</h2>
+
+<p>RICE-PO part d'une idée simple. Si on veut attribuer correctement le crédit à une étape de raisonnement, il faut se demander : <em>et si l'agent avait pensé autre chose à ce moment-là, le résultat aurait-il changé ?</em> C'est exactement ce qu'on fait en sciences sociales pour mesurer un effet causal : on compare un monde réel avec un monde alternatif.</p>
+
+<p>Le hic, c'est qu'on ne peut pas se permettre de générer des branches contrefactuelles à chaque jeton. Cela coûterait des semaines de calcul pour un seul entraînement. Les chercheurs déploient donc trois mécanismes en cascade pour économiser l'effort tout en gardant la précision.</p>
+
+<h3>1. Sélectionner les moments d'incertitude</h3>
+
+<p>Premier filtre : l'entropie de la politique. Quand le modèle hésite entre plusieurs formulations possibles d'un résumé, son entropie de génération est élevée. C'est là que ses choix sont les plus instables, donc les plus informatifs à examiner. RICE-PO ne garde que les quatre résumés les plus incertains parmi toutes les trajectoires échantillonnées pour une même requête initiale.</p>
+
+<p>Analogie : un coach de tennis ne va pas analyser image par image tout le match. Il se concentre sur les balles de break, là où le résultat pouvait basculer.</p>
+
+<h3>2. Brancher des contrefactuels locaux</h3>
+
+<p>Une fois ces points d'ancrage sélectionnés, l'agent regénère cinq variantes alternatives à partir du même historique. Chaque branche produit un nouveau raisonnement, un nouveau résumé, et reçoit son propre score de pertinence via le moteur de recherche. On obtient ainsi une distribution locale : sur ces six chemins possibles (l'original plus cinq alternatives), à quel point les récompenses varient-elles ?</p>
+
+<p>Si la variance est élevée, cela signifie que le raisonnement à cet endroit fait vraiment une différence. Si toutes les branches aboutissent à des scores similaires, c'est que le choix de raisonnement n'a guère d'impact — autant ne pas le surcrédit.</p>
+
+<h3>3. Vérifier la stabilité dans le futur</h3>
+
+<p>Dernier garde-fou : l'effet résiduel. Une branche qui donne un bon score local peut très bien s'effondrer aux tours suivants, ou inversement, une mauvaise branche peut être rattrapée. Pour mesurer cela, chaque branche est poursuivie jusqu'au bout de la trajectoire, et on calcule la différence entre la récompense locale et la récompense finale.</p>
+
+<p>Si cette différence varie peu d'une branche à l'autre, on peut faire confiance au signal local. Sinon, le signal est trompeur : le résultat final dépend trop de ce qui se passe après, et propager le crédit en arrière introduirait du bruit.</p>
+
+<p>RICE-PO ne transmet le crédit du résumé vers le raisonnement qui l'a produit que lorsque ces deux conditions sont remplies : influence locale forte ET effet résiduel stable. Dans tous les autres cas, le raisonnement hérite seulement de l'avantage global de la trajectoire. Cette double porte évite à la fois de récompenser des raisonnements sans impact réel et de propager du bruit causé par des étapes ultérieures.</p>
+
+<h2>Résultats : les petits modèles rattrapent les gros</h2>
+
+<p>Les expériences portent sur deux jeux de tests classiques. Le premier, BRIGHT, regroupe douze tâches de recherche exigeantes en raisonnement — biologie, économie, programmation, théorèmes mathématiques. Le second, BEIR, couvre une recherche plus généraliste sur cinq domaines comme la finance, la science médicale ou les arguments juridiques.</p>
+
+<p>Avec un modèle de base de 1,5 milliard de paramètres (DeepSeek-R1-Distill-Qwen-1.5B), RICE-PO atteint un score moyen de 27,49 sur BRIGHT, contre 24,98 pour GRPO, l'approche RL standard. L'écart est plus net encore sur les tâches qui demandent du raisonnement profond : sur les questions de type théorèmes mathématiques, l'amélioration dépasse 9 points par rapport à GRPO et 4 points par rapport aux méthodes intermédiaires comme GiGPO et HGPO.</p>
+
+<p>Le résultat le plus marquant se trouve avec le modèle Qwen3-4B-Thinking. À 4 milliards de paramètres, RICE-PO obtient 37,76 de moyenne sur BRIGHT — au-dessus de Diver, la méthode de référence qui utilisait pourtant un modèle de 14 milliards de paramètres pour résumer les documents récupérés. Autrement dit, une meilleure attribution de crédit permet à un modèle trois fois plus petit de dépasser un système plus lourd.</p>
+
+<p>Sur BEIR, où les requêtes sont moins exigeantes en raisonnement, l'écart se resserre mais reste positif : 65,66 contre 64,55 pour le meilleur concurrent, Tree-GRPO. La méthode généralise donc au-delà de son cas d'usage de prédilection.</p>
+
+<p>Une analyse plus fine montre que neuf tâches sur douze bénéficient du déclenchement par entropie — le gain médian est d'environ 1,28 point de NDCG@10, avec des pics à +7,65 sur les questions de théorèmes et +4,68 en psychologie. Les rares régressions concernent l'économie et un jeu de données spécialisé en programmation Pony, où le couplage entre raisonnement et récupération est plus lâche.</p>
+
+<blockquote>
+<p>Une autre étude d'ablation oppose deux stratégies naïves à RICE-PO : tout propager systématiquement depuis le résumé local (Case 1), ou tout propager depuis la récompense finale (Case 2). Aucune des deux ne dépasse 25,82 de moyenne. La porte conditionnelle de RICE-PO ajoute donc 1,67 point en moyenne — non pas en propageant <em>plus</em> de signal, mais en propageant <em>plus sélectivement</em>.</p>
+</blockquote>
+
+<h2>Implications pratiques : un changement d'échelle économique</h2>
+
+<p>Pour quiconque exploite un système de recherche en production, le résultat a une portée concrète. Entraîner un agent de recherche par renforcement coûte cher. Le critique appris dans PPO mange du calcul, et les méthodes sans critique comme GRPO échantillonnent beaucoup de trajectoires pour estimer leurs avantages. Si l'on peut obtenir avec 4 milliards de paramètres ce qu'il fallait auparavant aller chercher dans des modèles de 14 milliards, la facture d'inférence chute en proportion.</p>
+
+<p>Le second enseignement touche à l'architecture des agents eux-mêmes. Les systèmes actuels mélangent souvent raisonnement et action dans un même flot de jetons, sans distinguer ce qui est observable de ce qui ne l'est pas. RICE-PO propose un cadre simple : séparer explicitement les actions exécutables (qu'on peut évaluer en temps réel via un outil externe) des actions latentes (qu'on ne peut évaluer qu'indirectement). Cette séparation s'applique au-delà de la recherche documentaire — pensez à un agent qui appelle des fonctions d'API, génère du code, ou pilote un robot. Partout où une étape produit un effet mesurable et où d'autres étapes restent internes, la même asymétrie se retrouve.</p>
+
+<p>Un troisième effet, plus discret, concerne la qualité des requêtes générées. Le prompt template utilisé par les chercheurs impose des contraintes de diversité explicites : changer d'angle de récupération à chaque tour (définition, mécanisme, contre-exemple, condition limite…), inclure 4 à 8 mots-clés concrets, ajouter au moins une exclusion ou une désambiguïsation. RICE-PO renforce naturellement les comportements qui suivent ces consignes quand ils produisent effectivement de meilleurs résultats, sans qu'on ait à coder de règle explicite.</p>
+
+<h2>Ce qu'on ne sait pas encore</h2>
+
+<p>Plusieurs limites méritent d'être posées clairement. D'abord, l'expérience tient le moteur de recherche fixe pendant tout l'entraînement. C'est une simplification raisonnable pour isoler l'effet de l'attribution de crédit, mais les systèmes réels ont souvent un moteur qui évolue lui aussi — index mis à jour, embeddings réentraînés, reranker fine-tuné. Comment se comporte RICE-PO quand la cible bouge ? Personne ne le sait encore.</p>
+
+<p>Ensuite, le coût des branches contrefactuelles. Générer cinq alternatives par point d'ancrage, multiplié par quatre points par batch, multiplié par cinq tours possibles, cela représente un surcoût d'inférence non négligeable. Les auteurs montrent que ce coût reste praticable pour des modèles de 1,5 à 4 milliards de paramètres. Passer à 70 ou 400 milliards demanderait soit des estimateurs plus efficaces (peut-être basés sur des proxys appris plutôt que sur des branches réelles), soit un échantillonnage adaptatif plus agressif.</p>
+
+<p>Reste enfin la question du transfert. RICE-PO repose sur une distinction nette entre action exécutable et action latente. Dans certains agents, cette frontière est floue : un raisonnement intermédiaire peut être consulté par un outil externe, ou une action exécutable peut comporter du raisonnement implicite. Adapter le cadre à ces situations hybrides demandera de redéfinir ce qui compte comme une « ancre » évaluable.</p>
+
+<p>La piste la plus excitante, suggérée brièvement dans les conclusions, consiste à traiter cette méthode comme un premier pas vers l'entraînement de modèles de langage à partir de la <em>structure</em> de leurs interactions, et non plus seulement de leurs récompenses terminales. Un agent qui appelle un compilateur, un solveur SMT, une base de données vectorielle ou une API métier produit en permanence des signaux intermédiaires exploitables. Apprendre à les distinguer, à les pondérer, à décider quand les remonter vers les étapes latentes — c'est probablement la prochaine frontière de l'apprentissage par renforcement pour les agents conversationnels.</p>
+
+<p>RICE-PO ne résout pas tout. Mais en proposant une recette concrète, mesurable, qui marche sur deux benchmarks publics et avec des modèles ouverts, l'équipe pose une pierre solide. Le code et les hyperparamètres précis (top-K à 4, cinq branches Monte-Carlo, seuils d'influence à 0,05 et de stabilité à 0,03) sont assez explicites pour qu'une autre équipe puisse répliquer et étendre — ce qui, dans un domaine où beaucoup d'avancées restent confinées à des laboratoires industriels, n'est pas un détail.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
