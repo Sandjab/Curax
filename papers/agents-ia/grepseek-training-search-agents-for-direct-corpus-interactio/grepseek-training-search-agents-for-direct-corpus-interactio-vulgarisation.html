@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrepSeek: Training Search Agents for Direct Corpus Interaction — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>GrepSeek: Training Search Agents for Direct Corpus Interaction</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Quand grep remplace la base de données vectorielle</h2>
+
+<p>Construire l'index d'un moteur de recherche sémantique sur 21 millions de passages Wikipédia coûte 62 heures de calcul sur un GPU A100 et réclame 221 Go de mémoire pour le garder en service. GrepSeek fait le même travail avec une minute de préparation et 14 Go — la taille du texte brut, rien de plus. Le secret tient dans une commande que tout développeur connaît : <code>grep</code>.</p>
+
+<p>Une équipe de l'Université du Massachusetts Amherst, de Princeton et de Carnegie Mellon propose de retourner la logique habituelle des agents de recherche. Au lieu d'interroger un index pré-calculé, leur agent fouille directement le corpus en lançant des commandes shell, exactement comme un développeur cherche une fonction dans un dépôt de code. Le résultat dépasse les systèmes de recherche dense sur la majorité des bancs d'essai testés, avec une fraction de leurs ressources.</p>
+
+<h2>Le coût caché de la recherche sémantique</h2>
+
+<p>Les agents de recherche modernes reposent presque tous sur le même schéma. On découpe le corpus en morceaux de taille fixe, on transforme chaque morceau en vecteur numérique grâce à un modèle d'embedding, et on range ces vecteurs dans un index. Quand une question arrive, le système la convertit elle aussi en vecteur et renvoie les documents dont la représentation est la plus proche. C'est l'architecture RAG, devenue le réflexe par défaut.</p>
+
+<p>Cette approche a deux angles morts. Le premier est matériel. L'index doit être construit à l'avance, stocké, maintenu, puis reconstruit dès que le corpus change. Le second est plus subtil. La recherche dense raisonne par similarité de sens, ce qui la rend floue sur les détails. Deux entreprises au nom voisin, deux personnes homonymes, une filiale et sa maison mère : l'embedding les rapproche dans son espace vectoriel et l'agent confond les pistes. Sur les questions à sauts multiples, où il faut enchaîner plusieurs recherches en gardant une précision stricte sur chaque entité, ces confusions s'accumulent jusqu'à fausser la réponse finale.</p>
+
+<p>Une autre voie existait déjà : laisser l'agent fouiller le texte brut avec des commandes Unix. Mais les travaux antérieurs s'appuyaient sur de gros modèles propriétaires pilotés au moment de l'inférence — Claude, par exemple — ce qui rendait chaque réponse lente et coûteuse, parfois plus d'une heure pour une seule question. Les auteurs posent donc une question différente : peut-on entraîner un petit modèle à faire ça vite et bien, de façon déployable en conditions réelles ?</p>
+
+<h2>Apprendre à fouiller, pas à classer</h2>
+
+<p>GrepSeek traite le corpus comme un environnement. L'agent ne reçoit pas une liste de documents : il reçoit un fichier texte géant — une ligne par passage Wikipédia, 21 millions de lignes — et le droit de lancer des commandes shell dessus. Il écrit un raisonnement, choisit une commande, lit le résultat, affine, recommence, et au bout de quelques tours rédige sa réponse.</p>
+
+<p>Un exemple concret rend la mécanique limpide. Question : « The Joggers est un groupe dont le chanteur est le fils d'un chimiste américain qui a reçu le plus haut quoi ? » L'agent lance <code>rg -F "The Joggers" corpus | rg -i "singer" | head -n 3</code>, découvre que le chanteur appartient à la famille Whitesides, puis cherche <code>rg -F "George M. Whitesides" corpus | rg -i "highest"</code> et tombe sur la phrase qui le décrit comme détenteur du « plus haut indice de Hirsch parmi les chimistes vivants en 2011 ». Réponse : l'indice de Hirsch. Le <code>-F</code> impose une correspondance exacte, sans interprétation : l'agent cherche la chaîne de caractères, pas une vague ressemblance.</p>
+
+<blockquote>Plutôt que d'apprendre à mieux interroger un moteur de recherche, l'agent apprend à se passer du moteur.</blockquote>
+
+<p>Entraîner ce comportement s'est révélé piégeux. Lâcher l'apprentissage par renforcement directement sur le corpus produisait des agents incohérents qui lançaient des commandes trop larges, ramenaient des pans entiers de texte et saturaient la mémoire — au point de faire planter des machines équipées de 1024 Go de RAM. Les auteurs ont donc découpé l'entraînement en deux temps.</p>
+
+<h3>Construire des exemples à l'envers</h3>
+
+<p>La première étape fabrique un jeu de démonstrations. Deux modèles collaborent. Un « Tuteur » connaît la réponse ; un « Planificateur » l'ignore. Le Tuteur décompose la question en sous-questions, puis construit la chaîne de recherche à rebours, de la réponse vers la question. À chaque saut, il propose une commande qui retrouve un document justifiant l'étape, avec une règle stricte : interdiction d'utiliser la réponse cherchée ou ses synonymes comme termes de recherche. Sans ce garde-fou, le Tuteur tricherait en cherchant directement ce qu'il sait déjà, et l'agent apprendrait un comportement impossible à reproduire quand la réponse n'est pas connue d'avance.</p>
+
+<p>Une fois la chaîne vérifiée, on la remet à l'endroit. Le Planificateur rejoue le parcours dans le bon sens, en ne voyant que ce qu'un agent verrait vraiment à cet instant : la question et les résultats déjà obtenus. Comme il avance à l'aveugle, son raisonnement manque parfois de justesse. Le Tuteur réécrit alors ce raisonnement pour qu'il mène naturellement à la bonne commande, sans jamais glisser un fait que l'agent ne pouvait pas encore connaître. Un dernier juge relit chaque trajectoire et jette celles où une information du futur a fui. Le modèle, un Qwen3.5 de 9 milliards de paramètres, est ensuite affiné sur les 10 000 exemples propres ainsi produits.</p>
+
+<h3>Puis affiner par essais et erreurs</h3>
+
+<p>La seconde étape laisse l'agent s'entraîner seul par renforcement, avec l'algorithme GRPO. Pour chaque question, il génère cinq tentatives, et celles qui produisent la meilleure réponse — mesurée par le recouvrement de mots avec la solution — sont récompensées, à condition d'être correctement formatées. Parti d'une base déjà disciplinée par la première étape, l'agent peaufine sa stratégie au lieu de partir dans tous les sens. C'est cette combinaison qui débloque la performance : sans renforcement, le score chute lourdement sur les questions complexes ; sans la phase de démonstration préalable, l'entraînement s'effondre purement et simplement.</p>
+
+<h3>Rendre la fouille assez rapide</h3>
+
+<p>Fouiller un fichier de 14 Go à chaque commande resterait trop lent pour un usage interactif. Les chercheurs ont écrit un moteur d'exécution qui découpe le corpus en tranches et lance la même commande sur toutes les tranches en parallèle, avant de recoller les morceaux. La contrainte qu'ils s'imposent est exigeante : le résultat fusionné doit être identique, octet pour octet, à celui d'une exécution séquentielle classique. Selon le type de commande — simple filtre, comptage, tri suivi d'un <code>head</code> — la fusion suit une règle adaptée, et les cas trop tordus repassent en mode séquentiel par sécurité. Un démon garde en plus le corpus en mémoire pour éviter de le recharger à chaque appel.</p>
+
+<h2>Plus précis, surtout sur les questions complexes</h2>
+
+<p>Sur sept bancs d'essai de questions-réponses, GrepSeek décroche le meilleur score F1 moyen, 0,5691, devant le meilleur système de recherche dense, à 0,5441. Il l'emporte sur quatre jeux de données et l'écart est statistiquement significatif sur trois d'entre eux. L'agent n'a été entraîné que sur deux de ces jeux : ses gains sur les cinq autres mesurent donc sa capacité à généraliser à des données jamais vues.</p>
+
+<p>Les progrès les plus nets apparaissent sur les questions à sauts multiples, celles qui exigent d'enchaîner plusieurs recherches. La correspondance exacte y fait merveille. L'agent isole une formule chimique rare, un nom propre complet ou une entité-pont en une seule commande, là où l'embedding fond des entités voisines dans une même bouillie sémantique. Distinguer une filiale de sa maison mère, éviter une collision de noms : autant de pièges qui font dérailler la recherche dense et que GrepSeek franchit en exigeant la chaîne de caractères précise. Fait notable, l'agent apprend en cours d'entraînement à composer des pipelines de plus en plus expressifs — environ 70 % de ses commandes enchaînent deux filtres successifs — tout en réduisant le nombre d'appels et en consacrant davantage de tokens au raisonnement.</p>
+
+<p>Le talon d'Achille est l'envers de cette force. Sur PopQA, un jeu centré sur des entités rares aux orthographes variables, l'agent rate parfois sa cible pour un simple accent manquant : c'est le seul recul vraiment significatif face aux concurrents. La correspondance exacte ne pardonne pas les variations de surface, et <code>rg</code> ne classe pas ses résultats par pertinence. Quand un mot-clé est trop fréquent, le bon document se retrouve enterré sous des correspondances moins utiles.</p>
+
+<p>Côté ressources, le contraste est saisissant. Là où la recherche dense réclame 70 à 221 Go de mémoire pour ses index et des dizaines d'heures de GPU pour les construire, GrepSeek se contente des 14 Go du texte brut et d'une minute de mise en route. Son moteur parallèle accélère la fouille jusqu'à 7,6 fois, ramenant la latence d'une commande de 5,39 à 0,71 seconde sur 32 tranches. En contrepartie, une réponse complète prend 8,67 secondes contre 4,77 pour un système dense — non pas à cause de la recherche, qui ne pèse que 0,81 seconde, mais des longs raisonnements que l'agent déroule avant de conclure.</p>
+
+<h2>Ce que ça change pour qui déploie de la recherche</h2>
+
+<p>Pour une équipe qui exploite un corpus mouvant — documentation interne, base juridique, archives mises à jour chaque jour — l'absence d'index pré-calculé pèse lourd dans la balance. Pas de pipeline d'embedding à entretenir, pas de réindexation à chaque ajout, pas de base vectorielle à dimensionner. On pointe l'agent sur les fichiers texte et il travaille. Le coût de stockage se réduit à celui des données elles-mêmes.</p>
+
+<p>La transparence est l'autre bénéfice concret. Quand un système dense se trompe, on hérite d'un score de similarité opaque, et il devient difficile de savoir pourquoi tel document est remonté. Ici, chaque étape est une commande shell lisible. On voit ce que l'agent a cherché, dans quel ordre, ce qu'il a filtré. Pour un domaine où il faut auditer ou expliquer une réponse — conformité réglementaire, santé, finance, recrutement — cette traçabilité a une valeur immédiate.</p>
+
+<p>Le message n'est pas que la recherche dense est dépassée. Les deux approches échouent sur des cas opposés : l'embedding excelle quand la formulation varie et que le sens compte plus que les mots ; la fouille exacte gagne quand un nom, un code ou une date doivent correspondre au caractère près. GrepSeek se présente comme un complément crédible, pas comme un remplaçant — et son faible coût d'entrée le rend facile à essayer à côté d'un système existant.</p>
+
+<h2>Les chantiers ouverts</h2>
+
+<p>La fragilité aux variations de surface est le premier verrou à lever. Les auteurs visent une interface enrichie : correspondance approximative, expressions régulières plus souples, de quoi rattraper un accent manquant ou une orthographe alternative sans renoncer à la précision. La piste la plus naturelle reste l'hybride, coupler la fouille directe et la recherche dense pour que chacune couvre les faiblesses de l'autre.</p>
+
+<p>Reste le coût du raisonnement. L'agent passe l'essentiel de son temps non pas à fouiller mais à réfléchir, et ses traces s'allongent au fil de l'entraînement, jusqu'à plus de 6 000 tokens par trajectoire. Raccourcir ces raisonnements sans perdre en justesse conditionne le passage à grande échelle. Les chercheurs évoquent aussi d'élargir l'évaluation aux questions à réponse longue et aux corpus jamais rencontrés à l'entraînement.</p>
+
+<p>Le code, les données d'entraînement et les modèles sont publiés en accès libre. Pour qui veut tester si <code>grep</code> suffit à sa propre base de connaissances, l'expérience est à portée de main — et c'est sans doute là que se jouera la suite, dans les corpus réels où la théorie rencontre les accents, les homonymes et les bases qui changent chaque matin.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

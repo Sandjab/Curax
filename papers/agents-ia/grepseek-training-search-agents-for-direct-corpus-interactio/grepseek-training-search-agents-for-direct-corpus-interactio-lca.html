@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrepSeek: Training Search Agents for Direct Corpus Interaction — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>GrepSeek: Training Search Agents for Direct Corpus Interaction</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>GrepSeek attaque le retrieval pour agents de recherche sous un angle qui rompt avec le RAG classique. Un système RAG conventionnel passe par un retriever : la requête interroge un index de représentations de documents pré-calculées, qui renvoie une liste ordonnée de passages. Les chunks sont figés avant l'indexation, identiques pour toutes les requêtes. GrepSeek supprime cette couche. L'agent traite le corpus brut comme un environnement et localise l'information en émettant des commandes shell exécutables — <code>rg</code>, <code>grep</code>, <code>head</code>, chaînées par des pipes. Les auteurs rangent cette famille de méthodes sous le terme Direct Corpus Interaction (DCI).</p>
+
+<p>L'intérêt revendiqué est la granularité libre : au lieu d'un découpage figé en documents, n'importe quel fragment de texte peut être extrait pour une requête donnée, ce qui autorise un filtrage lexical exact, la recherche de motifs symboliques rares, le suivi d'entités-ponts à travers plusieurs documents. La filiation est explicite avec les agents de code, où <code>grep</code> et <code>ripgrep</code> servent déjà à localiser du contexte dans un dépôt.</p>
+
+<p>Le problème pratique vient de l'état de l'art contemporain. Deux travaux indépendants et concomitants (Sen et al., 2026 ; Li et al., 2026) proposent le même principe, mais en orchestrant l'inférence de gros modèles propriétaires fermés — Claude chez Li et al. — ce qui rend une seule requête coûteuse et parfois longue d'une heure. GrepSeek veut transformer cette capacité de prompting en compétence apprise d'un modèle compact à poids ouverts, donc déployable et reproductible.</p>
+
+<h2>Méthodologie</h2>
+
+<h3>Cadre d'interaction</h3>
+
+<p>L'agent opère dans une boucle ReAct sur au plus T = 6 tours. À chaque pas, la politique produit une trace de raisonnement entre balises <code>&lt;think&gt;</code>, puis une action : soit une commande shell au format Hermes <code>&lt;tool_call&gt;</code>, soit une terminaison qui émet la réponse dans <code>&lt;answer&gt;</code>. Le corpus est exposé comme un fichier logique unique d'une ligne par passage. Le modèle de base est Qwen3.5-9B.</p>
+
+<h3>Entraînement en deux temps</h3>
+
+<p>Le constat fondateur justifie tout le pipeline : appliquer directement le RL à l'interaction avec un corpus de plusieurs gigaoctets produit un comportement dégénéré. L'agent émet des commandes trop larges, rapatrie des segments énormes, gonfle la longueur de contexte et fait échouer l'entraînement — les auteurs rapportent des dépassements mémoire jusque sur des machines de 1024 Go de RAM. La réponse est un démarrage à froid suivi d'un raffinement par renforcement.</p>
+
+<p>La génération des données de démarrage à froid mobilise deux rôles. Un <strong>Tutor</strong> answer-aware connaît la réponse et construit la chaîne de commandes à rebours, du dernier hop vers le premier, ce qui convient aux questions multi-hop puisqu'il identifie les preuves une étape à la fois. Une règle stricte interdit d'utiliser la réponse ou ses alias comme termes de recherche, sans quoi la trajectoire trichait en interrogeant directement la cible. Un <strong>Planner</strong> answer-blind reconstruit ensuite la trajectoire dans l'ordre chronologique, conditionné uniquement sur l'historique observable, et le Tutor réaligne son raisonnement sur les commandes vérifiées. Un filtrage final exige un F1 non nul avec la réponse de référence et fait passer chaque trajectoire devant un juge de cohérence temporelle qui rejette toute fuite d'information future.</p>
+
+<p>Sur ces trajectoires synthétiques, le modèle subit d'abord un SFT (10 000 exemples, mélange équilibré NQ + HotpotQA), qui installe des commandes concises et évite les scans massifs. Puis GRPO affine la politique pendant 200 pas, avec un groupe de n = 5 trajectoires par requête, sur l'intégralité de NQ et HotpotQA. La récompense est le F1 token-level de la réponse, multiplié par un indicateur binaire de conformité structurelle : une trajectoire mal formée reçoit un signal nul. Le Tutor et le Planner sont des Qwen3.5-27B, soit trois fois la taille de l'agent entraîné.</p>
+
+<h3>Moteur d'exécution</h3>
+
+<p>Pour rendre le DCI praticable à l'échelle, les auteurs développent un moteur sharded-parallèle préservant la sémantique. Le corpus est partitionné en S shards alignés sur les lignes ; un classifieur conservateur de pipeline décide si une commande peut être parallélisée sans risque. Toute commande qui dépend d'un état global ou inter-lignes — indexation de lignes, fenêtrage contextuel, transformation in-place — bascule sur une exécution séquentielle de repli. Cinq stratégies de réduction déterministes (concaténation, head local puis global, somme de comptages, fusion k-way pour sort | head) garantissent une équivalence octet-à-octet avec l'exécution séquentielle. Un daemon persistant maintient le corpus en mémoire et évite de recharger les données à chaque appel.</p>
+
+<h3>Protocole d'évaluation</h3>
+
+<p>Sept benchmarks : trois single-hop (NQ, TriviaQA, PopQA) et quatre multi-hop (HotpotQA, 2Wiki, MuSiQue, Bamboogle), pour 51 713 requêtes au total. Le corpus est le dump Wikipédia 2018 de 21 millions de passages (~14 Go). L'entraînement n'utilise que NQ et HotpotQA (169 615 exemples) ; les cinq autres jeux servent de test out-of-distribution. La métrique principale est le F1 token-level, l'EM figurant en annexe. Les baselines partagent toutes le même backbone : LLM direct sans recherche, RAG, IRCoT, Search-O1, rejection sampling, et Search-R1 (optimisé par GRPO), chacun avec BM25, E5-110M ou Qwen3-Embedding-4B.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>GrepSeek obtient le meilleur F1 micro-moyen, 0,5691, contre 0,5441 pour la meilleure baseline dense (Search-R1 + Qwen3-4B). L'agent domine sur 4 des 7 jeux (NQ, HotpotQA, 2Wiki, MuSiQue), avec une amélioration statistiquement significative sur 3 d'entre eux. Les gains se concentrent sur le multi-hop, là où les retrievers denses souffrent de conflation sémantique et d'ambiguïté d'entités : le matching exact via <code>rg -F</code> isole des formules chimiques rares, des noms complets et des entités-ponts intermédiaires.</p>
+
+<p>Le revers est assumé et chiffré. Sur PopQA — entités de longue traîne, variations de surface, diacritiques — GrepSeek subit la seule dégradation statistiquement significative face à la meilleure baseline. La cause est structurelle : le matching exact rate une entité dont l'accent diffère, et <code>rg</code> ne classe pas par pertinence sémantique, si bien que le document le plus autoritatif peut être enfoui sous des correspondances antérieures dans l'ordre du fichier.</p>
+
+<p>Côté efficience, les avantages sont nets sur deux axes et défavorables sur un troisième. L'empreinte mémoire tombe à 14 Go (la taille brute du corpus) contre 70 Go pour E5 et 221 Go pour Qwen3-4B. L'indexation hors-ligne disparaît : environ une minute de préparation, contre 3,2 et 62,4 heures-A100. Le moteur accélère la recherche shell jusqu'à 7,6×, ramenant la latence d'exécution de 5,39 s en séquentiel à 0,71 s sur 32 shards. En revanche, la latence end-to-end par requête atteint 8,67 s, supérieure à E5 (4,77 s) et Qwen3-4B (6,07 s). Ce surcoût ne vient pas du retrieval (0,81 s) mais du décodage du LLM (7,86 s), alourdi par des traces de raisonnement longues.</p>
+
+<p>Les ablations confirment que les deux étapes sont indispensables. Sans GRPO, le F1 moyen chute à 0,4249 ; sans SFT, à 0,3314, avec une instabilité telle que les auteurs rapportent le dernier checkpoint avant effondrement. Dès 2 500 trajectoires de démarrage à froid, le gain sur le modèle de base est substantiel, puis la courbe plafonne au-delà de 5 000 exemples. L'analyse du comportement montre une politique interprétable : <code>head</code> systématique, matching exact <code>-F</code> quasi général, filtrage en cascade dans 70 % des commandes, et davantage de commandes sur le multi-hop que sur le single-hop. Au fil du RL, l'agent réduit le nombre de commandes (de 3,06 à 2,56) tout en allongeant son raisonnement (4 251 à 6 409 tokens) et en composant des pipelines multi-étapes plus expressifs.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>La limite la plus gênante est l'absence de comparaison directe avec les deux agents DCI contemporains. GrepSeek se mesure uniquement à des retrievers à index. Les auteurs argumentent vouloir isoler le mécanisme de retrieval, ce qui est cohérent, mais la conséquence est qu'on ne sait pas si l'agent compact entraîné égale ou dépasse en exactitude l'approche par prompting de Claude (Li et al., 2026) qu'il prétend remplacer pour des raisons de coût. Le bénéfice annoncé est l'efficience, pas la qualité prouvée à parité de tâche.</p>
+
+<p>Un second point fragilise l'attribution causale des gains. GrepSeek génère des trajectoires de raisonnement bien plus longues et dispose de 6 tours. La comparaison contrôle le backbone et les réglages, mais pas le budget de calcul au moment du test. Une partie de l'avantage sur le multi-hop pourrait provenir de ce surplus de raisonnement plutôt que du mécanisme DCI lui-même. L'article ne neutralise pas ce facteur.</p>
+
+<p>Le moteur d'exécution optimise la composante qui pèse le moins. Le 7,6× s'applique à un retrieval déjà sous la seconde, tandis que le goulot réel — le décodage de longues traces — reste entier et place GrepSeek devant un désavantage de latence end-to-end. L'optimisation système est solide sur le plan correctness, mais elle attaque le mauvais bout du budget temps.</p>
+
+<p>Les mesures d'efficience reposent sur 350 exemples (50 par jeu), et le 7,6× correspond à une configuration matérielle unique. Les études de cas comparant GrepSeek à la meilleure baseline dense sont anecdotiques et choisies pour illustrer le propos. Enfin, le F1 token-level comme métrique principale reste un proxy faible de l'exactitude factuelle : aucun jugement humain ni LLM-as-judge ne valide la qualité des réponses finales. La dépendance à un Tutor/Planner trois fois plus gros signale par ailleurs une distillation depuis un modèle plus capable, dont dépend la qualité du démarrage à froid.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>C'est le point fort du travail. Code, données d'entraînement et checkpoints sont annoncés publics sur GitHub. Les jeux proviennent du dépôt FlashRAG, le corpus du dump wiki-18 public. Les annexes détaillent les hyperparamètres des phases SFT, GRPO et inférence (Tables 5 à 7), l'ensemble des prompts des rôles Tutor, Planner et juges (Figures 6 à 19), et les deux algorithmes — génération de trajectoires et recherche sharded-parallèle.</p>
+
+<p>Les modèles Qwen3.5-9B et 27B sont publics, ce qui rend la chaîne entièrement rejouable sur du matériel à poids ouverts, à la différence des approches DCI fondées sur Claude. Deux réserves : la dépendance à des modèles Qwen très récents (sortie février 2026, cohérente avec le dépôt mai 2026 du preprint) et le statut non revu par les pairs. La configuration matérielle de référence — un A100 80 Go, 32 cœurs CPU, 32 Go de RAM système — est explicitement documentée.</p>
+
+<h2>Impact et applications</h2>
+
+<p>La portée pratique est réelle. Supprimer l'indexation hors-ligne et diviser la mémoire par cinq à quinze rend le DCI attractif pour des corpus volumineux ou fréquemment mis à jour, où recalculer un index dense coûte cher. Le moteur fonctionne aussi sur un corpus résidant sur disque, avec des sorties identiques, ce qui ouvre le déploiement à des configurations contraintes. Pour les besoins exigeant un matching exact d'entités, des motifs symboliques ou un suivi de bridge entities, l'approche est précise et interprétable, qualités que les embeddings denses peinent à offrir.</p>
+
+<p>Les frontières sont tout aussi claires. La fragilité aux variations de surface et l'absence de classement sémantique disqualifient le DCI lexical pur sur les requêtes à faible recouvrement lexical ou à formulation ambiguë. Les auteurs proposent eux-mêmes la voie raisonnable : une architecture hybride combinant interaction directe et retrieval à index, enrichie de primitives de matching flou. GrepSeek se présente comme un complément aux retrievers denses, pas comme leur remplacement.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Le travail prolonge la lignée des agents de recherche multi-tours — IRCoT (Trivedi et al., 2023) entrelaçant chaîne de pensée et retrieval, Search-O1 (Li et al., 2025), Search-R1 (Jin et al., 2025) optimisé par RL, et CoSearch (Zeng et al., 2026) qui co-entraîne raisonnement et ranking. La distinction tient au composant optimisé : au lieu d'apprendre à mieux solliciter un retriever fixe, GrepSeek apprend à interagir directement avec le corpus par des opérations shell déterministes.</p>
+
+<p>Sur le DCI lui-même, l'article reconnaît honnêtement deux contributions contemporaines et indépendantes (Sen et al., 2026 ; Li et al., 2026) ainsi que Subramanian et al. (2025), et se rattache aux travaux systèmes de recherche efficace sur texte compressé (Succinct, Swift). La filiation avec la recherche de code est revendiquée via GrepRAG (Wang et al., 2026). La nouveauté de GrepSeek n'est donc pas le principe DCI mais sa traduction en capacité apprise d'un modèle compact, via un pipeline de données anti-fuite et un moteur d'exécution vérifiable. Les auteurs laissent à de futurs travaux l'évaluation sur des benchmarks de deep research plus larges (BrowseComp, Total Recall QA) et le long-form, ce qui borne honnêtement la généralité des conclusions actuelles.</p>
+
+<h2>Tableau récapitulatif de robustesse</h2>
+
+<table>
+<thead>
+<tr><th>Critère</th><th>Score (/5)</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td class="score-4">4</td><td>Problème clair et bien motivé — rendre le DCI praticable via un modèle compact — mais le principe est partagé avec deux travaux concomitants reconnus</td></tr>
+<tr><td>Design expérimental</td><td class="score-4">4</td><td>Sept benchmarks, split out-of-distribution, multiples retrievers, baseline RL forte, ablations et études de scaling ; manque la comparaison directe aux agents DCI contemporains</td></tr>
+<tr><td>Taille d'échantillon</td><td class="score-5">5</td><td>51 713 requêtes d'évaluation, 169 615 exemples d'entraînement, tests de significativité avec correction de Bonferroni sur les ablations</td></tr>
+<tr><td>Qualité des métriques</td><td class="score-4">4</td><td>F1 token-level et EM standards et adaptés ; le F1 reste un proxy faible de l'exactitude factuelle, sans jugement humain ni LLM des réponses finales</td></tr>
+<tr><td>Contrôle des biais</td><td class="score-4">4</td><td>Backbone et réglages identiques pour toutes les baselines, pipeline anti-fuite soigné ; budget de raisonnement au test non neutralisé, Tutor/Planner trois fois plus gros que l'agent</td></tr>
+<tr><td>Reproductibilité</td><td class="score-5">5</td><td>Code, données et checkpoints publiés, prompts et algorithmes complets en annexe, jeux et corpus publics, backbone à poids ouverts</td></tr>
+<tr><td>Transparence / Limitations</td><td class="score-5">5</td><td>Dégradation significative sur PopQA, désavantage de latence et fragilité lexicale rapportés sans euphémisme ; travaux contemporains explicitement crédités</td></tr>
+<tr><td>Impact / Nouveauté</td><td class="score-4">4</td><td>Contributions pratiques réelles (suppression de l'indexation, mémoire réduite, moteur vérifiable) mais nouveauté conceptuelle diluée dans un espace contemporain encombré</td></tr>
+</tbody>
+</table>
+
+<p><strong>Note globale de robustesse : 4,4 / 5</strong> — Travail empirique solide, méthodologiquement propre et exemplaire en reproductibilité. La force tient à l'ampleur de l'évaluation, à la rigueur du pipeline anti-fuite et à l'honnêteté sur les échecs lexicaux. Deux réserves tempèrent l'enthousiasme : l'absence de comparaison directe avec les agents DCI contemporains qu'il prétend rendre obsolètes par le coût, et un possible confondant de budget de raisonnement au moment du test qui complique l'attribution des gains au seul mécanisme d'interaction directe.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

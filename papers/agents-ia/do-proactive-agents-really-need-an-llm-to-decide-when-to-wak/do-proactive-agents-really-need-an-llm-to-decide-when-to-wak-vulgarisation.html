@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Do Proactive Agents Really Need an LLM to Decide When to Wake and What to Anchor? — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Do Proactive Agents Really Need an LLM to Decide When to Wake and What to Anchor?</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Un portier qui coûte le prix d'un avocat</h2>
+
+<p>Une démo d'assistant proactif récente tente de proposer une nouvelle suggestion toutes les 15 secondes. Cela fait 240 décisions par heure, soit près de 6 000 par jour. Chacune de ces décisions paie le coût complet d'un grand modèle de langage — même quand la réponse est « non, n'interromps pas l'utilisateur ». Le composant censé veiller discrètement en arrière-plan devient ainsi la pièce la plus gourmande de tout le système.</p>
+
+<p>Les assistants proactifs, ces logiciels qui interviennent sans qu'on les sollicite (« veux-tu un résumé de ce document ? », « j'ai trouvé la fonction que tu cherchais »), reposent presque tous sur la même mécanique : ils lisent votre activité comme un texte et interrogent un LLM à chaque événement. Une équipe de Purdue, Microsoft, Michigan State et Georgia Tech vient de poser une question dérangeante dans un article au titre frontal : faut-il vraiment un LLM pour décider <em>quand</em> se réveiller et <em>sur quoi</em> s'appuyer ? Leur réponse, étayée par des mesures sur quatorze modèles différents, est non.</p>
+
+<h2>Deux décisions avant la moindre action</h2>
+
+<p>Exécuter une tâche n'est pas le problème difficile d'un assistant proactif. Le vrai défi se situe en amont, dans deux décisions qui précèdent toute intervention. La première : faut-il interrompre l'utilisateur maintenant ? La seconde : si oui, sur quel élément précis ancrer la suggestion ? Ces deux questions sont identifiées comme centrales depuis les premiers travaux sur les agents contextuels, il y a vingt ans.</p>
+
+<p>Les systèmes actuels répondent à ces deux questions avec des composants taillés comme des modèles de langage, et cela crée deux ennuis bien concrets.</p>
+
+<p>Le premier est le coût. Un détecteur de déclenchement qui tourne en continu sur chaque événement devient ruineux s'il est lui-même un gros modèle. La latence du LLM se place directement sur le chemin critique : l'utilisateur attend, le serveur chauffe, la facture grimpe, et tout cela pour des milliers de décisions dont l'écrasante majorité aboutit à « ne rien faire ».</p>
+
+<p>Le second ennui touche la pertinence. Quand le système finit par se déclencher, sa suggestion rate souvent l'objet exact sur lequel l'utilisateur travaille. Sur une session chargée, l'agent se rabat sur le thème général ou sur l'application ouverte plutôt que de nommer le fichier précis en cours d'édition. La raison est structurelle : le module qui décide « quand » et celui qui décide « sur quoi » sont deux étapes séparées, si bien que le signal de réveil et les indices censés le justifier peuvent ne pas être d'accord.</p>
+
+<h2>Le texte n'était qu'un emballage</h2>
+
+<p>Les deux problèmes partagent une racine commune, et c'est l'observation la plus élégante de l'article. Le signal sur lequel ces composants travaillent n'est pas nativement du texte.</p>
+
+<p>Quand vous cliquez sur un fichier, changez d'application ou tapez une requête, le système d'exploitation enregistre un événement structuré : un acteur, un verbe, un objet, un horodatage. Il sait déjà, sous une forme propre et exploitable, que « l'utilisateur a ouvert <code>email_filter.py</code> dans Visual Studio Code ». Les benchmarks publics prennent ensuite cette structure et la rendent sous forme de phrase, parce que c'est leur format de stockage. Puis le LLM reçoit cette phrase et doit la ré-analyser pour en ré-extraire… le nom du fichier et l'application. On lui demande de reconstruire une information que le système possédait déjà parfaitement.</p>
+
+<blockquote>La structure, c'est la donnée ; le texte n'en est qu'une sérialisation. Demander à un LLM de retrouver la structure à partir du texte est un aller-retour que le système n'avait jamais besoin de faire.</blockquote>
+
+<p>L'image qui vient à l'esprit est celle d'un tableur qu'on imprimerait sur papier pour ensuite le scanner et le redactylographier, en espérant retrouver les colonnes d'origine. Le format natif de l'activité utilisateur n'est ni une ligne de tableau ni une suite de mots : c'est un graphe temporel. Les mêmes entités reviennent au fil du temps — le même fichier édité à l'instant 3 puis à l'instant 17 — et chaque événement touche plusieurs entités à la fois. Aplatir tout cela en texte détruit ces liens.</p>
+
+<h2>Un petit modèle de graphe à la place du LLM</h2>
+
+<p>Les chercheurs construisent donc un graphe temporel à partir de l'activité. Les nœuds sont les événements eux-mêmes et les entités que l'utilisateur manipule : fichiers, applications, URLs, requêtes de recherche. Des arêtes relient chaque événement aux entités qu'il touche, et des arêtes temporelles relient les événements consécutifs dans le sens chronologique. Le tout est bâti par des règles déterministes, sans aucune intelligence artificielle — puisque l'information était déjà structurée, il suffit de la lire.</p>
+
+<p>Sur ce graphe, ils branchent un petit modèle de <strong>temporal graph learning</strong> (apprentissage sur graphes temporels), qui sert d'encodeur. Et voici l'astuce : une seule passe de calcul produit les deux décisions d'un coup. Une « tête de déclenchement » posée sur les nœuds-événements estime la probabilité qu'il faille réveiller l'assistant. Une « tête de routage » posée sur les nœuds-entités attribue à chaque fichier, chaque URL, un score de pertinence. Les deux têtes partagent le même corps de modèle, lisent le même état caché et sont entraînées ensemble.</p>
+
+<p>C'est là que le découplage des systèmes classiques disparaît. Le signal « réveille-toi » et l'indice « voici le fichier concerné » ne proviennent plus de deux modules qui pourraient se contredire, mais d'une même représentation interne. Le grand modèle de langage n'intervient qu'au bout de la chaîne, et uniquement quand la tête de déclenchement dépasse son seuil. Son rôle se réduit à ce qu'il fait le mieux : transformer une petite poignée d'entités structurées en une phrase fluide adressée à l'utilisateur.</p>
+
+<p>La répartition des tâches ressemble à celle d'une boîte de nuit. Inutile de poster un avocat surdiplômé à la porte pour filtrer les entrées : un portier rapide suffit pour la décision binaire. On réserve l'expertise coûteuse à ceux qui ont franchi le seuil. Le petit modèle de graphe joue le portier ; le LLM ne se déclenche que pour les rares moments qui méritent une vraie réponse.</p>
+
+<h2>Plus juste, plus rapide, et plus léger</h2>
+
+<p>Les chiffres sont nets. Sur le benchmark ProactiveAgent, brancher ce modèle de graphe améliore le score F1 de chacun des quatorze modèles de langage testés, sans exception. Le gain moyen atteint 16,7 points, avec des pointes à 46 points pour les modèles ouverts les plus petits. Aucun modèle ne régresse.</p>
+
+<p>Le détail révèle pourquoi. Sans aide, certains modèles déclenchent à tout-va — un modèle accepte 99 % des événements pour seulement 15 % de précision — tandis que d'autres restent trop muets. Le modèle de graphe absorbe les excès des premiers en les faisant s'abstenir quand le seuil n'est pas franchi, et donne aux seconds un point d'ancrage concret qui les pousse à agir. Un seul jeu de poids, un seul seuil, sans réglage spécifique à chaque modèle, aligne les quatorze sur un rappel supérieur à 96 %.</p>
+
+<p>Plus frappant encore : cette approche bat le fine-tuning. Adapter un modèle de bout en bout sur les données proactives — la méthode lourde et coûteuse — fait passer Qwen2-7B de 60,7 à 66,5 de F1. Le brancher au petit modèle de graphe, sans toucher à ses poids, le porte à 70,7. Un module de graphe d'appoint dépasse l'adaptation paramétrique du modèle lui-même.</p>
+
+<p>Côté vitesse, le déclencheur de graphe traite un événement en 11 ms sur serveur GPU et 14 ms sur un ordinateur portable grand public. Les versions LLM-as-trigger testées vont de 40 ms à plus d'une seconde — soit 4 à 83 fois plus lent selon la configuration. Et augmenter la taille du LLM n'aide pas : passer de 0,6 à 8 milliards de paramètres ne fait pas bouger la qualité de détection. Quant à la recette qui génère une tâche complète à chaque événement avant de décider, elle réclame près de 4 secondes par événement et sa détection devient indistinguable du tirage au sort.</p>
+
+<p>L'empreinte mémoire raconte la même histoire. Le modèle de graphe tient dans environ 220 Mo. Un déclencheur LLM de 8 milliards de paramètres réclame à lui seul environ 16 Go de mémoire vidéo, soit 75 fois plus. Sur le rythme de la démo publique, le coût annuel tombe d'une vingtaine de GPU-heures par appareil à environ six heures et demie.</p>
+
+<h2>Un déclencheur calibré, et qui reste à la maison</h2>
+
+<p>Un résultat plus discret mérite l'attention des praticiens : la calibration. Les scores des déclencheurs à base de LLM s'effondrent aux extrêmes — 94 à 98 % des événements reçoivent une probabilité collée à 0 ou à 1. Impossible, dans ces conditions, de choisir un seuil de décision fiable, car la moindre variation fait tout basculer. Le modèle de graphe, lui, produit une distribution continue centrée autour du seuil. La conséquence pratique se mesure : la dispersion du seuil optimal d'un modèle à l'autre n'est que de 0,035 pour le graphe, contre des valeurs trois à dix fois supérieures pour les autres familles. Un seul seuil déployé fonctionne pour tout le monde, ce qui évite une fastidieuse étape de recalibration à chaque changement de modèle aval.</p>
+
+<p>L'argument de la confidentialité ferme le dossier. Un journal d'activité contient ce qu'il y a de plus intime dans l'usage d'une machine : noms de fichiers, URLs visitées, requêtes tapées. Faire transiter ce flux par un gros modèle distant pose un problème évident. Un modèle de graphe à 220 Mo tient entièrement sur l'appareil, à côté du flux sensible qu'il consomme, sans jamais le faire sortir. Sur la même classe de matériel, faire cohabiter un déclencheur LLM de 8 milliards de paramètres avec un agent aval de 7 milliards sature déjà une carte professionnelle — et ne laisse aucune marge à un portable qui doit aussi faire tourner les applications de tous les jours.</p>
+
+<h2>Ce que l'étude ne tranche pas encore</h2>
+
+<p>Les auteurs restent prudents sur la portée de leur évaluation. Tous les scores reposent sur un juge automatique entraîné à noter les suggestions proactives, qui s'accorde à plus de 90 % avec des annotations humaines. Mais l'expérience subjective d'un vrai utilisateur — l'interruption tombe-t-elle au bon moment, la suggestion est-elle réellement utile dans le feu de l'action — n'a pas été mesurée. C'est une limite honnête : un bon score sur un benchmark ne garantit pas une bonne sensation au quotidien.</p>
+
+<p>La question de l'équité reste également ouverte. Sur le volet mobile, le système peut s'appuyer sur des données démographiques (genre, âge, profession, lieu). Les auteurs précisent qu'une analyse des biais entre sous-groupes serait nécessaire avant d'utiliser ces attributs comme indices de routage dans un produit réel. À cela s'ajoutent les garde-fous habituels : minimisation des données, filtrage des entités sensibles, options de retrait, politiques de rétention.</p>
+
+<p>Au-delà du cas particulier, l'article propose un principe de conception qui dépasse les assistants proactifs. Le transfert du même encodeur de graphe vers un benchmark mobile, où il dépasse là aussi les versions fine-tunées, suggère que l'idée n'est pas un coup de chance lié à un jeu de données. La leçon tient en une phrase : garder un petit modèle temporel toujours allumé, et réserver le raisonnement complet du LLM aux instants qui survivent à son filtre.</p>
+
+<p>Cette logique de séparation entre une couche de contrôle légère, permanente et bon marché, et une couche de raisonnement coûteuse mais rare, vaut bien au-delà du desktop. Chaque fois qu'un système doit décider en continu s'il faut convoquer un grand modèle, la même question se pose : la donnée est-elle vraiment du texte, ou en a-t-elle seulement pris l'apparence le temps d'être stockée ? Quand la réponse est la seconde, un petit modèle spécialisé fait souvent le travail mieux, plus vite et pour bien moins cher.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Under the Hood of SKILL.md: Semantic Supply-chain Attacks on AI Agent Skill Registry — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Under the Hood of SKILL.md: Semantic Supply-chain Attacks on AI Agent Skill Registry</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Introduction</h2>
+<p>En quelques semaines, une campagne baptisée ClawHavoc a déposé 1 184 skills malveillants sur ClawHub, le dépôt de compétences de l'assistant OpenClaw. D'autres skills piégés ont servi à diffuser Atomic macOS Stealer, un voleur d'identifiants. Ces incidents ne relèvent pas de la science-fiction : ils décrivent la nouvelle surface d'attaque des agents IA autonomes.</p>
+
+<p>Un agent moderne ne se contente plus de répondre à des questions. Il lit du code, modifie des fichiers, lance des outils et interroge des ressources externes. Pour étendre ses capacités, il télécharge des « Agent Skills » : de petits paquets de fichiers regroupant instructions, scripts et références réutilisables. Chaque paquet repose sur un fichier nommé SKILL.md, qui décrit en langage naturel à quel moment et comment l'agent doit s'en servir.</p>
+
+<p>Une étude de l'Université du Maryland, signée Shoumik Saha, Kazem Faghih et Soheil Feizi, montre que ce fichier descriptif est tout sauf anodin. Trois mots bien choisis y suffisent à tromper le moteur qui classe les skills, à orienter le choix de l'agent vers une compétence piégée, ou à faire passer une instruction malveillante sous le radar des scanners. La thèse des chercheurs tient en une phrase : <strong>SKILL.md n'est pas de la documentation passive, c'est du texte opérationnel</strong> qui décide quelles capacités tierces un agent trouve, croit et utilise.</p>
+
+<h2>Un texte que la machine prend au mot</h2>
+<p>Les skills ressemblent aux paquets logiciels que distribuent npm ou PyPI. Comme eux, ils peuvent embarquer du code malveillant ou des étapes d'installation douteuses. Mais ils ajoutent une couche que les paquets traditionnels n'ont jamais eue : des instructions en langage naturel que l'agent lit, croit, et exécute.</p>
+
+<p>Le marché a explosé. Un travail récent recense plus de 98 000 skills publiés en trois mois, et les principaux dépôts — ClawHub, Skills.sh, LobeHub — en hébergent de quelques dizaines de milliers à près de 288 000. Le terrain est déjà miné : un audit de Snyk relève des problèmes critiques dans 13,4 % des skills examinés, une autre étude empirique trouve des vulnérabilités dans 26,1 % des cas, certains rapports montant jusqu'à 47 %.</p>
+
+<p>La recherche existante s'était surtout penchée sur l'aval — ce que fait un agent une fois le skill chargé en mémoire. On savait déjà qu'un fichier piégé pouvait pousser l'agent à des comportements dangereux, et on savait détecter certaines soumissions malveillantes. Restait un angle mort : tout ce qui se passe avant l'exécution. Comment un skill malveillant est-il admis dans le dépôt, comment remonte-t-il dans les résultats de recherche, comment l'agent finit-il par le choisir ?</p>
+
+<p>Ces étapes forment ce que les auteurs appellent le cycle de vie côté dépôt. Ils le découpent en trois moments : la découverte (le dépôt classe les skills pour une requête), la sélection (l'agent choisit parmi les candidats) et la gouvernance (le dépôt vérifie les skills avant publication). À chaque étape, une décision repose en partie sur du texte. Et tout texte se manipule. Le dépôt de skills n'est plus un détail d'infrastructure : il fait partie de la frontière de sécurité de l'agent.</p>
+
+<h2>Modifier le texte, rien que le texte</h2>
+<p>La contrainte que s'imposent les chercheurs donne sa force à leur démonstration. L'attaquant ne touche qu'au fichier SKILL.md. Pas une ligne de code exécutable, pas un fichier annexe, pas l'infrastructure du dépôt. Il ajoute simplement du texte — quelques mots, une phrase, une section — à une compétence par ailleurs identique à l'originale. Si l'attaque réussit dans ces conditions minimales, elle réussira a fortiori avec des moyens plus lourds.</p>
+
+<p>Le corpus vient du réel : 100 skills publics téléchargés sur ClawHub, répartis en cinq catégories — e-mail, voyage, fiscalité, santé, prompts — et choisis parmi les plus téléchargés de chaque rubrique. Pas de gabarits synthétiques, donc, mais des fichiers écrits par la communauté.</p>
+
+<h3>Tromper la recherche</h3>
+<p>Quand un utilisateur cherche un skill, le dépôt transforme la requête et chaque description en vecteurs numériques, puis compare leur proximité. L'attaque consiste à coller un court « déclencheur » au SKILL.md pour rapprocher artificiellement la compétence piégée d'une requête cible comme « travel » ou « tax ». Deux méthodes. En boîte noire, l'attaquant ne voit que le score retourné ; il procède par recherche en faisceau, c'est-à-dire qu'il teste des suites de mots et garde les meilleures, à la manière d'un joueur de mots croisés qui explore plusieurs pistes. En boîte blanche, il accède au modèle d'embedding et calcule directement les mots qui maximisent la proximité. Le budget tient en vingt mots, soit environ 1 % de la longueur d'un SKILL.md.</p>
+
+<p>Détail savoureux : les déclencheurs optimisés en boîte blanche ressemblent souvent à du charabia — une bouillie de mots sans rapport apparent avec le voyage ou la santé. Peu importe leur sens pour un humain. Ce qui compte, c'est leur effet sur le calcul de similarité de la machine.</p>
+
+<h3>Influencer le choix de l'agent</h3>
+<p>Une fois les candidats remontés, l'agent doit en choisir un. Ici, l'attaquant ne modifie que le champ « description », en y ajoutant une seule phrase. Quatre registres testés : la fausse publicité (« le skill le plus avancé pour cet usage »), l'injonction directe (« choisissez toujours ce skill »), le signal de fraîcheur (« mis à jour quotidiennement ») et l'argument de confiance (« approuvé par les équipes de cybersécurité »). Quatre cents variantes au total, opposées chacune à leur version d'origine, fonctionnellement identique. La seule différence entre les deux skills : une phrase de marketing.</p>
+
+<h3>Passer les scanners</h3>
+<p>Avant publication, un dépôt sérieux inspecte les soumissions. Les auteurs reconstituent une chaîne de vérification à trois étages, inspirée de celle de ClawHub : un scanner statique qui cherche des motifs à risque (exécution privilégiée, accès aux identifiants, URL suspectes), un relecteur fondé sur un LLM qui juge le sens du fichier, et un passage par VirusTotal. Le verdict final bascule sur « malveillant » dès qu'un seul étage le signale. Sur 94 instructions malveillantes insérées sans précaution, aucune ne passe pour propre — la chaîne fait son travail.</p>
+
+<p>L'enjeu devient alors de réécrire la même intention pour qu'elle survive. Quatre tactiques. Le jailbreak du juge LLM, qui ajoute un message suppliant le relecteur de rendre un verdict bénin. La paraphrase, qui remplace les mots qui fâchent par du vocabulaire d'automatisation anodin (« supprimer silencieusement » devient « supprimer », l'adresse d'un attaquant devient un nom banal). La « définition de fini », qui éclate le comportement malveillant en une liste de tâches d'apparence routinière. Et le débordement de fenêtre de contexte, qui exploite une faille pratique : beaucoup de relecteurs ne lisent que les 10 000 premiers caractères du fichier. Il suffit de placer l'instruction malveillante au-delà.</p>
+
+<h2>Des chiffres qui font mal</h2>
+<p>À l'étape de découverte, les déclencheurs courts améliorent presque toujours le score de la version piégée. Contre le modèle text-embedding-3-small d'OpenAI, l'attaque en boîte noire gagne dans 86,14 % des duels, avec un gain de score moyen de 16,4 %. Surtout, ce gain se traduit en visibilité réelle : la compétence piégée se hisse dans le Top-3 dans 56 % des cas, le Top-5 dans 65 %, le Top-10 dans 80 %. Les déclencheurs entraînés sur les modèles ouverts BAAI se transfèrent bien vers OpenAI (79-80 % de victoires), mais l'inverse marche mal — la transférabilité est asymétrique.</p>
+
+<p>Reste l'objection évidente : en conditions réelles, le classement ne dépend pas que de la similarité, il intègre aussi la popularité. Les chercheurs reconstituent la formule de ClawHub, qui mélange pertinence lexicale, pertinence vectorielle et logarithme du nombre de téléchargements. Même handicapée par ce facteur de popularité, la version piégée l'emporte dans 74,14 % des cas pour un attaquant doté d'un nombre moyen de téléchargements (579). Pour un skill flambant neuf, sans aucun téléchargement, elle gagne 94 % des duels à son lancement, et encore 40 % une heure plus tard. Le démarrage à froid, censé protéger les nouveaux venus, ne protège pas grand-chose.</p>
+
+<p>À l'étape de sélection, le verdict est net. Sur quatre modèles — GPT-4.1-mini, GPT-5, Gemma-4-31B et Qwen3-235B — l'agent préfère la variante piégée dans 77,6 % des duels en moyenne, là où le hasard donnerait 50 %. Les deux plus gros modèles, Gemma et Qwen, dépassent 80 %. La fausse publicité et l'injonction directe pèsent le plus lourd, mais même les arguments doux — fiabilité, fraîcheur — déplacent le choix. L'agent ne traite donc pas deux skills équivalents de façon neutre. Une formulation plus flatteuse suffit à emporter sa décision, alors même que les deux compétences font rigoureusement la même chose.</p>
+
+<p>À l'étape de gouvernance, tout dépend de la tactique. Le jailbreak du juge LLM déçoit l'attaquant : 63,5 % des variantes restent étiquetées malveillantes, signe que le relecteur résiste aux tentatives frontales de le manipuler. La paraphrase fait bien plus de dégâts : 73,9 % des variantes échappent au verdict malveillant. La définition de fini en laisse passer une bonne part, avec 23,9 % jugées propres. Mais le coup de grâce vient du débordement de fenêtre : quand l'instruction malveillante est cachée au-delà de la zone lue par le relecteur, <strong>87,1 % des variantes sont jugées propres et aucune n'est classée malveillante</strong>. Le scanner n'a tout simplement pas regardé au bon endroit.</p>
+
+<p>Un point d'application aggrave le tableau. Beaucoup de dépôts ne bloquent que le verdict « malveillant » et laissent les skills « suspects » accessibles avec un simple avertissement. Sous cette politique, près de 32 % des instructions malveillantes insérées sans la moindre ruse passeraient déjà. Les tactiques d'évasion ne font qu'élargir cette brèche.</p>
+
+<h2>Ce que ça change pour qui déploie des agents</h2>
+<p>Le modèle de confiance des dépôts de skills calque celui des magasins d'applications : on suppose qu'un bon classement, une description engageante et un badge « vérifié » reflètent la qualité. Ce travail montre que ces trois signaux se fabriquent avec du texte, sans toucher au code. Pour une entreprise qui laisse ses agents piocher des skills dans un dépôt public, la conséquence est directe : la compétence la mieux classée et la plus persuasive n'est pas forcément la plus sûre, ni même la plus compétente.</p>
+
+<p>Le danger croît quand les attaques se composent. Rien n'empêche un même skill de franchir d'abord la gouvernance grâce au débordement de contexte, de remonter ensuite dans la recherche grâce à un déclencheur, puis d'être choisi grâce à une phrase flatteuse. Chaque étape a son taux de réussite ; enchaînées, elles dessinent un chemin complet, de l'attaquant jusqu'à l'exécution.</p>
+
+<p>Les pistes de défense suivent les failles. Traiter la documentation d'un skill comme une entrée sensible, au même titre qu'une saisie utilisateur non fiable. Lire le fichier en entier, ou par morceaux, plutôt que ses 10 000 premiers caractères. Durcir le traitement des verdicts « suspects » au lieu de les laisser filer. Fonder la sélection sur des preuves de capacité plutôt que sur le ton de la description. Et appliquer le moindre privilège à l'exécution, pour qu'un skill compromis ne puisse pas exfiltrer d'identifiants même s'il a tout réussi en amont.</p>
+
+<p>Les auteurs plaident aussi pour la transparence. Un dépôt devrait pouvoir expliquer pourquoi un skill a été classé, choisi ou approuvé. Sans ce journal de bord, ni l'utilisateur ni l'agent en aval ne peuvent repérer une anomalie.</p>
+
+<h2>Les questions qui restent ouvertes</h2>
+<p>L'étude se limite volontairement aux attaques par SKILL.md seul. C'est sa rigueur autant que sa limite : les attaques qui modifient le code exécutable, les dépendances ou le comportement à l'exécution restent hors champ, et elles ne disparaîtront pas. La chaîne de gouvernance testée s'inspire de ClawHub mais tourne en local ; un dépôt de production avec d'autres politiques pourrait réagir différemment. Et le corpus, cent skills sur cinq catégories, ne couvre pas toute la diversité des dépôts existants.</p>
+
+<p>Une observation dépasse le cadre sécuritaire. Si un agent préfère un skill parce que sa description se dit « la plus avancée » ou « approuvée par des experts », c'est que son jugement se laisse guider par le registre marketing plutôt que par la capacité réelle. Le problème n'est pas seulement celui d'un dépôt à protéger ; c'est celui d'agents qui prennent les mots pour des faits. Les futurs systèmes devront apprendre à évaluer une compétence sur pièces, pas sur sa plaquette commerciale.</p>
+
+<p>Les chercheurs esquissent un modèle de gouvernance hybride : des politiques centralisées (scan, paliers de confiance, révocation) complétées par des audits décentralisés, des journaux de transparence, du signalement communautaire et des attestations signées. Le code et le jeu de données seront publiés, donnant aux défenseurs une base commune pour mesurer le risque et éprouver leurs parades sur ce terrain encore neuf.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neural Weight Norm = Kolmogorov Complexity — Vulgarisation</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Neural Weight Norm = Kolmogorov Complexity</h1>
+    <p class="doc-type">Vulgarisation</p>
+  </div>
+  <div class="companion-content">
+    <h2>Une ligne de code que personne ne sait vraiment expliquer</h2>
+
+<p>Le weight decay tient en une ligne. Dans presque tous les entraînements de réseaux de neurones, on ajoute une petite pénalité qui décourage les poids de grossir. L'astuce date de 1991, signée Krogh et Hertz. Trente-cinq ans plus tard, elle reste le réglage le plus universel du deep learning, et son fonctionnement profond échappe encore à la théorie.</p>
+
+<p>L'effet pratique, lui, est bien documenté. Retirez le weight decay et la performance sur les données de test se dégrade de façon fiable. Gardez-le et le réseau généralise bien au-delà de ce que prédisent les théories classiques. Entre ces deux observations, un trou : <em>pourquoi</em> cette pénalité aide-t-elle un modèle à mieux se comporter sur des données qu'il n'a jamais vues ?</p>
+
+<p>Tiberiu Musat, chercheur à l'ETH Zürich, propose une réponse qui relie le deep learning à un coin reculé de l'informatique théorique. Il démontre que la plus petite norme de poids d'un réseau capable de produire une sortie donnée est égale à la <strong>complexité de Kolmogorov</strong> de cette sortie — la mesure la plus pure de « simplicité » qui existe. Le weight decay ne serait pas un bricolage empirique. Ce serait une approximation calculable du rasoir d'Occam le plus puissant qu'on connaisse.</p>
+
+<h2>Pourquoi la théorie classique cale</h2>
+
+<p>La théorie de l'apprentissage du XXᵉ siècle raisonne en termes de <em>capacité</em>. Elle mesure la richesse d'une famille de fonctions — sa dimension de Vapnik-Chervonenkis, sa complexité de Rademacher — et en déduit combien d'exemples il faut pour apprendre sans surapprendre. Cette approche a un angle mort fatal pour notre question : elle ne voit aucune différence entre un réseau entraîné avec weight decay et un réseau entraîné sans.</p>
+
+<p>La raison est simple. Ajouter une pénalité sur les poids ne change pas l'ensemble des fonctions que l'architecture peut représenter. La classe reste la même, donc ses mesures de capacité aussi. Pire : un résultat marquant de 2017 (Zhang et collègues) a montré que les architectures qui généralisent sur des données réelles peuvent aussi mémoriser parfaitement des étiquettes tirées au hasard. La taille de la famille de fonctions n'explique donc rien du tout sur ce qui généralise.</p>
+
+<p>Il faut un autre principe. Celui de la <strong>longueur de description</strong> : entre deux hypothèses qui collent aux données, préférer celle qui se décrit le plus brièvement. Sa version la plus radicale est la complexité de Kolmogorov d'une chaîne — la longueur du plus court programme qui, exécuté sur une machine universelle, recrache exactement cette chaîne. Une suite comme « ab » répétée mille fois se résume en une instruction courte. Une suite de mille bits vraiment aléatoires ne se décrit pas plus brièvement qu'en l'écrivant en entier.</p>
+
+<p>À partir de cette mesure, on construit le <strong>prior universel de Solomonoff</strong> : la façon de parier optimale sur la prochaine observation, qui donne plus de poids aux explications courtes. C'est le rasoir d'Occam transformé en distribution de probabilité, et il bat asymptotiquement tout prédicteur calculable. Le hic est connu depuis soixante ans : ce prior est incalculable. Il est resté un idéal qu'on admire sans pouvoir l'utiliser.</p>
+
+<h2>Relier des poids à la longueur d'un programme</h2>
+
+<p>Le tour de force du papier consiste à faire le pont entre deux mondes qui n'ont rien à voir : une quantité numérique continue, la norme des poids, et une quantité combinatoire, la longueur d'un programme. Trois ingrédients rendent ce pont possible.</p>
+
+<p>Le premier est le choix du modèle. Musat travaille avec des réseaux <strong>bouclés</strong> : un unique bloc de calcul que l'on répète, encore et encore, jusqu'à ce qu'un canal de sortie signale « stop ». C'est moins exotique qu'il n'y paraît — les Universal Transformers, les deep equilibrium models et le chain-of-thought relèvent tous de cette idée. Un tel réseau se comporte comme un petit processeur qui exécute un programme inscrit dans ses poids, et il est Turing-complet : il peut calculer tout ce qui est calculable.</p>
+
+<p>Le deuxième ingrédient est la <strong>précision fixe</strong>, et c'est lui qui porte tout l'argument. Sur du vrai matériel, chaque poids est codé sur un nombre fixe de bits — fp16, bf16, int8, int4. Chaque poids transporte donc une quantité d'information bornée. Cette contrainte paraît anodine ; elle est en réalité essentielle. Avec des poids à précision infinie, un seul nombre réel peut dissimuler une infinité d'information dans ses décimales. On peut alors construire des réseaux de norme finie qui décident des problèmes non calculables : la norme perd tout lien avec la complexité. Même les poids rationnels ne sauvent rien, car une fraction peut cacher autant de bits qu'on veut dans son numérateur. Seule la précision fixe verrouille ensemble la magnitude d'un poids et sa longueur de description.</p>
+
+<p>Le troisième ingrédient, ce sont deux traductions qui referment le sandwich. D'un côté, n'importe quel programme peut être <em>câblé</em> directement dans les poids : un bit de programme coûte un poids. Un réseau peut donc être aussi compact que le plus court programme produisant la sortie voulue. De l'autre, n'importe quel réseau peut être décrit en listant ses poids non nuls, chacun accompagné de son adresse — où il se trouve dans l'architecture. C'est ce coût d'adressage qui introduit le fameux facteur logarithmique.</p>
+
+<p>Un dernier effet rend le résultat indifférent au choix de la norme. En précision fixe, toutes les normes — L1, L2 au carré, n'importe quelle Lp — finissent par mesurer la même chose : le simple décompte des poids non nuls. Que vous régularisiez avec l'une ou l'autre, vous contrôlez la même quantité sous-jacente.</p>
+
+<h2>Un encadrement à un facteur logarithmique près</h2>
+
+<p>Le théorème central prend la forme d'un encadrement serré. Si l'on note N(s) le nombre minimal de poids non nuls nécessaires pour qu'un réseau produise la chaîne s, et K(s) sa complexité de Kolmogorov, alors :</p>
+
+<blockquote>N(s) est inférieur à K(s), qui est lui-même inférieur à N(s) multiplié par le logarithme de N(s).</blockquote>
+
+<p>Autrement dit, le coût minimal en poids et la complexité algorithmique de la sortie se tiennent à un facteur logarithmique l'un de l'autre. Les deux bornes sont atteignables : aucune n'est lâche.</p>
+
+<p>Ce facteur log n'est pas un défaut de la preuve. Le réseau peut réellement l'exploiter, et l'exemple le plus parlant est celui des <strong>permutations</strong>. Imaginez une matrice carrée qui range N éléments dans un ordre arbitraire. Un réseau avec environ N paramètres ternaires suffit à émettre cette matrice case par case. Pourtant, décrire la permutation elle-même demande de l'ordre de N fois log N bits, parce qu'il y a une explosion combinatoire de réordonnancements possibles. Chaque paramètre paie ainsi le prix de son adresse : il situe sa position parmi toutes les positions imaginables, et c'est exactement ce budget que la famille des permutations dépense jusqu'au dernier bit.</p>
+
+<p>Vient alors la conséquence qui donne son titre au papier. La pénalité L2 du weight decay correspond, mathématiquement, au logarithme négatif d'un prior gaussien sur les poids. Or le prior que cette pénalité induit sur les <em>sorties</em> du réseau coïncide avec le prior universel de Solomonoff — à ce même facteur logarithmique près. C'est, à la connaissance de l'auteur, le premier lien quantitatif et bilatéral entre un régularisateur réellement utilisé en production et le prior universel. Le réglage le plus fiable du deep learning se révèle être un proxy traitable du biais inductif idéal le plus puissant que la théorie connaisse.</p>
+
+<h2>Ce que ça change pour qui entraîne des modèles</h2>
+
+<p>Première bonne nouvelle : le résultat ne vit pas dans un régime de laboratoire. La précision fixe, condition indispensable du théorème, est précisément celle dans laquelle tournent toutes les puces — fp16, bf16, int8, int4. La correspondance s'applique là où les réseaux sont entraînés et déployés pour de vrai.</p>
+
+<p>Le papier en tire des prédictions concrètes, présentées comme des conjectures à tester plutôt que comme des faits établis :</p>
+
+<ul>
+<li>Les tâches dont la cible est algorithmiquement simple — raisonnement structuré, langages réguliers — devraient profiter davantage du weight decay que les tâches dont la cible est essentiellement aléatoire.</li>
+<li>La quantification renforce le biais : sur des réseaux fortement quantifiés (int4, int8), la norme au carré suit exactement le décompte des poids non nuls, ce qui fait de l'entraînement sparse quantifié une implémentation plus directe du prior que le weight decay pleine précision.</li>
+<li>La bonne mesure de complexité effective, pour prédire la généralisation, n'est ni le nombre brut de paramètres ni la norme nue, mais la norme L2 au carré multipliée par son logarithme.</li>
+<li>Les architectures dont le budget de calcul s'adapte à la difficulté — transformers bouclés, deep equilibrium, chain-of-thought — devraient battre les réseaux à profondeur fixe sur des cibles de complexité variable.</li>
+<li>L1, magnitude pruning, dropout variationnel : en précision fixe, toutes ces recettes visent la même sparsité et induisent donc le même prior, aux constantes près.</li>
+</ul>
+
+<p>Le travail offre aussi une borne de généralisation presque gratuite. Les poids eux-mêmes, listés tels quels, constituent leur propre compression. Là où la littérature obtient des garanties non triviales au prix de schémas de compression élaborés, ici la borne tombe directement de la structure du réseau, exprimée dans les mêmes unités que le prior universel.</p>
+
+<h2>Les questions encore ouvertes</h2>
+
+<p>L'auteur ne survend pas son résultat. Le théorème est asymptotique et ses constantes, héritées des machines de Turing universelles, sont énormes : il éclaire la nature du weight decay sans prédire quoi que ce soit à petite échelle. Il décrit le prior <em>induit</em> sur les sorties, pas ce que la descente de gradient finit réellement par trouver — combler l'écart entre le réseau de norme minimale et le réseau effectivement entraîné reste le prochain pas naturel. Et rien n'a encore été validé en expérience.</p>
+
+<p>Plusieurs pistes restent grandes ouvertes. Pourrait-on resserrer le facteur logarithmique en exhibant une architecture naturelle, Turing-complète, dont l'espace d'adressage par paramètre serait beaucoup plus petit ? Les tentatives évidentes échouent : les convolutions, en partageant leurs poids, n'arrivent plus à loger un programme arbitraire. La relation entre la complexité de Kolmogorov et les normes spectrales — celles qui contrôlent la régularité d'un réseau plutôt que son contenu informationnel — n'est pas tranchée non plus.</p>
+
+<p>Reste enfin une conjecture séduisante sur les minima plats, ces régions du paysage de perte réputées favorables à la généralisation. Et si leur platitude n'était qu'une conséquence de la correspondance démontrée ici ? Un réseau de faible norme est un réseau de courte description, et une courte description est exactement la condition dans laquelle le paysage devient localement plat. Le mystère du weight decay, longtemps traité comme une recette de cuisine, commence à ressembler à un théorème.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

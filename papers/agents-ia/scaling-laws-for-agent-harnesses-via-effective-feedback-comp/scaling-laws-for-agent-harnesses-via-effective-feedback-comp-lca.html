@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scaling Laws for Agent Harnesses via Effective Feedback Compute — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Scaling Laws for Agent Harnesses via Effective Feedback Compute</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+
+<p>Quand un modèle de langage passe de la prédiction en un coup à la résolution interactive, sa performance dépend de moins en moins de ses poids et de plus en plus du harness qui l'entoure : le code qui décide comment il appelle des outils, reçoit du feedback, vérifie ses états intermédiaires, mémorise et révise ses solutions. Les analyses de <em>test-time scaling</em> mesurent d'ordinaire cette dépense par des grandeurs brutes — tokens, appels d'outils, temps horloge, coût. Zhang et ses collègues partent d'un constat simple : deux trajectoires consommant le même nombre de tokens peuvent différer radicalement selon que leurs observations sont utiles ou stériles.</p>
+
+<p>La question posée est précise. Quelle grandeur scalaire prédit qu'ajouter du calcul à l'inférence va améliorer un harness en boucle fermée ? La réponse proposée s'appelle Effective Feedback Compute (EFC). L'idée tient en une phrase : ne créditer un événement de feedback que lorsqu'il est informatif, valide, non redondant et retenu pour les décisions suivantes. Le reste — l'agitation coûteuse mais sans effet — ne compte pas.</p>
+
+<h2>Méthodologie</h2>
+
+<h3>La grandeur EFC et ses variantes</h3>
+
+<p>Chaque trajectoire est découpée en événements de feedback. À chaque événement, quatre facteurs bornés entre 0 et 1 : informativité (I), validité (V), pertinence non redondante (R), mise à jour de la mémoire (M). La contribution d'un événement est le produit <strong>κ·I·V·R·M</strong>, avec κ = 10. La forme multiplicative impose un comportement de goulot d'étranglement : un feedback invalide, redondant ou oublié ne rapporte presque rien, même s'il est informatif.</p>
+
+<p>Trois versions coexistent. Oracle-EFC, calculée sur des tâches synthétiques où l'expérimentateur connaît l'état latent et la progression réelle vers la solution. Estimated-EFC, reconstruite à partir de signaux observables dans la trace — déclenchement d'un vérificateur, réutilisation d'un résultat d'outil, changement de plan, rétention mémoire — via un estimateur calibré sur les tâches oracles. NRS-EFC enfin (<em>non-redundant stable</em>), qui pénalise les observations répétées et instables pour les traces réelles bruitées. Une normalisation par la demande de la tâche, EFC/D<sub>task</sub>, mesure si le feedback extrait suffit relativement à ce que la tâche exige.</p>
+
+<h3>Trois couches de tâches et sept harness</h3>
+
+<p>Le protocole descend graduellement de l'accès oracle vers le réalisme. Couche synthétique : tâches procédurales (Needle Lookup, State Tracking, Rule Filter) à état caché et réponse déterministe. Couche semi-réaliste : complétion de code type HumanEval avec tests unitaires. Couche réelle : sous-ensembles vérifiables de HumanEval, Terminal-Bench 2.0 et SWE-bench Verified. Sept familles de harness, notées H0 à H6, vont de la réponse directe (H0) à la boucle fermée profonde (H6), en passant par un contrôle négatif délibéré : H4, <em>high budget noisy</em>, dépense beaucoup avec un routage, une vérification et une mémoire faibles.</p>
+
+<p>Toutes les coordonnées sont ajustées au même modèle d'échec en loi de puissance, E(z) = E∞ + A·z<sup>−α</sup>, et comparées par R² et MAE. Trois modèles de base interviennent (DeepSeek-V4-Flash, gpt-5.4-nano, Claude-Haiku-4.5), les résultats étant d'abord agrégés sur des runs répétés puis moyennés entre modèles.</p>
+
+<h2>Résultats principaux</h2>
+
+<p>Sur les tâches synthétiques contrôlées, la hiérarchie est nette. Les tokens bruts et le temps horloge plafonnent à R² = 0,33 et 0,37 ; les appels d'outils et les opérations atteignent 0,42. Le baseline système SAS monte à 0,88. Oracle-EFC et Estimated-EFC atteignent toutes deux 0,94, et Oracle-EFC/D<sub>task</sub> culmine à 0,99 avec une MAE de 0,02. Que l'estimée colle à l'oracle suggère que le signal de feedback utile se récupère depuis la trace, sans accès à l'état caché.</p>
+
+<p>L'intervention à budget apparié est le résultat le plus parlant. En fixant rigoureusement le budget brut — deltas de coût et d'appels d'outils nuls — et en ne faisant varier que la qualité du feedback rendu, le succès passe de 0,27 à 0,90. Les ablations de modules localisent ce gain : la qualité du routeur (+0,28 d'efficacité η), la force du vérificateur (+0,22) et la fidélité mémoire (+0,20) augmentent η, tandis que le bruit d'observation la dégrade (−0,17). L'efficacité η explique alors 0,97 de la variance de succès, contre 0,01 pour le coût brut.</p>
+
+<p>Sur les traces réelles mélangées, la dépense brute s'effondre comme prédicteur : R² négatifs ou quasi nuls pour les tokens, le temps, le coût et les appels d'outils. NRS-EFC atteint 0,89, NRS-EFC/D<sub>task</sub> 0,92, SAS reste loin derrière à 0,43. L'efficacité η se révèle dépendante de la tranche : H5 et H6 dominent sur HumanEval (η ≈ 1,9), toutes les variantes restent autour de 0,1 sur Terminal, et sur SWE ce sont des harness précoces ou intermédiaires qui l'emportent. Dans un holdout prospectif dont le protocole a été figé avant collecte, NRS-EFC/D<sub>task</sub> demeure le meilleur prédicteur à R² = 0,85.</p>
+
+<h2>Discussion et limites</h2>
+
+<p>Le problème central est la circularité partielle d'Oracle-EFC. Cette grandeur se construit à partir de la progression réelle vers l'état cible (∆<sup>latent</sup>), c'est-à-dire d'un proxy direct du succès. Qu'une quantité bâtie sur la progression vers la solution prédise le succès à R² = 0,99 ne démontre pas grand-chose : la corrélation est en partie tautologique. Les auteurs précisent que le label de succès final n'entre pas dans l'estimation des facteurs, mais l'état latent qui les alimente reste un substitut du résultat. Estimated-EFC, calibrée pour reproduire ces cibles oracles, hérite de la même fragilité conceptuelle.</p>
+
+<p>Deuxième réserve : les résultats les plus spectaculaires reposent sur des tâches synthétiques où l'expérimentateur fabrique les conditions. Dans la couche contrôlée, les harness H0-H6 sont instanciés par des paramètres de simulation (Annexe D). L'intervention à budget apparié oppose une condition « basse qualité » produisant du bruit redondant à une condition « haute qualité » produisant du feedback ciblé et retenu — ce contraste est conçu par les auteurs. Que le succès grimpe de 0,27 à 0,90 dans ces conditions ne fait que confirmer la construction. Le signal survit sur les traces réelles, mais le R² y descend de 0,99 à 0,85-0,92, et cet écart est l'information qui compte.</p>
+
+<p>Troisième réserve : Estimated-EFC et NRS-EFC regorgent de constantes posées à la main. Le facteur de qualité de statut Q<sub>t</sub> attribue 1,00 à un test passé, 0,42 à une erreur d'assertion, 0,12 à une erreur d'exécution, 0,06 à un timeout. Les portes G<sub>t</sub>, Λ<sub>t</sub> et leurs variantes non redondantes empilent des multiplicateurs (1,35, 1,15, 0,62, 0,45, 0,16, 0,10) et un dénominateur 1 + 0,35·A<sub>t</sub>. S'ajoutent les pondérations 0,70+0,30·B<sup>router</sup>, 0,82+0,18·V<sub>t</sub>, et les exposants « fittés » de D<sub>task</sub>. Cette accumulation de degrés de liberté ouvre un espace d'ajustement considérable, et rien n'indique une validation croisée systématique de ces choix.</p>
+
+<p>Le baseline SAS est par ailleurs réimplémenté par les auteurs « à partir de proxies observables dans la trace », et non repris tel quel de Kim et al. (2026b). L'affirmation de battre un baseline fort perd de sa force quand ce baseline est reconstruit par ceux qui le surpassent. Enfin, la statistique reportée pour l'intervention — p = 1,0 × 10<sup>−300</sup> — n'a aucun sens pratique : une telle valeur signale un N gigantesque de paires synthétiques ou un plancher numérique, pas une taille d'effet. Le nombre de cellules agrégées sur lesquelles les R² sont calculés n'est jamais explicité, ce qui rend l'ajustement d'une loi de puissance à trois paramètres difficile à juger contre le surapprentissage.</p>
+
+<h2>Reproductibilité</h2>
+
+<p>Aucune mention de code ni de données publiés. Les tâches synthétiques sont décrites au niveau du template — nombre de variables latentes, d'outils distracteurs, probabilité d'observations bruitées — mais ne sont pas distribuées. Les sous-ensembles de benchmarks réels sont filtrés selon des règles énoncées, sans la liste exacte des instances retenues. Les modèles employés sont propriétaires ou spécifiques, accessibles via API, donc susceptibles d'évoluer sans préavis.</p>
+
+<p>L'effort de transparence porte sur la méthode : les annexes C et D détaillent les formules des facteurs, les portes de statut et les rôles des sept harness. C'est appréciable, mais insuffisant pour rejouer les chiffres. Reproduire l'ensemble — calibration de l'estimateur sur les tâches oracles, ajustement des exposants de D<sub>task</sub>, gates réglés à la main — demanderait de reconstruire de zéro un pipeline dont de nombreux paramètres ne sont justifiés que par leur valeur.</p>
+
+<h2>Impact et applications</h2>
+
+<p>La contribution est d'abord conceptuelle, et elle est juste : la performance d'un harness se gouverne moins par combien on dépense que par l'efficacité avec laquelle le budget brut se convertit en feedback durable et suffisant. La décomposition en efficacité du harness (η = EFC/C<sub>raw</sub>) et demande de la tâche (D<sub>task</sub>) est propre et opérationnelle. Pour un praticien, le message est actionnable : investir dans le routage, la vérification et la rétention mémoire plutôt que dans la simple multiplication des appels.</p>
+
+<p>Le contrôle négatif H4 et le holdout prospectif pré-enregistré méritent d'être salués. La pré-spécification du protocole avant collecte reste rare et protège contre l'ajustement post hoc des métriques. Le constat que η est une interaction harness-tâche, et non une propriété fixe du harness, est lui aussi solide : il interdit de désigner un « meilleur harness » universel. Le cadre vaut néanmoins aujourd'hui comme grille d'analyse prometteuse davantage que comme loi d'échelle établie, car la preuve causale la plus forte demeure cantonnée à des conditions synthétiques fabriquées.</p>
+
+<h2>Positionnement dans la littérature</h2>
+
+<p>Le travail prolonge la lignée des lois d'échelle (Kaplan et al., 2020 ; Hoffmann et al., 2022) vers le calcul d'inférence, et se distingue des travaux de test-time compute (Brown et al. ; Snell et al. ; Zhu et al. ; Kim et al., 2026a) qui mesurent l'effort par des échantillons, des tokens ou un budget de recherche. Là où ces études comptent la dépense, EFC tente de compter le feedback utile.</p>
+
+<p>Le rapport à SAS (Kim et al., 2026b) est explicitement assumé : SAS est un modèle système multivarié, EFC une coordonnée scalaire au niveau de la trace. Les deux sont complémentaires plus que rivaux, même si l'article présente EFC comme supérieure. Le positionnement s'inscrit aussi dans le courant traitant le harness comme objet de conception à part entière — représentations en langage naturel (Pan et al., 2026), boucles d'optimisation versionnées (Ursekar et al., 2026), benchmarks de récupération de contexte (Li et al., 2026a). EFC apporte à ce courant une grandeur prédictive compacte, dont la valeur dépendra de sa capacité à se détacher des tâches jouets qui l'ont vue naître.</p>
+
+<h2>Tableau récapitulatif des scores de robustesse</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Critère</th>
+      <th>Score (/5)</th>
+      <th>Commentaire</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Question de recherche</td>
+      <td>5</td>
+      <td>Question claire et originale : quelle coordonnée scalaire prédit l'utilité du calcul d'inférence pour un harness en boucle fermée. Très pertinente vu la montée en charge des harness agentiques.</td>
+    </tr>
+    <tr>
+      <td>Design expérimental</td>
+      <td>4</td>
+      <td>Protocole multi-couches réfléchi (synthétique → exécutable → réel → prospectif), contrôle négatif H4, intervention à budget apparié, holdout pré-enregistré. Pénalisé par des conditions synthétiques fabriquées par l'expérimentateur.</td>
+    </tr>
+    <tr>
+      <td>Taille d'échantillon</td>
+      <td>3</td>
+      <td>Plusieurs modèles, runs répétés, balayages de budget. Mais le nombre de cellules agrégées servant aux ajustements n'est pas explicité, et la p-valeur de 10<sup>−300</sup> n'est pas informative.</td>
+    </tr>
+    <tr>
+      <td>Qualité des métriques</td>
+      <td>2</td>
+      <td>Oracle-EFC partiellement circulaire (bâtie sur la progression latente, proxy du succès) ; estimateur chargé de constantes posées à la main. Les métriques de sortie (R², MAE) sont standard, mais la validité du prédicteur central est le maillon faible.</td>
+    </tr>
+    <tr>
+      <td>Contrôle des biais</td>
+      <td>3</td>
+      <td>Le budget apparié neutralise franchement le confondant de dépense brute, l'agrégation entre modèles isole la capacité de base. Mais SAS est réimplémenté par les auteurs et les conditions synthétiques sont auto-conçues.</td>
+    </tr>
+    <tr>
+      <td>Reproductibilité</td>
+      <td>2</td>
+      <td>Ni code ni données publiés. Modèles propriétaires, templates synthétiques non distribués, instances réelles non listées, nombreuses constantes justifiées seulement par leur valeur.</td>
+    </tr>
+    <tr>
+      <td>Transparence et limitations</td>
+      <td>3</td>
+      <td>Section travaux futurs, reconnaissance que η dépend de la tâche et que les exposants sont des poids de calibration et non des signes causaux. Mais la circularité d'Oracle-EFC et le nombre de paramètres libres ne sont jamais discutés comme limites.</td>
+    </tr>
+    <tr>
+      <td>Impact et nouveauté</td>
+      <td>4</td>
+      <td>Cadrage conceptuel juste et utile (qualité du feedback &gt; dépense brute), décomposition η/D<sub>task</sub> opérationnelle pour la conception de harness. Preuve la plus forte encore confinée au synthétique.</td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td><strong>Note globale</strong></td>
+      <td><strong>3.0 / 5</strong></td>
+      <td>Idée pertinente et bien menée, design soigné avec validation prospective pré-enregistrée, mais métrique en partie circulaire, chargée de constantes ajustées à la main, et résultats les plus convaincants limités à des tâches synthétiques fabriquées. Cadre d'analyse prometteur plutôt que loi d'échelle établie.</td>
+    </tr>
+  </tfoot>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

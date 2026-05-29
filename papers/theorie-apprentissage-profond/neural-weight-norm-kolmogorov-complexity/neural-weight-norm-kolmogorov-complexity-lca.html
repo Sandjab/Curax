@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neural Weight Norm = Kolmogorov Complexity — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Neural Weight Norm = Kolmogorov Complexity</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Pourquoi le weight decay fonctionne-t-il ? La question ouvre l'article et en fixe l'enjeu. Le weight decay est le régularisateur le plus employé en apprentissage profond ; le retirer dégrade systématiquement les performances en généralisation. La théorie classique de la capacité reste pourtant muette : les complexités de VC et de Rademacher d'un réseau entraîné avec ou sans weight decay sont identiques, et Zhang et al. (2017) ont montré que les mêmes architectures capables de généraliser peuvent aussi mémoriser des étiquettes aléatoires. L'explication ne tient donc pas à la taille de la classe de fonctions.</p>
+<p>Musat se tourne vers la théorie de la longueur de description et sa forme la plus tranchée, la complexité de Kolmogorov K(s) : la longueur du plus court programme produisant la chaîne s sur une machine de Turing universelle. Cette complexité fonde le prior universel de Solomonoff, optimal sur les fonctions computables mais incomputable, resté un idéal asymptotique sans contrepartie entraînable. L'objectif est de combler cet écart : établir un lien quantitatif et bilatéral entre une norme Lp des poids et K(s).</p>
+
+<h2>Méthodologie</h2>
+<p>L'article est purement théorique, sans la moindre expérience. Le modèle est un réseau bouclé : un bloc feedforward unique itéré jusqu'à ce qu'un canal d'arrêt se déclenche, avec trois coordonnées dédiées (halt, emit, bit) et un état initial x0 = 0. Les poids vivent dans un espace de précision fixe Θδ,M où chaque paramètre non nul est un objet à O(1) bits. La complexité neuronale N(s) compte le nombre minimal de paramètres non nuls d'un tel réseau produisant s.</p>
+<p>Une observation élémentaire rend le résultat indépendant de la norme choisie : en précision fixe, δᵖ‖θ‖₀ ≤ ‖θ‖ₚᵖ ≤ Mᵖ‖θ‖₀. Toute norme Lp à la puissance p égale donc le compte de paramètres non nuls à une constante près, et tout se ramène à ‖θ‖₀.</p>
+<p>La preuve repose sur deux réductions courtes. La première (Lemme 5) encode n'importe quel programme U dans les poids au coût d'un bit par bit de programme : une porte qui ne s'active qu'à l'itération 1 injecte le programme dans le flux résiduel via une couche de routage d'exactement |p| paramètres ternaires. La seconde (Lemme 6) décrit tout réseau de précision fixe en énumérant ses paramètres non nuls, chacun spécifié par un tuple (couche, source, cible, valeur) coûtant O(log W) bits d'adressage, qu'un simulateur de taille constante reconstruit. La saturation du facteur logarithmique passe par les matrices de permutation. Les appendices A à I fournissent les constructions explicites.</p>
+
+<h2>Résultats principaux</h2>
+<p>Le théorème central encadre N(s) ≤ K(s) ≤ N(s) log N(s), à des constantes près, les deux bornes étant atteintes. Le même encadrement vaut pour toute norme Lp via l'effondrement décrit plus haut.</p>
+<p>Le corollaire 7 compare le prior induit sur les sorties Q(s) = Σ π(θ) au prior universel M(s) : −log Q(s) tombe dans [K(s)/(β log K(s)), K(s) + α]. Le prior induit par le weight decay L2 épouse celui de Solomonoff dans l'exposant, à un facteur logarithmique près. La proposition 8 en tire une borne de généralisation de type MDL dont la pénalité de complexité s'écrit ‖θ‖²log‖θ‖².</p>
+<p>Le témoin de saturation est explicite. Pour une permutation π : [N]→[N], la sérialisation ligne par ligne de sa matrice a une complexité K(sπ) = log₂N! = Θ(N log N), tandis qu'un réseau ternaire la produit avec N(sπ) = Θ(N) paramètres. Le facteur logarithmique est donc réel, pas un artefact de preuve. L'appendice G relie la version à temps borné à la complexité de Levin ; l'appendice I établit que N est semi-computable supérieurement mais non computable.</p>
+<p>La section 5.3 énonce cinq prédictions testables : données simples mieux servies par le weight decay, quantification renforçant le biais, complexité effective en ‖θ‖²log‖θ‖², profondeur bouclée avantagée sur cibles à faible K, convergence des priors parcimonieux vers un même prior. Toutes sont présentées comme conjectures non vérifiées.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le titre promet davantage que la preuve ne livre. Le corollaire 7 porte sur le prior marginal Q(s), pas sur ce que trouve la descente de gradient. Musat le reconnaît sans détour : la SGD avec weight decay L2 effectue une estimation MAP de θ, pas une marginalisation bayésienne. L'article ne montre donc pas que les réseaux entraînés approchent l'induction de Solomonoff — seulement que le prior, lu au niveau des sorties, coïncide avec celui de Solomonoff. L'écart entre réseaux de norme minimale et réseaux effectivement entraînés, qui est précisément ce qui intéresse le praticien, reste ouvert.</p>
+<p>N(s) est un minimum global sur θ. Rien ne garantit que l'optimisation l'atteigne, et la question de l'optimisation n'est pas abordée.</p>
+<p>Les constantes cU et cd ne sont ni bornées ni calculées, et l'auteur admet qu'elles seront grandes pour des machines de Turing universelles réalistes : cU contient un simulateur complet de machine universelle plongé dans un transformeur bouclé. La borne N(s) ≤ K(s) + cU est donc vide pour toute chaîne dont la complexité est inférieure à cU, c'est-à-dire toutes les chaînes d'intérêt pratique. Le résultat est, selon les termes mêmes de l'auteur, conceptuel et non prédictif aux petites échelles. La correspondance avec Solomonoff tient « à un facteur polynomial en 2^K(s) » près, soit une marge colossale.</p>
+<p>Le modèle est idéalisé : réseau bouclé émettant une seule chaîne depuis x0 = 0. Les réglages d'apprentissage supervisé standard exigent des adaptations que l'article ne traite pas. Et aucune expérience n'est conduite : les cinq prédictions restent des promesses. À son crédit, la section de limites est honnête et complète, les preuves sont courtes et modulaires, et l'argument sur la précision fixe — le seul régime où la question a un sens, puisque les poids réels sont super-Turing et les poids rationnels portent une information non bornée dans leur numérateur et leur dénominateur — est l'apport véritable de l'article.</p>
+
+<h2>Reproductibilité</h2>
+<p>Théorie pure : ni code ni données à publier. Les constructions sont explicites sur neuf appendices, assez détaillées pour qu'un lecteur déterminé reconstruise les preuves — le routage d'injection, l'encodage par énumération, le décompte log₂N! de la permutation. Quelques approximations subsistent (« on traite ℓmax comme effectivement non borné »), et les constantes ne sont jamais chiffrées. La complétude Turing à précision constante est empruntée telle quelle à Li &amp; Wang et Giannou et al., utilisées comme boîtes noires. La vérifiabilité des preuves est bonne ; il n'y a rien à exécuter.</p>
+
+<h2>Impact et applications</h2>
+<p>L'article jette un pont conceptuel entre régularisation et théorie algorithmique de l'information. Si les prédictions se confirmaient, plusieurs conséquences pratiques suivraient : l'entraînement parcimonieux conscient de la quantification deviendrait une implémentation plus directe du prior universel que le weight decay pleine précision, puisque ‖θ‖² suit exactement le compte de paramètres en int4/int8 ; les modèles à profondeur bouclée seraient avantagés sur les cibles à faible complexité ; la bonne mesure de complexité effective serait la norme L2 carrée log-augmentée plutôt que le compte brut de paramètres.</p>
+<p>Ces retombées restent suspendues aux constantes et à l'écart prior-entraînement. L'intérêt immédiat concerne les théoriciens de la généralisation et du MDL, pas l'ingénieur qui règle son weight decay. La valeur de l'article tient à la reformulation d'une intuition diffuse en énoncé précis et falsifiable.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le tableau 1 de l'article situe la contribution sur quatre axes face aux travaux voisins. Schmidhuber (1997) mesurait la complexité de Kolmogorov des poids eux-mêmes via un programme externe et une recherche de Levin, ce qui revient en un sens à la réciproque du présent résultat. Jacot (2025) est l'analogue le plus proche : un encadrement bilatéral entre une norme L1 pondérée de ResNets à valeurs réelles et le nombre de portes d'un circuit booléen approchant la fonction ; mais l'architecture (feedforward), la précision (réelle) et la grandeur de complexité (portes, non programmes) diffèrent. Shaw et al. (2026) sont les plus proches par la motivation : un objectif MDL asymptotiquement optimal pour transformeurs via un pont vers les machines de Turing à préfixe, mais par une posterior variationnelle gaussienne-mélange, et le résultat est unilatéral.</p>
+<p>Musat concède que chaque ingrédient est connu : complétude Turing des transformeurs bouclés, descriptions courtes des vecteurs parcimonieux, domination du prior universel. L'apport est le premier encadrement bilatéral quantitatif entre une norme Lp d'un réseau de précision fixe et la complexité de Kolmogorov de la chaîne émise. La filiation classique remonte à la complexité de Kolmogorov des circuits booléens (Allender) et à la hiérarchie de Balcázar et al. indexée par la complexité des poids. L'article occupe un créneau encombré ; sa contribution est incrémentale mais bien cadrée.</p>
+
+<h2>Synthèse des critères de robustesse</h2>
+<p>La grille ci-dessous a été conçue pour des travaux empiriques. Appliquée à un article de mathématiques sans données ni expérience, plusieurs critères (taille d'échantillon, contrôle des biais, qualité des métriques) s'évaluent par analogie — qualité du cadre de preuve, transparence des hypothèses, précision des objets mathématiques — et restent structurellement bas faute de contenu empirique. La note globale reflète la valeur de l'article comme contribution théorique, et non la moyenne des lignes.</p>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td></tr>
+<tr><td>Design expérimental (cadre de preuve)</td><td>4</td></tr>
+<tr><td>Taille d'échantillon</td><td>2</td></tr>
+<tr><td>Qualité des métriques</td><td>3</td></tr>
+<tr><td>Contrôle des biais (hypothèses)</td><td>3</td></tr>
+<tr><td>Reproductibilité</td><td>4</td></tr>
+<tr><td>Transparence des limites</td><td>5</td></tr>
+<tr><td>Impact et nouveauté</td><td>3</td></tr>
+<tr><td><strong>Note globale</strong></td><td><strong>3,5</strong></td></tr>
+</tbody>
+</table>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

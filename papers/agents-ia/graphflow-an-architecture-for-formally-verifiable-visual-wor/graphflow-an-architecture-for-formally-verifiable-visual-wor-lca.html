@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GraphFlow: An Architecture for Formally Verifiable Visual Workflows Enabling Reliable Agentic AI Automation — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>GraphFlow: An Architecture for Formally Verifiable Visual Workflows Enabling Reliable Agentic AI Automation</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les workflows agentiques multi-étapes accumulent les erreurs : sous un modèle idéalisé d'étapes indépendantes, un processus de dix étapes à 90 % de fiabilité par étape n'aboutit que dans 35 % des cas. GraphFlow part de ce constat pour fiabiliser l'automatisation agentique dans des processus critiques, en santé d'abord. L'idée directrice est de faire du diagramme de workflow l'artefact exécutable de référence : un objet unique qui définit le périmètre des données, la sémantique d'exécution et le monitoring.</p>
+<p>Deux mécanismes structurent la proposition. Un <strong>noyau vérifié</strong> à la compilation admet une classe restreinte de diagrammes (acycliques, séquentiels) et exige que leurs contrats — préconditions, postconditions, obligations de composition — soient prouvés avant entrée dans une bibliothèque partagée. Un <strong>moteur d'exécution durable</strong> enregistre les résultats dans un journal d'événements en ajout seul, autorisant rejeu déterministe, reprises et audit. Les couloirs de responsabilité (swimlanes) rendent explicites les frontières de confiance entre logique vérifiée, systèmes externes, jugement humain et décisions IA.</p>
+<p>La question posée est claire et pertinente : l'automatisation agentique mission-critique souffre d'un déficit de fiabilité que le paradigme « planification à l'inférence » aggrave, car le comportement devient sensible aux variations de prompt et difficile à auditer. Déplacer la planification vers des diagrammes et des contrats vérifiables est une réponse cohérente. Les auteurs ne revendiquent pas la nouveauté de l'exécution durable ni du modèle visuel ; ils situent leur apport sur le diagramme-comme-spécification générant à la fois artefacts révisables et obligations de preuve.</p>
+
+<h2>Méthodologie</h2>
+<p>La publication relève davantage du papier d'architecture que de l'étude expérimentale. Trois piliers sont formalisés avec une notation ensembliste : la recherche de cohortes (une cohorte Θ comme résultat d'une requête sur l'univers des ressources), l'automatisation formelle (un compilateur 𝒞 envoyant un diagramme admissible vers une automatisation), et les tableaux de bord opérationnels (des métriques agrégeant les résultats de requêtes). Un langage textuel propriétaire, GFL, sert à décrire diagrammes, requêtes et déclencheurs.</p>
+<p>L'annexe D énonce une sémantique à deux niveaux — grand pas pour la compilation, petit pas émettant des événements pour l'exécution durable — et deux théorèmes. Le premier établit une correction partielle des artefacts compilés relativement à leurs contrats, sous trois hypothèses fortes : actions déterministes conformes à leurs contrats, et obligations de preuve acceptées par le vérificateur. Le second affirme le déterminisme du rejeu dès lors que tous les résultats non déterministes influençant le contrôle sont journalisés.</p>
+<p>La partie empirique est un pilote d'un an (janvier–décembre 2025) sur trois sites cliniques anonymisés, intégrés à un dossier patient informatisé (EHR) de production. Le protocole repose sur un modèle d'enrôlement par cohorte : chaque patient enrôlé déclenche exactement une exécution de workflow. La porte de complétion instrumentée est l'appel initial de création d'ordre dans l'EHR. Aucun bras de comparaison, aucune ligne de base, aucune randomisation. Le pilote est observationnel et conduit par l'éditeur du système.</p>
+<p>Faiblesse décisive : le prototype déployé est <strong>antérieur</strong> au cadre de vérification décrit. Les preuves, la sémantique formelle et la composition vérifiée n'étaient pas implémentées pendant le pilote. La méthodologie empirique ne teste donc pas l'hypothèse centrale du papier — que la vérification formelle améliore la fiabilité. Elle évalue uniquement la faisabilité de l'exécution durable et du diagramme-comme-spécification.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur 8 728 exécutions, 8 473 ont abouti et 255 ont échoué, soit un taux de complétion agrégé de 97,08 %. La ventilation par site révèle une concentration forte : la clinique α (télémédecine, active toute l'année) compte 6 987 exécutions à 98,96 % de succès, la clinique γ (organisation multi-départements) 1 639 exécutions à 88,90 %, et la clinique β seulement 102 exécutions à 100 %. Plus de 80 % du volume provient d'un seul site, ce qui rend l'agrégat peu représentatif.</p>
+<p>Le chiffre de 97,08 % demande une lecture prudente, et les auteurs la fournissent eux-mêmes. Per-run et per-boundary sont « identiques par construction » parce que chaque exécution ne contenait qu'une seule porte instrumentée : le succès de l'appel de création d'ordre EHR. Le « taux de complétion du workflow » se réduit donc au taux de succès d'un appel API. Les étapes cliniques en aval — actions du praticien, ordres conditionnels de suivi, tâches d'étiquetage en arrière-plan — existaient mais n'étaient pas comptabilisées comme portes de complétion. La métrique ne mesure pas la fiabilité du processus de soin de bout en bout.</p>
+<p>L'analyse des échecs est instructive : les défaillances se localisent presque exclusivement aux frontières avec les systèmes externes (échecs d'autorisation de prescription, doublons ou suppressions de dossiers patients), aucune n'étant attribuée à une structure de diagramme ou à une sémantique d'exécution erronée. C'est l'apport empirique le plus solide : la journalisation durable localise effectivement les pannes aux frontières organisationnelles et techniques. Le taux dégradé de la clinique γ s'explique par la complexité d'autorisation d'une grande organisation, ce qui contredit d'ailleurs l'hypothèse d'indépendance des défaillances mobilisée pour motiver l'argument du cumul d'erreurs.</p>
+
+<h2>Discussion et limites</h2>
+<p>L'écart entre le titre et les preuves apportées est le problème majeur. Le titre annonce des workflows « formellement vérifiables » qui « permettent » une automatisation agentique fiable. Or rien dans la publication ne démontre la vérifiabilité formelle (le vérificateur et l'assistant de preuve ne sont pas intégrés) ni le gain de fiabilité (aucune comparaison). Les théorèmes de l'annexe D sont des reformulations de résultats standards — correction partielle à la Hoare, déterminisme de l'event-sourcing — et ne sont pas vérifiés mécaniquement.</p>
+<p>L'argument du cumul d'erreurs (0,9¹⁰ ≈ 0,35) sert de motivation pédagogique mais relève de l'arithmétique iid. Les auteurs reconnaissent que les workflows réels violent l'indépendance, et leurs propres données le confirment (défaillances corrélées par site). L'argument reste qualitativement valable mais ne constitue pas un résultat.</p>
+<p>Le statut commercial pèse sur l'interprétation : MedFlow, Inc. évalue son propre produit, sans bras contrôle, sans aveuglement, sans audit indépendant. Les confondants (complexité d'autorisation propre à chaque clinique, périodes d'intégration décalées) sont signalés mais non maîtrisés.</p>
+<p>Le contrepoids est une transparence qui dépasse l'usage du genre. La section « Status and Roadmap » sépare nettement l'implémenté, le spécifié et le à-venir. Les non-goals précisent que le déterminisme n'implique pas la vérité métier et que systèmes externes, IA et humains restent des hypothèses. La distinction per-boundary/per-run est explicitée plutôt que masquée. Les modes de défaillance (mauvaises spécifications, données obsolètes, erreurs de jugement humain) sont listés sans euphémisme. Cette honnêteté ne compense pas l'absence de preuve, mais elle écarte le soupçon de survente.</p>
+
+<h2>Reproductibilité</h2>
+<p>La reproductibilité est quasi nulle. Aucun code n'est publié, le langage GFL et le moteur sont propriétaires, et le composant central — le vérificateur — n'existe pas encore. Les données cliniques ne sont pas partagées, ce qui se comprend pour des raisons réglementaires mais interdit toute réplication des chiffres. Les sites sont anonymisés, la définition exacte des cohortes et l'instrumentation ne sont pas reproductibles par un tiers.</p>
+<p>Seul élément positif : les annexes A et B fournissent des listings GFL complets, dont la reconstruction du workflow déployé (parcours de dépistage cognitif). Un lecteur peut suivre la structure logique des diagrammes. Cela documente l'intention mais ne permet ni d'exécuter ni de vérifier quoi que ce soit, faute d'outillage diffusé.</p>
+
+<h2>Impact et applications</h2>
+<p>Le potentiel applicatif vise les domaines mission-critique à forte intégration : santé, mais aussi service client, industrie, logistique, cités comme terrains de défaillances analogues. Contraindre un agent à sélectionner, paramétrer et lancer des workflows pré-approuvés plutôt qu'à planifier des séquences d'appels d'outils ad hoc répond à un vrai problème de variance comportementale. Le découplage entre cœur vérifié à la compilation et garanties appliquées au runtime est un cadre de pensée utile pour les équipes qui industrialisent des agents.</p>
+<p>L'impact démontré reste pourtant modeste. Ce que le pilote établit — faisabilité de l'exécution durable et localisation des pannes aux frontières — relève de l'ingénierie déjà connue (Temporal, journaux d'événements). La valeur ajoutée revendiquée tient entièrement dans le noyau vérifié, qui est repoussé à un papier ultérieur et à un déploiement « planifié pour 2026 ». Tant que les obligations de preuve ne sont pas effectivement déchargées par un assistant de preuve sur des automatisations réelles, l'apport scientifique reste une promesse architecturale.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le positionnement est l'un des points forts du texte. Les auteurs ancrent leur travail dans l'exécution durable (Temporal), les modèles de référence et catalogues de patterns de workflow (WfMC, van der Aalst), les machines à états cloud et ordonnanceurs de DAG (Step Functions, Airflow), la modélisation de processus métier (BPMN, Camunda), et surtout la logique de Hoare et le proof-carrying code de Necula. L'analogie est explicite : appliquer au workflow le schéma du code porteur de preuve, où chaque automatisation transporte des obligations à décharger avant admission.</p>
+<p>Le tableau comparatif distingue honnêtement exécution (rejeu durable, machine à états, DAG, token-flow) et vérification (reproductibilité, garanties opérationnelles, gouvernance), GraphFlow se réclamant seul de la « vérification formelle ». La revendication est légitime au plan conceptuel mais prématurée au plan empirique, puisque cette colonne décrit un système non encore construit. Les références sur le biais d'automatisation (Parasuraman et Riley, Amershi et al.) et sur l'échec des systèmes d'IA en santé (Watson Oncology, taxonomie de Raji et al.) sont pertinentes et bien mobilisées pour cadrer le problème de confiance.</p>
+
+<h2>Synthèse des critères de robustesse</h2>
+<table>
+  <thead>
+    <tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Question de recherche</td><td>4</td><td>Problème de fiabilité agentique clair et pertinent ; angle proof-carrying workflow bien posé.</td></tr>
+    <tr><td>Design expérimental</td><td>2</td><td>Pilote observationnel sans contrôle ni ligne de base ; ne teste pas l'hypothèse centrale (vérification non implémentée).</td></tr>
+    <tr><td>Taille d'échantillon</td><td>3</td><td>8 728 exécutions mais 80 % issues d'un seul site et une seule porte mesurée ; volume trompeur au regard des claims.</td></tr>
+    <tr><td>Qualité des métriques</td><td>2</td><td>Métrique unique (succès d'un appel EHR) confondue avec la complétion « par construction ».</td></tr>
+    <tr><td>Contrôle des biais</td><td>2</td><td>Auto-évaluation par l'éditeur, pas de bras témoin, confondants signalés mais non maîtrisés.</td></tr>
+    <tr><td>Reproductibilité</td><td>1</td><td>Pas de code ni de données, GFL et vérificateur propriétaires ou inexistants ; seuls des listings GFL fournis.</td></tr>
+    <tr><td>Transparence des limites</td><td>5</td><td>Feuille de route explicite, non-goals nets, aveu que le pilote précède la vérification, distinction per-boundary/per-run assumée.</td></tr>
+    <tr><td>Impact et nouveauté</td><td>3</td><td>Cadre conceptuel intéressant mais contribution centrale non implémentée ni évaluée ; théorèmes standards.</td></tr>
+  </tbody>
+</table>
+<p><strong>Note globale : 2,0 / 5.</strong> La robustesse d'une publication tient à l'adéquation entre ses affirmations et ses preuves. Ici, la promesse phare — la vérification formelle améliorant la fiabilité — ne dispose d'aucun support empirique, de l'aveu même des auteurs, et la partie expérimentale se ramène au succès d'un seul appel API auto-rapporté. La transparence exceptionnelle et la qualité de l'ingénierie déployée évitent la note plancher, sans suffire à étayer scientifiquement la thèse défendue.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

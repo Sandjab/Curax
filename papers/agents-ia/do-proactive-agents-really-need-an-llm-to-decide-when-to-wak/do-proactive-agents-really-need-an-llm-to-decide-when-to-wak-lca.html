@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Do Proactive Agents Really Need an LLM to Decide When to Wake and What to Anchor? — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Do Proactive Agents Really Need an LLM to Decide When to Wake and What to Anchor?</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Un agent proactif décide seul quand intervenir et sur quoi appuyer son intervention, sans attendre une instruction. Les systèmes actuels traitent ces deux décisions en appelant un LLM à chaque évènement : le flux d'activité utilisateur est rendu sous forme de texte, puis un modèle de langage est invoqué pour décider s'il faut agir. Le travail attaque ce choix de conception frontalement avec une question dans le titre : un LLM est-il vraiment nécessaire pour décider du réveil et de l'ancrage ?</p>
+<p>Le constat de départ est précis. L'activité utilisateur n'est pas nativement du texte : le système d'exploitation journalise déjà chaque action comme un tuple structuré <em>(acteur, verbe, objet, horodatage)</em> qu'il maintient sous forme de graphe. Rendre cette structure en texte puis demander à un LLM de la reconstruire est un aller-retour que le système n'avait jamais à faire. Deux problèmes en découlent : un déclencheur qui tourne en continu devient le composant le plus coûteux quand il s'agit d'un gros modèle (la démo de Lu et al. tente une offre toutes les 15 secondes, soit 240 décisions par heure, chacune payée plein tarif), et les suggestions produites sont souvent déconnectées de l'artefact réellement manipulé par l'utilisateur.</p>
+<p>La proposition consiste à traiter le signal always-on comme des mises à jour de graphe et non comme du texte. Un petit modèle de <em>temporal-graph-learning</em> (TGL) sert d'encodeur ; un seul forward pass produit une probabilité de déclenchement par évènement et un score de routage par entité. Le LLM n'intervient que pour transformer un transfert structuré en une phrase fluide adressée à l'utilisateur, et seulement lorsque le déclencheur s'active.</p>
+
+<h2>Méthodologie</h2>
+<p>L'activité est modélisée comme un graphe temporel hétérogène construit de façon déterministe par un extracteur à base de règles. Les nœuds représentent les évènements et les entités touchées (fichiers, applications, URL, requêtes, plus des nœuds de type regroupant les entités par extension, sujet, domaine ou langue). Les arêtes encodent les relations évènement-entité, deux directions temporelles entre évènements consécutifs, et des boucles sur soi.</p>
+<p>Un unique squelette TGL — trois couches GATv2 sensibles aux relations surmontées d'une tête Jumping Knowledge — alimente deux têtes de lecture : une tête de déclenchement sur les nœuds d'évènement et une tête de routage sur les nœuds d'entité. Les deux partagent le même état caché et sont entraînées conjointement contre une fonction de coût combinée. C'est là le sens architectural de l'unification revendiquée : non pas un classifieur unique, mais deux lectures issues d'un même encodage de graphe. À l'inférence, le masquage causal supprime les arêtes temporelles arrière pour que la décision à l'évènement <em>t</em> ne dépende que des évènements antérieurs ou égaux à <em>t</em>.</p>
+<p>Le protocole principal suit celui de Lu et al. sur le benchmark desktop ProactiveAgent. La baseline « vanilla » reprend le prompt publié de l'article d'origine évalué contre le même juge ; « + Ours » nourrit le même agent downstream avec le contexte structuré routé par TGL. Un seul checkpoint TGL, un seul seuil de déclenchement et un seul template de prompt servent les 14 backbones évalués (open-weight, OpenAI, Anthropic, DeepSeek). Chaque cellule agrège trois exécutions. Le juge est le modèle de récompense (RM) publié avec ProactiveAgent, entraîné à scorer les suggestions de tâches proactives.</p>
+<p>Trois axes de comparaison structurent l'évaluation. Une étude d'ablation isole la contribution du déclencheur et celle du contenu de routage (désactivation du déclencheur, remplacement par des entités aléatoires de même cardinalité, prompt sans graphe). Une comparaison d'architectures de déclencheur oppose TGL à quatre familles non-graphe (règle, tabulaire, textuel BERT-style, LLM-as-trigger en deux protocoles de sortie). Des mesures de latence et d'empreinte mémoire sont relevées sur un serveur RTX A6000 et un ordinateur portable grand public. Un transfert sur le benchmark mobile FingerTip-20K complète le tableau en annexe.</p>
+
+<h2>Résultats principaux</h2>
+<p>TGL améliore le F1 sur chacun des 14 backbones, de +3,1 à +46,0 points, pour une moyenne de +16,7 ; aucun backbone ne régresse. Le gain est le plus fort là où l'auto-régulation des LLM vanilla dérive le plus : Qwen3-8B passe de 26,1 à 72,1 (+46,0), DeepSeek-V4-Pro gagne +26,6. Les modèles déjà bien calibrés en vanilla (GPT-5.4 à 73,5, Claude-Opus-4.7 à 74,4) ne gagnent que +3,1 à +5,4, le routage atteignant alors l'agent sur des évènements où il serait resté silencieux.</p>
+<p>La comparaison intra-architecture la plus nette concerne Qwen2-7B : vanilla 60,74, fine-tuné proactif end-to-end 66,47, + Ours 70,68. Un encodeur de graphe de 1,16 M paramètres entraînables en surcouche dépasse l'adaptation paramétrique complète du même backbone. Sur la comparaison de déclencheurs, TGL atteint 0,738 d'AUC must-fire, soit +7,0 points au-dessus du meilleur déclencheur LLM (Qwen3-0,6B à 0,668), et domine aussi les deux colonnes côté skip. Scaler le LLM-as-trigger de 0,6 B à 8 B ne relève pas l'AUC (0,668 → 0,644) ; le protocole full-SFT par génération tombe à 0,505, indistinguable du hasard.</p>
+<p>La calibration sépare nettement le panel. TGL, la règle et les modèles tabulaires produisent des probabilités qui suivent le label (Brier 0,27-0,32) ; les baselines textuelles BGE et les déclencheurs LLM s'effondrent vers les extrêmes du score (Brier 0,58-0,66, soit environ deux fois pire), 94 à 98 % de leurs évènements se collant à [0 ; 0,05] ∪ [0,95 ; 1]. La conséquence opérationnelle se lit dans l'écart-type du seuil oracle inter-backbones : 0,035 pour TGL, le plus bas des neuf lignes, contre 0,14-0,26 pour les LLM. Un seuil global unique reste donc quasi optimal pour les 14 backbones avec TGL, là où les déclencheurs non-graphe exigeraient une calibration par backbone.</p>
+<p>Côté coût, le forward TGL prend 11,13 ms par évènement sur serveur et 13,99 ms sur portable, soit 4 à 7× et 12 à 83× plus rapide que toutes les configurations LLM-as-trigger testées. L'empreinte résidente est de ~220 MiB en BF16, environ 75× plus petite qu'un LLM 8B. Les ablations confirment que les deux têtes portent le gain : désactiver le déclencheur coûte en moyenne 3,2 F1, randomiser le routage 8,6, et le contrôle prompt-only sans graphe 12,7.</p>
+
+<h2>Discussion et limites</h2>
+<p>La faiblesse centrale est reconnue par les auteurs eux-mêmes : toute l'évaluation principale repose sur le juge-RM hors-ligne de ProactiveAgent. Aucun utilisateur réel ne juge si une intervention tombe au bon moment ou cite le bon artefact. Le RM annonce 91,80 de F1 d'accord avec des annotations humaines tenues à l'écart, ce qui est respectable, mais reste un proxy : l'expérience subjective sous déploiement n'est pas mesurée. Toutes les améliorations de F1 héritent de cette limite.</p>
+<p>Une partie du gain s'explique par un effet de correction de baselines mal réglées. Plusieurs LLM vanilla dérivent loin du point de fonctionnement calibré — Qwen3-8B sur-active à R = 99 % / P = 15 %, DeepSeek-V4-Pro sous-active à R = 52 %. Un déclencheur calibré qui aligne tout le monde sur R ≥ 96 % et P ≥ 50 % récupère mécaniquement une grande marge. Le travail neutralise correctement cet argument en comparant aussi aux baselines fine-tunées et via les ablations, mais l'ampleur des +40 F1 doit se lire dans ce contexte : ils mesurent autant la dérive des LLM non régulés que la valeur intrinsèque du graphe.</p>
+<p>La contribution architecturale est incrémentale. TGAT, TGN, GATv2 et Jumping Knowledge sont des briques existantes ; la nouveauté tient au recadrage du problème et à l'instanciation jointe déclenchement-routage sur un encodeur partagé, pas à l'invention d'un mécanisme. C'est un mérite de conception plus que de fondation.</p>
+<p>Les auteurs signalent honnêtement que, sur ProactiveAgent, le flux d'activité est déjà sérialisé en texte : leur extracteur regex reconstruit ce que la plateforme avait à l'origine sous forme structurée. La démonstration que « la structure est la donnée » repose donc en partie sur une hypothèse de déploiement où le pipeline possède les identifiants système directement, hypothèse non testée ici puisque le benchmark ne fournit que du texte rendu. L'argument est cohérent mais reste conceptuel sur ce point précis.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le niveau de détail est élevé. Les annexes documentent la construction du graphe (ontologies d'entités, règles d'augmentation de type, canaux d'arêtes), la featurisation des nœuds (embedding texte BGE gelé de 768d, embedding de type 32d, MLP de gap temporel 32d), l'architecture GNN, les hyperparamètres LoRA et full-SFT des baselines, les prompts complets et les protocoles de décodage. Le hardware est précisé (RTX A6000 48 Go, portable 36 Go), de même que l'agrégation sur trois graines et les seuils fixés avant évaluation.</p>
+<p>Les deux benchmarks employés sont publics et utilisés sous leurs termes d'origine, sans nouvelle collecte de données. Les auteurs vérifient l'isolation train/test au niveau session et par correspondance de chaînes d'évènements (zéro recouvrement direct). Les mappings extension-vers-catégorie et alias d'applications sont annoncés comme publiés avec le code. La principale réserve tient au statut de preprint : l'extrait ne contient pas de lien de dépôt vérifiable, et la disponibilité effective du code reste à confirmer.</p>
+
+<h2>Impact et applications</h2>
+<p>Le principe de conception est simple et transférable : garder un petit modèle temporel toujours actif, et réserver le raisonnement LLM complet aux moments qui passent son déclencheur. Pour un assistant de bureau ou mobile, ce découpage répond à trois contraintes réelles — latence sur le chemin critique, coût par évènement sur un signal continu, et confidentialité. Un journal d'activité (noms de fichiers, URL, requêtes) est sensible ; une empreinte sous le gigaoctet permet un déploiement entièrement sur l'appareil, à l'intérieur de la frontière de confiance de l'utilisateur, là où un déclencheur 8B plus un agent 7B saturent déjà un A6000.</p>
+<p>Le résultat sur FingerTip-20K (le même backbone TGL battant le meilleur fine-tune LoRA de l'article d'origine sur les deux métriques) suggère que le routage par graphe typé transfère au-delà du desktop. L'estimation économique — environ 6,5 GPU-heures par appareil et par an pour TGL contre 24 à 46 pour la gamme LLM-as-trigger au taux de polling de la démo publique — donne un ordre de grandeur concret de l'enjeu de déploiement à grande échelle.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail se situe à l'intersection de trois lignes. L'assistance proactive, dont les fondations précèdent les agents LLM (So et Sonenberg 2004, Myers et Yorke-Smith 2007) et que des benchmarks récents formalisent en décision fire-or-skip par évènement sur desktop et mobile. Les études d'interaction homme-machine sur le coût attentionnel des interruptions, qui établissent la décision de réveil comme l'étape porteuse avant tout appel downstream. Et l'apprentissage sur graphes temporels (TGAT, TGN, GATv2), dont le biais inductif épouse le cadre du déclencheur proactif.</p>
+<p>L'apport propre est d'isoler le chemin always-on et de montrer empiriquement qu'il relève d'un problème de graphe, pas de langage — un déplacement de cadrage qui distingue ce papier des formulations antérieures où déclencheur, fournisseur de contexte et agent sont trois modules à forme de LLM. La position défendue rejoint un courant plus large d'ingénierie de harness, où l'on adapte de façon déterministe l'interface autour du modèle plutôt que le modèle lui-même, et où l'on réserve le compute coûteux aux états qui le justifient.</p>
+
+<h2>Synthèse des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Question précise et originale ; recadrage net du problème always-on de langage vers graphe.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Protocole large et bien contrôlé (14 backbones, ablations, comparaison de 4 familles), mais évaluation entièrement hors-ligne via juge-RM.</td></tr>
+<tr><td>Taille d'échantillon</td><td>4</td><td>14 backbones, n=3 exécutions, 1000 épisodes FingerTip ; std reportés mais pas de tests de significativité formels.</td></tr>
+<tr><td>Qualité des métriques</td><td>5</td><td>Métriques riches et appropriées : F1, AUC multi-définition, Brier, ECE, écart-type de seuil, latence sur deux matériels, empreinte mémoire.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Isolation train/test vérifiée, supervision et prompt partagés ; reste la circularité potentielle du juge-RM comme mesure de qualité.</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Annexes très détaillées, benchmarks publics, hyperparamètres et prompts fournis ; lien de code non vérifiable dans l'extrait, statut preprint.</td></tr>
+<tr><td>Transparence des limitations</td><td>5</td><td>Limites assumées sans détour (absence d'éval utilisateur, sérialisation texte, confidentialité, équité démographique non testée), éthique et usage d'IA déclarés.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Recadrage convaincant et impact pratique fort pour le déploiement on-device ; briques architecturales (TGAT/TGN/GATv2) préexistantes.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 4,3 / 5.</strong> Un travail rigoureux, bien documenté et utile, dont la démonstration centrale tient solidement. La réserve principale n'est pas méthodologique au sens strict mais porte sur la validité externe : tant que l'évaluation reste un juge-RM hors-ligne, le bénéfice réel pour l'utilisateur final demeure une promesse étayée par un proxy, non une mesure directe.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

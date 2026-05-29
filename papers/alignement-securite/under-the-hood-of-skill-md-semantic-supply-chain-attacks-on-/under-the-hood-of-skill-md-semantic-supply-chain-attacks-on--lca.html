@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Under the Hood of SKILL.md: Semantic Supply-chain Attacks on AI Agent Skill Registry — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>Under the Hood of SKILL.md: Semantic Supply-chain Attacks on AI Agent Skill Registry</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>Les Agent Skills sont des paquets modulaires sur système de fichiers. Chaque skill est ancrée par un fichier SKILL.md qui déclare, en langage naturel, quand et comment un agent doit l'utiliser. Des registres comme ClawHub ou Skills.sh en hébergent désormais des dizaines de milliers, avec plus de 98 000 skills recensées dans les trois premiers mois selon une étude citée. Ce texte décrit une nouvelle surface de risque.</p>
+<p>Les travaux antérieurs portaient sur ce qui se passe après le chargement d'une skill (code malveillant, comportement de l'agent) ou sur la détection des soumissions malveillantes. Le cycle de vie côté registre restait inexploré : comment une skill est admise, classée, présentée et sélectionnée avant toute exécution. La thèse défendue est nette : SKILL.md n'est pas une documentation passive mais un texte opérationnel qui décide quelles capacités tierces un agent trouve, choisit et exécute. Trois étapes structurent l'analyse — Discovery, Selection, Governance.</p>
+
+<h2>Méthodologie</h2>
+<p>Le corpus partagé rassemble 100 skills réelles téléchargées sur ClawHub, réparties en cinq catégories (email, travel, tax, health, prompt), les 20 plus téléchargées par catégorie. Le modèle de menace suppose un adversaire de la chaîne d'approvisionnement en boîte noire : il ne modifie que le SKILL.md (perturbation δ ajoutée à la spécification), sans contrôle sur le backend, le modèle de l'agent ou la distribution des requêtes.</p>
+<h3>Discovery</h3>
+<p>L'attaquant ajoute un déclencheur court d'environ 20 tokens (≈1 % du fichier). En boîte noire, une recherche par faisceau (modèle proposeur Qwen2.5-0.5B, largeur B=4, K=50, budget T=20) maximise la similarité cosinus avec l'embedding de la requête cible. En boîte blanche, une optimisation par gradient (5 runs, 50 itérations) cible directement le modèle d'embedding. Trois encodeurs sont testés (bge-base, bge-small, text-embedding-3-small d'OpenAI), avec mesure de transférabilité. Un score de classement réaliste reproduit ClawHub : lexical + vectoriel + 0,08·log(1+téléchargements), évalué en scénario « jour moyen » (579 téléchargements) et « 0-day » (zéro téléchargement).</p>
+<h3>Selection</h3>
+<p>Choix apparié : seul le champ <strong>description</strong> est modifié par l'ajout d'une phrase, selon quatre stratégies (publicité mensongère, injonctions assertives, signaux de maintenance, allégations de confiance). Le cadre Hermes-agent présente à l'agent la skill originale et sa variante fonctionnellement équivalente. Quatre modèles (GPT-4.1-mini, GPT-5, Gemma-4-31B, Qwen3-235B) sont évalués sur 100 skills × 4 variantes × 5 prompts = 2 000 essais par modèle. Les prompts utilisateurs sont synthétisés par un LLM.</p>
+<h3>Governance</h3>
+<p>Un pipeline à trois étages reproduit le système de scan de ClawHub : scanner statique à règles, relecteur LLM (« ClawScan »), et scan VirusTotal. Le corpus est filtré à 47 skills « purement propres » en anglais. GPT-5 génère deux instructions malveillantes par skill (94 variantes), revues manuellement. Après une validation de base sur l'insertion directe, quatre stratégies d'évasion sont testées : jailbreak du juge LLM, paraphrase, formulation en « Definition of Done », et débordement de la fenêtre de contexte (l'instruction est placée au-delà des 10 000 premiers caractères transmis au relecteur).</p>
+
+<h2>Résultats principaux</h2>
+<p><strong>Discovery.</strong> Le meilleur résultat en même modèle atteint 86,14 % de taux de victoire (+16,40 % de score) contre OpenAI en boîte noire. Les déclencheurs optimisés sur les modèles BAAI transfèrent vers OpenAI à 79–80 %, mais le transfert inverse est faible : la manipulation est donc asymétrique. En classement Top-k sous OpenAI, la skill adverse atteint 56 % / 65 % / 80 % (top-3 / top-5 / top-10). Sous le score réaliste tenant compte de la popularité, elle gagne dans 74,14 % des cas en jour moyen ; en 0-day, 94 % au lancement mais seulement 40 % après une heure.</p>
+<p><strong>Selection.</strong> La variante adverse est choisie dans 77,6 % des essais en moyenne, loin au-dessus de la base aléatoire de 50 %. La publicité mensongère et les injonctions assertives dominent. Gemma-4-31B et Qwen3-235B dépassent 80 %. Tous les modèles testés cèdent au-dessus du hasard : le choix dépend du cadrage linguistique, pas de la capacité réelle.</p>
+<p><strong>Governance.</strong> Le pipeline détecte bien l'insertion directe (aucune variante propre, 68,2 % jugées malveillantes), mais sous une politique qui ne bloque que le verdict « malveillant », ≈32 % des variants directs restent accessibles. Les évasions creusent l'écart : le jailbreak du juge reste limité (63,5 % encore malveillants), la paraphrase fait passer 73,9 % des variants sous le seuil bloquant, la « Definition of Done » obtient 23,9 % de verdicts propres. Le débordement de contexte est le plus brutal : 87,1 % de verdicts propres, 0 % de malveillants — contournement total.</p>
+
+<h2>Discussion et limites</h2>
+<p>Le point faible le plus sérieux est l'absence de toute inférence statistique. Aucun intervalle de confiance, aucun test de significativité dans l'ensemble du papier. Les chiffres sont des estimations ponctuelles. Avec 47 skills pour la gouvernance et 14 à 20 skills par catégorie, les conclusions par domaine reposent sur des effectifs trop minces pour porter le détail des comparaisons inter-stratégies.</p>
+<p>Une circularité méthodologique pèse sur deux expériences : GPT-5 génère à la fois les prompts utilisateurs de la sélection et les instructions malveillantes, alors qu'il figure aussi parmi les modèles évalués en sélection. La « revue manuelle » des 94 variantes n'est pas spécifiée — ni le nombre d'annotateurs, ni les critères, ni l'accord inter-juges.</p>
+<p>Le pipeline de gouvernance est une réimplémentation locale, « inspirée de ClawHub ». Sa validation contre les rapports de modération de ClawHub n'est pas quantifiée, et les défenses de production réelles peuvent différer. Le résultat le plus spectaculaire — le débordement de contexte — est presque trivial : il exploite une troncature à 10 000 caractères. C'est davantage un défaut d'implémentation qu'une attaque sémantique profonde, et la parade (relecture par segments ou du fichier entier) est immédiate. Les auteurs le reconnaissent.</p>
+<p>Les exemples de déclencheurs de découverte (figures 8 et 9) produisent un texte incohérent (« colours welcome shelby racism fridays bessie county… »). Un relecteur humain ou une simple heuristique de qualité textuelle le signalerait. L'attaque suppose donc une récupération purement vectorielle, sans filtre de lisibilité. La décroissance 94 %→40 % en une heure du scénario 0-day montre d'ailleurs que les signaux de popularité neutralisent partiellement l'attaque rapidement. Enfin, les noms d'écosystème (ClawHub, OpenClaw, ClawScan) paraissent anonymisés, ce qui limite la vérification externe, et les trois étapes sont mesurées isolément : la composition bout-en-bout reste hypothétique.</p>
+<p>Au crédit du travail : le protocole apparié isole proprement l'effet du cadrage sémantique, la fonction de classement réaliste sort du cadre de laboratoire, l'analyse de transférabilité est sérieuse, et la section limites comme l'énoncé éthique sont francs.</p>
+
+<h2>Reproductibilité</h2>
+<p>Le code et le jeu de données sont promis (github.com/ShoumikSaha/agent-skill-security). L'algorithme de recherche par faisceau est détaillé, les hyperparamètres et modèles sont nommés, le matériel précisé (une RTX A5000). Les prompts de génération des données synthétiques figurent en annexe. Les freins : la disponibilité du code n'est pas confirmée au stade de la prépublication, le pipeline de gouvernance reste local, et l'expérience « in the wild » dépend d'un registre vivant et mutable, donc difficile à rejouer à l'identique.</p>
+
+<h2>Impact et applications</h2>
+<p>Le travail tombe au bon moment, alors que les écosystèmes de skills explosent. Pour les opérateurs de registres, les recommandations sont concrètes : relecture du fichier entier ou par segments (ce qui annule l'attaque par débordement), traitement strict des verdicts « suspects », classement fondé sur des preuves et robuste aux déclencheurs, signaux d'audit expliquant pourquoi une skill a été classée, choisie ou approuvée. Pour les développeurs d'agents : moindre privilège à l'exécution et défiance envers le cadrage des descriptions. Le papier fournit une grille de mesure pour une surface émergente, et gère sa nature dual-use de manière responsable (expériences locales, aucun upload sur registre public).</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'appuie sur les attaques adverses contre la récupération dense (GASLITE, décodage adverse, attaques rapides sur modèles de langage) et sur les injections de prompt via skills (Schmotz et al.). Il se distingue des travaux sur les skills à porte dérobée (SkillTrojan, BadSkill) et sur la détection de soumissions malveillantes (SkillSieve, classification par contexte de dépôt) en visant le cycle de vie côté registre, en amont de l'exécution, plutôt que le comportement post-chargement ou la détection binaire. Les gabarits de jailbreak du juge héritent des patrons DAN. La contribution centrale est conceptuelle autant qu'empirique : formuler Discovery, Selection et Governance comme trois étapes d'attaque distinctes mais composables, et fournir une méthode d'évaluation pour chacune.</p>
+
+<h2>Synthèse des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>5</td><td>Cadrage clair, original et opportun : la vue « cycle de vie côté registre » comble un angle mort réel.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trois protocoles complémentaires bien construits ; le choix apparié isole l'effet sémantique, le classement réaliste renforce la validité externe.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>100 skills, mais 47 pour la gouvernance et 14–20 par catégorie : trop mince pour les conclusions par domaine.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Win rate, Top-k, préférence de sélection, distribution des verdicts : alignés sur les objectifs, mais sans aucune barre d'erreur.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>Bon contrôle par équivalence fonctionnelle et skills « propres » ; circularité résiduelle (GPT-5 génère et est évalué).</td></tr>
+<tr><td>Reproductibilité</td><td>4</td><td>Code promis, algorithmes et hyperparamètres détaillés ; pipeline local et registre vivant freinent la réplication exacte.</td></tr>
+<tr><td>Transparence sur les limites</td><td>5</td><td>Section limites et énoncé éthique honnêtes, y compris sur la nature locale du pipeline et la portée SKILL.md-only.</td></tr>
+<tr><td>Impact et nouveauté</td><td>5</td><td>Première formalisation de la surface sémantique du registre, résultats marquants et défenses directement actionnables.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale : 4,0 / 5.</strong> Une prépublication de sécurité solide, originale et transparente, dont la portée est limitée par le manque de rigueur statistique, des effectifs réduits et une infrastructure de gouvernance reconstituée localement.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
