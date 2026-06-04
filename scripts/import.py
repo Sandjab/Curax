@@ -2064,9 +2064,17 @@ def main():
                         help="nombre de workers paralleles pour le scoring (defaut: 3)")
     parser.add_argument('--no-keywords', action='store_true',
                         help="desactiver l'extraction de mots-cles cherchables (activee par defaut, via Haiku)")
+    parser.add_argument('--scan', metavar='DIR',
+                        help="(workflow) scan + extraction + dedup, emet le JSON sur stdout (pas d'appel Claude)")
+    parser.add_argument('--finalize', metavar='JSON_FILE',
+                        help="(workflow) finalise l'import a partir d'un JSON decrivant articles + papers classifies")
     args = parser.parse_args()
 
-    if args.reclassify:
+    if args.scan:
+        _cmd_scan(args)
+    elif args.finalize:
+        _cmd_finalize(args)
+    elif args.reclassify:
         cmd_reclassify(args)
     elif args.reclassify_papers:
         cmd_reclassify_papers(args)
@@ -2080,6 +2088,221 @@ def _regenerate_manifest():
     """Lance generate_manifest.py."""
     manifest_script = os.path.join(PROJECT_ROOT, ".github", "scripts", "generate_manifest.py")
     subprocess.run([sys.executable, manifest_script], cwd=PROJECT_ROOT, check=True)
+
+
+# ---------------------------------------------------------------------------
+# Sous-commandes utilitaires pour le workflow (.claude/skills/curax-import)
+# Phases déterministes consommées par workflow.js. Pas d'appel Claude ici.
+# ---------------------------------------------------------------------------
+
+def _cmd_scan(args):
+    """Scan + extraction + dédup. Émet sur stdout un JSON consommé par workflow.js.
+
+    Schema:
+      {
+        "existing_articles_catalog": {"domains": {...},
+                                      "articles": [{"path","domain"}, ...]},
+        "existing_papers_catalog":   {"domains": {...},
+                                      "papers":   [{"path","domain"}, ...]},
+        "new_articles": [{"filepath","filename","source","author",
+                          "text","preview","provisional_slug"}, ...],
+        "new_papers":   [{"filepath","filename","text","preview","abstract"}, ...]
+      }
+    """
+    source_dir = args.scan
+    if not os.path.isdir(source_dir):
+        json.dump({"error": f"dossier '{source_dir}' introuvable"}, sys.stdout)
+        sys.exit(1)
+
+    html_files = sorted(f for f in os.listdir(source_dir) if f.lower().endswith('.html'))
+    pdf_files  = sorted(f for f in os.listdir(source_dir) if f.lower().endswith('.pdf'))
+
+    catalog        = load_catalog()
+    papers_catalog = load_papers_catalog()
+
+    new_articles = []
+    if html_files:
+        file_contents = {}
+        file_sources  = {}
+        for fname in html_files:
+            filepath = os.path.join(source_dir, fname)
+            with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
+                file_contents[filepath] = f.read()
+            lower = fname.lower()
+            if lower.startswith('linkedin-article'):
+                file_sources[filepath] = 'linkedin'
+            elif lower.startswith('medium-article'):
+                file_sources[filepath] = 'medium'
+            else:
+                file_sources[filepath] = 'twitter'
+
+        excluded = dedup_batch(file_contents, extract_content_fingerprint)
+        excluded |= dedup_against_catalog(
+            file_contents, excluded, catalog["articles"],
+            extract_content_fingerprint, _read_article_content,
+        )
+        for filepath, content in file_contents.items():
+            if filepath in excluded:
+                continue
+            info = analyze_article(filepath, content)
+            new_articles.append({
+                "filepath":         info['filepath'],
+                "filename":         info['filename'],
+                "source":           file_sources[filepath],
+                "author":           info['author'],
+                "text":             info['text'][:40000],
+                "preview":          info['text'][:500],
+                "provisional_slug": info['slug'],
+            })
+
+    new_papers = []
+    if pdf_files:
+        if not _HAS_PYMUPDF:
+            json.dump({"error": "PyMuPDF requis (pip install pymupdf)"}, sys.stdout)
+            sys.exit(1)
+        pdf_texts = {}
+        for fname in pdf_files:
+            filepath = os.path.join(source_dir, fname)
+            try:
+                pdf_texts[filepath] = extract_pdf_text(filepath)
+            except Exception:
+                continue
+        excluded = dedup_batch(pdf_texts, extract_pdf_fingerprint)
+        excluded |= dedup_against_catalog(
+            pdf_texts, excluded, papers_catalog["papers"],
+            extract_pdf_fingerprint, _read_pdf_text, doi_fn=extract_pdf_doi,
+        )
+        for filepath, text in pdf_texts.items():
+            if filepath in excluded:
+                continue
+            try:
+                abstract = extract_pdf_abstract(filepath)
+            except Exception:
+                abstract = text[:3000]
+            new_papers.append({
+                "filepath": filepath,
+                "filename": os.path.basename(filepath),
+                "text":     text[:100000],
+                "preview":  text[:500],
+                "abstract": abstract,
+            })
+
+    payload = {
+        "existing_articles_catalog": {
+            "domains":  catalog.get("domains", {}),
+            "articles": [{"path": p, "domain": m.get("domain", "")}
+                         for p, m in catalog.get("articles", {}).items()],
+        },
+        "existing_papers_catalog": {
+            "domains": papers_catalog.get("domains", {}),
+            "papers":  [{"path": p, "domain": m.get("domain", "")}
+                        for p, m in papers_catalog.get("papers", {}).items()],
+        },
+        "new_articles": new_articles,
+        "new_papers":   new_papers,
+    }
+    json.dump(payload, sys.stdout, ensure_ascii=False)
+
+
+def _cmd_finalize(args):
+    """Finalise un import workflow : applique taxonomies, écrit fichiers et catalogs,
+    régénère le manifeste, nettoie infiles/.
+
+    Input JSON (fichier passé via --finalize) :
+      {
+        "articles_taxonomy": {"domains": {...}, "observations": "..."} | null,
+        "papers_taxonomy":   {"domains": {...}, "observations": "..."} | null,
+        "articles": [ {filepath, source, author, domain, slug, title, description,
+                       tags, keywords, quality_score, quality_note}, ... ],
+        "papers":   [ {filepath, domain, slug, title, description, tags, keywords,
+                       quality_note, authors, year, journal, doi,
+                       robustness_global, lca_html, vulgarisation_html}, ... ],
+        "cleanup_infiles": true|false,
+        "infiles_dir": "infiles" | null
+      }
+    """
+    with open(args.finalize, 'r', encoding='utf-8') as f:
+        payload = json.load(f)
+
+    art_tax  = payload.get("articles_taxonomy") or None
+    pap_tax  = payload.get("papers_taxonomy")   or None
+    articles = payload.get("articles", [])
+    papers   = payload.get("papers",   [])
+
+    if articles or art_tax:
+        catalog = load_catalog()
+        if art_tax:
+            catalog["domains"]      = art_tax.get("domains", catalog.get("domains", {}))
+            catalog["observations"] = art_tax.get("observations", catalog.get("observations", ""))
+
+        file_contents = {}
+        analyses = []
+        for a in articles:
+            fp = a["filepath"]
+            with open(fp, 'r', encoding='utf-8', errors='replace') as f:
+                file_contents[fp] = f.read()
+            analyses.append({
+                "filepath":      fp,
+                "filename":      os.path.basename(fp),
+                "domain":        a["domain"],
+                "slug":          a["slug"],
+                "title":         a["title"],
+                "description":   a["description"],
+                "tags":          a.get("tags", []),
+                "keywords":      a.get("keywords", []),
+                "quality_score": a["quality_score"],
+                "quality_note":  a["quality_note"],
+                "author":        a.get("author"),
+                "source":        a.get("source", "twitter"),
+            })
+        do_import(analyses, file_contents, catalog)
+        save_catalog(catalog)
+
+    if papers or pap_tax:
+        papers_catalog = load_papers_catalog()
+        if pap_tax:
+            papers_catalog["domains"]      = pap_tax.get("domains", papers_catalog.get("domains", {}))
+            papers_catalog["observations"] = pap_tax.get("observations", papers_catalog.get("observations", ""))
+
+        paper_analyses = []
+        for p in papers:
+            robustness = float(p.get("robustness_global", 0))
+            paper_analyses.append({
+                "filepath":           p["filepath"],
+                "filename":           os.path.basename(p["filepath"]),
+                "domain":             p["domain"],
+                "slug":               p["slug"],
+                "title":              p["title"],
+                "description":        p.get("description", ""),
+                "tags":               p.get("tags", []),
+                "keywords":           p.get("keywords", []),
+                "quality_score":      min(round(robustness * 2), 10),
+                "quality_note":       p["quality_note"],
+                "authors":            p.get("authors", []),
+                "year":               p.get("year", 0),
+                "journal":            p.get("journal", ""),
+                "doi":                p.get("doi", ""),
+                "robustness_global":  robustness,
+                "lca_html":           p["lca_html"],
+                "vulgarisation_html": p["vulgarisation_html"],
+            })
+        do_import_papers(paper_analyses, papers_catalog)
+        save_papers_catalog(papers_catalog)
+
+    _regenerate_manifest()
+
+    if payload.get("cleanup_infiles"):
+        infiles_dir = payload.get("infiles_dir") or os.path.join(PROJECT_ROOT, "infiles")
+        if os.path.isdir(infiles_dir):
+            for fname in os.listdir(infiles_dir):
+                fp = os.path.join(infiles_dir, fname)
+                if os.path.isfile(fp) and fname.lower().endswith(('.html', '.pdf')):
+                    os.remove(fp)
+
+    print(json.dumps(
+        {"ok": True, "articles_imported": len(articles), "papers_imported": len(papers)},
+        ensure_ascii=False,
+    ))
 
 
 if __name__ == '__main__':
