@@ -456,6 +456,18 @@ def extract_pdf_doi(text):
     return m.group(0).rstrip('.') if m else ""
 
 
+def derive_arxiv_doi(filename):
+    """Dérive le DOI arXiv canonique depuis un nom de fichier arXiv
+    (ex: '2605.10878v1.pdf' -> '10.48550/arXiv.2605.10878').
+
+    Le DOI arXiv n'apparait pas dans le corps des preprints ; on le
+    reconstruit depuis l'identifiant. Retourne '' si le nom ne suit pas
+    le format arXiv 'YYMM.NNNNN'."""
+    base = os.path.splitext(os.path.basename(filename))[0]
+    m = re.match(r'(\d{4}\.\d{4,5})(?:v\d+)?$', base)
+    return f"10.48550/arXiv.{m.group(1)}" if m else ""
+
+
 def extract_pdf_fingerprint(text):
     """SHA-256 du texte nettoyé. Retourne None si texte trop court."""
     cleaned = re.sub(r'\s+', ' ', text).strip()
@@ -1956,7 +1968,7 @@ def cmd_import(args):
                         info['authors'] = lca_result['authors']
                         info['year'] = lca_result['year']
                         info['journal'] = lca_result['journal']
-                        info['doi'] = lca_result['doi']
+                        info['doi'] = lca_result['doi'] or derive_arxiv_doi(info['filename'])
                         info['robustness_global'] = lca_result['robustness_global']
                         info['lca_html'] = lca_result['lca_html']
                         info['vulgarisation_html'] = vulg_result['vulgarisation_html']
@@ -2281,7 +2293,7 @@ def _cmd_finalize(args):
                 "authors":            p.get("authors", []),
                 "year":               p.get("year", 0),
                 "journal":            p.get("journal", ""),
-                "doi":                p.get("doi", ""),
+                "doi":                p.get("doi", "") or derive_arxiv_doi(p["filepath"]),
                 "robustness_global":  robustness,
                 "lca_html":           p["lca_html"],
                 "vulgarisation_html": p["vulgarisation_html"],
