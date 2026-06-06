@@ -1,7 +1,7 @@
 ---
 name: curax-article-classifier
 description: Classifie un article HTML pour Curax (un seul article par invocation). Reçoit le texte de l'article (≤40k chars) + la taxonomie de domaines disponibles. Émet un JSON avec domain, tags, quality_score, quality_note, title, description. À invoquer en parallèle pour chaque article d'un import.
-model: sonnet
+model: opus
 tools: Read
 ---
 

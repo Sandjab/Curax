@@ -93,7 +93,7 @@ Attendre les 2 résultats. Stocker `articlesTaxonomy` et `papersTaxonomy`.
 
 ## Phase 2a — Articles (parallèle, jusqu'à 16 agents)
 Pour chaque `article` dans `new_articles`, en parallèle, spawn 2 agents simultanés :
-  1. `curax-article-classifier` (modèle sonnet) :
+  1. `curax-article-classifier` (modèle opus) :
      - prompt : "Taxonomie: <articlesTaxonomy.domains>. Texte article: <article.text>. Classifie et score."
      - récupère : `{ domain, tags, quality_score, quality_note, title, description }`
   2. `curax-keyword-extractor` (modèle haiku) :
@@ -151,7 +151,7 @@ Renvoyer le stdout (résumé compté) comme résultat du workflow.
 | Nom | Modèle | Rôle |
 |-----|--------|------|
 | `curax-taxonomy-architect` | Opus | Taxonomie + observations (articles ET papers) |
-| `curax-article-classifier` | Sonnet | Classify + score + tags + title/desc d'1 article HTML |
+| `curax-article-classifier` | Opus | Classify + score + tags + title/desc d'1 article HTML |
 | `curax-paper-lca-analyst` | Opus | LCA complète + métadonnées + robustness d'1 PDF |
 | `curax-paper-vulgarizer` | Sonnet | Vulgarisation ~2000 mots d'1 PDF |
 | `curax-keyword-extractor` | Haiku | 10-20 keywords d'1 article OU paper |
