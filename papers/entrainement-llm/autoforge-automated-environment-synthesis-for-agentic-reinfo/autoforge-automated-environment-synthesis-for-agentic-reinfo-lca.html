@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoForge: Automated Environment Synthesis for Agentic Reinforcement Learning — Lecture Critique d'Article</title>
+  <script>
+  (function(){
+    var m = localStorage.getItem('curax-mode') || 'light';
+    var t = localStorage.getItem('curax-theme') || 'portfolio';
+    document.documentElement.setAttribute('data-mode', m);
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <script src="../../../themes.js"></script>
+  <style>
+    :root {
+      --background: #f8f7f2; --foreground: #1a1a1a; --card: #ffffff;
+      --card-foreground: #1a1a1a; --primary: #c1a875; --primary-foreground: #ffffff;
+      --primary-hover: #b09560; --secondary: #f0ece0; --muted: #f0ece0;
+      --muted-foreground: #6b6352; --border: #e2decb; --input: #e2decb;
+      --ring: #c1a875; --radius: 0.75rem;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .companion-header {
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .companion-header a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .companion-header a:hover { text-decoration: underline; }
+    .companion-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      line-height: 1.3;
+    }
+    .companion-header .doc-type {
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+    .companion-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .companion-content h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .companion-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .companion-content p {
+      margin-bottom: 1rem;
+    }
+    .companion-content ul, .companion-content ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    .companion-content li {
+      margin-bottom: 0.3rem;
+    }
+    .companion-content blockquote {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background-color: var(--muted);
+      border-radius: var(--radius);
+      font-style: italic;
+    }
+    .companion-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .companion-content th, .companion-content td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .companion-content th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+    .companion-content tr:nth-child(even) {
+      background-color: color-mix(in srgb, var(--muted) 50%, transparent);
+    }
+    /* Score coloring in LCA tables */
+    .score-5 { color: hsl(142, 71%, 35%); font-weight: 700; }
+    .score-4 { color: hsl(120, 40%, 40%); font-weight: 600; }
+    .score-3 { color: hsl(45, 93%, 37%); font-weight: 600; }
+    .score-2 { color: hsl(25, 95%, 43%); font-weight: 600; }
+    .score-1 { color: hsl(0, 72%, 45%); font-weight: 600; }
+    .score-0 { color: hsl(0, 0%, 50%); font-weight: 600; }
+    @media (max-width: 600px) {
+      .companion-header, .companion-content { padding: 1rem; }
+      .companion-header h1 { font-size: 1.3rem; }
+      .companion-content table { font-size: 0.8rem; }
+      .companion-content th, .companion-content td { padding: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="companion-header">
+    <a href="../../../index.html">&larr; Retour a Curax</a>
+    <h1>AutoForge: Automated Environment Synthesis for Agentic Reinforcement Learning</h1>
+    <p class="doc-type">Lecture Critique d'Article</p>
+  </div>
+  <div class="companion-content">
+    <h2>Objectif et contexte</h2>
+<p>L'entraînement d'agents LLM par renforcement dans des environnements réels coûte cher et passe mal à l'échelle : l'agent attend le plus souvent la réponse d'un outil externe ou d'un utilisateur. La synthèse d'environnements simulés est devenue la réponse dominante, mais les travaux antérieurs restent semi-automatisés ou produisent des tâches trop faciles. AutoForge attaque trois manques précis : l'automatisation complète de la génération d'environnements et de tâches difficiles, l'instabilité des utilisateurs simulés par LLM, et le traitement naïf de l'entraînement multi-environnements comme s'il s'agissait d'un environnement unique.</p>
+<p>La question de recherche est nette et bien cadrée par rapport à des concurrents nommément cités (AgentScaler, MUA-RL, UserRL). L'originalité tient moins à une rupture conceptuelle qu'à l'assemblage : un pipeline de bout en bout partant de simples descriptions d'outils, couplé à une adaptation ciblée de GRPO.</p>
+
+<h2>Méthodologie</h2>
+<p>Le pipeline comporte trois étages. D'abord la synthèse d'environnement : un LLM génère la structure d'état sous forme de base clé-valeur puis le code Python des fonctions-outils, ce qui garantit un feedback déterministe, concurrent et peu coûteux. Ensuite la génération de séquences d'outils : les outils forment un graphe orienté dont les marches aléatoires produisent des milliers de séquences, fusionnées puis enrichies de nœuds et d'arêtes de raisonnement pour former un DAG. Enfin la génération de tâches : le DAG sert de plan pour instancier un état initial, exécuter la séquence dorée jusqu'à un état final, et raffiner l'intention utilisateur en une formulation minimale et naturelle. La vérification repose sur la comparaison de l'état final atteint avec l'état doré, choix judicieux puisqu'une tâche admet plusieurs séquences valides.</p>
+<p>Le second apport, ERPO, étend GRPO sur quatre points. Le rollout est centré utilisateur, avec un agent utilisateur qui délivre l'information par bribes. Le <em>Interleaved Thinking</em> conserve les traces de raisonnement des tours précédents, que Qwen3 supprime par défaut. Le mécanisme MEU utilise un LLM-juge pour repérer les trajectoires où l'échec provient d'une erreur de l'utilisateur simulé et les exclut du calcul de l'avantage et de la perte. Enfin, la normalisation de l'avantage passe du niveau du groupe au niveau de l'environnement : l'écart-type est estimé sur l'ensemble des trajectoires d'un même environnement, ce qui réduit la sensibilité aux valeurs aberrantes quand la taille de groupe est faible.</p>
+<p>Le protocole expérimental s'appuie sur Qwen3-Thinking-235B pour la synthèse, Qwen3-Thinking-30B comme dorsale, un démarrage à froid par SFT puis la phase RL avec GPT-4.1 comme simulateur d'utilisateur, sur 64 GPU. L'échantillonnage dynamique de DAPO écarte les échantillons entièrement corrects ou entièrement faux.</p>
+
+<h2>Résultats principaux</h2>
+<p>Sur les trois benchmarks internes (τ-bench, τ2-Bench, VitaBench), AutoForge-30B-A3B domine les modèles ouverts sous 200 milliards de paramètres et se rapproche des systèmes propriétaires, avec seulement 3 milliards de paramètres actifs. Le gain sur la dorsale Qwen3-Thinking-30B est réel et parfois large : par exemple 76,3 contre 26,3 sur le domaine télécom de τ2-Bench. La domination n'est pas uniforme : sur le sous-ensemble Cross Domain de VitaBench, AutoForge obtient 17,5, en retrait de GPT-o3 (30,0) et de Claude-Sonnet-4 (23,0).</p>
+<p>La généralisation hors domaine est testée sur ACEBench-zh, en chinois, avec un format d'appel d'outils différent et des outils absents de l'entraînement. La version RL progresse davantage que la version SFT, mais le résultat n'est rapporté que par une figure, sans valeurs chiffrées ni comparaison statistique.</p>
+<p>L'analyse de l'utilisateur simulé est révélatrice. En remplaçant GPT-4.1 par GPT-5-thinking pour jouer l'utilisateur, le score télécom bondit de 76,3 à 90,4. Cet écart de 14 points imputable au seul simulateur montre autant la fragilité de l'évaluation que la sous-estimation possible de l'agent. Les ablations confirment que la normalisation au niveau environnement stabilise la courbe de récompense et que MEU évite l'effondrement observé en fin d'entraînement sans masquage.</p>
+
+<h2>Discussion et limites</h2>
+<p>Les résultats principaux sont donnés comme des nombres uniques, sans variance, sans graines multiples ni intervalles de confiance. Les courbes d'ablation reposent sur une seule exécution. Pour un travail dont l'argument central porte sur la <em>stabilité</em> d'entraînement, l'absence de mesure de dispersion affaiblit la démonstration : une courbe plus lisse sur un run ne prouve pas une variance réduite entre runs.</p>
+<p>L'entraînement ne mobilise que dix environnements et 1078 tâches. Les auteurs le reconnaissent et laissent ouverte la question du passage à l'échelle du nombre d'environnements, qui est pourtant l'argument de vente du pipeline automatisé. La récompense binaire de correspondance d'état ne supervise que le résultat final, sans crédit intermédiaire par tour.</p>
+<p>Un signe de relecture insuffisante affaiblit la confiance : la conclusion attribue les capacités démontrées à « AgentScaler » au lieu d'AutoForge, vestige d'un copier-coller. Détail mineur en soi, mais indicateur du soin apporté à la rédaction finale. Enfin, l'usage de GPT-4.1 à la fois pendant l'entraînement et l'évaluation crée une dépendance à un simulateur propriétaire dont le comportement peut évoluer.</p>
+
+<h2>Reproductibilité</h2>
+<p>Aucun lien vers un dépôt de code ou vers les environnements synthétisés n'apparaît dans le texte. Les prompts de MEU et de l'utilisateur optimisé figurent en annexe, et les hyperparamètres clés sont donnés (batch de 32, huit trajectoires par échantillon, échantillonnage dynamique DAPO, 64 GPU). Ces éléments permettent de comprendre la méthode mais pas de la rejouer à l'identique. La dépendance à des modèles fermés (GPT-4.1, GPT-5-thinking) pour la simulation d'utilisateur et à Qwen3-235B pour la synthèse rend la reproduction exacte difficile hors d'un environnement disposant des mêmes accès. La reproductibilité reste faible.</p>
+
+<h2>Impact et applications</h2>
+<p>Le message pratique est fort : un modèle ouvert de 30 milliards de paramètres, dont 3 actifs, rivalise avec des systèmes propriétaires sur des tâches conversationnelles multi-tours à outils. La génération d'environnements à partir de simples documentations d'outils réduit le coût d'annotation manuelle qui pèse sur les approches type τ-bench. L'idée de masquer les trajectoires polluées par un utilisateur simulé défaillant adresse un problème concret et sous-traité de l'entraînement agentique. L'analyse de sensibilité au simulateur d'utilisateur a une portée méthodologique qui dépasse ce seul travail : elle suggère que les scores publiés sur ces benchmarks dépendent fortement du modèle jouant l'utilisateur.</p>
+
+<h2>Positionnement dans la littérature</h2>
+<p>Le travail s'inscrit dans une vague dense de 2025 sur la synthèse d'environnements pour RL agentique. Il se démarque explicitement d'AgentScaler (dont il reprend la construction de graphe d'outils) par l'automatisation complète, de MUA-RL et UserRL par le traitement de l'instabilité utilisateur, et des simulateurs à base de modèle (ZeroSearch, ToolSandbox) par le choix d'environnements exécutables déterministes plutôt que d'un simulateur LLM sujet aux hallucinations. L'extension de GRPO au niveau environnement dialogue directement avec DeepSeekMath et DAPO. Le positionnement est honnête et documenté, mais l'espace est très concurrentiel et plusieurs contributions relèvent de raffinements incrémentaux sur des briques existantes plutôt que d'une nouveauté isolée décisive.</p>
+
+<h2>Tableau récapitulatif des critères de robustesse</h2>
+<table>
+<thead>
+<tr><th>Critère</th><th>Score /5</th><th>Justification</th></tr>
+</thead>
+<tbody>
+<tr><td>Question de recherche</td><td>4</td><td>Problème clair, bien délimité, trois manques identifiés précisément ; originalité surtout combinatoire.</td></tr>
+<tr><td>Design expérimental</td><td>4</td><td>Trois benchmarks internes, un hors domaine, ablations ciblées ; mais pas de graines multiples.</td></tr>
+<tr><td>Taille d'échantillon</td><td>3</td><td>Dix environnements et 1078 tâches ; limite reconnue par les auteurs, pas de test statistique.</td></tr>
+<tr><td>Qualité des métriques</td><td>4</td><td>Récompense de correspondance d'état pertinente et vérifiable ; supervision limitée au résultat final.</td></tr>
+<tr><td>Contrôle des biais</td><td>4</td><td>MEU et étude de la fiabilité de l'utilisateur simulé traitent un confondant réel ; dépendance à GPT-4.1.</td></tr>
+<tr><td>Reproductibilité</td><td>2</td><td>Pas de code ni d'environnements publiés ; dépendance à des modèles fermés pour synthèse et simulation.</td></tr>
+<tr><td>Transparence des limites</td><td>4</td><td>Section limitations explicite : entrées contraintes, peu d'environnements, récompense purement terminale.</td></tr>
+<tr><td>Impact et nouveauté</td><td>4</td><td>Modèle 30B compétitif face au propriétaire ; apport concret mais dans un champ saturé.</td></tr>
+</tbody>
+</table>
+<p><strong>Note globale indépendante : 3,6 / 5.</strong> Travail d'ingénierie cohérent et utile, dont la portée est bridée par des résultats mono-exécution sans variance, un ensemble d'entraînement restreint et une reproductibilité faible.</p>
+  </div>
+  <script>
+  (function(){
+    if (typeof CURAX_THEMES !== 'undefined') {
+      var t = localStorage.getItem('curax-theme') || 'portfolio';
+      var m = localStorage.getItem('curax-mode') || 'light';
+      var theme = CURAX_THEMES[t];
+      if (theme) {
+        var styles = theme[m];
+        var root = document.documentElement;
+        for (var key in styles) {
+          root.style.setProperty('--' + key, styles[key]);
+        }
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
